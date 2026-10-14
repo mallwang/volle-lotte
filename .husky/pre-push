@@ -1,0 +1,2 @@
+npx nx affected -t typecheck --uncommitted
+npm run test:affected
