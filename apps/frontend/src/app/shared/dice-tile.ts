@@ -1,4 +1,5 @@
-import { Component, computed, input, output } from '@angular/core';
+import { Component, computed, inject, input, output } from '@angular/core';
+import { I18nService } from '../core/i18n.service';
 
 /** Replaceable placeholder for a die (FR-017): the later dice UI swaps only this component. */
 @Component({
@@ -42,9 +43,11 @@ export class DiceTile {
   readonly selected = input(false);
   readonly disabled = input(false);
   readonly toggled = output();
+  private readonly i18n = inject(I18nService);
   protected readonly label = computed(() => {
     const value = this.value();
-    if (value === null) return 'Die not thrown yet';
-    return `Die ${value}, ${this.selected() ? 'selected' : 'not selected'}`;
+    if (value === null) return this.i18n.t('dice.notThrown');
+    const state = this.i18n.t(this.selected() ? 'dice.selected' : 'dice.notSelected');
+    return this.i18n.t('dice.state', { value, state });
   });
 }

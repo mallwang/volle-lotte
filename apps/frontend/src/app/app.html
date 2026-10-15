@@ -1,24 +1,41 @@
 <header class="vl-header">
   <h1>Volle Lotte</h1>
   @if (socket.session() && !socket.game()) {
-  <nav class="vl-nav" aria-label="Main">
-    <a routerLink="/lobby" routerLinkActive="active">Games</a>
-    <a routerLink="/create-game" routerLinkActive="active">Create game</a>
+  <nav class="vl-nav" [attr.aria-label]="'nav.main' | t">
+    <a routerLink="/lobby" routerLinkActive="active">{{ 'nav.games' | t }}</a>
+    <a routerLink="/create-game" routerLinkActive="active">{{ 'nav.create' | t }}</a>
   </nav>
   }
+  <p-select
+    class="vl-lang"
+    [options]="i18n.languages"
+    [ngModel]="i18n.lang()"
+    (ngModelChange)="i18n.set($event)"
+    optionLabel="name"
+    optionValue="code"
+    [ariaLabel]="'language.label' | t"
+  >
+    <ng-template #selectedItem let-o>
+      <span aria-hidden="true">{{ o.flag }}</span>
+      <span class="vl-lang-name">{{ o.name }}</span>
+    </ng-template>
+    <ng-template #item let-o>
+      <span aria-hidden="true">{{ o.flag }}</span> {{ o.name }}
+    </ng-template>
+  </p-select>
   <p-selectbutton
-    [options]="modes"
+    [options]="modes()"
     [ngModel]="theme.mode()"
     (ngModelChange)="theme.set($event)"
     optionLabel="label"
     optionValue="value"
     [allowEmpty]="false"
-    ariaLabel="Colour theme"
+    [ariaLabel]="'theme.label' | t"
   />
 </header>
 @if (socket.connection() !== 'connected') {
 <p-message severity="warn" role="status">
-  Connection: {{ socket.connection() }}. Trying to reconnect.
+  {{ 'connection.status' | t: { state: ('connection.' + socket.connection()) | t } }}
 </p-message>
 }
 <p-toast position="top-center" />

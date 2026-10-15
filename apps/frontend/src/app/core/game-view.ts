@@ -1,4 +1,5 @@
 import type { GameView, LogEntry, SeatView } from 'game-rules';
+import type { I18nService } from './i18n.service';
 
 export const isHost = (g: GameView): boolean => g.hostId === g.you.playerId;
 
@@ -7,51 +8,42 @@ export function playerSeats(g: GameView): number[] {
   return g.seats.flatMap((s, i) => (s.state === 'human' || s.state === 'computer' ? [i] : []));
 }
 
-export const seatName = (s: SeatView | undefined): string => s?.nickname ?? 'Computer';
+export const seatName = (s: SeatView | undefined, i18n: I18nService): string =>
+  s?.nickname ?? i18n.t('player.computer');
 
-export function logText(g: GameView, e: LogEntry): string {
-  const who = e.seat === undefined ? '' : seatName(g.seats[e.seat]);
+export function logText(g: GameView, e: LogEntry, i18n: I18nService): string {
+  const who = e.seat === undefined ? '' : seatName(g.seats[e.seat], i18n);
   if (e.kind === 'turn' && typeof e.data === 'object') {
     const ev = e.data;
+    const t = (key: string, params: Record<string, string | number> = {}) =>
+      i18n.t(`log.${key}`, { who, ...params });
     switch (ev.type) {
       case 'cardDrawn':
-        return `${who} drew ${ev.card}`;
+        return t('drew', { card: i18n.t(`card.${ev.card}`) });
       case 'thrown':
-        return `${who} threw ${ev.dice.join(' ')}`;
+        return t('threw', { dice: ev.dice.join(' ') });
       case 'selected':
+        // Street: dice count by value, not points
         return ev.points > 0
-          ? `${who} set aside ${ev.dice.join(' ')} for ${ev.points} points`
-          : `${who} set aside ${ev.dice.join(' ')}`; // Street: dice count by value, not points
+          ? t('selectedPoints', { dice: ev.dice.join(' '), points: ev.points })
+          : t('selected', { dice: ev.dice.join(' ') });
       case 'volleLotte':
-        return `${who} got a Volle Lotte`;
+        return t('volleLotte');
       case 'bust':
-        return `${who} busted and lost ${ev.lost}`;
+        return t('bust', { lost: ev.lost });
       case 'banked':
-        return `${who} banked ${ev.points}`;
+        return t('banked', { points: ev.points });
       case 'turnLost':
-        return `${who} lost the turn (${ev.lost})`;
+        return t('turnLost', { lost: ev.lost });
       case 'turnEnded':
-        return `${who} ended the turn`;
+        return t('turnEnded');
       case 'deckReshuffled':
-        return 'The deck was reshuffled';
+        return t('deckReshuffled');
       case 'penalty':
-        return `${who} lost ${ev.lost} points`;
+        return t('penalty', { lost: ev.lost });
       case 'gameOver':
-        return 'The game is over';
+        return t('gameOver');
     }
   }
-  const text: Record<string, string> = {
-    joined: 'joined',
-    left: 'left',
-    disconnected: 'disconnected',
-    reconnected: 'reconnected',
-    hostChanged: 'is the new host',
-    seatChanged: 'seat changed',
-    started: 'The game started',
-    turn: 'played',
-    finished: 'The game finished',
-    waitingForHost: 'Waiting for the host',
-    hostDecided: 'The host decided',
-  };
-  return `${who} ${text[e.kind]}`.trim();
+  return i18n.t(`log.${e.kind}`, { who }).trim();
 }

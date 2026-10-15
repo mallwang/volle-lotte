@@ -6,7 +6,9 @@ import { DialogModule } from 'primeng/dialog';
 import { MessageModule } from 'primeng/message';
 import { errorMessage } from '../core/error-message';
 import { isHost, seatName } from '../core/game-view';
+import { I18nService } from '../core/i18n.service';
 import { SocketService } from '../core/socket.service';
+import { TranslatePipe } from '../core/translate.pipe';
 
 /** Reconnect grace period of the backend, only used to scale the countdown bar. */
 const GRACE_SECONDS = 60;
@@ -15,21 +17,21 @@ export const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard', 'random'];
 /** Shows disconnected players with the grace countdown and the host decision controls. */
 @Component({
   selector: 'app-disconnect-banner',
-  imports: [FormsModule, ButtonModule, DialogModule, MessageModule],
+  imports: [FormsModule, ButtonModule, DialogModule, MessageModule, TranslatePipe],
   template: `
     @for (d of entries(); track d.seat) {
       <p-message severity="warn" role="status" styleClass="vl-block">
         <div>
-          {{ d.name }} is disconnected.
+          {{ 'banner.disconnected' | t: { name: d.name } }}
           @if (!d.pending) {
-            Reconnect window: {{ d.remaining }} s.
+            {{ 'banner.window' | t: { n: d.remaining } }}
             <progress
               [max]="graceSeconds"
               [value]="d.remaining"
-              [attr.aria-label]="'Reconnect window for ' + d.name"
+              [attr.aria-label]="'banner.windowFor' | t: { name: d.name }"
             ></progress>
           } @else if (!host()) {
-            Host is deciding.
+            {{ 'banner.deciding' | t }}
           }
         </div>
       </p-message>
@@ -38,24 +40,28 @@ export const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard', 'random'];
       [visible]="host() && pendingEntries().length > 0"
       [closable]="false"
       [modal]="true"
-      header="Player disconnected"
+      [header]="'banner.title' | t"
       appendTo="self"
       [style]="{ width: '26rem', maxWidth: '95vw' }"
     >
       @for (d of pendingEntries(); track d.seat) {
         <div class="vl-form">
-          <p>{{ d.name }} did not come back. Replace with a computer or free the seat?</p>
+          <p>{{ 'banner.didNotReturn' | t: { name: d.name } }}</p>
           <label class="vl-field">
-            Difficulty for {{ d.name }}
+            {{ 'banner.difficultyFor' | t: { name: d.name } }}
             <select [name]="'difficulty-' + d.seat" [(ngModel)]="difficulty">
               @for (o of difficulties; track o) {
-                <option [value]="o">{{ o }}</option>
+                <option [value]="o">{{ 'difficulty.' + o | t }}</option>
               }
             </select>
           </label>
           <div class="vl-actions">
-            <p-button label="Replace with computer" (onClick)="decide(d.seat, 'computer')" />
-            <p-button label="Free seat" severity="secondary" (onClick)="decide(d.seat, 'free')" />
+            <p-button [label]="'banner.replace' | t" (onClick)="decide(d.seat, 'computer')" />
+            <p-button
+              [label]="'banner.free' | t"
+              severity="secondary"
+              (onClick)="decide(d.seat, 'free')"
+            />
           </div>
         </div>
       }
@@ -68,6 +74,7 @@ export const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard', 'random'];
 export class DisconnectBanner {
   readonly game = input.required<GameView>();
   private readonly socket = inject(SocketService);
+  private readonly i18n = inject(I18nService);
   private readonly now = signal(Date.now());
   protected readonly graceSeconds = GRACE_SECONDS;
   protected readonly difficulties = DIFFICULTIES;
@@ -84,7 +91,7 @@ export class DisconnectBanner {
         {
           seat,
           pending,
-          name: seatName(s),
+          name: seatName(s, this.i18n),
           remaining: Math.max(0, Math.ceil((end - this.now()) / 1000)),
         },
       ];
@@ -104,6 +111,6 @@ export class DisconnectBanner {
       decision,
       difficulty: decision === 'computer' ? this.difficulty() : undefined,
     });
-    this.error.set(ack.ok ? '' : errorMessage(ack));
+    this.error.set(ack.ok ? '' : errorMessage(ack, this.i18n));
   }
 }

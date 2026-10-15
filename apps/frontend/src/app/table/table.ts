@@ -13,7 +13,9 @@ import { ButtonModule } from 'primeng/button';
 import { MessageService } from 'primeng/api';
 import { errorMessage } from '../core/error-message';
 import { logText, playerSeats } from '../core/game-view';
+import { I18nService } from '../core/i18n.service';
 import { SocketService } from '../core/socket.service';
+import { TranslatePipe } from '../core/translate.pipe';
 import { CardTile } from '../shared/card-tile';
 import { DiceTile } from '../shared/dice-tile';
 import { PlayerTile } from '../shared/player-tile';
@@ -35,22 +37,32 @@ const ANNOUNCED: Record<string, 'info' | 'warn' | 'success'> = {
 
 @Component({
   selector: 'app-table',
-  imports: [ButtonModule, CardTile, DiceTile, DisconnectBanner, PlayerTile],
+  imports: [ButtonModule, CardTile, DiceTile, DisconnectBanner, PlayerTile, TranslatePipe],
   template: `
     @if (socket.game(); as view) {
       @if (view.game; as state) {
         <h2>{{ view.name }}</h2>
         <app-disconnect-banner [game]="view" />
         <div class="vl-table">
-          <section aria-label="Table">
-            <p>Deck: {{ state.deckSize }} cards. Target {{ state.rules.targetScore }}.</p>
+          <section [attr.aria-label]="'table.table' | t">
+            <p>
+              {{ 'table.deck' | t: { size: state.deckSize, target: state.rules.targetScore } }}
+            </p>
             @if (state.turn; as turn) {
               <p>
-                Active: {{ state.players[state.current].name }}. Phase: {{ turn.phase }}. Carried
-                {{ turn.carried }}, run {{ turn.run }}.
+                {{
+                  'table.active'
+                    | t
+                      : {
+                          name: state.players[state.current].name,
+                          phase: 'table.phase.' + turn.phase | t,
+                          carried: turn.carried,
+                          run: turn.run,
+                        }
+                }}
               </p>
               <app-card-tile [card]="turn.card ?? null" />
-              <div class="vl-dice" role="group" aria-label="Dice">
+              <div class="vl-dice" role="group" [attr.aria-label]="'table.dice' | t">
                 @for (i of slots; track i) {
                   <app-dice-tile
                     [value]="turn.dice[i] ?? null"
@@ -78,8 +90,8 @@ const ANNOUNCED: Record<string, 'info' | 'warn' | 'success'> = {
               </div>
             }
           </section>
-          <section aria-label="Players">
-            <h3>Players</h3>
+          <section [attr.aria-label]="'table.players' | t">
+            <h3>{{ 'table.players' | t }}</h3>
             <ul class="vl-players">
               @for (p of state.players; track $index) {
                 <li>
@@ -96,18 +108,19 @@ const ANNOUNCED: Record<string, 'info' | 'warn' | 'success'> = {
           </section>
         </div>
       }
-      <h3>Log</h3>
+      <h3>{{ 'table.log' | t }}</h3>
       <ol #logEl class="vl-log" role="log" aria-live="polite">
         @for (e of view.log; track $index) {
           <li>{{ text(e) }}</li>
         }
       </ol>
-      <p-button label="Leave game" severity="secondary" (onClick)="socket.leave()" />
+      <p-button [label]="'game.leave' | t" severity="secondary" (onClick)="socket.leave()" />
     }
   `,
 })
 export class Table {
   protected readonly socket = inject(SocketService);
+  private readonly i18n = inject(I18nService);
   protected readonly chosen = signal<number[]>([]);
   /** Always six slots, so the table does not jump while dice are not thrown. */
   protected readonly slots = [0, 1, 2, 3, 4, 5];
@@ -133,39 +146,40 @@ export class Table {
   protected readonly actions = computed(() => {
     const turn = this.socket.game()?.game?.turn;
     const mine = this.mine();
+    const t = (key: string) => this.i18n.t(key);
     const wait = (ok: boolean, why: string) => {
-      if (!mine) return 'Not your turn';
+      if (!mine) return t('table.notYourTurn');
       return ok ? '' : why;
     };
     return [
       {
         id: 'draw',
-        label: 'Draw card',
-        reason: wait(this.can('draw'), 'Already drawn'),
+        label: t('table.draw'),
+        reason: wait(this.can('draw'), t('table.drawn')),
         run: () => this.act({ type: 'draw' }),
       },
       {
         id: 'throw',
-        label: 'Throw dice',
+        label: t('table.throw'),
         reason: wait(
           this.canThrow(),
-          turn?.phase === 'draw' ? 'Draw a card first' : 'Set aside dice first',
+          turn?.phase === 'draw' ? t('table.drawFirst') : t('table.setAsideFirst'),
         ),
         run: () => this.act({ type: 'throw' }),
       },
       {
         id: 'select',
-        label: 'Set aside selected',
+        label: t('table.select'),
         reason: wait(
           this.can('select') && this.chosen().length > 0,
-          this.can('select') ? 'Select at least one die' : 'Throw the dice first',
+          this.can('select') ? t('table.selectOne') : t('table.throwFirst'),
         ),
         run: () => this.select(),
       },
       {
         id: 'bank',
-        label: 'Bank points',
-        reason: wait(this.canBank(), 'Nothing to bank now'),
+        label: t('table.bank'),
+        reason: wait(this.canBank(), t('table.nothingToBank')),
         run: () => this.act({ type: 'bank' }),
       },
     ];
@@ -178,7 +192,7 @@ export class Table {
       for (const e of g.log.slice(this.seen)) {
         const severity =
           ANNOUNCED[e.kind === 'turn' && typeof e.data === 'object' ? e.data.type : e.kind];
-        if (severity) this.messages.add({ severity, detail: logText(g, e), life: 4000 });
+        if (severity) this.messages.add({ severity, detail: logText(g, e, this.i18n), life: 4000 });
       }
       this.seen = g.log.length;
     });
@@ -212,7 +226,7 @@ export class Table {
 
   protected text = (e: Parameters<typeof logText>[1]): string => {
     const g = this.socket.game();
-    return g ? logText(g, e) : '';
+    return g ? logText(g, e, this.i18n) : '';
   };
 
   protected select(): Promise<void> {
@@ -222,6 +236,7 @@ export class Table {
   protected async act(action: Action): Promise<void> {
     const ack = await this.socket.send('turn:action', { action });
     if (ack.ok) this.chosen.set([]);
-    else this.messages.add({ severity: 'error', detail: errorMessage(ack), sticky: true });
+    else
+      this.messages.add({ severity: 'error', detail: errorMessage(ack, this.i18n), sticky: true });
   }
 }

@@ -6,6 +6,7 @@ import { signal } from '@angular/core';
 import { App } from './app';
 import { expectNoA11yViolations, inBothModes } from './core/testing';
 import { SOCKET, SocketService } from './core/socket.service';
+import { I18nService } from './core/i18n.service';
 import { ThemeService } from './core/theme.service';
 
 function setup(connection = 'connected') {
@@ -56,6 +57,18 @@ describe('App', () => {
     socket.connection.set('connected');
     fixture.detectChanges();
     expect(el.querySelector('p-message')).toBeNull();
+  });
+
+  it('switches the visible text without reload and names the language select', async () => {
+    const { fixture, el } = setup();
+    const select = el.querySelector('p-select.vl-lang');
+    expect(select?.querySelector('[aria-label="Language"]')).not.toBeNull();
+    TestBed.inject(I18nService).set('de');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(el.querySelector('p-selectbutton')?.textContent).toContain('Dunkel');
+    expect(el.querySelector('p-select.vl-lang [aria-label="Sprache"]')).not.toBeNull();
+    localStorage.clear();
   });
 
   it('has no axe violations in light and dark', async () => {
