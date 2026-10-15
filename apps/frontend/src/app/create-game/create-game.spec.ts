@@ -1,8 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { providePrimeNG } from 'primeng/config';
 import { defaultRules } from 'game-rules';
 import { SocketService } from '../core/socket.service';
-import { stubSocket } from '../core/testing';
+import { expectNoA11yViolations, inBothModes, stubSocket } from '../core/testing';
 import { CreateGame } from './create-game';
 
 async function setup() {
@@ -11,6 +12,7 @@ async function setup() {
     imports: [CreateGame],
     providers: [
       provideRouter([{ path: '**', children: [] }]),
+      providePrimeNG(),
       { provide: SocketService, useValue: socket },
     ],
   });
@@ -27,7 +29,7 @@ async function setup() {
     await fixture.whenStable();
     fixture.detectChanges();
   };
-  return { socket, el, type, submit };
+  return { socket, fixture, el, type, submit };
 }
 
 describe('CreateGame', () => {
@@ -63,5 +65,19 @@ describe('CreateGame', () => {
     type('password', 'secret');
     await submit();
     expect(el.querySelector('[role=alert]')?.textContent).toContain('already in a game');
+  });
+
+  it('shows per-field errors next to each invalid field', async () => {
+    const { el, submit, type } = await setup();
+    type('seats', '9');
+    await submit();
+    expect(el.querySelectorAll('p-message[role=alert]')).toHaveLength(3);
+    expect(el.textContent).toContain('Seats must be between 2 and 8.');
+  });
+
+  it('has no axe violations in light and dark', async () => {
+    const { fixture, submit } = await setup();
+    await submit();
+    await inBothModes(fixture, () => expectNoA11yViolations(fixture));
   });
 });

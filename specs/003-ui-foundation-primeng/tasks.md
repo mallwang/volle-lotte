@@ -79,15 +79,15 @@ description: 'Task list for UI Foundation (PrimeNG)'
 
 ### Tests for User Story 2
 
-- [ ] T019 [P] [US2] Update `apps/frontend/src/app/nickname/nickname.spec.ts`: inline validation message, submit blocked while invalid, axe light and dark
-- [ ] T020 [P] [US2] Update `apps/frontend/src/app/create-game/create-game.spec.ts`: per-field errors, invalid form cannot submit, axe light and dark
+- [x] T019 [P] [US2] Update `apps/frontend/src/app/nickname/nickname.spec.ts`: inline validation message, submit blocked while invalid, axe light and dark
+- [x] T020 [P] [US2] Update `apps/frontend/src/app/create-game/create-game.spec.ts`: per-field errors, invalid form cannot submit, axe light and dark
 - [ ] T021 [P] [US2] Update `apps/frontend/src/app/lobby/lobby.spec.ts`: game cards show name, free seats and key rules, join opens the password dialog, empty state, axe light and dark
 - [ ] T022 [P] [US2] Update `apps/frontend/src/app/game-lobby/game-lobby.spec.ts`: seat states (empty, human, computer, locked, ready, offline) each have label and icon, host-only controls hidden for non-host, axe light and dark
 
 ### Implementation for User Story 2
 
-- [ ] T023 [P] [US2] Migrate `apps/frontend/src/app/nickname/nickname.ts` to PrimeNG (`inputtext`, `button`, `message` for inline errors), keep the existing session behaviour
-- [ ] T024 [P] [US2] Migrate `apps/frontend/src/app/create-game/create-game.ts` to PrimeNG (`inputtext`, `inputnumber`, `toggleswitch`/`checkbox`, `select`, `button`) with inline per-field validation messages (FR-004)
+- [x] T023 [P] [US2] Migrate `apps/frontend/src/app/nickname/nickname.ts` to PrimeNG (`inputtext`, `button`, `message` for inline errors), keep the existing session behaviour
+- [x] T024 [P] [US2] Migrate `apps/frontend/src/app/create-game/create-game.ts` to PrimeNG (`inputtext`, `inputnumber`, `toggleswitch`/`checkbox`, `select`, `button`) with inline per-field validation messages (FR-004)
 - [ ] T025 [P] [US2] Migrate `apps/frontend/src/app/lobby/lobby.ts` to PrimeNG: game `card`s with name, free seats `tag` and rules, join `dialog` with `password` field (focus moves in and returns to the trigger), skeleton/empty state
 - [ ] T026 [US2] Migrate `apps/frontend/src/app/game-lobby/game-lobby.ts` to seat tiles (`tag`, `avatar`, `button`, `menu` for host seat actions) showing human/computer/locked/ready/offline/host with text and icon; host controls (lock, add computer, kick, start) rendered only when `isHost(view)`
 
