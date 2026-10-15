@@ -69,3 +69,14 @@ Java quirks that stay: 350 minimum points (configurable), four-of-a-kind doublin
 ## Open decisions
 
 None. The rule questions are resolved (see `specs/001-rules-engine/spec.md`, Clarifications).
+
+## Port status (feature 001-rules-engine)
+
+Done in `libs/game-rules/src/lib/`: `scoring.ts` (Punkte), `turn.ts` (Runde), `cards.ts` (Kartenstapel, Karte), `game.ts` (Spiel). Java tests ported in `turn.spec.ts` and `scoring.spec.ts`, then extended.
+
+Deliberate differences from Java:
+
+- State is immutable JSON, all randomness comes from an injected `RandomInt`, no I/O.
+- All eleven card types with their effects, configurable card counts, target score, minimum points and four-of-a-kind doubling.
+- 2-8 players; the game ends at the target score or with a Clover, ties share a rank.
+- Actions are rejected with a stable reason instead of throwing; `legalActions`, `toJSON` and `fromJSON` are new.

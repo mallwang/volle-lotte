@@ -1,4 +1,4 @@
-# Public API: `@volle-lotte/game-rules`
+# Public API: `game-rules`
 
 Everything below is exported from `libs/game-rules/src/index.ts`. Types are in [data-model.md](../data-model.md). The library performs no I/O and never mutates its arguments.
 
