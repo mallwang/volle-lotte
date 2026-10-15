@@ -26,9 +26,9 @@ describe('tiles', () => {
     const f = TestBed.createComponent(CardTile);
     f.detectChanges();
     expect(f.nativeElement.textContent).toContain('none');
-    f.componentRef.setInput('card', 'fireworks');
+    f.componentRef.setInput('card', 'star');
     f.detectChanges();
-    expect(f.nativeElement.textContent).toContain('fireworks');
+    expect(f.nativeElement.textContent).toContain('star');
   });
 
   it('player tile marks active, role, offline and score', () => {

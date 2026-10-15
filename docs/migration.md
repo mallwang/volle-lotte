@@ -37,7 +37,7 @@ Java quirks that stay: 350 minimum points (configurable), four-of-a-kind doublin
 - Persist the game state as JSON in SQLite after every turn (save/load, restart without losing games). Loading leads to the game lobby, all humans must press "Ready" again.
 - PWA: Angular service worker, an update is only activated in the lobby or after the game, never mid-game. The backend reports a `protocolVersion`.
 - Dice selection: tap. Drag-and-drop at most later.
-- Star is the Fireworks card; the deck stays at 56 cards.
+- The deck stays at 56 cards (5 Star cards).
 - The 350 minimum points stay, some rules are configurable, but the 1/5 scoring and other core rules are fixed (see rules.md).
 
 ## Requirements from the briefing (summary for later specs)

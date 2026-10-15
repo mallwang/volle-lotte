@@ -120,7 +120,7 @@ Every function works with keyboard, touch and mouse. Focus is always visible, di
 - **FR-007**: The table MUST show all 2-8 players with name, score and online status, mark the active player, and adapt its layout to the player count and screen size.
 - **FR-008**: The table MUST show the current card, the dice, the turn points and the carried points, using simple placeholder visuals (labeled tiles) for cards and dice.
 - **FR-009**: The active player MUST be able to complete the whole turn flow (draw, throw, select dice by tap or click, set aside, bank) in the UI, with only currently allowed actions enabled and a short reason shown when an action is unavailable.
-- **FR-010**: The UI MUST display the outcome of every turn end (bank, bust, Stop, Double Lotte, Plus/Minus, Street, Fireworks, Clover win) as a clear message to all players.
+- **FR-010**: The UI MUST display the outcome of every turn end (bank, bust, Stop, Double Lotte, Plus/Minus, Street, Star, Clover win) as a clear message to all players.
 - **FR-011**: The result screen MUST show the ranking (equal scores share a rank) and allow returning to the lobby.
 - **FR-012**: The game log MUST be readable, ordered, scrollable and announced to assistive technology without moving focus.
 - **FR-013**: Disconnects MUST be shown with a reconnect countdown; after the grace period the host MUST get a decision dialog (computer or free seat) and other players a waiting notice.

@@ -33,4 +33,4 @@
 
 ## Notes
 
-- The three open markers (Star vs. Fireworks, Street counting, points on Stop after Volle Lotte) were resolved in `/speckit-clarify`, together with Double Lotte scope and Plus/Minus. The remaining questions from rules.md (Clover, Fireworks on Volle Lotte, minimum points, tie-break and target score) were resolved there as well.
+- The three open markers (Street counting, points on Stop after Volle Lotte) were resolved in `/speckit-clarify`, together with Double Lotte scope and Plus/Minus. The remaining questions from rules.md (Clover, Star on Volle Lotte, minimum points, tie-break and target score) were resolved there as well.

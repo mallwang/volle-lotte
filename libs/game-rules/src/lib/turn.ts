@@ -78,7 +78,7 @@ function resolveVolleLotte(
       }
       return end(turn.carried + doubled, events);
     }
-    case 'fireworks':
+    case 'star':
       return end(total, events);
     case 'street':
       return end(STREET_POINTS, events);
@@ -104,7 +104,7 @@ function resolveVolleLotte(
 
 function bust(turn: Turn, events: Event[]): Extract<StepResult, { ok: true }> {
   const lost = turn.carried + turn.run;
-  if (turn.card === 'fireworks') {
+  if (turn.card === 'star') {
     events.push({ type: 'bust', lost: 0 });
     return end(lost, events);
   }
@@ -116,7 +116,7 @@ function bust(turn: Turn, events: Event[]): Extract<StepResult, { ok: true }> {
 function bankForbidden(turn: Turn): boolean {
   const { card } = turn;
   return (
-    card === 'fireworks' ||
+    card === 'star' ||
     card === 'street' ||
     (turn.carried > 0 && (card === 'doubleLotte' || card === 'clover'))
   );
