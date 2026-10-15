@@ -5,6 +5,7 @@ export type ThemeMode = 'system' | 'light' | 'dark';
 /** localStorage key; keep in sync with the pre-paint script in index.html. */
 export const THEME_KEY = 'vl-theme';
 const MODES: readonly ThemeMode[] = ['system', 'light', 'dark'];
+const MODE_SET: ReadonlySet<string> = new Set(MODES);
 
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
@@ -42,7 +43,7 @@ export class ThemeService {
   private read(): ThemeMode {
     try {
       const v = localStorage.getItem(THEME_KEY);
-      return v !== null && (MODES as readonly string[]).includes(v) ? (v as ThemeMode) : 'system';
+      return v !== null && MODE_SET.has(v) ? (v as ThemeMode) : 'system';
     } catch {
       return 'system';
     }
