@@ -17,6 +17,14 @@ there is no separate manual "push + draft the release" step at the end. All of t
 moment the developer confirms in Step 4. Make sure the developer understands this before they
 answer the confirmation prompt.
 
+**Docker push:** the pushed `v*.*.*` tag also triggers `.github/workflows/release.yml`, which
+builds and pushes the Docker image to Docker Hub (`walefish/volle-lotte:latest` and
+`walefish/volle-lotte:v<version>`).
+
+**Prerequisite:** every project in the release group (`frontend`, `backend`) needs a
+`package.json` with a `version` field. Nx Release aborts otherwise. On the first release it
+falls back to that manifest version and applies the conventional-commit bump to it.
+
 ## Steps
 
 ### Step 1 — Branch check
@@ -112,7 +120,8 @@ Ask the developer:
 
 > "Proceed with release v`<version>`? This will commit the version bump, write the CHANGELOG.md
 > entry shown above, tag it, **push to origin**, and **create the GitHub Release with that same
-> text automatically**. (yes/no)"
+> text automatically**. Pushing the tag also triggers the Docker Hub image build/push
+> (`walefish/volle-lotte:latest` and `:v<version>`). (yes/no)"
 
 - If the answer is **no** (or anything other than yes/y): abort with "Release cancelled."
 - If the answer is **yes** / **y**: continue to Step 6.
