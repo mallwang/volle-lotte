@@ -56,7 +56,7 @@ Java quirks that stay: 350 minimum points (configurable), four-of-a-kind doublin
 ## State of this repo
 
 - Done: `git init`, Spec-Kit 0.16.2, constitution v1.0.0, Nx workspace with CI (lint, typecheck, test, build, SonarCloud), `docs/rules.md`, card images, rules engine in `libs/game-rules` (feature 001, see Port status below).
-- Done: feature 002 (lobby and multiplayer, including computer players with difficulties; backend gateway in `apps/backend/src/app/lobby/`, frontend screens, wire protocol in `libs/game-rules/src/lib/protocol.ts`, `PROTOCOL_VERSION = 1`). The manual two-browser run (quickstart) is still open.
+- Done: feature 002 (lobby and multiplayer, including computer players with difficulties; backend gateway in `apps/backend/src/app/lobby/`, frontend screens, wire protocol in `libs/game-rules/src/lib/protocol.ts`, `PROTOCOL_VERSION = 1`). Open: integration tests T027/T034 and the manual two-browser run (quickstart, T045). Coverage: backend 94 %, frontend app code 86 %, `libs/game-rules` 100 % (lines).
 - **Not** created: dice UI, save/load, PWA, Docker.
 - Vaultfolio reference: read its constitution (`.specify/memory/constitution.md`) and `CLAUDE.md` as a template for tooling rules, do not copy blindly (Vaultfolio-specific: encryption, Turnstile, PrimeNG, domains).
 
