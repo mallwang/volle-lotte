@@ -9,7 +9,6 @@ export function stubSocket(game: GameView | null = null) {
     session: signal({ playerId: 'p0', nickname: 'Ann' }),
     games: signal([]),
     game: signal(game),
-    notice: signal<string | null>(null),
     storedNickname: '',
     send: vi.fn(),
     start: vi.fn(),

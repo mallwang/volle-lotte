@@ -1,12 +1,19 @@
-<header>
+<header class="vl-header">
   <h1>Volle Lotte</h1>
-  @if (socket.connection() !== 'connected') {
-  <output>Connection: {{ socket.connection() }}. Trying to reconnect.</output>
-  } @if (socket.notice(); as notice) {
-  <p role="alert">
-    {{ notice }}
-    <button type="button" (click)="socket.notice.set(null)">Dismiss</button>
-  </p>
-  }
+  <p-selectbutton
+    [options]="modes"
+    [ngModel]="theme.mode()"
+    (ngModelChange)="theme.set($event)"
+    optionLabel="label"
+    optionValue="value"
+    [allowEmpty]="false"
+    ariaLabel="Colour theme"
+  />
 </header>
-<main><router-outlet /></main>
+@if (socket.connection() !== 'connected') {
+<p-message severity="warn" role="status">
+  Connection: {{ socket.connection() }}. Trying to reconnect.
+</p-message>
+}
+<p-toast position="top-center" />
+<main class="vl-main"><router-outlet /></main>

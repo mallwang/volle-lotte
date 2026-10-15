@@ -79,3 +79,21 @@ select,
     scroll-behavior: auto !important;
   }
 }
+
+.vl-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+}
+.vl-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+.vl-main {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 0 1rem 1rem;
+}

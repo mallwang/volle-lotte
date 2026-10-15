@@ -1,4 +1,5 @@
 import { Injectable, InjectionToken, inject, signal } from '@angular/core';
+import { MessageService } from 'primeng/api';
 import { io } from 'socket.io-client';
 import {
   PROTOCOL_VERSION,
@@ -44,8 +45,7 @@ export class SocketService {
   readonly games = signal<GameSummary[]>([]);
   readonly game = signal<GameView | null>(null);
   readonly connection = signal<Connection>(this.socket.connected ? 'connected' : 'connecting');
-  /** Message for the user (server restart, replaced session, closed game). */
-  readonly notice = signal<string | null>(null);
+  private readonly messages = inject(MessageService);
 
   constructor() {
     this.socket.on('connect', () => {
@@ -59,12 +59,17 @@ export class SocketService {
       this.active = false;
       this.session.set(null);
       this.game.set(null);
-      this.notice.set('Your session was opened in another window or tab.');
+      this.notify('warn', 'Your session was opened in another window or tab.');
     }) as never);
     this.socket.on('game:closed', (() => {
       this.game.set(null);
-      this.notice.set('The game was closed.');
+      this.notify('info', 'The game was closed.');
     }) as never);
+  }
+
+  /** Tells the user (server restart, replaced session, closed game); info fades, the rest persists. */
+  private notify(severity: 'info' | 'warn' | 'error', detail: string): void {
+    this.messages.add({ severity, detail, life: severity === 'info' ? 4000 : undefined });
   }
 
   /** Nickname saved from an earlier visit, if any. */
@@ -87,7 +92,7 @@ export class SocketService {
       this.stored = { token: ack.token, nickname: ack.nickname };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(this.stored));
       this.active = true;
-      this.notice.set(null);
+      this.messages.clear();
       this.session.set({ playerId: ack.playerId, nickname: ack.nickname });
       this.game.set(ack.game ?? null);
       await this.refreshLobby();
@@ -137,7 +142,7 @@ export class SocketService {
       this.active = false;
       this.session.set(null);
       this.game.set(null);
-      this.notice.set(errorMessage(ack));
+      this.notify('error', errorMessage(ack));
       return;
     }
     this.stored = { token: ack.token, nickname: ack.nickname };
@@ -146,7 +151,7 @@ export class SocketService {
     if (ack.game) this.game.set(ack.game);
     else {
       this.game.set(null);
-      if (hadGame) this.notice.set('The server was restarted and your game is gone.');
+      if (hadGame) this.notify('warn', 'The server was restarted and your game is gone.');
     }
     await this.refreshLobby();
   }

@@ -60,12 +60,12 @@ description: 'Task list for UI Foundation (PrimeNG)'
 
 ### Tests for User Story 1
 
-- [ ] T016 [P] [US1] Update `apps/frontend/src/app/app.spec.ts`: header renders, theme toggle calls `ThemeService.set`, selected mode reflected, offline notice shown/hidden from the socket connection state, axe check in light and dark
+- [x] T016 [P] [US1] Update `apps/frontend/src/app/app.spec.ts`: header renders, theme toggle calls `ThemeService.set`, selected mode reflected, offline notice shown/hidden from the socket connection state, axe check in light and dark
 
 ### Implementation for User Story 1
 
-- [ ] T017 [US1] Rebuild the shell in `apps/frontend/src/app/app.ts` and `apps/frontend/src/app/app.html`: header with app title, `SelectButton` theme toggle (system/light/dark, labelled icons), `p-toast` host, offline `p-message` bound to the socket connection state, main landmark with router outlet, responsive container with no horizontal scroll from 320 px
-- [ ] T018 [US1] Route `SocketService` notices to PrimeNG `MessageService` in `apps/frontend/src/app/core/socket.service.ts` (severity `info|warn|error`, summary from `errorMessage()`, errors persist until dismissed, info auto-dismisses after 4 s) and replace the old header notice string; update `apps/frontend/src/app/core/socket.service.spec.ts`
+- [x] T017 [US1] Rebuild the shell in `apps/frontend/src/app/app.ts` and `apps/frontend/src/app/app.html`: header with app title, `SelectButton` theme toggle (system/light/dark, labelled icons), `p-toast` host, offline `p-message` bound to the socket connection state, main landmark with router outlet, responsive container with no horizontal scroll from 320 px
+- [x] T018 [US1] Route `SocketService` notices to PrimeNG `MessageService` in `apps/frontend/src/app/core/socket.service.ts` (severity `info|warn|error`, summary from `errorMessage()`, errors persist until dismissed, info auto-dismisses after 4 s) and replace the old header notice string; update `apps/frontend/src/app/core/socket.service.spec.ts`
 
 **Checkpoint**: User Story 1 works and is testable alone: shell, theme, toggle, toasts and offline notice.
 
