@@ -11,5 +11,10 @@
     "rootDir": "."
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["src/**/testing.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
+  "exclude": ["src/**/testing.ts", "src/**/*.spec.ts", "src/**/*.test.ts"],
+  "references": [
+    {
+      "path": "../../libs/game-rules/tsconfig.lib.json"
+    }
+  ]
 }
