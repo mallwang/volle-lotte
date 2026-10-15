@@ -83,6 +83,8 @@ export interface GameView {
   you: { playerId: string; seat: number };
   seats: SeatView[];
   game?: GameStateView;
+  /** Dice indices the active player has ticked so far (not yet confirmed). */
+  preview?: number[];
   pending: number[];
   graceEndsAt: Record<number, number>;
   log: LogEntry[];
@@ -120,6 +122,7 @@ export interface Intents {
   'game:start': [undefined, object];
   'host:decide': [{ seat: number; decision: 'computer' | 'free'; difficulty?: Difficulty }, object];
   'turn:action': [{ action: Action }, object];
+  'turn:preview': [{ dice: number[] }, object];
 }
 
 /** Server to client pushes: event name -> payload. */

@@ -42,6 +42,7 @@ export function toView(room: GameRoom, playerId: string): GameView {
   if (room.game) {
     const { deck, ...rest } = room.game;
     view.game = { ...rest, deckSize: deck.length };
+    view.preview = room.preview;
   }
   return view;
 }

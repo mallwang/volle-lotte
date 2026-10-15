@@ -35,20 +35,26 @@ async function setup() {
 describe('CreateGame', () => {
   it('validates name and password before sending', async () => {
     const { socket, el, submit, type } = await setup();
+    type('gameName', '');
     await submit();
     expect(el.querySelector('[role=alert]')?.textContent).toContain('Name');
-    type('name', 'Table');
-    type('password', 'abc');
+    type('gameName', 'Table');
+    type('gamePassword', 'abc');
     await submit();
     expect(el.querySelector('[role=alert]')?.textContent).toContain('Password');
     expect(socket.create).not.toHaveBeenCalled();
   });
 
+  it('prefills the game name from the nickname', async () => {
+    const { el } = await setup();
+    expect(el.querySelector<HTMLInputElement>('input[name=gameName]')?.value).toBe("Ann's Game");
+  });
+
   it('sends the default rules', async () => {
     const { socket, submit, type } = await setup();
     socket.create.mockResolvedValue({ ok: true, game: { id: 'g1' } });
-    type('name', 'Table');
-    type('password', 'secret');
+    type('gameName', 'Table');
+    type('gamePassword', 'secret');
     await submit();
     expect(socket.create).toHaveBeenCalledWith({
       name: 'Table',
@@ -61,18 +67,18 @@ describe('CreateGame', () => {
   it('renders a server error', async () => {
     const { socket, el, submit, type } = await setup();
     socket.create.mockResolvedValue({ ok: false, reason: 'alreadyInGame' });
-    type('name', 'Table');
-    type('password', 'secret');
+    type('gameName', 'Table');
+    type('gamePassword', 'secret');
     await submit();
     expect(el.querySelector('[role=alert]')?.textContent).toContain('already in a game');
   });
 
   it('shows per-field errors next to each invalid field', async () => {
     const { el, submit, type } = await setup();
-    type('seats', '9');
+    type('gameName', '');
+    type('target', '0');
     await submit();
     expect(el.querySelectorAll('p-message[role=alert]')).toHaveLength(3);
-    expect(el.textContent).toContain('Seats must be between 2 and 8.');
   });
 
   it('has no axe violations in light and dark', async () => {

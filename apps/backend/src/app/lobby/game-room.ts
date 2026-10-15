@@ -77,6 +77,8 @@ export class GameRoom {
 
   private readonly now: () => number;
   private readonly rng: RandomInt;
+  /** Dice indices the active player has ticked but not yet confirmed; shown to the others. */
+  preview: number[] = [];
   private fresh: LogEntry[] = [];
   private seatOfEngine: number[] = [];
   private readonly graceTimers = new Map<number, NodeJS.Timeout>();
@@ -249,12 +251,27 @@ export class GameRoom {
     return this.apply(action);
   }
 
+  setPreview(playerId: string, dice: number[]): Res {
+    if (this.phase !== 'running' || !this.game) return fail('notInGame');
+    const seat = this.seatOf(playerId);
+    if (seat < 0) return fail('notInGame');
+    if (this.pending.has(this.currentSeat())) return fail('paused');
+    if (seat !== this.currentSeat()) return fail('notYourTurn');
+    const n = this.game.turn?.dice.length ?? 0;
+    if (new Set(dice).size !== dice.length || dice.some((d) => d < 0 || d >= n))
+      return fail('invalidRequest');
+    this.preview = dice;
+    this.emit();
+    return { ok: true };
+  }
+
   private apply(action: Action): Res {
     const game = this.game as GameState;
     const seat = this.currentSeat();
     const outcome = applyAction(game, action, this.rng);
     if (!outcome.ok) return { ok: false, reason: 'rejected', engine: outcome.reason };
     this.game = outcome.state;
+    this.preview = [];
     for (const event of outcome.events) this.add('turn', seat, event);
     if (outcome.state.result) {
       this.phase = 'finished';

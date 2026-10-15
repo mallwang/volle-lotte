@@ -73,6 +73,24 @@ describe('GameRoom play', () => {
     expect(room.act(cur, { type: 'bank' })).toMatchObject({ ok: false });
   });
 
+  it("shares the active player's dice preview and clears it on the next action", () => {
+    const room = started();
+    let [cur, other] = ['h', 'p'];
+    // Play until a throw leaves dice to select (busts and stop cards pass the turn).
+    for (let i = 0; i < 50 && room.game?.turn?.phase !== 'select'; i++) {
+      [cur, other] = room.game?.current === 0 ? ['h', 'p'] : ['p', 'h'];
+      room.act(cur, { type: room.game?.turn?.phase === 'draw' ? 'draw' : 'throw' });
+    }
+    expect(room.game?.turn?.phase).toBe('select');
+    expect(room.setPreview(other, [0])).toMatchObject({ reason: 'notYourTurn' });
+    expect(room.setPreview(cur, [0, 0])).toMatchObject({ reason: 'invalidRequest' });
+    expect(room.setPreview(cur, [99])).toMatchObject({ reason: 'invalidRequest' });
+    expect(room.setPreview(cur, [0])).toEqual({ ok: true });
+    expect(toView(room, other).preview).toEqual([0]);
+    room.act(cur, { type: 'select', dice: [0] });
+    expect(toView(room, other).preview).toEqual([]);
+  });
+
   it('views hide the deck and the hash', () => {
     const room = started();
     const json = JSON.stringify(toView(room, 'h'));

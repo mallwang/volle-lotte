@@ -13,7 +13,7 @@ import { Component, computed, input, output } from '@angular/core';
       [disabled]="disabled()"
       (click)="toggled.emit()"
     >
-      {{ value() }}
+      {{ value() ?? '?' }}
       @if (selected()) {
         <span aria-hidden="true">&#10003;</span>
       }
@@ -37,11 +37,14 @@ import { Component, computed, input, output } from '@angular/core';
   `,
 })
 export class DiceTile {
-  readonly value = input.required<number>();
+  /** `null` = not thrown yet (placeholder keeps the layout stable). */
+  readonly value = input.required<number | null>();
   readonly selected = input(false);
   readonly disabled = input(false);
   readonly toggled = output();
-  protected readonly label = computed(
-    () => `Die ${this.value()}, ${this.selected() ? 'selected' : 'not selected'}`,
-  );
+  protected readonly label = computed(() => {
+    const value = this.value();
+    if (value === null) return 'Die not thrown yet';
+    return `Die ${value}, ${this.selected() ? 'selected' : 'not selected'}`;
+  });
 }

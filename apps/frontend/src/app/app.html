@@ -1,5 +1,11 @@
 <header class="vl-header">
   <h1>Volle Lotte</h1>
+  @if (socket.session() && !socket.game()) {
+  <nav class="vl-nav" aria-label="Main">
+    <a routerLink="/lobby" routerLinkActive="active">Games</a>
+    <a routerLink="/create-game" routerLinkActive="active">Create game</a>
+  </nav>
+  }
   <p-selectbutton
     [options]="modes"
     [ngModel]="theme.mode()"

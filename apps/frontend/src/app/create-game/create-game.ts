@@ -5,98 +5,128 @@ import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
+import { SelectButtonModule } from 'primeng/selectbutton';
 import { CARD_TYPES, defaultRules, rulesError, type CardType, type Rules } from 'game-rules';
 import { errorMessage } from '../core/error-message';
 import { SocketService } from '../core/socket.service';
 
 @Component({
   selector: 'app-create-game',
-  imports: [FormsModule, RouterLink, ButtonModule, CheckboxModule, InputTextModule, MessageModule],
+  imports: [
+    FormsModule,
+    RouterLink,
+    ButtonModule,
+    CheckboxModule,
+    InputTextModule,
+    MessageModule,
+    SelectButtonModule,
+  ],
   template: `
     <form class="vl-form" (ngSubmit)="submit()">
       <h2>Create game</h2>
-      <div class="vl-field">
-        <label for="name">Name</label>
-        <input pInputText id="name" name="name" [(ngModel)]="name" maxlength="40" />
-        @if (errors().name; as e) {
-          <p-message severity="error" size="small" role="alert">{{ e }}</p-message>
-        }
-      </div>
-      <div class="vl-field">
-        <label for="password">Password</label>
-        <input
-          pInputText
-          id="password"
-          name="password"
-          type="password"
-          [(ngModel)]="password"
-          autocomplete="off"
-        />
-        @if (errors().password; as e) {
-          <p-message severity="error" size="small" role="alert">{{ e }}</p-message>
-        }
-      </div>
-      <div class="vl-field">
-        <label for="seats">Seats</label>
-        <input
-          pInputText
-          id="seats"
-          name="seats"
-          type="number"
-          min="2"
-          max="8"
-          [(ngModel)]="seats"
-        />
-        @if (errors().seats; as e) {
-          <p-message severity="error" size="small" role="alert">{{ e }}</p-message>
-        }
-      </div>
-      <fieldset class="vl-form">
-        <legend>Rules (fixed once the game is created)</legend>
+      <div class="vl-row">
         <div class="vl-field">
-          <label for="target">Target score</label>
+          <label for="game-name">Name</label>
           <input
             pInputText
-            id="target"
-            name="target"
-            type="number"
-            min="1"
-            [(ngModel)]="targetScore"
+            id="game-name"
+            name="gameName"
+            [(ngModel)]="name"
+            maxlength="40"
+            autocomplete="off"
+            data-bwignore
+            data-lpignore="true"
+            data-1p-ignore
           />
+          @if (errors().name; as e) {
+            <p-message severity="error" size="small" role="alert">{{ e }}</p-message>
+          }
         </div>
         <div class="vl-field">
-          <label for="minimum">Minimum points</label>
+          <label for="game-password">Password</label>
           <input
             pInputText
-            id="minimum"
-            name="minimum"
-            type="number"
-            min="0"
-            [(ngModel)]="minimumPoints"
+            id="game-password"
+            name="gamePassword"
+            type="password"
+            [(ngModel)]="password"
+            autocomplete="new-password"
+            data-bwignore
+            data-lpignore="true"
+            data-1p-ignore
           />
+          @if (errors().password; as e) {
+            <p-message severity="error" size="small" role="alert">{{ e }}</p-message>
+          }
+        </div>
+      </div>
+      <div class="vl-field">
+        <span id="seats-label">Seats</span>
+        <p-selectbutton
+          [options]="seatOptions"
+          optionLabel="label"
+          optionValue="value"
+          [(ngModel)]="seats"
+          name="seats"
+          [allowEmpty]="false"
+          ariaLabelledBy="seats-label"
+        />
+      </div>
+      <details class="vl-rules">
+        <summary>
+          <span>Rules <small>(fixed once the game is created)</small></span>
+          <i class="pi pi-chevron-down" aria-hidden="true"></i>
+        </summary>
+        <div class="vl-row">
+          <div class="vl-field">
+            <label for="target">Target score</label>
+            <input
+              pInputText
+              id="target"
+              name="target"
+              type="number"
+              min="1"
+              [(ngModel)]="targetScore"
+            />
+          </div>
+          <div class="vl-field">
+            <label for="minimum">Minimum points</label>
+            <input
+              pInputText
+              id="minimum"
+              name="minimum"
+              type="number"
+              min="0"
+              [(ngModel)]="minimumPoints"
+            />
+          </div>
         </div>
         <div class="vl-actions">
           <p-checkbox inputId="doubling" name="doubling" [binary]="true" [(ngModel)]="doubling" />
           <label for="doubling">Four of a kind doubles</label>
         </div>
-        @for (t of cardTypes; track t) {
-          <div class="vl-field">
-            <label [for]="'card-' + t">Cards: {{ t }}</label>
-            <input
-              pInputText
-              [id]="'card-' + t"
-              [name]="'card-' + t"
-              type="number"
-              min="0"
-              [ngModel]="counts()[t]"
-              (ngModelChange)="setCount(t, $event)"
-            />
-          </div>
-        }
+        <h3>Cards per type</h3>
+        <div class="vl-card-grid">
+          @for (t of cardTypes; track t) {
+            <div class="vl-card-input">
+              <span class="vl-card-face" aria-hidden="true">{{ cardLabels[t] }}</span>
+              <label [for]="'card-' + t">{{ cardNames[t] }}</label>
+              <input
+                pInputText
+                [id]="'card-' + t"
+                [name]="'card-' + t"
+                type="number"
+                min="0"
+                [ngModel]="counts()[t]"
+                (ngModelChange)="setCount(t, $event)"
+              />
+            </div>
+          }
+        </div>
         @if (errors().rules; as e) {
           <p-message severity="error" size="small" role="alert">{{ e }}</p-message>
         }
-      </fieldset>
+      </details>
       <div class="vl-actions">
         <p-button type="submit" label="Create" />
         <a routerLink="/lobby">Cancel</a>
@@ -112,7 +142,38 @@ export class CreateGame {
   private readonly router = inject(Router);
   private readonly defaults = defaultRules();
   protected readonly cardTypes = CARD_TYPES;
-  protected readonly name = signal('');
+  protected readonly seatOptions = [2, 3, 4, 5, 6, 7, 8].map((n) => ({
+    label: String(n),
+    value: n,
+  }));
+  /** Short text on the preview tile and the full name under it. */
+  protected readonly cardLabels: Record<CardType, string> = {
+    bonus200: '+200',
+    bonus300: '+300',
+    bonus400: '+400',
+    bonus500: '+500',
+    bonus600: '+600',
+    doubleLotte: '×2',
+    stop: '✋',
+    fireworks: '✨',
+    street: '1-6',
+    plusMinus: '±',
+    clover: '☘',
+  };
+  protected readonly cardNames: Record<CardType, string> = {
+    bonus200: 'Bonus 200',
+    bonus300: 'Bonus 300',
+    bonus400: 'Bonus 400',
+    bonus500: 'Bonus 500',
+    bonus600: 'Bonus 600',
+    doubleLotte: 'Double Lotte',
+    stop: 'Stop',
+    fireworks: 'Fireworks',
+    street: 'Street',
+    plusMinus: 'Plus/Minus',
+    clover: 'Clover',
+  };
+  protected readonly name = signal(`${this.socket.session()?.nickname ?? 'My'}'s Game`);
   protected readonly password = signal('');
   protected readonly seats = signal(4);
   protected readonly targetScore = signal(this.defaults.targetScore);
@@ -133,21 +194,17 @@ export class CreateGame {
     cardCounts: this.counts(),
   }));
   private readonly problems = computed(() => {
-    const [name, password, seats] = [this.name().trim(), this.password(), this.seats()];
+    const [name, password] = [this.name().trim(), this.password()];
     return {
       name: name.length < 1 || name.length > 40 ? 'Name must have 1-40 characters.' : null,
       password:
         password.length < 4 || password.length > 64 ? 'Password must have 4-64 characters.' : null,
-      seats:
-        !Number.isInteger(seats) || seats < 2 || seats > 8
-          ? 'Seats must be between 2 and 8.'
-          : null,
       rules: rulesError(this.rules()),
     };
   });
   /** Per-field messages, shown after the first submit attempt. */
   protected readonly errors = computed(() =>
-    this.submitted() ? this.problems() : { name: null, password: null, seats: null, rules: null },
+    this.submitted() ? this.problems() : { name: null, password: null, rules: null },
   );
 
   protected async submit(): Promise<void> {

@@ -1,6 +1,6 @@
 import { Component, effect, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { MessageModule } from 'primeng/message';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { ToastModule } from 'primeng/toast';
@@ -8,7 +8,15 @@ import { SocketService } from './core/socket.service';
 import { ThemeService, type ThemeMode } from './core/theme.service';
 
 @Component({
-  imports: [RouterOutlet, FormsModule, MessageModule, SelectButtonModule, ToastModule],
+  imports: [
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    FormsModule,
+    MessageModule,
+    SelectButtonModule,
+    ToastModule,
+  ],
   selector: 'app-root',
   templateUrl: './app.html',
 })

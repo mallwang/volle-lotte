@@ -5,6 +5,13 @@ import { Component, input } from '@angular/core';
   selector: 'app-player-tile',
   template: `
     <div class="vl-player" [attr.aria-current]="active() ? 'true' : null">
+      <i
+        class="pi"
+        [class.pi-desktop]="computer()"
+        [class.pi-user]="!computer()"
+        role="img"
+        [attr.aria-label]="computer() ? 'Computer' : 'Human'"
+      ></i>
       <strong>{{ name() }}</strong>
       @if (active()) {
         <span class="vl-status vl-status-mint">Active</span>
@@ -40,6 +47,8 @@ export class PlayerTile {
   readonly score = input<number | null>(null);
   readonly role = input<string | null>(null);
   readonly online = input(true);
+  /** Computer-controlled seat (also a human replaced by a computer). */
+  readonly computer = input(false);
   readonly active = input(false);
   /** Offline text, e.g. a reconnect countdown. */
   readonly reconnect = input<string | null>(null);

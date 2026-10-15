@@ -7,6 +7,7 @@
   --vl-on-butter: #5a4300;
   --vl-rose: #f6d0cb;
   --vl-on-rose: #7a2118;
+  --vl-bg: #fbf1ea;
 }
 .app-dark {
   --vl-mint: #244a38;
@@ -17,11 +18,12 @@
   --vl-on-butter: #ffefb0;
   --vl-rose: #5a2626;
   --vl-on-rose: #ffd9d9;
+  --vl-bg: #1c1411;
 }
 
 body {
   margin: 0;
-  background: var(--p-surface-50);
+  background: var(--vl-bg);
   color: var(--p-text-color);
   font-family:
     system-ui,
@@ -102,7 +104,85 @@ select,
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  max-width: 32rem;
+  max-width: 36rem;
+  margin-inline: auto;
+}
+.vl-form h2 {
+  text-align: center;
+}
+.vl-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.vl-row > .vl-field {
+  flex: 1 1 12rem;
+}
+.vl-rules {
+  border: 1px solid var(--p-content-border-color);
+  border-radius: var(--p-content-border-radius);
+  padding: 0 0.75rem 0.75rem;
+}
+.vl-rules > * + * {
+  margin-top: 0.75rem;
+}
+.vl-rules summary {
+  cursor: pointer;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  justify-content: space-between;
+  list-style: none;
+}
+.vl-rules summary::-webkit-details-marker {
+  display: none;
+}
+.vl-rules summary small {
+  font-weight: 400;
+  opacity: 0.8;
+}
+.vl-rules[open] summary .pi {
+  transform: rotate(180deg);
+}
+.vl-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
+  gap: 0.75rem;
+}
+.vl-card-input {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: center;
+}
+.vl-card-face {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 3 / 2;
+  border-radius: 0.5rem;
+  border: 1px solid var(--p-content-border-color);
+  background: var(--p-content-background);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+.vl-nav {
+  display: flex;
+  gap: 1rem;
+  margin-right: auto;
+}
+.vl-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 0.5rem;
+  color: var(--p-text-color);
+}
+.vl-nav a.active {
+  color: var(--p-primary-color);
+  font-weight: 600;
+  text-decoration: underline;
 }
 .vl-field {
   display: flex;

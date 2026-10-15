@@ -50,18 +50,16 @@ const ANNOUNCED: Record<string, 'info' | 'warn' | 'success'> = {
                 {{ turn.carried }}, run {{ turn.run }}.
               </p>
               <app-card-tile [card]="turn.card ?? null" />
-              @if (turn.dice.length > 0) {
-                <div class="vl-dice" role="group" aria-label="Dice">
-                  @for (d of turn.dice; track $index) {
-                    <app-dice-tile
-                      [value]="d"
-                      [selected]="chosen().includes($index)"
-                      [disabled]="!mine() || turn.phase !== 'select'"
-                      (toggled)="toggle($index)"
-                    />
-                  }
-                </div>
-              }
+              <div class="vl-dice" role="group" aria-label="Dice">
+                @for (i of slots; track i) {
+                  <app-dice-tile
+                    [value]="turn.dice[i] ?? null"
+                    [selected]="shown().includes(i)"
+                    [disabled]="i >= turn.dice.length || !mine() || turn.phase !== 'select'"
+                    (toggled)="toggle(i)"
+                  />
+                }
+              </div>
               <div class="vl-turn-actions">
                 @for (a of actions(); track a.id) {
                   <div>
@@ -90,6 +88,7 @@ const ANNOUNCED: Record<string, 'info' | 'warn' | 'success'> = {
                     [score]="p.score"
                     [active]="$index === state.current"
                     [online]="view.seats[seats()[$index]]?.connected !== false"
+                    [computer]="view.seats[seats()[$index]]?.state === 'computer'"
                   />
                 </li>
               }
@@ -110,6 +109,12 @@ const ANNOUNCED: Record<string, 'info' | 'warn' | 'success'> = {
 export class Table {
   protected readonly socket = inject(SocketService);
   protected readonly chosen = signal<number[]>([]);
+  /** Always six slots, so the table does not jump while dice are not thrown. */
+  protected readonly slots = [0, 1, 2, 3, 4, 5];
+  /** My own ticks while I play, otherwise the active player's ticks pushed by the server. */
+  protected readonly shown = computed(() =>
+    this.mine() ? this.chosen() : (this.socket.game()?.preview ?? []),
+  );
   private readonly messages = inject(MessageService);
   private readonly logEl = viewChild<ElementRef<HTMLElement>>('logEl');
   /** Log entries already announced; the server log keeps growing, so the length is a stable cursor. */
@@ -200,7 +205,9 @@ export class Table {
   }
 
   protected toggle(i: number): void {
+    if (i >= (this.socket.game()?.game?.turn?.dice.length ?? 0)) return;
     this.chosen.update((c) => (c.includes(i) ? c.filter((x) => x !== i) : [...c, i]));
+    void this.socket.send('turn:preview', { dice: this.chosen() });
   }
 
   protected text = (e: Parameters<typeof logText>[1]): string => {

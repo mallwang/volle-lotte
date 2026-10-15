@@ -93,7 +93,7 @@ import { DIFFICULTIES, DisconnectBanner } from '../table/disconnect-banner';
                   <p-button
                     label="Add computer"
                     severity="secondary"
-                    (onClick)="setSeat($index, 'computer', difficulty())"
+                    (onClick)="setSeat($index, 'computer', 'medium')"
                   />
                 }
               }
@@ -102,14 +102,6 @@ import { DIFFICULTIES, DisconnectBanner } from '../table/disconnect-banner';
         }
       </ul>
       @if (host()) {
-        <label>
-          Difficulty for new computers
-          <select name="new-difficulty" [(ngModel)]="difficulty">
-            @for (o of difficulties; track o) {
-              <option [value]="o">{{ o }}</option>
-            }
-          </select>
-        </label>
         <p-button label="Start game" [disabled]="!canStart()" (onClick)="start()" />
       } @else {
         <p>Waiting for {{ hostName() }} to start the game.</p>
@@ -124,7 +116,6 @@ import { DIFFICULTIES, DisconnectBanner } from '../table/disconnect-banner';
 export class GameLobby {
   protected readonly socket = inject(SocketService);
   protected readonly difficulties = DIFFICULTIES;
-  protected readonly difficulty = signal<Difficulty>('medium');
   protected readonly error = signal('');
   protected readonly host = computed(() => {
     const g = this.socket.game();
