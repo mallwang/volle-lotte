@@ -14,7 +14,7 @@ export function ranking(state: Pick<GameState, 'players'>, first?: number): Rank
   const offset = first === undefined ? 0 : 1;
   const ranks: Rank[] = first === undefined ? [] : [{ rank: 1, players: [first] }];
   order.forEach((i, n) => {
-    const last = ranks[ranks.length - 1];
+    const last = ranks.at(-1);
     if (n > 0 && players[last.players[0]].score === players[i].score) {
       ranks[ranks.length - 1] = { rank: last.rank, players: [...last.players, i] };
     } else {

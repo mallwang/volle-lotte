@@ -4,19 +4,19 @@ import type { CardType, GameState } from './types.js';
 type Rec = Record<string, unknown>;
 type Parsed = { ok: true; state: GameState } | { ok: false; reason: string };
 
-const PHASES = ['draw', 'throw', 'select', 'decide'];
+const PHASES = new Set(['draw', 'throw', 'select', 'decide']);
 const isRec = (v: unknown): v is Rec => typeof v === 'object' && v !== null && !Array.isArray(v);
 const isInt = (v: unknown, min = 0): v is number => Number.isInteger(v) && (v as number) >= min;
 const isDie = (v: unknown) => isInt(v, 1) && (v as number) <= 6;
 
 export function toJSON(state: GameState): unknown {
-  return JSON.parse(JSON.stringify(state));
+  return structuredClone(state);
 }
 
 function turnError(t: unknown): string | null {
   if (!isRec(t)) return 'turn must be an object';
   const { phase, card, dice, free, carried, run, street, volleLottes } = t;
-  if (typeof phase !== 'string' || !PHASES.includes(phase)) return 'unknown turn phase';
+  if (typeof phase !== 'string' || !PHASES.has(phase)) return 'unknown turn phase';
   if ((card === null) !== (phase === 'draw')) return 'card must be null exactly in phase draw';
   if (card !== null && !CARD_TYPES.includes(card as CardType)) return 'unknown turn card';
   if (!isInt(free) || free > 6) return 'free must be an integer 0-6';

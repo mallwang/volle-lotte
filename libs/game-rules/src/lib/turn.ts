@@ -177,7 +177,7 @@ function selectAction(
     dice: [],
     run: turn.run + points,
     free: turn.free - values.length,
-    street: [...turn.street, ...(turn.card === 'street' ? values : [])].sort(),
+    street: [...turn.street, ...(turn.card === 'street' ? values : [])].sort((a, b) => a - b),
   };
   const events: Event[] = [{ type: 'selected', points }];
   return next.free > 0

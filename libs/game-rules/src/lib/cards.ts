@@ -4,7 +4,7 @@ import type { CardType, RandomInt, Rules } from './types.js';
 
 export function buildDeck(rules: Rules, rng: RandomInt): CardType[] {
   return shuffle(
-    CARD_TYPES.flatMap((card) => Array<CardType>(rules.cardCounts[card]).fill(card)),
+    CARD_TYPES.flatMap((card) => new Array<CardType>(rules.cardCounts[card]).fill(card)),
     rng,
   );
 }
