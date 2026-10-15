@@ -8,4 +8,4 @@ Developed with [Spec-Kit](https://github.com/github/spec-kit) (`/speckit-*`); pr
 
 ## Status
 
-Workspace, CI (lint, typecheck, test, build, SonarCloud) and the constitution are in place; rules engine (spec 1) is next. See [docs/migration.md](docs/migration.md).
+Workspace, CI (lint, typecheck, test, build, SonarCloud), the constitution and the pure rules engine (`libs/game-rules`, spec 001) are in place; lobby and multiplayer (spec 002) is specified and next to be planned. See [docs/migration.md](docs/migration.md).

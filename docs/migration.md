@@ -1,6 +1,6 @@
 # Migration / handover: Java -> web app
 
-Status: 2026-10-14. This file is the handover from the planning session (started in the `java` repo) into this repo.
+Status: 2026-10-15. This file is the handover from the planning session (started in the `java` repo) into this repo.
 
 ## Goal
 
@@ -55,16 +55,15 @@ Java quirks that stay: 350 minimum points (configurable), four-of-a-kind doublin
 
 ## State of this repo
 
-- Created: `git init` (main), Spec-Kit 0.16.2 (Claude, sh), `.editorconfig` and `.prettierrc` from Vaultfolio, `.gitignore`, README, CLAUDE.md, `docs/rules.md`, this file, card images.
-- **Not** created: constitution, Nx workspace, code, Docker, CI.
+- Done: `git init`, Spec-Kit 0.16.2, constitution v1.0.0, Nx workspace with CI (lint, typecheck, test, build, SonarCloud), `docs/rules.md`, card images, rules engine in `libs/game-rules` (feature 001, see Port status below).
+- In progress: feature 002 (lobby and multiplayer, including computer players with difficulties), spec and clarifications in `specs/002-lobby-multiplayer/`, UX mockup approved; `/speckit-plan` is next.
+- **Not** created: backend gateway, frontend UI, Docker.
 - Vaultfolio reference: read its constitution (`.specify/memory/constitution.md`) and `CLAUDE.md` as a template for tooling rules, do not copy blindly (Vaultfolio-specific: encryption, Turnstile, PrimeNG, domains).
 
 ## Next steps
 
-1. `/speckit-constitution` (proposal: server-authoritative, pure tested rules engine, one container with SQLite, games survive updates and restarts, no accounts in release 1, npm and Nx like Vaultfolio).
-2. `/speckit-specify` feature 1: rules engine (input: rules.md, the Java tests). Then `/speckit-clarify` with the clarification questions from rules.md.
-3. Nx workspace (NestJS, Angular, `libs/game-rules`) as the first task in the plan of feature 1 or as its own feature 0.
-4. Further features in this order: lobby and multiplayer via WebSocket, computer players, dice UI, save/load, PWA and safe updates, game log, Docker deployment.
+1. Feature 002: `/speckit-plan`, `/speckit-tasks`, `/speckit-implement` (lobby, WebSocket gateway, turn flow, computer players).
+2. Further features in this order: dice UI, save/load, PWA and safe updates, game log, Docker deployment.
 
 ## Open decisions
 
