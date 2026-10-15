@@ -1,14 +1,33 @@
 import { Component, effect, inject } from '@angular/core';
-import { Router, RouterOutlet } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { MessageModule } from 'primeng/message';
+import { SelectButtonModule } from 'primeng/selectbutton';
+import { ToastModule } from 'primeng/toast';
 import { SocketService } from './core/socket.service';
+import { ThemeService, type ThemeMode } from './core/theme.service';
 
 @Component({
-  imports: [RouterOutlet],
+  imports: [
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    FormsModule,
+    MessageModule,
+    SelectButtonModule,
+    ToastModule,
+  ],
   selector: 'app-root',
   templateUrl: './app.html',
 })
 export class App {
   protected readonly socket = inject(SocketService);
+  protected readonly theme = inject(ThemeService);
+  protected readonly modes: { label: string; value: ThemeMode }[] = [
+    { label: 'System', value: 'system' },
+    { label: 'Light', value: 'light' },
+    { label: 'Dark', value: 'dark' },
+  ];
   private readonly router = inject(Router);
   private signedIn = false;
 

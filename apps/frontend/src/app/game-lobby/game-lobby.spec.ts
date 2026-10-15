@@ -1,7 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import type { SeatView } from 'game-rules';
 import { SocketService } from '../core/socket.service';
-import { gameView, stubSocket } from '../core/testing';
+import { providePrimeNG } from 'primeng/config';
+import { expectNoA11yViolations, gameView, inBothModes, stubSocket } from '../core/testing';
 import { GameLobby } from './game-lobby';
 
 const me = (ready: boolean): SeatView => ({
@@ -23,14 +24,14 @@ async function setup(game: ReturnType<typeof gameView>) {
   const socket = stubSocket(game);
   TestBed.configureTestingModule({
     imports: [GameLobby],
-    providers: [{ provide: SocketService, useValue: socket }],
+    providers: [providePrimeNG(), { provide: SocketService, useValue: socket }],
   });
   const fixture = TestBed.createComponent(GameLobby);
   await fixture.whenStable();
   const el = fixture.nativeElement as HTMLElement;
   const button = (text: string) =>
     [...el.querySelectorAll('button')].find((b) => b.textContent?.includes(text));
-  return { socket, el, button };
+  return { socket, el, button, fixture };
 }
 
 describe('GameLobby', () => {
@@ -65,5 +66,24 @@ describe('GameLobby', () => {
     expect(button('Lock')).toBeUndefined();
     expect(el.textContent).toContain('Waiting for Bob');
     expect(el.querySelector('input[type=checkbox]')).toBeTruthy();
+  });
+
+  it('shows every seat state with a text label and icon', async () => {
+    const { el } = await setup(
+      gameView({}, [
+        me(true),
+        { state: 'computer', difficulty: 'easy' },
+        { state: 'locked' },
+        { state: 'open' },
+      ]),
+    );
+    for (const t of ['Ready', 'Computer (easy)', 'Locked', 'Free'])
+      expect(el.textContent).toContain(t);
+    expect(el.querySelectorAll('p-tag .pi').length).toBeGreaterThanOrEqual(4);
+  });
+
+  it('has no a11y violations in both modes', async () => {
+    const { fixture } = await setup(gameView({}, [me(true), other(false)]));
+    await inBothModes(fixture, () => expectNoA11yViolations(fixture));
   });
 });

@@ -1,7 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { defaultRules } from 'game-rules';
 import { SocketService } from '../core/socket.service';
-import { gameView, stubSocket } from '../core/testing';
+import { providePrimeNG } from 'primeng/config';
+import { expectNoA11yViolations, gameView, inBothModes, stubSocket } from '../core/testing';
 import { Result } from './result';
 
 describe('Result', () => {
@@ -33,13 +34,14 @@ describe('Result', () => {
     );
     TestBed.configureTestingModule({
       imports: [Result],
-      providers: [{ provide: SocketService, useValue: socket }],
+      providers: [providePrimeNG(), { provide: SocketService, useValue: socket }],
     });
     const fixture = TestBed.createComponent(Result);
     await fixture.whenStable();
     const items = [...(fixture.nativeElement as HTMLElement).querySelectorAll('li')];
     expect(items[0].textContent).toMatch(/Rank 1:\s*Ann/);
     expect(items[1].textContent).toMatch(/Rank 2:\s*Bob \(3000\),\s*Cy \(3000\)/);
+    await inBothModes(fixture, () => expectNoA11yViolations(fixture));
     fixture.nativeElement.querySelector('button').click();
     expect(socket.leave).toHaveBeenCalled();
   });

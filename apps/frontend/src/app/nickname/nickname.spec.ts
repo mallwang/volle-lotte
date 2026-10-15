@@ -1,7 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { providePrimeNG } from 'primeng/config';
 import { SocketService } from '../core/socket.service';
-import { stubSocket } from '../core/testing';
+import { expectNoA11yViolations, inBothModes, stubSocket } from '../core/testing';
 import { Nickname } from './nickname';
 
 async function setup() {
@@ -10,6 +11,7 @@ async function setup() {
     imports: [Nickname],
     providers: [
       provideRouter([{ path: '**', children: [] }]),
+      providePrimeNG(),
       { provide: SocketService, useValue: socket },
     ],
   });
@@ -24,7 +26,7 @@ async function setup() {
     await fixture.whenStable();
     fixture.detectChanges();
   };
-  return { socket, el, submit };
+  return { socket, fixture, el, submit };
 }
 
 describe('Nickname', () => {
@@ -40,5 +42,18 @@ describe('Nickname', () => {
     socket.start.mockResolvedValue({ ok: false, reason: 'nicknameTaken' });
     await submit('Ann');
     expect(el.querySelector('[role=alert]')?.textContent).toContain('already used');
+  });
+
+  it('blocks submit and flags the field while invalid', async () => {
+    const { socket, el, submit } = await setup();
+    await submit('a');
+    expect(el.querySelector('input')?.getAttribute('aria-invalid')).toBe('true');
+    expect(socket.start).not.toHaveBeenCalled();
+  });
+
+  it('has no axe violations in light and dark', async () => {
+    const { fixture, submit } = await setup();
+    await submit('a');
+    await inBothModes(fixture, () => expectNoA11yViolations(fixture));
   });
 });

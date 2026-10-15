@@ -3,6 +3,8 @@ import { provideRouter } from '@angular/router';
 import type { GameSummary } from 'game-rules';
 import { SocketService } from '../core/socket.service';
 import { stubSocket } from '../core/testing';
+import { providePrimeNG } from 'primeng/config';
+import { expectNoA11yViolations, inBothModes } from '../core/testing';
 import { Lobby } from './lobby';
 
 const summary: GameSummary = {
@@ -22,6 +24,7 @@ async function setup() {
   TestBed.configureTestingModule({
     imports: [Lobby],
     providers: [
+      providePrimeNG(),
       provideRouter([{ path: '**', children: [] }]),
       { provide: SocketService, useValue: socket },
     ],
@@ -39,7 +42,7 @@ async function setup() {
     el.querySelector('form')!.dispatchEvent(new Event('submit'));
     await settle();
   };
-  return { socket, el, tryJoin };
+  return { socket, el, tryJoin, fixture, settle };
 }
 
 describe('Lobby', () => {
@@ -47,6 +50,26 @@ describe('Lobby', () => {
     const { el } = await setup();
     expect(el.querySelector('li')?.textContent).toContain('Table One');
     expect(el.querySelector('li')?.textContent).toContain('1/4');
+    expect(el.querySelector('p-tag')?.textContent).toContain('3 free');
+  });
+
+  it('opens the password dialog on join', async () => {
+    const { el, settle } = await setup();
+    el.querySelector('button')!.click();
+    await settle();
+    expect(el.querySelector('[role=dialog]')?.textContent).toContain('Password for Table One');
+  });
+
+  it('shows an empty state', async () => {
+    const { socket, el, settle } = await setup();
+    socket.games.set([] as never);
+    await settle();
+    expect(el.textContent).toContain('No open games.');
+  });
+
+  it('has no a11y violations in both modes', async () => {
+    const { fixture } = await setup();
+    await inBothModes(fixture, () => expectNoA11yViolations(fixture));
   });
 
   it('shows attempts left after a wrong password', async () => {

@@ -1,6 +1,10 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import type { Ack, Difficulty } from 'game-rules';
+import { AvatarModule } from 'primeng/avatar';
+import { ButtonModule } from 'primeng/button';
+import { MessageModule } from 'primeng/message';
+import { TagModule } from 'primeng/tag';
 import { errorMessage } from '../core/error-message';
 import { isHost, seatName } from '../core/game-view';
 import { SocketService } from '../core/socket.service';
@@ -8,7 +12,7 @@ import { DIFFICULTIES, DisconnectBanner } from '../table/disconnect-banner';
 
 @Component({
   selector: 'app-game-lobby',
-  imports: [FormsModule, DisconnectBanner],
+  imports: [FormsModule, DisconnectBanner, AvatarModule, ButtonModule, MessageModule, TagModule],
   template: `
     @if (socket.game(); as game) {
       <h2>{{ game.name }}</h2>
@@ -17,20 +21,25 @@ import { DIFFICULTIES, DisconnectBanner } from '../table/disconnect-banner';
         doubling {{ game.rules.fourOfAKindDoubling ? 'on' : 'off' }}.
       </p>
       <app-disconnect-banner [game]="game" />
-      <ul>
+      <ul class="vl-cards">
         @for (s of game.seats; track $index) {
-          <li>
-            Seat {{ $index + 1 }}:
+          <li class="vl-seat">
+            <p-avatar [label]="'' + ($index + 1)" shape="circle" aria-hidden="true" />
+            <span class="vl-seat-name">Seat {{ $index + 1 }}</span>
             @switch (s.state) {
               @case ('human') {
-                {{ s.nickname }}
+                <strong>{{ s.nickname }}</strong>
                 @if (s.playerId === game.hostId) {
-                  <span aria-label="host">&#9733;</span>
+                  <p-tag value="Host" icon="pi pi-star" severity="info" />
                 }
                 @if (s.connected === false) {
-                  (offline)
+                  <p-tag value="Offline" icon="pi pi-wifi" severity="danger" />
                 }
-                {{ s.ready ? 'ready' : 'not ready' }}
+                <p-tag
+                  [value]="s.ready ? 'Ready' : 'Not ready'"
+                  [icon]="s.ready ? 'pi pi-check' : 'pi pi-clock'"
+                  [severity]="s.ready ? 'success' : 'warn'"
+                />
                 @if ($index === game.you.seat) {
                   <label>
                     <input
@@ -43,7 +52,7 @@ import { DIFFICULTIES, DisconnectBanner } from '../table/disconnect-banner';
                 }
               }
               @case ('computer') {
-                Computer ({{ s.difficulty }})
+                <p-tag [value]="'Computer (' + s.difficulty + ')'" icon="pi pi-desktop" />
                 @if (host()) {
                   <label>
                     Difficulty seat {{ $index + 1 }}
@@ -56,22 +65,36 @@ import { DIFFICULTIES, DisconnectBanner } from '../table/disconnect-banner';
                       }
                     </select>
                   </label>
-                  <button type="button" (click)="setSeat($index, 'open')">Remove computer</button>
+                  <p-button
+                    label="Remove computer"
+                    severity="secondary"
+                    (onClick)="setSeat($index, 'open')"
+                  />
                 }
               }
               @case ('locked') {
-                <span aria-hidden="true">&#128274;</span> Locked
+                <p-tag value="Locked" icon="pi pi-lock" severity="secondary" />
                 @if (host()) {
-                  <button type="button" (click)="setSeat($index, 'open')">Unlock</button>
+                  <p-button
+                    label="Unlock"
+                    severity="secondary"
+                    (onClick)="setSeat($index, 'open')"
+                  />
                 }
               }
               @default {
-                Free
+                <p-tag value="Free" icon="pi pi-user-plus" severity="success" />
                 @if (host()) {
-                  <button type="button" (click)="setSeat($index, 'locked')">Lock</button>
-                  <button type="button" (click)="setSeat($index, 'computer', difficulty())">
-                    Add computer
-                  </button>
+                  <p-button
+                    label="Lock"
+                    severity="secondary"
+                    (onClick)="setSeat($index, 'locked')"
+                  />
+                  <p-button
+                    label="Add computer"
+                    severity="secondary"
+                    (onClick)="setSeat($index, 'computer', 'medium')"
+                  />
                 }
               }
             }
@@ -79,21 +102,13 @@ import { DIFFICULTIES, DisconnectBanner } from '../table/disconnect-banner';
         }
       </ul>
       @if (host()) {
-        <label>
-          Difficulty for new computers
-          <select name="new-difficulty" [(ngModel)]="difficulty">
-            @for (o of difficulties; track o) {
-              <option [value]="o">{{ o }}</option>
-            }
-          </select>
-        </label>
-        <button type="button" [disabled]="!canStart()" (click)="start()">Start game</button>
+        <p-button label="Start game" [disabled]="!canStart()" (onClick)="start()" />
       } @else {
         <p>Waiting for {{ hostName() }} to start the game.</p>
       }
-      <button type="button" (click)="socket.leave()">Leave game</button>
+      <p-button label="Leave game" severity="secondary" (onClick)="socket.leave()" />
       @if (error()) {
-        <p class="error" role="alert">{{ error() }}</p>
+        <p-message severity="error" role="alert">{{ error() }}</p-message>
       }
     }
   `,
@@ -101,7 +116,6 @@ import { DIFFICULTIES, DisconnectBanner } from '../table/disconnect-banner';
 export class GameLobby {
   protected readonly socket = inject(SocketService);
   protected readonly difficulties = DIFFICULTIES;
-  protected readonly difficulty = signal<Difficulty>('medium');
   protected readonly error = signal('');
   protected readonly host = computed(() => {
     const g = this.socket.game();

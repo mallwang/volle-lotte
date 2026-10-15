@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { MessageService } from 'primeng/api';
 import { vi } from 'vitest';
 import { SOCKET, STORAGE_KEY, SocketService, type SocketLike } from './socket.service';
 
@@ -29,8 +30,11 @@ function setup(stored?: object) {
   localStorage.clear();
   if (stored) localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
   const socket = new FakeSocket();
-  TestBed.configureTestingModule({ providers: [{ provide: SOCKET, useValue: socket }] });
-  return { socket, service: TestBed.inject(SocketService) };
+  TestBed.configureTestingModule({
+    providers: [{ provide: SOCKET, useValue: socket }, MessageService],
+  });
+  const add = vi.spyOn(TestBed.inject(MessageService), 'add');
+  return { socket, add, service: TestBed.inject(SocketService) };
 }
 
 describe('SocketService', () => {
@@ -68,25 +72,35 @@ describe('SocketService', () => {
   });
 
   it('tells the user when a restarted server has no game', async () => {
-    const { socket, service } = setup();
+    const { socket, add, service } = setup();
     socket.replies['session:start'] = { ...started, game };
     await service.start('Ann');
     socket.replies['session:start'] = started;
     socket.fire('connect');
-    await vi.waitFor(() => expect(service.notice()).toContain('restarted'));
+    await vi.waitFor(() =>
+      expect(add).toHaveBeenCalledWith(
+        expect.objectContaining({ severity: 'warn', detail: expect.stringContaining('restarted') }),
+      ),
+    );
     expect(service.game()).toBeNull();
   });
 
   it('handles session:replaced and game:closed', async () => {
-    const { socket, service } = setup();
+    const { socket, add, service } = setup();
     socket.replies['session:start'] = { ...started, game };
     await service.start('Ann');
     socket.fire('game:closed');
     expect(service.game()).toBeNull();
-    expect(service.notice()).toContain('closed');
+    expect(add).toHaveBeenCalledWith({
+      severity: 'info',
+      detail: 'The game was closed.',
+      life: 4000,
+    });
     socket.fire('session:replaced');
     expect(service.session()).toBeNull();
-    expect(service.notice()).toContain('another');
+    expect(add).toHaveBeenCalledWith(
+      expect.objectContaining({ severity: 'warn', detail: expect.stringContaining('another') }),
+    );
     socket.sent.length = 0;
     socket.fire('connect');
     expect(socket.sent).toEqual([]);
