@@ -5,8 +5,9 @@
 **Created**: 2026-10-15
 
 **Status**: Draft
+**Design**: [design.md](design.md) (mockup: [mockup.html](mockup.html))
 
-**Input**: User description: "Feature 002: Lobby and multiplayer via WebSocket. Anonymous sessions, password-protected games with rules set at creation, main lobby (2-8 players), game lobby with seats and Ready, host role, leave/disconnect handling with reconnect grace period, server-authoritative dice, turn flow (select, throw, bank). Out of scope: computer strategies, dice UI/animation, save/load, PWA, game log table, Docker, accounts."
+**Input**: User description: "Feature 002: Lobby and multiplayer via WebSocket. Anonymous sessions, password-protected games with rules set at creation, main lobby (2-8 players), game lobby with seats and Ready, host role, leave/disconnect handling with reconnect grace period, server-authoritative dice, turn flow (select, throw, bank). Computer players that play on their own with selectable difficulty. Out of scope: strategy calibration by simulation, dice UI/animation, save/load, PWA, game log table, Docker, accounts."
 
 ## User Scenarios & Testing _(mandatory)_
 
@@ -31,7 +32,7 @@ A person opens the app, enters a nickname and becomes an anonymous player. They 
 
 ### User Story 2 - Prepare the game in the game lobby and start it (Priority: P1)
 
-In the game lobby, seats beyond the chosen player count are shown locked (padlock). The host can lock or enable seats and switch a seat between human and computer placeholder. Every human presses "Ready"; only when all humans are ready can the host start the game.
+In the game lobby, seats beyond the chosen player count are shown locked (padlock). The host can lock or enable seats and switch a seat between human and computer. A computer has a difficulty (easy, medium, hard) or "random", which stays hidden from the other players. Every human presses "Ready"; only when all humans are ready can the host start the game.
 
 **Why this priority**: Starting a game is required before any turn can be played.
 
@@ -69,7 +70,7 @@ The active player throws the dice, selects scoring dice, and either throws the r
 
 ### User Story 4 - Handle players who leave or disconnect (Priority: P2)
 
-When a player's connection drops or they leave, everyone is warned and an entry is added to the event log. A dropped player may reconnect within a grace period (60 s) and continue seamlessly. After the grace period the host decides: replace the seat with a computer placeholder or free the seat. The game waits for that decision on the missing player's turn.
+When a player's connection drops or they leave, everyone is warned and an entry is added to the event log. A dropped player may reconnect within a grace period (60 s) and continue seamlessly. After the grace period the host decides: replace the seat with a computer or free the seat. The game waits for that decision on the missing player's turn.
 
 **Why this priority**: Online games with up to 8 people will see disconnects; but a stable game without it still works for short sessions.
 
@@ -79,7 +80,7 @@ When a player's connection drops or they leave, everyone is warned and an entry 
 
 1. **Given** a running game, **When** a player disconnects, **Then** all others are warned and a log entry is added.
 2. **Given** a disconnected player, **When** they reconnect within 60 s, **Then** they regain their seat, role and current state and the warning is cleared.
-3. **Given** a disconnected player, **When** 60 s pass, **Then** the host is asked to put in a computer placeholder or free the seat.
+3. **Given** a disconnected player, **When** 60 s pass, **Then** the host is asked to put in a computer or free the seat.
 4. **Given** it is the disconnected player's turn, **When** the grace period runs out, **Then** the game pauses until the host decides.
 5. **Given** the host themself disconnects, **When** the grace period runs out, **Then** host rights pass to another human player, who then makes the decision.
 6. **Given** a player who leaves deliberately, **When** they confirm leaving, **Then** the same warning and host decision flow applies, without waiting for the grace period.
@@ -97,7 +98,7 @@ When a player's connection drops or they leave, everyone is warned and an entry 
 - The server restarts: running games are out of scope here (save/load is a later feature), so the games are gone; clients get a clear message.
 - Network flaps repeatedly: each reconnect within the grace period restores the seat; the grace period restarts per disconnect.
 - Actions arrive twice (double click, retransmission): the second one is rejected or ignored without corrupting the state.
-- Computer seats exist in this feature only as placeholders; on their turn the game waits/skips as defined in Assumptions.
+- A computer takes a seat that a human left mid-game: it continues with that player's score and plays from the next turn on.
 
 ## Requirements _(mandatory)_
 
@@ -119,11 +120,17 @@ When a player's connection drops or they leave, everyone is warned and an entry 
 
 **Game lobby**
 
-- **FR-009**: The game lobby MUST show all seats with status (human, computer placeholder, empty, locked) and all players' readiness, updated in real time for everyone.
+- **FR-009**: The game lobby MUST show all seats with status (human, computer, empty, locked) and all players' readiness, updated in real time for everyone.
 - **FR-010**: Seats beyond the chosen player count MUST be locked at creation.
-- **FR-011**: The host MUST be able to lock and enable seats and to switch a seat between human and computer placeholder at any time before the start.
+- **FR-011**: The host MUST be able to lock and enable seats and to switch a seat between human and computer at any time before the start, and choose the computer's difficulty (easy, medium, hard, or random).
 - **FR-012**: Every human player MUST be able to mark themselves ready and revert it.
 - **FR-013**: The host MUST be able to start the game only when at least 2 seats are occupied and all humans are ready.
+
+**Computer players**
+
+- **FR-025**: A computer seat MUST play its turns on its own through the same intents and validation as a human; it can never act out of turn or illegally.
+- **FR-026**: A computer MUST have a difficulty (easy, medium, hard) that determines how much risk it takes (when it banks, which dice it keeps), or "random", where the level is picked at random and stays hidden from the other players.
+- **FR-027**: Computer turns MUST be paced with short artificial pauses so humans can follow each step; the pause is the only delay and never blocks other games.
 
 **Game flow**
 
@@ -137,7 +144,7 @@ When a player's connection drops or they leave, everyone is warned and an entry 
 
 - **FR-019**: When a player disconnects or leaves, the system MUST warn all remaining players and add an entry to the game's event log.
 - **FR-020**: A disconnected player MUST be able to reconnect within a 60 s grace period and regain seat, role and state.
-- **FR-021**: After the grace period, or when a player leaves deliberately, the host MUST be offered to replace the seat with a computer placeholder or to free the seat; a game waiting for a decision on that player's turn MUST pause.
+- **FR-021**: After the grace period, or when a player leaves deliberately, the host MUST be offered to replace the seat with a computer or to free the seat; a game waiting for a decision on that player's turn MUST pause.
 - **FR-022**: If the host is the one who left, host rights MUST pass to another human player.
 - **FR-023**: One session token MUST be active on one connection at a time.
 
@@ -149,7 +156,7 @@ When a player's connection drops or they leave, everyone is warned and an entry 
 
 - **Player session**: an anonymous identity with a nickname and a secret token; may belong to at most one game at a time.
 - **Game room**: a game before and during play; has a password (hashed), fixed rules, seats, a host, a status (lobby, running, finished) and an event log.
-- **Seat**: a position in a game room; states are empty, human, computer placeholder or locked; holds readiness for humans.
+- **Seat**: a position in a game room; states are empty, human, computer (with difficulty) or locked; holds readiness for humans.
 - **Rules configuration**: the configurable rules from rules.md chosen at creation.
 - **Game state**: the state produced by the rules engine; authoritative on the server.
 - **Event log entry**: a time-stamped message about something that happened in a game.
@@ -170,7 +177,8 @@ When a player's connection drops or they leave, everyone is warned and an entry 
 
 - Release 1 has no accounts; a nickname plus token is the only identity ([constitution](../../.specify/memory/constitution.md), principle V).
 - Games exist only in memory in this feature; restart loses them. Persistence is the separate save/load feature.
-- Computer seats are placeholders here: they can be set and replaced, but have no strategy. On their turn the game is paused or the turn is passed automatically (to be decided in `/speckit-plan`; the computer feature will replace this). Hidden difficulty levels are part of the computer feature.
+- Computer players are part of this feature (autonomous play, three difficulties plus hidden random). Calibrating the levels by simulation is a later, separate task; the first levels are simple risk thresholds.
+- Computer players do not use a password or session and never count as humans for Ready.
 - Dice animation, manual throws and timers (2-5 s, 20 s) belong to the dice UI feature; here a throw is a single instant action.
 - Locking a seat occupied by a human is refused until that human has left; the host can first free the seat.
 - The attempt limit for passwords is 5 failed attempts per client and game within 10 minutes, then a 10-minute lock; the exact numbers may be tuned in the plan.
