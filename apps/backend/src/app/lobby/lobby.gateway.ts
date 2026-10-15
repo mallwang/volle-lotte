@@ -27,14 +27,14 @@ import { SessionsService, validNickname, type Session } from './sessions.service
 import { toView } from './view';
 
 const LOBBY = 'lobby';
-const DIFFICULTIES = ['easy', 'medium', 'hard', 'random'];
+const DIFFICULTIES = new Set(['easy', 'medium', 'hard', 'random']);
 const isObj = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && x !== null;
 const isInt = (x: unknown, min: number, max: number): x is number =>
   Number.isInteger(x) && (x as number) >= min && (x as number) <= max;
 const isPassword = (x: unknown): x is string =>
   typeof x === 'string' && x.length >= 4 && x.length <= 64;
 const isDifficulty = (x: unknown): x is Difficulty | undefined =>
-  x === undefined || DIFFICULTIES.includes(x as string);
+  x === undefined || DIFFICULTIES.has(x as string);
 const isAction = (x: unknown): x is Action =>
   isObj(x) &&
   (['draw', 'throw', 'bank'].includes(x['type'] as string) ||
@@ -90,12 +90,12 @@ export class LobbyGateway implements OnGatewayDisconnect {
     let game;
     const room = session.gameId ? this.registry.get(session.gameId) : undefined;
     if (room && room.seatOf(session.playerId) >= 0) {
-      client.leave(LOBBY);
+      void client.leave(LOBBY);
       room.setConnected(session.playerId, true);
       game = toView(room, session.playerId);
     } else {
       session.gameId = undefined;
-      client.join(LOBBY);
+      void client.join(LOBBY);
     }
     return {
       ok: true,
@@ -268,13 +268,13 @@ export class LobbyGateway implements OnGatewayDisconnect {
 
   private enter(client: Socket, session: Session, room: GameRoom): void {
     session.gameId = room.id;
-    client.leave(LOBBY);
+    void client.leave(LOBBY);
   }
 
   private exit(session: Session): void {
     session.gameId = undefined;
     if (session.socketId) {
-      this.server.sockets.sockets.get(session.socketId)?.join(LOBBY);
+      void this.server.sockets.sockets.get(session.socketId)?.join(LOBBY);
       this.emitTo(session.socketId, 'lobby:games', { games: this.registry.list() });
     }
   }

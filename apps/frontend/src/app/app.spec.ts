@@ -14,6 +14,6 @@ describe('App', () => {
     await fixture.whenStable();
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('h1')?.textContent).toContain('Volle Lotte');
-    expect(el.querySelector('[role=status]')?.textContent).toContain('connecting');
+    expect(el.querySelector('output')?.textContent).toContain('connecting');
   });
 });

@@ -1,7 +1,7 @@
 <header>
   <h1>Volle Lotte</h1>
   @if (socket.connection() !== 'connected') {
-  <p role="status">Connection: {{ socket.connection() }}. Trying to reconnect.</p>
+  <output>Connection: {{ socket.connection() }}. Trying to reconnect.</output>
   } @if (socket.notice(); as notice) {
   <p role="alert">
     {{ notice }}
