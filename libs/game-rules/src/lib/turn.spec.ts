@@ -159,9 +159,9 @@ describe('cards', () => {
   });
 
   describe('Fireworks', () => {
-    it('must select all scoring dice', () => {
+    it('may select just some of the scoring dice', () => {
       const t = run(turnOf('fireworks'), { type: 'throw' }, rolls(1, 5, 2, 3, 4, 6)).turn as Turn;
-      expect(reason(t, select(0))).toBe('incompleteFireworks');
+      expect(reason(t, select(0))).toBe('accepted');
       expect(reason(t, select(0, 1))).toBe('accepted');
     });
 

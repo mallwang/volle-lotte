@@ -1,0 +1,405 @@
+import { randomInt } from 'node:crypto';
+import {
+  applyAction,
+  chooseAction,
+  createGame,
+  type Action,
+  type ComputerLevel,
+  type Difficulty,
+  type ErrorReason,
+  type GameState,
+  type GameSummary,
+  type LogEntry,
+  type LogKind,
+  type RandomInt,
+  type RejectionReason,
+  type RoomPhase,
+  type Rules,
+} from 'game-rules';
+
+export const SEATS = 8;
+export const GRACE_MS = 60_000;
+export const LOG_CAP = 500;
+const COMPUTER_DELAY_MS: [number, number] = [700, 1400];
+
+type Level = 'easy' | 'medium' | 'hard';
+
+export type Seat =
+  | { state: 'open' }
+  | { state: 'locked' }
+  | {
+      state: 'human';
+      playerId: string;
+      nickname: string;
+      connected: boolean;
+      ready: boolean;
+      disconnectedAt?: number;
+    }
+  | { state: 'computer'; difficulty: Difficulty; effective: Level };
+
+export type Fail = { ok: false; reason: ErrorReason; engine?: RejectionReason };
+export type Res<T = object> = ({ ok: true } & T) | Fail;
+
+const fail = (reason: ErrorReason): Fail => ({ ok: false, reason });
+
+export interface RoomOptions {
+  id: string;
+  name: string;
+  passwordHash: string;
+  rules: Rules;
+  seatCount: number;
+  host: { playerId: string; nickname: string };
+  now?: () => number;
+  rng?: RandomInt;
+  graceMs?: number;
+  /** Called after every accepted change, also from timers, with the log entries added since the last call. */
+  onChange?: (entries: LogEntry[]) => void;
+}
+
+const levelFor = (d: Difficulty): ComputerLevel =>
+  d === 'random' ? (['easy', 'medium', 'hard'] as const)[randomInt(3)] : d;
+
+export class GameRoom {
+  readonly id: string;
+  readonly name: string;
+  readonly passwordHash: string;
+  readonly rules: Rules;
+  readonly createdAt: number;
+  readonly graceMs: number;
+  readonly seats: Seat[] = [];
+  hostId: string;
+  phase: RoomPhase = 'lobby';
+  game: GameState | null = null;
+  log: LogEntry[] = [];
+  /** Seats waiting for a host decision (running game only). */
+  pending = new Set<number>();
+  onChange?: (entries: LogEntry[]) => void;
+
+  private readonly now: () => number;
+  private readonly rng: RandomInt;
+  private fresh: LogEntry[] = [];
+  private seatOfEngine: number[] = [];
+  private readonly graceTimers = new Map<number, NodeJS.Timeout>();
+  private computerTimer?: NodeJS.Timeout;
+
+  constructor(o: RoomOptions) {
+    this.id = o.id;
+    this.name = o.name;
+    this.passwordHash = o.passwordHash;
+    this.rules = o.rules;
+    this.hostId = o.host.playerId;
+    this.now = o.now ?? Date.now;
+    this.rng = o.rng ?? ((n) => randomInt(n));
+    this.graceMs = o.graceMs ?? GRACE_MS;
+    this.onChange = o.onChange;
+    this.createdAt = this.now();
+    for (let i = 0; i < SEATS; i++) this.seats.push({ state: i < o.seatCount ? 'open' : 'locked' });
+    this.seats[0] = this.humanSeat(o.host.playerId, o.host.nickname);
+  }
+
+  // ---- queries
+
+  seatOf(playerId: string): number {
+    return this.seats.findIndex((s) => s.state === 'human' && s.playerId === playerId);
+  }
+
+  humans() {
+    return this.seats.flatMap((s) => (s.state === 'human' ? [s] : []));
+  }
+
+  hasConnectedHuman(): boolean {
+    return this.humans().some((h) => h.connected);
+  }
+
+  isPaused(): boolean {
+    return this.phase === 'running' && this.pending.has(this.currentSeat());
+  }
+
+  host() {
+    return this.humans().find((h) => h.playerId === this.hostId);
+  }
+
+  summary(): GameSummary {
+    return {
+      id: this.id,
+      name: this.name,
+      host: this.host()?.nickname ?? '',
+      targetScore: this.rules.targetScore,
+      seatsUsed: this.seats.filter((s) => s.state === 'human' || s.state === 'computer').length,
+      seatsTotal: this.seats.filter((s) => s.state !== 'locked').length,
+      locked: true,
+      phase: this.phase,
+    };
+  }
+
+  // ---- lobby
+
+  join(playerId: string, nickname: string, seat?: number): Res<{ seat: number }> {
+    if (this.phase !== 'lobby') return fail('gameStarted');
+    const lower = nickname.toLowerCase();
+    if (this.humans().some((h) => h.nickname.toLowerCase() === lower)) return fail('nicknameTaken');
+    let index = seat;
+    if (index === undefined) {
+      index = this.seats.findIndex((s) => s.state === 'open');
+      if (index < 0) return fail('gameFull');
+    } else if (this.seats[index]?.state !== 'open') {
+      return fail('seatNotFree');
+    }
+    this.seats[index] = this.humanSeat(playerId, nickname);
+    this.resetReady();
+    this.add('joined', index);
+    this.emit();
+    return { ok: true, seat: index };
+  }
+
+  /** Deliberate leave. Returns whether the room has no human left. */
+  leave(playerId: string): Res<{ empty: boolean }> {
+    const seat = this.seatOf(playerId);
+    if (seat < 0) return fail('notInGame');
+    this.clearGrace(seat);
+    this.add('left', seat);
+    if (this.phase === 'running') {
+      // the seat stays with its engine player but counts as gone until the host decides
+      const human = this.seats[seat] as Extract<Seat, { state: 'human' }>;
+      human.connected = false;
+      this.markPending(seat);
+    } else {
+      this.seats[seat] = { state: 'open' };
+      this.resetReady();
+    }
+    if (this.hostId === playerId) this.electHost(playerId);
+    this.emit();
+    return { ok: true, empty: this.humans().length === 0 };
+  }
+
+  setSeat(
+    playerId: string,
+    seat: number,
+    mode: 'open' | 'locked' | 'computer',
+    difficulty: Difficulty = 'medium',
+  ): Res<{ removed?: string }> {
+    if (playerId !== this.hostId) return fail('notHost');
+    if (this.phase !== 'lobby') return fail('gameStarted');
+    const current = this.seats[seat];
+    if (!current) return fail('invalidRequest');
+    let removed: string | undefined;
+    if (mode === 'computer') {
+      if (current.state === 'human') {
+        if (current.playerId === this.hostId) return fail('seatOccupied');
+        removed = current.playerId;
+      }
+      this.seats[seat] = {
+        state: 'computer',
+        difficulty,
+        effective: levelFor(difficulty),
+      };
+    } else if (current.state === 'human' || current.state === 'computer') {
+      // occupied seats are freed by removing the occupant first: computers via 'open'
+      if (mode === 'locked' || current.state === 'human') return fail('seatOccupied');
+      this.seats[seat] = { state: 'open' };
+    } else {
+      this.seats[seat] = { state: mode };
+    }
+    this.resetReady();
+    this.add('seatChanged', seat, mode === 'computer' ? difficulty : mode);
+    this.emit();
+    return { ok: true, removed };
+  }
+
+  setReady(playerId: string, ready: boolean): Res {
+    const seat = this.seatOf(playerId);
+    if (seat < 0) return fail('notInGame');
+    if (this.phase !== 'lobby') return fail('gameStarted');
+    (this.seats[seat] as Extract<Seat, { state: 'human' }>).ready = ready;
+    this.emit();
+    return { ok: true };
+  }
+
+  start(playerId: string): Res {
+    if (playerId !== this.hostId) return fail('notHost');
+    if (this.phase !== 'lobby') return fail('gameStarted');
+    const occupied = this.seats.flatMap((s, i) =>
+      s.state === 'human' || s.state === 'computer' ? [i] : [],
+    );
+    if (occupied.length < 2) return fail('notEnoughPlayers');
+    if (this.humans().some((h) => !h.ready)) return fail('notReady');
+    this.seatOfEngine = occupied;
+    this.game = createGame(
+      occupied.map((i) => {
+        const s = this.seats[i];
+        return s.state === 'human' ? s.nickname : `Computer ${i + 1}`;
+      }),
+      this.rules,
+      this.rng,
+    );
+    this.phase = 'running';
+    this.add('started');
+    this.emit();
+    return { ok: true };
+  }
+
+  // ---- play
+
+  act(playerId: string, action: Action): Res {
+    if (this.phase !== 'running' || !this.game) return fail('notInGame');
+    const seat = this.seatOf(playerId);
+    if (seat < 0) return fail('notInGame');
+    if (this.pending.has(this.currentSeat())) return fail('paused');
+    if (seat !== this.currentSeat()) return fail('notYourTurn');
+    return this.apply(action);
+  }
+
+  private apply(action: Action): Res {
+    const game = this.game as GameState;
+    const seat = this.currentSeat();
+    const outcome = applyAction(game, action, this.rng);
+    if (!outcome.ok) return { ok: false, reason: 'rejected', engine: outcome.reason };
+    this.game = outcome.state;
+    for (const event of outcome.events) this.add('turn', seat, event);
+    if (outcome.state.result) {
+      this.phase = 'finished';
+      this.add('finished');
+      this.clearTimers();
+    }
+    this.emit();
+    return { ok: true };
+  }
+
+  private currentSeat(): number {
+    return this.seatOfEngine[this.game?.current ?? 0] ?? -1;
+  }
+
+  private scheduleComputer() {
+    if (this.computerTimer || this.phase !== 'running' || !this.game) return;
+    if (this.seats[this.currentSeat()]?.state !== 'computer') return;
+    const [min, max] = COMPUTER_DELAY_MS;
+    this.computerTimer = setTimeout(
+      () => {
+        this.computerTimer = undefined;
+        const seat = this.seats[this.currentSeat()];
+        if (this.phase !== 'running' || !this.game || seat?.state !== 'computer') return;
+        this.apply(chooseAction(this.game, seat.effective, this.rng));
+      },
+      randomInt(min, max + 1),
+    );
+  }
+
+  // ---- connection, leave, host decisions
+
+  setConnected(playerId: string, connected: boolean): void {
+    const seat = this.seatOf(playerId);
+    if (seat < 0) return;
+    const human = this.seats[seat] as Extract<Seat, { state: 'human' }>;
+    if (human.connected === connected) return;
+    human.connected = connected;
+    if (connected) {
+      this.clearGrace(seat);
+      human.disconnectedAt = undefined;
+      this.pending.delete(seat);
+      this.add('reconnected', seat);
+    } else {
+      human.disconnectedAt = this.now();
+      this.add('disconnected', seat);
+      this.graceTimers.set(
+        seat,
+        setTimeout(() => this.graceOver(seat, playerId), this.graceMs),
+      );
+    }
+    this.emit();
+  }
+
+  private graceOver(seat: number, playerId: string) {
+    this.graceTimers.delete(seat);
+    if (this.seatOf(playerId) !== seat) return;
+    if (this.phase === 'running') this.markPending(seat);
+    else this.seats[seat] = { state: 'open' };
+    if (this.hostId === playerId) this.electHost(playerId);
+    this.emit();
+  }
+
+  decide(
+    playerId: string,
+    seat: number,
+    decision: 'computer' | 'free',
+    difficulty: Difficulty = 'medium',
+  ): Res<{ removed?: string }> {
+    if (playerId !== this.hostId) return fail('notHost');
+    if (!this.pending.has(seat)) return fail('nothingPending');
+    const old = this.seats[seat];
+    const removed = old.state === 'human' ? old.playerId : undefined;
+    this.clearGrace(seat);
+    if (decision === 'computer') {
+      this.seats[seat] = {
+        state: 'computer',
+        difficulty,
+        effective: levelFor(difficulty),
+      };
+      this.pending.delete(seat);
+    } else {
+      // the engine player stays; the game waits on this seat until the host puts in a computer
+      this.seats[seat] = { state: 'open' };
+    }
+    this.add('hostDecided', seat, decision);
+    this.emit();
+    return { ok: true, removed };
+  }
+
+  private markPending(seat: number) {
+    this.pending.add(seat);
+    this.add('waitingForHost', seat);
+  }
+
+  private electHost(leaving: string) {
+    const others = this.humans().filter(
+      (h) => h.playerId !== leaving && !this.pending.has(this.seatOf(h.playerId)),
+    );
+    const next = others.find((h) => h.connected) ?? others[0];
+    if (!next) return;
+    this.hostId = next.playerId;
+    this.add('hostChanged', this.seatOf(next.playerId));
+  }
+
+  // ---- internals
+
+  /** Clears timers; the room is not used afterwards. */
+  dispose(): void {
+    this.clearTimers();
+    this.onChange = undefined;
+  }
+
+  private clearTimers() {
+    for (const t of this.graceTimers.values()) clearTimeout(t);
+    this.graceTimers.clear();
+    clearTimeout(this.computerTimer);
+    this.computerTimer = undefined;
+  }
+
+  private clearGrace(seat: number) {
+    clearTimeout(this.graceTimers.get(seat));
+    this.graceTimers.delete(seat);
+  }
+
+  private humanSeat(playerId: string, nickname: string): Seat {
+    return { state: 'human', playerId, nickname, connected: true, ready: false };
+  }
+
+  private resetReady() {
+    for (const h of this.humans()) h.ready = false;
+  }
+
+  private add(kind: LogKind, seat?: number, data?: LogEntry['data']) {
+    const entry: LogEntry = { at: this.now(), kind };
+    if (seat !== undefined) entry.seat = seat;
+    if (data !== undefined) entry.data = data;
+    this.log.push(entry);
+    if (this.log.length > LOG_CAP) this.log.shift();
+    this.fresh.push(entry);
+  }
+
+  private emit() {
+    this.scheduleComputer();
+    const entries = this.fresh;
+    this.fresh = [];
+    this.onChange?.(entries);
+  }
+}

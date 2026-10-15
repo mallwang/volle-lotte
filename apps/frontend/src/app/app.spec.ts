@@ -1,18 +1,19 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { App } from './app';
-import { NxWelcome } from './nx-welcome';
+import { SOCKET } from './core/socket.service';
 
 describe('App', () => {
-  beforeEach(async () => {
+  it('should render the title and show the connection state', async () => {
+    const socket = { connected: false, on: () => 0, emit: () => 0, connect: () => 0 };
     await TestBed.configureTestingModule({
-      imports: [App, NxWelcome],
+      imports: [App],
+      providers: [provideRouter([]), { provide: SOCKET, useValue: socket }],
     }).compileComponents();
-  });
-
-  it('should render title', async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Welcome frontend');
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('h1')?.textContent).toContain('Volle Lotte');
+    expect(el.querySelector('output')?.textContent).toContain('connecting');
   });
 });

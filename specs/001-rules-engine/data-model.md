@@ -60,11 +60,11 @@ Turn points are `carried + run`. `volleLottes` counts only Volle Lotte scored af
 
 ## Rejection
 
-`{ ok: false, reason }` where `reason` is one of: `gameOver`, `wrongPhase`, `emptySelection`, `invalidIndex`, `duplicateIndex`, `nonScoringDie`, `incompleteFireworks`, `belowMinimum`, `nothingToBank`.
+`{ ok: false, reason }` where `reason` is one of: `gameOver`, `wrongPhase`, `emptySelection`, `invalidIndex`, `duplicateIndex`, `nonScoringDie`, `belowMinimum`, `nothingToBank`.
 
 ## Event
 
-Returned with every accepted action for UI and logs: `{ type: 'cardDrawn', card } | { type: 'thrown', dice } | { type: 'selected', points } | { type: 'volleLotte' } | { type: 'bust', lost } | { type: 'banked', points } | { type: 'turnLost', lost } | { type: 'turnEnded', next } | { type: 'deckReshuffled' } | { type: 'penalty', player, lost } | { type: 'gameOver', result }`.
+Returned with every accepted action for UI and logs: `{ type: 'cardDrawn', card } | { type: 'thrown', dice } | { type: 'selected', dice, points } | { type: 'volleLotte' } | { type: 'bust', lost } | { type: 'banked', points } | { type: 'turnLost', lost } | { type: 'turnEnded', next } | { type: 'deckReshuffled' } | { type: 'penalty', player, lost } | { type: 'gameOver', result }`.
 
 ## State transitions
 

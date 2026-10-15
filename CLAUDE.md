@@ -20,5 +20,5 @@ The Java reference lives as a copy in `tmp/java/` (git-ignored, read-only).
 
 <!-- SPECKIT START -->
 
-Current feature plan: [specs/001-rules-engine/plan.md](specs/001-rules-engine/plan.md)
+Current feature plan: [specs/002-lobby-multiplayer/plan.md](specs/002-lobby-multiplayer/plan.md)
 <!-- SPECKIT END -->

@@ -42,21 +42,6 @@ const reject = (reason: RejectionReason): Rejection => ({ ok: false, reason });
 
 const isBonus = (card: CardType | null) => card?.startsWith('bonus') === true;
 
-/** Best score any subset of the dice can reach (Fireworks needs the selection to match it). */
-function maxScore(dice: readonly number[], rules: Rules): number {
-  let best = 0;
-  for (let mask = 1; mask < 1 << dice.length; mask++) {
-    best = Math.max(
-      best,
-      scoreDice(
-        dice.filter((_, i) => mask & (1 << i)),
-        rules,
-      ),
-    );
-  }
-  return best;
-}
-
 /** A card is drawn: Stop credits what was carried, everything else starts a run with six dice. */
 export function applyCard(turn: Turn, card: CardType): Extract<StepResult, { ok: true }> {
   const events: Event[] = [{ type: 'cardDrawn', card }];
@@ -169,8 +154,6 @@ function selectAction(
   } else {
     points = scoreDice(values, rules);
     if (points < 0) return reject('nonScoringDie');
-    if (turn.card === 'fireworks' && points < maxScore(turn.dice, rules))
-      return reject('incompleteFireworks');
   }
   const next: Turn = {
     ...turn,
@@ -179,7 +162,7 @@ function selectAction(
     free: turn.free - values.length,
     street: [...turn.street, ...(turn.card === 'street' ? values : [])].sort((a, b) => a - b),
   };
-  const events: Event[] = [{ type: 'selected', points }];
+  const events: Event[] = [{ type: 'selected', dice: values, points }];
   return next.free > 0
     ? { ok: true, turn: { ...next, phase: 'decide' }, credit: 0, events }
     : resolveVolleLotte(rules, next, events);

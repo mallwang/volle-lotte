@@ -1,0 +1,870 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Lobby and multiplayer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <style>
+      :root {
+        color-scheme: light;
+
+        /* App tokens — copied verbatim from apps/frontend's current theme/tokens where they exist.
+           No theme file exists yet; use a neutral placeholder style and say so in design.md. */
+
+        /* Review-tool-only tokens */
+        --review-bg: #f3f2ee;
+        --review-ink: #2c2a25;
+        --review-muted: #7a7669;
+        --review-line: #ddd9d0;
+        --review-accent: #b45f2c;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--review-bg);
+        color: var(--review-ink);
+        font-family:
+          system-ui,
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        text-wrap: balance;
+      }
+
+      /* ============ Review-tool chrome (reusable as-is) ============ */
+
+      .review-header {
+        padding: 1.5rem 2rem 1rem;
+        border-bottom: 1px solid var(--review-line);
+      }
+      .review-eyebrow {
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--review-accent);
+        font-weight: 700;
+        margin: 0 0 0.25rem;
+      }
+      .review-header h1 {
+        margin: 0 0 0.35rem;
+        font-size: 1.35rem;
+        font-weight: 800;
+      }
+      .review-header p {
+        margin: 0;
+        color: var(--review-muted);
+        font-size: 0.9rem;
+        max-width: 68ch;
+        line-height: 1.5;
+      }
+
+      .review-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.25rem;
+        align-items: center;
+        padding: 0.85rem 2rem;
+        background: #fff;
+        border-bottom: 1px solid var(--review-line);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+      .control-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .control-group span.label {
+        font-size: 0.72rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--review-muted);
+        font-weight: 700;
+      }
+
+      .segmented {
+        display: inline-flex;
+        border: 1px solid var(--review-line);
+        border-radius: 8px;
+        overflow: hidden;
+        flex-wrap: wrap;
+      }
+      .segmented button {
+        appearance: none;
+        border: none;
+        background: #fff;
+        color: var(--review-ink);
+        font: inherit;
+        font-size: 0.83rem;
+        font-weight: 600;
+        padding: 0.4rem 0.75rem;
+        cursor: pointer;
+        border-right: 1px solid var(--review-line);
+      }
+      .segmented button:last-child {
+        border-right: none;
+      }
+      .segmented button:hover {
+        background: #f1efe9;
+      }
+      .segmented button:focus-visible {
+        outline: 2px solid var(--review-accent);
+        outline-offset: -2px;
+      }
+      .segmented button[aria-pressed='true'] {
+        background: var(--review-accent);
+        color: #fff;
+      }
+
+      .review-stage {
+        padding: 2rem;
+        display: flex;
+        justify-content: center;
+      }
+
+      .stage-frame {
+        width: 100%;
+        max-width: 1180px;
+        background: #d9d4c8;
+        border-radius: 14px;
+        padding: 1.25rem;
+        transition: max-width 0.2s ease;
+      }
+      .stage-frame[data-viewport='mobile'] {
+        max-width: 400px;
+      }
+
+      .stage-frame-label {
+        font-size: 0.72rem;
+        color: var(--review-muted);
+        text-align: center;
+        margin: 0 0 0.5rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .canvas {
+        background: var(--bg, #fff);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+        color: var(--text, #1a1a1a);
+      }
+
+      .review-footer {
+        padding: 0 2rem 2rem;
+        max-width: 1180px;
+        margin: 0 auto;
+        font-size: 0.85rem;
+        color: var(--review-muted);
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+      }
+      .review-footer code {
+        background: #fff;
+        border: 1px solid var(--review-line);
+        border-radius: 4px;
+        padding: 0.1em 0.4em;
+        font-size: 0.8em;
+      }
+      .review-footer h3 {
+        margin: 0.5rem 0 0;
+        font-size: 0.8rem;
+        color: var(--review-ink);
+      }
+      .review-footer ul {
+        margin: 0.25rem 0 0.5rem;
+        padding-left: 1.1rem;
+      }
+
+      /* ============ generic state-visibility mechanism (reusable as-is) ============ */
+
+      [data-screen] [data-show] {
+        display: none;
+      }
+      [data-screen='nick'] [data-show~='nick'] {
+        display: block;
+      }
+      [data-screen='main'] [data-show~='main'] {
+        display: block;
+      }
+      [data-screen='create'] [data-show~='create'] {
+        display: block;
+      }
+      [data-screen='room'] [data-show~='room'] {
+        display: block;
+      }
+      [data-screen='table'] [data-show~='table'] {
+        display: block;
+      }
+      [data-screen='paused'] [data-show~='paused'] {
+        display: block;
+      }
+      [data-screen='end'] [data-show~='end'] {
+        display: block;
+      }
+      [data-screen] [data-show].flex {
+        display: none;
+      }
+      [data-screen='nick'] [data-show~='nick'].flex {
+        display: flex;
+      }
+      [data-screen='main'] [data-show~='main'].flex {
+        display: flex;
+      }
+      [data-screen='create'] [data-show~='create'].flex {
+        display: flex;
+      }
+      [data-screen='room'] [data-show~='room'].flex {
+        display: flex;
+      }
+      [data-screen='table'] [data-show~='table'].flex {
+        display: flex;
+      }
+      [data-screen='paused'] [data-show~='paused'].flex {
+        display: flex;
+      }
+      [data-screen='end'] [data-show~='end'].flex {
+        display: flex;
+      }
+      /* Gotcha: if a shown block needs display:grid/flex (not the default block), the generic
+         `display:block` rule above wins on equal specificity (attribute selectors == class
+         selectors). Add a same-block override with an extra class qualifier, e.g.
+         [data-screen='X'] [data-show='X'].my-grid-block { display: grid; } */
+
+      /* ============ feature styles (authored fresh per feature) ============ */
+
+      .app {
+        --bg: #fbf7ee;
+        --text: #2b2620;
+        --muted: #8a8272;
+        --line: #d9d0bd;
+        --accent: #b45f2c;
+        --ok: #3f7d4e;
+        --warn: #b8892b;
+        --bad: #a8412f;
+        padding: 1rem;
+        min-height: 560px;
+        background: var(--bg);
+      }
+      .app h2 {
+        margin: 0.2rem 0 0.8rem;
+        font-size: 1.25rem;
+      }
+      .app h3 {
+        margin: 0 0 0.4rem;
+        font-size: 0.95rem;
+      }
+      .app p.hint {
+        color: var(--muted);
+        font-size: 0.85rem;
+        margin: 0.2rem 0 0.8rem;
+      }
+      .btn {
+        font: inherit;
+        font-weight: 700;
+        border: 2px solid var(--text);
+        background: #fff;
+        border-radius: 10px;
+        padding: 0.55rem 1rem;
+        min-height: 44px;
+        cursor: pointer;
+      }
+      .btn.primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+      .btn.danger {
+        border-color: var(--bad);
+        color: var(--bad);
+      }
+      .btn[disabled] {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+        margin: 0.5rem 0;
+        font-size: 0.85rem;
+        font-weight: 600;
+      }
+      .field .in {
+        border: 2px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        padding: 0.5rem 0.6rem;
+        min-height: 44px;
+        font-weight: 400;
+        display: flex;
+        align-items: center;
+      }
+      .card {
+        border: 2px solid var(--line);
+        border-radius: 12px;
+        background: #fff;
+        padding: 0.8rem;
+      }
+      .row {
+        display: flex;
+        gap: 0.6rem;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .row.sb {
+        justify-content: space-between;
+      }
+      .grid2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+      }
+      .center {
+        max-width: 420px;
+        margin: 2rem auto;
+      }
+      .tag {
+        font-size: 0.72rem;
+        font-weight: 700;
+        border-radius: 99px;
+        padding: 0.15rem 0.55rem;
+        border: 1.5px solid var(--line);
+        background: #fff;
+      }
+      .tag.ok {
+        border-color: var(--ok);
+        color: var(--ok);
+      }
+      .tag.warn {
+        border-color: var(--warn);
+        color: var(--warn);
+      }
+      .tag.bad {
+        border-color: var(--bad);
+        color: var(--bad);
+      }
+      .game {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border: 2px solid var(--line);
+        border-radius: 12px;
+        background: #fff;
+        padding: 0.7rem 0.9rem;
+        margin: 0.5rem 0;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+      }
+      .seats {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+        gap: 0.6rem;
+      }
+      .seat {
+        border: 2px solid var(--line);
+        border-radius: 12px;
+        background: #fff;
+        padding: 0.7rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        min-height: 92px;
+      }
+      .seat.locked {
+        background: #eee9dc;
+        color: var(--muted);
+        border-style: dashed;
+      }
+      .seat.empty {
+        border-style: dashed;
+      }
+      .seat.me {
+        border-color: var(--accent);
+      }
+      .sel {
+        border: 2px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        padding: 0.3rem 0.5rem;
+        font-size: 0.8rem;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .table {
+        display: grid;
+        grid-template-columns: 1fr 260px;
+        gap: 1rem;
+      }
+      .stage {
+        border: 2px solid var(--line);
+        border-radius: 12px;
+        background: #efe6d0;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+        align-items: center;
+      }
+      .cardface {
+        width: 90px;
+        height: 128px;
+        border: 3px solid var(--text);
+        border-radius: 10px;
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        font-weight: 800;
+        font-size: 0.85rem;
+        padding: 0.3rem;
+      }
+      .dice {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .die {
+        width: 52px;
+        height: 52px;
+        border: 3px solid var(--text);
+        border-radius: 10px;
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 1.3rem;
+      }
+      .die.sel {
+        background: #f4d9b5;
+        border-color: var(--accent);
+        min-height: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+      }
+      .die.dim {
+        opacity: 0.4;
+      }
+      .score {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.88rem;
+      }
+      .score td {
+        padding: 0.4rem 0.3rem;
+        border-bottom: 1px solid var(--line);
+      }
+      .score tr.active {
+        background: #f4d9b5;
+        font-weight: 800;
+      }
+      .score td.n {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      .log {
+        font-size: 0.78rem;
+        color: var(--muted);
+        max-height: 150px;
+        overflow: auto;
+        margin: 0.3rem 0 0;
+        padding-left: 1rem;
+      }
+      .banner {
+        border: 2px solid var(--warn);
+        background: #fbefcf;
+        border-radius: 10px;
+        padding: 0.6rem 0.8rem;
+        margin-bottom: 0.8rem;
+        font-weight: 600;
+      }
+      .banner.bad {
+        border-color: var(--bad);
+        background: #f6dcd5;
+      }
+      .actions {
+        display: flex;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .ph {
+        border: 2px dashed var(--muted);
+        color: var(--muted);
+        border-radius: 10px;
+        padding: 0.5rem;
+        font-size: 0.75rem;
+        text-align: center;
+      }
+      .stage-frame[data-viewport='mobile'] .grid2,
+      .stage-frame[data-viewport='mobile'] .table {
+        grid-template-columns: 1fr;
+      }
+      .stage-frame[data-viewport='mobile'] .seats {
+        grid-template-columns: 1fr;
+      }
+      .stage-frame[data-viewport='mobile'] .center {
+        margin: 0.5rem auto;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="review-header">
+      <p class="review-eyebrow">Non-functional review mockup</p>
+      <h1>Lobby and multiplayer</h1>
+      <p>
+        Screens for feature 002: nickname, main lobby, create game, game lobby with seats and
+        computer difficulty, game table, player-left handling, result. Switch screen and viewport
+        above.
+      </p>
+    </header>
+
+    <div class="review-controls">
+      <div class="control-group">
+        <span class="label">Viewport</span>
+        <div class="segmented" id="viewport-toggle">
+          <button type="button" data-viewport="desktop" aria-pressed="true">Desktop</button>
+          <button type="button" data-viewport="mobile" aria-pressed="false">Mobile</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <span class="label">Screen</span>
+        <div class="segmented" id="screen-toggle">
+          <button type="button" data-screen="nick" aria-pressed="false">1 Nickname</button
+          ><button type="button" data-screen="main" aria-pressed="false">2 Main lobby</button
+          ><button type="button" data-screen="create" aria-pressed="false">3 Create game</button
+          ><button type="button" data-screen="room" aria-pressed="true">4 Game lobby (host)</button
+          ><button type="button" data-screen="table" aria-pressed="false">5 Game table</button
+          ><button type="button" data-screen="paused" aria-pressed="false">6 Player left</button
+          ><button type="button" data-screen="end" aria-pressed="false">7 Result</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="review-stage">
+      <div class="stage-frame" id="stage-frame" data-viewport="desktop">
+        <p class="stage-frame-label" id="stage-frame-label">Desktop</p>
+        <div class="canvas" data-screen="room" id="canvas">
+          <div class="app">
+            <div data-show="nick" class="center card">
+              <h2>Volle Lotte</h2>
+              <p class="hint">Pick a nickname to play. No account needed.</p>
+              <label class="field">Nickname<span class="in">Markus</span></label>
+              <button class="btn primary" style="width: 100%">Continue</button>
+            </div>
+
+            <div data-show="main">
+              <div class="row sb">
+                <h2>Open games</h2>
+                <span class="row"
+                  ><span class="tag">You: Markus</span
+                  ><button class="btn primary">Create game</button></span
+                >
+              </div>
+              <div class="game">
+                <div>
+                  <b>Friday round</b><br /><span class="hint"
+                    >Host: Anna · target 6,000 · 2 / 4 players</span
+                  >
+                </div>
+                <span class="row"
+                  ><span class="tag">🔒 password</span><button class="btn">Join</button></span
+                >
+              </div>
+              <div class="game">
+                <div>
+                  <b>Family night</b><br /><span class="hint"
+                    >Host: Tom · target 10,000 · 5 / 8 players</span
+                  >
+                </div>
+                <span class="row"
+                  ><span class="tag">🔒 password</span><button class="btn">Join</button></span
+                >
+              </div>
+              <div class="game">
+                <div>
+                  <b>Quick one</b><br /><span class="hint"
+                    >Host: Lea · target 6,000 · 2 / 2 players</span
+                  >
+                </div>
+                <span class="row"
+                  ><span class="tag bad">full</span><button class="btn" disabled>Join</button></span
+                >
+              </div>
+              <div class="game">
+                <div>
+                  <b>Already running</b><br /><span class="hint">Host: Max · in progress</span>
+                </div>
+                <span class="tag">running</span>
+              </div>
+              <div class="card" style="margin-top: 1rem">
+                <h3>Join "Friday round"</h3>
+                <div class="row">
+                  <span class="field" style="flex: 1"><span class="in">••••••</span></span
+                  ><button class="btn primary">Join</button>
+                </div>
+                <p class="hint" style="margin: 0.3rem 0 0; color: var(--bad)">
+                  Wrong password. 3 attempts left. (Too many attempts: "Try again in 10 minutes".)
+                </p>
+              </div>
+            </div>
+
+            <div data-show="create" class="center card">
+              <h2>Create game</h2>
+              <label class="field">Game name<span class="in">Friday round</span></label>
+              <label class="field">Password<span class="in">••••••</span></label>
+              <label class="field"
+                >Players (seats)<span class="in"
+                  >4 &nbsp; ▾ &nbsp;<span class="hint" style="margin: 0">2–8</span></span
+                ></label
+              >
+              <h3 style="margin-top: 0.8rem">Rules</h3>
+              <label class="field">Target score<span class="in">6,000</span></label>
+              <label class="field"
+                >Minimum points to bank<span class="in">350 (0 = off)</span></label
+              >
+              <label class="field">Four or more of a kind doubles<span class="in">on</span></label>
+              <label class="field"
+                >Cards per type<span class="in"
+                  >Default set (56 cards) · <u>customize</u></span
+                ></label
+              >
+              <p class="hint">Rules cannot be changed after creating the game.</p>
+              <button class="btn primary" style="width: 100%">Create and open lobby</button>
+            </div>
+
+            <div data-show="room">
+              <div class="row sb">
+                <div>
+                  <h2 style="margin-bottom: 0">Friday round</h2>
+                  <span class="hint">Target 6,000 · minimum 350 · doubling on</span>
+                </div>
+                <span class="row"><button class="btn danger">Leave</button></span>
+              </div>
+              <div class="seats">
+                <div class="seat me">
+                  <div class="row sb"><b>Markus ★</b><span class="tag">host</span></div>
+                  <span class="tag ok" style="align-self: flex-start">Ready ✓</span
+                  ><span class="hint" style="margin: 0">That's you</span>
+                </div>
+                <div class="seat">
+                  <div class="row sb"><b>Anna</b><span class="tag">human</span></div>
+                  <span class="tag warn" style="align-self: flex-start">Not ready</span
+                  ><span class="row"
+                    ><span class="hint" style="margin: 0">Host:</span
+                    ><button class="btn" style="min-height: 36px; padding: 0.2rem 0.6rem">
+                      Make computer
+                    </button></span
+                  >
+                </div>
+                <div class="seat">
+                  <div class="row sb"><b>Computer</b><span class="tag">computer</span></div>
+                  <div class="sel"><span>Difficulty: Hard</span><span>▾</span></div>
+                  <span class="hint" style="margin: 0">Easy · Medium · Hard · Random (hidden)</span>
+                </div>
+                <div class="seat empty">
+                  <b>Free seat</b><span class="hint" style="margin: 0">Waiting for a player…</span>
+                  <div class="row">
+                    <button class="btn" style="min-height: 36px; padding: 0.2rem 0.6rem">
+                      Add computer</button
+                    ><button class="btn" style="min-height: 36px; padding: 0.2rem 0.6rem">
+                      🔒 Lock
+                    </button>
+                  </div>
+                </div>
+                <div class="seat locked">
+                  <b>🔒 Locked</b><span style="font-size: 0.8rem">Not in use</span
+                  ><button
+                    class="btn"
+                    style="min-height: 36px; padding: 0.2rem 0.6rem; align-self: flex-start"
+                  >
+                    Enable
+                  </button>
+                </div>
+                <div class="seat locked">
+                  <b>🔒 Locked</b><span style="font-size: 0.8rem">Not in use</span
+                  ><button
+                    class="btn"
+                    style="min-height: 36px; padding: 0.2rem 0.6rem; align-self: flex-start"
+                  >
+                    Enable
+                  </button>
+                </div>
+              </div>
+              <div class="row sb" style="margin-top: 1rem">
+                <span class="hint" style="margin: 0"
+                  >Start needs at least 2 players and every human ready. Waiting for: Anna.</span
+                ><span class="row"
+                  ><button class="btn">Not ready</button
+                  ><button class="btn primary" disabled>Start game</button></span
+                >
+              </div>
+              <ul class="log">
+                <li>Anna joined</li>
+                <li>Markus created the game</li>
+              </ul>
+            </div>
+
+            <div data-show="table paused">
+              <div data-show="paused" class="banner">
+                ⚠ Anna lost the connection. Waiting for her to return… <b>0:42</b>
+              </div>
+              <div data-show="paused" class="banner bad">
+                Anna did not return. Host decision (Markus):
+                <span class="row" style="margin-top: 0.4rem"
+                  ><button class="btn">Put in computer ▾ difficulty</button
+                  ><button class="btn">Free the seat</button></span
+                >
+                <span class="hint" style="margin: 0.3rem 0 0"
+                  >The game is paused until you decide. Other players see: "Waiting for the
+                  host…"</span
+                >
+              </div>
+              <div class="table">
+                <div class="stage">
+                  <div class="row sb" style="width: 100%">
+                    <b>Markus' turn</b><span class="tag">Turn points: 450</span>
+                  </div>
+                  <div class="row" style="gap: 1rem; align-items: flex-start">
+                    <div class="cardface">Bonus<br />300</div>
+                    <div>
+                      <h3>Throw 2</h3>
+                      <div class="dice">
+                        <span class="die">1</span><span class="die">5</span
+                        ><span class="die dim">2</span><span class="die dim">3</span>
+                      </div>
+                      <p class="hint">Tap a scoring die to set it aside.</p>
+                    </div>
+                  </div>
+                  <div class="ph">[dice animation — separate feature]</div>
+                  <div class="actions">
+                    <button class="btn primary">Throw remaining dice</button
+                    ><button class="btn">Bank 450</button>
+                  </div>
+                  <p class="hint" style="margin: 0; color: var(--bad)">
+                    Rejected: set aside at least one scoring die first.
+                  </p>
+                </div>
+                <div>
+                  <div class="card">
+                    <h3>Score · target 6,000</h3>
+                    <table class="score">
+                      <tr class="active">
+                        <td>▶ Markus</td>
+                        <td class="n">2,350</td>
+                      </tr>
+                      <tr>
+                        <td>Anna <span class="tag bad">offline</span></td>
+                        <td class="n">1,800</td>
+                      </tr>
+                      <tr>
+                        <td>Computer 🤖</td>
+                        <td class="n">3,100</td>
+                      </tr>
+                    </table>
+                  </div>
+                  <div class="card" style="margin-top: 0.6rem">
+                    <h3>Event log</h3>
+                    <ul class="log">
+                      <li>Markus drew Bonus 300</li>
+                      <li>Computer banked 650</li>
+                      <li>Anna disconnected</li>
+                      <li>Computer drew Stop</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div data-show="end" class="center card">
+              <h2>Game over</h2>
+              <p class="hint">Computer reached 6,000.</p>
+              <table class="score">
+                <tr>
+                  <td>🥇 1</td>
+                  <td>Computer</td>
+                  <td class="n">6,150</td>
+                </tr>
+                <tr>
+                  <td>🥈 2</td>
+                  <td>Markus</td>
+                  <td class="n">4,200</td>
+                </tr>
+                <tr>
+                  <td>🥈 2</td>
+                  <td>Anna</td>
+                  <td class="n">4,200</td>
+                </tr>
+              </table>
+              <p class="hint">Equal scores share a rank.</p>
+              <button class="btn primary" style="width: 100%">Back to main lobby</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="review-footer">
+      <h3>Out of scope for this mockup</h3>
+      <ul>
+        <li>Dice and cup look, animation, manual throw (dice UI feature)</li>
+        <li>
+          Theme and hand-drawn style: no theme or component library exists yet, so this uses a
+          neutral placeholder look
+        </li>
+        <li>Validation and server rules (password hashing, rate limits, tokens)</li>
+      </ul>
+    </footer>
+
+    <script>
+      const canvas = document.getElementById('canvas');
+      const stageFrame = document.getElementById('stage-frame');
+      const stageLabel = document.getElementById('stage-frame-label');
+
+      document.getElementById('viewport-toggle').addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-viewport]');
+        if (!btn) return;
+        const value = btn.getAttribute('data-viewport');
+        stageFrame.setAttribute('data-viewport', value);
+        stageLabel.textContent = value === 'mobile' ? 'Mobile (phone)' : 'Desktop';
+        [...document.getElementById('viewport-toggle').querySelectorAll('button')].forEach((b) =>
+          b.setAttribute('aria-pressed', String(b === btn)),
+        );
+      });
+
+      document.getElementById('screen-toggle').addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-screen]');
+        if (!btn) return;
+        const value = btn.getAttribute('data-screen');
+        canvas.setAttribute('data-screen', value);
+        [...document.getElementById('screen-toggle').querySelectorAll('button')].forEach((b) =>
+          b.setAttribute('aria-pressed', String(b === btn)),
+        );
+      });
+    </script>
+  </body>
+</html>

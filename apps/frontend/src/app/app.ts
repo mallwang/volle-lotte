@@ -1,13 +1,28 @@
-import { Component } from '@angular/core';
-import { RouterModule } from '@angular/router';
-import { NxWelcome } from './nx-welcome';
+import { Component, effect, inject } from '@angular/core';
+import { Router, RouterOutlet } from '@angular/router';
+import { SocketService } from './core/socket.service';
 
 @Component({
-  imports: [NxWelcome, RouterModule],
+  imports: [RouterOutlet],
   selector: 'app-root',
   templateUrl: './app.html',
-  styleUrl: './app.css',
 })
 export class App {
-  protected title = 'frontend';
+  protected readonly socket = inject(SocketService);
+  private readonly router = inject(Router);
+  private signedIn = false;
+
+  constructor() {
+    effect(() => {
+      const session = this.socket.session();
+      const game = this.socket.game();
+      if (session) {
+        this.signedIn = true;
+        if (game) void this.router.navigate(['/game', game.id]);
+      } else if (this.signedIn) {
+        this.signedIn = false;
+        void this.router.navigateByUrl('/nickname');
+      }
+    });
+  }
 }
