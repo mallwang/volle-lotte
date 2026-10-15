@@ -6,6 +6,8 @@
 
 **Status**: Draft
 
+**Design**: [design.md](design.md) (approved layout and Terracotta palette; mockup in [mockup.html](mockup.html))
+
 **Input**: User description: "UI foundation with PrimeNG (feature 003). Replace the minimal existing frontend screens (nickname, lobby, create game, game lobby, table, result, disconnect banner) with a polished, game-appropriate UI and make the game playable end to end afterwards, with a simple placeholder UI for dice, cards and turn actions (select dice by tap, throw, bank, end turn; no animation, cup drag or hand-drawn art yet). Warm game atmosphere with an orange and pastel palette; dark mode supported, default follows the system setting, optional manual toggle. Scope: app shell and layout, responsive (mobile first, touch friendly), accessibility basics, table layout for 2-8 players, scoreboard, game log, timers and disconnect decision dialog, toasts and errors. Out of scope: hand-drawn dice/cup/card art, dice animation, cup drag, save/load, PWA, Docker, accounts."
 
 ## User Scenarios & Testing _(mandatory)_

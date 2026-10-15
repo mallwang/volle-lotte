@@ -1,0 +1,1141 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Volle Lotte – UI foundation mockup</title>
+    <style>
+      :root {
+        --review-bg: #f3f2ee;
+        --review-ink: #2c2a25;
+        --review-muted: #7a7669;
+        --review-line: #ddd9d0;
+        --review-accent: #b45f2c;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--review-bg);
+        color: var(--review-ink);
+        font-family:
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          sans-serif;
+      }
+      .review-header {
+        padding: 1.25rem 2rem 0.75rem;
+        border-bottom: 1px solid var(--review-line);
+      }
+      .review-eyebrow {
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--review-accent);
+        font-weight: 700;
+        margin: 0 0 0.25rem;
+      }
+      .review-header h1 {
+        margin: 0 0 0.3rem;
+        font-size: 1.3rem;
+      }
+      .review-header p {
+        margin: 0;
+        color: var(--review-muted);
+        font-size: 0.9rem;
+        max-width: 80ch;
+        line-height: 1.5;
+      }
+      .review-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem 1.5rem;
+        padding: 0.75rem 2rem;
+        background: #fff;
+        border-bottom: 1px solid var(--review-line);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+      .control-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .label {
+        font-size: 0.72rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--review-muted);
+        font-weight: 700;
+      }
+      .segmented {
+        display: inline-flex;
+        border: 1px solid var(--review-line);
+        border-radius: 8px;
+        overflow: hidden;
+        flex-wrap: wrap;
+      }
+      .segmented button {
+        appearance: none;
+        border: 0;
+        border-right: 1px solid var(--review-line);
+        background: #fff;
+        color: var(--review-ink);
+        font: inherit;
+        font-size: 0.83rem;
+        font-weight: 600;
+        padding: 0.4rem 0.7rem;
+        cursor: pointer;
+      }
+      .segmented button:last-child {
+        border-right: 0;
+      }
+      .segmented button[aria-pressed='true'] {
+        background: var(--review-accent);
+        color: #fff;
+      }
+      .review-stage {
+        padding: 1.5rem 2rem;
+        display: flex;
+        justify-content: center;
+      }
+      .stage-frame {
+        width: 100%;
+        max-width: 1180px;
+        background: #d9d4c8;
+        border-radius: 14px;
+        padding: 1.25rem;
+        transition: max-width 0.2s;
+      }
+      .stage-frame[data-viewport='mobile'] {
+        max-width: 400px;
+      }
+      .stage-frame-label {
+        font-size: 0.72rem;
+        color: var(--review-muted);
+        text-align: center;
+        margin: 0 0 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .review-footer {
+        padding: 0 2rem 2rem;
+        max-width: 1180px;
+        margin: 0 auto;
+        font-size: 0.85rem;
+        color: var(--review-muted);
+      }
+      .review-footer ul {
+        padding-left: 1.1rem;
+      }
+
+      /* ===== App tokens (proposal: "Apricot") – light ===== */
+      .canvas {
+        --bg: #fff6ec;
+        --surface: #fffdfa;
+        --surface-2: #ffe9d2;
+        --line: #f0d4b8;
+        --text: #3b2a1e;
+        --muted: #7a5f4a;
+        --primary: #b84f08;
+        --on-primary: #fff;
+        --focus: #1d4ed8;
+        --mint: #cdeedb;
+        --on-mint: #1d4a33;
+        --lav: #e3dbf6;
+        --on-lav: #3d2f66;
+        --butter: #fff0b3;
+        --on-butter: #5a4500;
+        --rose: #ffd6d6;
+        --on-rose: #7a1f1f;
+        background: var(--bg);
+        color: var(--text);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+        font-size: 15px;
+      }
+      .canvas[data-theme='dark'] {
+        --bg: #1d1611;
+        --surface: #2a2019;
+        --surface-2: #3a2c21;
+        --line: #4d3b2c;
+        --text: #f7e9da;
+        --muted: #c9b09a;
+        --primary: #ffa24d;
+        --on-primary: #2a1500;
+        --focus: #8fb4ff;
+        --mint: #244a38;
+        --on-mint: #c9f1db;
+        --lav: #3a3159;
+        --on-lav: #e0d8fa;
+        --butter: #4d4018;
+        --on-butter: #ffefb0;
+        --rose: #5a2626;
+        --on-rose: #ffd9d9;
+      }
+
+      .canvas[data-palette='terracotta'] {
+        --bg: #fbf1ea;
+        --surface: #fffaf6;
+        --surface-2: #f3dccd;
+        --line: #e6c3ad;
+        --text: #3a241b;
+        --muted: #7b5a4c;
+        --primary: #a8431f;
+        --mint: #d3e8d6;
+        --on-mint: #1f4a2c;
+        --lav: #e6dcef;
+        --on-lav: #44305f;
+        --butter: #f6e3a8;
+        --on-butter: #5a4300;
+        --rose: #f6d0cb;
+        --on-rose: #7a2118;
+      }
+      .canvas[data-palette='terracotta'][data-theme='dark'] {
+        --bg: #1c1411;
+        --surface: #2a1d18;
+        --surface-2: #3b2a22;
+        --line: #52382c;
+        --text: #f5e6dc;
+        --muted: #cbaa98;
+        --primary: #f08a5d;
+        --on-primary: #2a1008;
+        --mint: #244a38;
+        --on-mint: #c9f1db;
+        --lav: #3a3159;
+        --on-lav: #e0d8fa;
+        --butter: #4d4018;
+        --on-butter: #ffefb0;
+        --rose: #5a2626;
+        --on-rose: #ffd9d9;
+      }
+      .canvas[data-palette='sorbet'] {
+        --bg: #fff4f6;
+        --surface: #fffafb;
+        --surface-2: #ffe1e8;
+        --line: #f6c9d5;
+        --text: #3a2430;
+        --muted: #7d5868;
+        --primary: #c8442a;
+        --mint: #c9f0e2;
+        --on-mint: #14493a;
+        --lav: #e1ddfb;
+        --on-lav: #352e6b;
+        --butter: #ffeeb0;
+        --on-butter: #5a4500;
+        --rose: #ffd3d3;
+        --on-rose: #7a1f1f;
+      }
+      .canvas[data-palette='sorbet'][data-theme='dark'] {
+        --bg: #20161b;
+        --surface: #2d1f26;
+        --surface-2: #3e2a34;
+        --line: #55394a;
+        --text: #fbe8ee;
+        --muted: #d1aab9;
+        --primary: #ff9a7a;
+        --on-primary: #2d0f06;
+        --mint: #1f4a40;
+        --on-mint: #c9f1e4;
+        --lav: #3a3466;
+        --on-lav: #e3dffb;
+        --butter: #4d4018;
+        --on-butter: #ffefb0;
+        --rose: #5a2626;
+        --on-rose: #ffd9d9;
+      }
+      .log {
+        height: 200px;
+        max-height: none;
+      }
+      .canvas button,
+      .canvas input,
+      .canvas select {
+        font: inherit;
+        min-height: 44px;
+      }
+      .canvas :focus-visible {
+        outline: 3px solid var(--focus);
+        outline-offset: 2px;
+      }
+      .app-bar {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.6rem 1rem;
+        background: var(--surface);
+        border-bottom: 1px solid var(--line);
+      }
+      .brand {
+        font-weight: 800;
+        font-size: 1.1rem;
+        color: var(--primary);
+        margin-right: auto;
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.15rem 0.6rem;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        background: var(--surface-2);
+      }
+      .chip.mint {
+        background: var(--mint);
+        color: var(--on-mint);
+      }
+      .chip.lav {
+        background: var(--lav);
+        color: var(--on-lav);
+      }
+      .chip.butter {
+        background: var(--butter);
+        color: var(--on-butter);
+      }
+      .chip.rose {
+        background: var(--rose);
+        color: var(--on-rose);
+      }
+      .btn {
+        border: 2px solid var(--primary);
+        background: transparent;
+        color: var(--primary);
+        border-radius: 10px;
+        padding: 0.4rem 1rem;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .btn.primary {
+        background: var(--primary);
+        color: var(--on-primary);
+      }
+      .btn:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+        border-style: dashed;
+      }
+      .page {
+        padding: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 1rem;
+      }
+      .card h2,
+      .card h3 {
+        margin: 0 0 0.5rem;
+        font-size: 1.05rem;
+      }
+      .narrow {
+        max-width: 420px;
+        margin: 1rem auto;
+        width: 100%;
+      }
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        margin-bottom: 0.75rem;
+      }
+      .field input,
+      .field select {
+        border: 2px solid var(--line);
+        background: var(--bg);
+        color: var(--text);
+        border-radius: 10px;
+        padding: 0.3rem 0.7rem;
+      }
+      .field .err {
+        color: var(--on-rose);
+        background: var(--rose);
+        border-radius: 8px;
+        padding: 0.2rem 0.5rem;
+        font-size: 0.85rem;
+      }
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+      }
+      .grid-seats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.75rem;
+      }
+      .seat {
+        border: 2px solid var(--line);
+        border-radius: 14px;
+        padding: 0.75rem;
+        background: var(--surface);
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        min-height: 120px;
+      }
+      .seat.locked {
+        background: var(--surface-2);
+        border-style: dashed;
+        color: var(--muted);
+      }
+      .seat.you {
+        border-color: var(--primary);
+      }
+      .game-row {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.7rem;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--surface);
+      }
+      .game-row + .game-row {
+        margin-top: 0.5rem;
+      }
+      .game-row .grow {
+        flex: 1;
+      }
+      .table-layout {
+        display: grid;
+        grid-template-columns: 1fr 300px;
+        gap: 1rem;
+      }
+      .players {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.5rem;
+      }
+      .ptile {
+        border: 2px solid var(--line);
+        border-radius: 12px;
+        padding: 0.5rem;
+        background: var(--surface);
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+      }
+      .ptile.active {
+        border-color: var(--primary);
+        background: var(--surface-2);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 30%, transparent);
+      }
+      .ptile .score {
+        font-size: 1.3rem;
+        font-weight: 800;
+      }
+      .felt {
+        background: var(--surface-2);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.9rem;
+        align-items: center;
+      }
+      .gamecard {
+        width: 84px;
+        height: 116px;
+        border-radius: 10px;
+        border: 2px solid var(--primary);
+        background: var(--surface);
+        display: grid;
+        place-items: center;
+        text-align: center;
+        font-weight: 800;
+        padding: 0.3rem;
+      }
+      .dice {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        justify-content: center;
+      }
+      .die {
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+        border: 2px solid var(--text);
+        background: var(--surface);
+        font-size: 1.5rem;
+        font-weight: 800;
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        position: relative;
+      }
+      .die[aria-pressed='true'] {
+        background: var(--primary);
+        color: var(--on-primary);
+        border-color: var(--primary);
+        transform: translateY(-6px);
+      }
+      .die[aria-pressed='true']::after {
+        content: '✓';
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background: var(--on-mint);
+        color: var(--mint);
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        font-size: 0.75rem;
+        display: grid;
+        place-items: center;
+      }
+      .die.aside {
+        opacity: 0.6;
+        border-style: dashed;
+        cursor: default;
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: center;
+      }
+      .hint {
+        font-size: 0.82rem;
+        color: var(--muted);
+      }
+      .log {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        max-height: 240px;
+        overflow: auto;
+        font-size: 0.88rem;
+      }
+      .log li {
+        padding: 0.3rem 0;
+        border-bottom: 1px dashed var(--line);
+      }
+      table.score {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      table.score td,
+      table.score th {
+        padding: 0.3rem 0.2rem;
+        text-align: left;
+        border-bottom: 1px solid var(--line);
+      }
+      .toast {
+        position: absolute;
+        right: 1rem;
+        top: 4rem;
+        background: var(--on-mint);
+        color: var(--mint);
+        border-radius: 10px;
+        padding: 0.6rem 0.9rem;
+        font-weight: 700;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+      }
+      .overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        display: grid;
+        place-items: center;
+      }
+      .dialog {
+        background: var(--surface);
+        border-radius: 16px;
+        padding: 1.25rem;
+        width: min(92%, 420px);
+        border: 2px solid var(--primary);
+      }
+      .banner {
+        background: var(--butter);
+        color: var(--on-butter);
+        border-radius: 12px;
+        padding: 0.6rem 0.9rem;
+        font-weight: 700;
+      }
+      .stage {
+        position: relative;
+      }
+      .swatches {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+      .sw {
+        padding: 0.5rem 0.8rem;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 0.85rem;
+        border: 1px solid var(--line);
+      }
+      .rank {
+        display: grid;
+        grid-template-columns: 2.5rem 1fr auto;
+        gap: 0.5rem;
+        padding: 0.6rem;
+        border-radius: 12px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        align-items: center;
+      }
+      .rank + .rank {
+        margin-top: 0.4rem;
+      }
+      .rank.first {
+        background: var(--butter);
+        color: var(--on-butter);
+        border-color: transparent;
+      }
+
+      [data-screen] [data-show] {
+        display: none;
+      }
+      [data-screen='nick'] [data-show~='nick'],
+      [data-screen='lobby'] [data-show~='lobby'],
+      [data-screen='create'] [data-show~='create'],
+      [data-screen='globby'] [data-show~='globby'],
+      [data-screen='table'] [data-show~='table'],
+      [data-screen='table8'] [data-show~='table8'],
+      [data-screen='table'] [data-show~='tablemy'],
+      [data-screen='table8'] [data-show~='tablemy'],
+      [data-screen='other'] [data-show~='table'],
+      [data-screen='other'] [data-show~='tableother'],
+      [data-screen='disc'] [data-show~='table'],
+      [data-screen='disc'] [data-show~='disc'],
+      [data-screen='hostdlg'] [data-show~='table'],
+      [data-screen='hostdlg'] [data-show~='hostdlg'],
+      [data-screen='result'] [data-show~='result'],
+      [data-screen='theme'] [data-show~='theme'] {
+        display: block;
+      }
+      [data-screen='table8'] [data-show~='p8'],
+      [data-screen='table8'] [data-show~='table8'] {
+        display: block;
+      }
+      [data-screen='table'] [data-show~='p8'],
+      [data-screen='other'] [data-show~='p8'] {
+        display: none;
+      }
+      [data-show~='toast'] {
+        display: none;
+      }
+      [data-screen='table'] [data-show~='toast'],
+      [data-screen='disc'] [data-show~='toast'] {
+        display: block;
+      }
+
+      /* mobile: stacked */
+      [data-viewport='mobile'] .grid-2,
+      [data-viewport='mobile'] .table-layout {
+        grid-template-columns: 1fr;
+      }
+      [data-viewport='mobile'] .grid-seats {
+        grid-template-columns: 1fr 1fr;
+      }
+      [data-viewport='mobile'] .players {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      [data-viewport='mobile'] .page {
+        padding: 0.75rem;
+      }
+      [data-viewport='mobile'] .hide-m {
+        display: none !important;
+      }
+      [data-viewport='mobile'] .ptile.compact {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="review-header">
+      <p class="review-eyebrow">Non-functional review mockup</p>
+      <h1>
+        Feature 003 – UI foundation (approved palette: Terracotta; others kept for comparison)
+      </h1>
+      <p>
+        Static layout and look proposal for all screens, in light and dark. Colours are a proposal
+        for review; PrimeNG would carry them through a custom preset. Dice and cards are
+        deliberately placeholders (labelled tiles). Use the toggles to switch screen, viewport and
+        theme.
+      </p>
+    </header>
+
+    <div class="review-controls">
+      <div class="control-group">
+        <span class="label">Viewport</span>
+        <div class="segmented" id="vp">
+          <button data-v="desktop" aria-pressed="true">Desktop</button
+          ><button data-v="mobile" aria-pressed="false">Mobile</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <span class="label">Palette</span>
+        <div class="segmented" id="pl">
+          <button data-p="apricot" aria-pressed="false">Apricot</button
+          ><button data-p="terracotta" aria-pressed="true">Terracotta</button
+          ><button data-p="sorbet" aria-pressed="false">Sorbet</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <span class="label">Theme</span>
+        <div class="segmented" id="th">
+          <button data-t="light" aria-pressed="true">Light</button
+          ><button data-t="dark" aria-pressed="false">Dark</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <span class="label">Screen</span>
+        <div class="segmented" id="sc">
+          <button data-s="theme" aria-pressed="true">Swatches</button
+          ><button data-s="nick" aria-pressed="false">Nickname</button
+          ><button data-s="lobby" aria-pressed="false">Lobby</button>
+          <button data-s="create" aria-pressed="false">Create game</button
+          ><button data-s="globby" aria-pressed="false">Game lobby</button>
+          <button data-s="table" aria-pressed="false">Table (my turn)</button
+          ><button data-s="other" aria-pressed="false">Table (other's turn)</button>
+          <button data-s="table8" aria-pressed="false">Table (8 players)</button
+          ><button data-s="disc" aria-pressed="false">Player offline</button>
+          <button data-s="hostdlg" aria-pressed="false">Host decision</button
+          ><button data-s="result" aria-pressed="false">Result</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="review-stage">
+      <div class="stage-frame" id="frame" data-viewport="desktop">
+        <p class="stage-frame-label" id="flabel">Desktop (≥ 1024 px)</p>
+        <div
+          class="canvas stage"
+          id="canvas"
+          data-screen="theme"
+          data-theme="light"
+          data-palette="terracotta"
+          data-viewport="desktop"
+        >
+          <div class="app-bar">
+            <span class="brand">🎲 Volle Lotte</span>
+            <span class="chip lav" data-show="globby table other table8 disc hostdlg"
+              >Game: Friday night</span
+            >
+            <span class="chip">Anna</span>
+            <button
+              class="btn"
+              aria-label="Toggle dark mode"
+              onclick="document.querySelector('#th [aria-pressed=false]').click()"
+            >
+              ◐
+            </button>
+          </div>
+
+          <!-- toast -->
+          <div class="toast" role="status" data-show="toast">Ben joined the game</div>
+
+          <!-- Palette -->
+          <div class="page" data-show="theme">
+            <div class="card">
+              <h2>Palette "Apricot": warm orange, pastel accents</h2>
+              <p class="hint">
+                Primary is a darker orange so white text keeps AA contrast (≈ 5:1); dark mode flips
+                to a light orange on a warm brown. Pastels carry status, always together with text
+                or an icon.
+              </p>
+              <div class="swatches">
+                <span class="sw" style="background: var(--primary); color: var(--on-primary)"
+                  >Primary</span
+                >
+                <span class="sw" style="background: var(--surface-2)">Peach surface</span>
+                <span class="sw" style="background: var(--mint); color: var(--on-mint)"
+                  >Mint · ready / ok</span
+                >
+                <span class="sw" style="background: var(--lav); color: var(--on-lav)"
+                  >Lavender · info / host</span
+                >
+                <span class="sw" style="background: var(--butter); color: var(--on-butter)"
+                  >Butter · warning</span
+                >
+                <span class="sw" style="background: var(--rose); color: var(--on-rose)"
+                  >Rose · error / bust</span
+                >
+              </div>
+            </div>
+            <div class="grid-2">
+              <div class="card">
+                <h3>Buttons and fields</h3>
+                <div class="field"><label>Nickname</label><input value="Anna" /></div>
+                <div class="field">
+                  <label>Password</label><input value="•••" /><span class="err"
+                    >⚠ Wrong password, 2 attempts left</span
+                  >
+                </div>
+                <div class="actions">
+                  <button class="btn primary">Primary</button><button class="btn">Secondary</button
+                  ><button class="btn" disabled>Disabled</button>
+                </div>
+              </div>
+              <div class="card">
+                <h3>Status chips</h3>
+                <div class="actions" style="justify-content: flex-start">
+                  <span class="chip mint">✓ Ready</span><span class="chip lav">★ Host</span
+                  ><span class="chip butter">⏳ Offline 42 s</span
+                  ><span class="chip rose">✕ Bust</span><span class="chip">🤖 Computer</span
+                  ><span class="chip">🔒 Locked</span>
+                </div>
+                <p class="hint">
+                  Fonts: system UI stack for body; a rounded display face for the logo/headings
+                  could follow with the hand-drawn art.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Nickname -->
+          <div class="page" data-show="nick">
+            <div class="card narrow">
+              <h2>Welcome to Volle Lotte</h2>
+              <div class="field">
+                <label for="n">Your nickname</label><input id="n" placeholder="e.g. Anna" />
+              </div>
+              <button class="btn primary" style="width: 100%">Continue</button>
+            </div>
+          </div>
+
+          <!-- Main lobby -->
+          <div class="page" data-show="lobby">
+            <div style="display: flex; justify-content: space-between; align-items: center">
+              <h2 style="margin: 0">Open games</h2>
+              <button class="btn primary">＋ Create game</button>
+            </div>
+            <div>
+              <div class="game-row">
+                <div class="grow">
+                  <strong>Friday night</strong>
+                  <div class="hint">Host Ben · target 6,000 · min 350</div>
+                </div>
+                <span class="chip">👥 3 / 5</span><span class="chip">🔒</span
+                ><button class="btn primary">Join</button>
+              </div>
+              <div class="game-row">
+                <div class="grow">
+                  <strong>Family round</strong>
+                  <div class="hint">Host Oma · target 10,000 · min 350</div>
+                </div>
+                <span class="chip rose">Full 8 / 8</span><span class="chip">🔒</span
+                ><button class="btn" disabled>Join</button>
+              </div>
+              <div class="game-row">
+                <div class="grow">
+                  <strong>Quick game</strong>
+                  <div class="hint">Host Chris · target 3,000 · min 0</div>
+                </div>
+                <span class="chip butter">Running</span><span class="chip">🔒</span
+                ><button class="btn" disabled>Join</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Create -->
+          <div class="page" data-show="create">
+            <div class="card narrow">
+              <h2>Create game</h2>
+              <div class="field"><label>Game name</label><input value="Friday night" /></div>
+              <div class="field">
+                <label>Password</label><input type="password" value="secret" />
+              </div>
+              <div class="field"><label>Seats (2–8)</label><input value="5" /></div>
+              <div class="field"><label>Target score</label><input value="6000" /></div>
+              <div class="field">
+                <label>Minimum points to bank</label><input value="350" /><span class="err"
+                  >⚠ Must be 0 or more</span
+                >
+              </div>
+              <p class="hint">
+                Rules are fixed once the game is created. Card counts: default set (56 cards),
+                adjustable.
+              </p>
+              <div class="actions">
+                <button class="btn">Cancel</button><button class="btn primary">Create game</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Game lobby -->
+          <div class="page" data-show="globby">
+            <div class="grid-seats">
+              <div class="seat you">
+                <strong>Anna (you)</strong><span class="chip lav">★ Host</span
+                ><span class="chip mint">✓ Ready</span>
+              </div>
+              <div class="seat">
+                <strong>Ben</strong><span class="chip">Human</span
+                ><span class="chip butter">Not ready</span
+                ><button class="btn hide-m">Make computer</button>
+              </div>
+              <div class="seat">
+                <strong>Computer 1</strong><span class="chip">🤖 Computer</span
+                ><select aria-label="Difficulty">
+                  <option>Random (hidden)</option>
+                </select>
+              </div>
+              <div class="seat">
+                <strong>Cleo</strong><span class="chip">Human</span
+                ><span class="chip rose">⚠ Offline</span>
+              </div>
+              <div class="seat">
+                <em>Free seat</em><span class="hint">Waiting for a player</span
+                ><button class="btn">Lock seat</button>
+              </div>
+              <div class="seat locked">
+                <strong>🔒 Locked</strong><button class="btn">Enable</button>
+              </div>
+              <div class="seat locked">
+                <strong>🔒 Locked</strong><button class="btn">Enable</button>
+              </div>
+              <div class="seat locked">
+                <strong>🔒 Locked</strong><button class="btn">Enable</button>
+              </div>
+            </div>
+            <div class="actions" style="justify-content: space-between">
+              <button class="btn">Leave game</button
+              ><span class="hint">Waiting for Ben to be ready…</span
+              ><button class="btn primary" disabled>Start game</button>
+            </div>
+          </div>
+
+          <!-- Table -->
+          <div class="page" data-show="table disc hostdlg">
+            <div data-show="disc">
+              <div class="banner" role="alert">
+                ⏳ Cleo lost the connection. Waiting 42 s for them to return…
+              </div>
+            </div>
+            <div class="table-layout">
+              <div style="display: flex; flex-direction: column; gap: 0.75rem">
+                <div class="players">
+                  <div class="ptile active">
+                    <span>▶ <strong>Anna</strong> (you)</span><span class="score">2,350</span
+                    ><span class="chip mint">Your turn</span>
+                  </div>
+                  <div class="ptile">
+                    <span><strong>Ben</strong></span
+                    ><span class="score">1,800</span>
+                  </div>
+                  <div class="ptile">
+                    <span>🤖 <strong>Computer 1</strong></span
+                    ><span class="score">2,100</span>
+                  </div>
+                  <div class="ptile">
+                    <span><strong>Cleo</strong></span
+                    ><span class="score">900</span
+                    ><span class="chip butter" data-show="disc">⏳ Offline</span>
+                  </div>
+                </div>
+                <div class="felt">
+                  <div
+                    style="
+                      display: flex;
+                      gap: 1.5rem;
+                      align-items: center;
+                      flex-wrap: wrap;
+                      justify-content: center;
+                    "
+                  >
+                    <div class="gamecard" aria-label="Card: Bonus 300">Bonus<br />300</div>
+                    <div>
+                      <div class="hint">Turn points</div>
+                      <div style="font-size: 1.8rem; font-weight: 800">450</div>
+                      <div class="hint">Carried 200 · this run 250 · deck 41</div>
+                    </div>
+                  </div>
+                  <div class="dice" role="group" aria-label="Dice">
+                    <button class="die" aria-pressed="true">1</button
+                    ><button class="die" aria-pressed="false">3</button
+                    ><button class="die" aria-pressed="true">5</button>
+                    <button class="die" aria-pressed="false">2</button
+                    ><button class="die aside" disabled>1</button
+                    ><button class="die aside" disabled>5</button>
+                  </div>
+                  <div class="actions">
+                    <button class="btn primary">Set aside selected (2)</button
+                    ><button class="btn">Throw remaining (4)</button
+                    ><button class="btn" disabled>Bank 450</button>
+                  </div>
+                  <span class="hint"
+                    >Tap dice to select, then set aside. Bank needs 350 in this run.</span
+                  >
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 0.75rem">
+                <div class="card">
+                  <h3>Scores</h3>
+                  <table class="score">
+                    <tr>
+                      <th>Player</th>
+                      <th>Score</th>
+                    </tr>
+                    <tr>
+                      <td>▶ Anna</td>
+                      <td>2,350</td>
+                    </tr>
+                    <tr>
+                      <td>Computer 1</td>
+                      <td>2,100</td>
+                    </tr>
+                    <tr>
+                      <td>Ben</td>
+                      <td>1,800</td>
+                    </tr>
+                    <tr>
+                      <td>Cleo</td>
+                      <td>900</td>
+                    </tr>
+                  </table>
+                  <p class="hint">Target 6,000</p>
+                </div>
+                <div class="card">
+                  <h3>Log</h3>
+                  <ul class="log" aria-live="polite">
+                    <li>Anna drew Bonus 300</li>
+                    <li>Anna threw 1 3 5 2 1 5</li>
+                    <li>Computer 1 banked 650</li>
+                    <li>Ben went bust ✕</li>
+                    <li>Ben threw 2 3 4 6 6 2</li>
+                    <li>Computer 1 drew Street</li>
+                    <li>Computer 1 got a Street: 2,000</li>
+                    <li>Cleo banked 400</li>
+                    <li>Cleo threw 1 1 1 5 2 4</li>
+                    <li>Anna banked 350</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Table, other's turn / 8 players share via screens below -->
+          <div class="page" data-show="tableother">
+            <div class="banner" style="background: var(--lav); color: var(--on-lav)">
+              Computer 1 is playing… (actions are disabled)
+            </div>
+          </div>
+
+          <div class="page" data-show="table8">
+            <div class="players">
+              <div class="ptile compact active">
+                <span>▶ <strong>Anna</strong></span
+                ><span class="score">2,350</span>
+              </div>
+              <div class="ptile compact"><span>Ben</span><span class="score">1,800</span></div>
+              <div class="ptile compact"><span>🤖 C1</span><span class="score">2,100</span></div>
+              <div class="ptile compact"><span>Cleo</span><span class="score">900</span></div>
+              <div class="ptile compact"><span>Dora</span><span class="score">1,250</span></div>
+              <div class="ptile compact"><span>Emil</span><span class="score">300</span></div>
+              <div class="ptile compact"><span>🤖 C2</span><span class="score">3,050</span></div>
+              <div class="ptile compact"><span>Fritz ⏳</span><span class="score">0</span></div>
+            </div>
+            <p class="hint">
+              Eight players: tiles shrink to a compact 4×2 grid (2×4 on phones); dice, card and
+              actions below stay unchanged.
+            </p>
+          </div>
+
+          <!-- Result -->
+          <div class="page" data-show="result">
+            <div class="card narrow">
+              <h2>🏆 Game over</h2>
+              <div class="rank first">
+                <strong>1</strong><span>Anna</span><strong>6,150</strong>
+              </div>
+              <div class="rank">
+                <strong>2</strong><span>Computer 2</span><strong>3,050</strong>
+              </div>
+              <div class="rank"><strong>2</strong><span>Ben</span><strong>3,050</strong></div>
+              <div class="rank"><strong>4</strong><span>Cleo</span><strong>900</strong></div>
+              <div class="actions" style="margin-top: 1rem">
+                <button class="btn primary">Back to lobby</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Host decision dialog -->
+          <div
+            class="overlay"
+            data-show="hostdlg"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="dt"
+          >
+            <div class="dialog">
+              <h3 id="dt">Cleo did not return</h3>
+              <p>What should happen with Cleo's seat?</p>
+              <div class="field">
+                <label>Computer difficulty</label
+                ><select>
+                  <option>Random</option>
+                </select>
+              </div>
+              <div class="actions">
+                <button class="btn">Free the seat</button
+                ><button class="btn primary">Put in a computer</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="review-footer">
+      <p><strong>What to judge:</strong></p>
+      <ul>
+        <li>Orange/pastel direction, contrast and warmth in light and dark.</li>
+        <li>
+          Table layout: players on top, felt area with card, dice and actions, scores and log on the
+          side (below on phones).
+        </li>
+        <li>Status is always chip text or icon plus colour (no colour-only state).</li>
+        <li>
+          Not shown: PrimeNG look-and-feel details (spacing and radii come from the preset),
+          animations, final dice/card art.
+        </li>
+      </ul>
+    </footer>
+
+    <script>
+      const canvas = document.getElementById('canvas'),
+        frame = document.getElementById('frame'),
+        fl = document.getElementById('flabel');
+      const bind = (id, attr, fn) =>
+        document.getElementById(id).addEventListener('click', (e) => {
+          const b = e.target.closest('button');
+          if (!b) return;
+          fn(b.dataset[attr]);
+          [...b.parentNode.children].forEach((x) =>
+            x.setAttribute('aria-pressed', String(x === b)),
+          );
+        });
+      bind('vp', 'v', (v) => {
+        frame.dataset.viewport = v;
+        canvas.dataset.viewport = v;
+        fl.textContent = v === 'mobile' ? 'Mobile (360–400 px)' : 'Desktop (≥ 1024 px)';
+      });
+      bind('pl', 'p', (v) => (canvas.dataset.palette = v));
+      bind('th', 't', (v) => (canvas.dataset.theme = v));
+      bind('sc', 's', (v) => (canvas.dataset.screen = v));
+      canvas.addEventListener('click', (e) => {
+        const d = e.target.closest('.die:not(.aside)');
+        if (d) d.setAttribute('aria-pressed', String(d.getAttribute('aria-pressed') !== 'true'));
+      });
+    </script>
+  </body>
+</html>
