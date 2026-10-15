@@ -9,6 +9,13 @@
 
 **Input**: User description: "Feature 002: Lobby and multiplayer via WebSocket. Anonymous sessions, password-protected games with rules set at creation, main lobby (2-8 players), game lobby with seats and Ready, host role, leave/disconnect handling with reconnect grace period, server-authoritative dice, turn flow (select, throw, bank). Computer players that play on their own with selectable difficulty. Out of scope: strategy calibration by simulation, dice UI/animation, save/load, PWA, game log table, Docker, accounts."
 
+## Clarifications
+
+### Session 2026-10-15
+
+- Q: How is a nickname already used in the same game handled? → A: The join is refused and the player picks another nickname in the same form (comparison ignores case).
+- Q: When are abandoned games cleaned up? → A: A lobby with no connected human is deleted after 15 minutes; a running (paused) game with no connected human is deleted after 24 hours.
+
 ## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Create and join a password-protected game (Priority: P1)
@@ -90,11 +97,11 @@ When a player's connection drops or they leave, everyone is warned and an entry 
 ### Edge Cases
 
 - Two clients use the same session token at once: the newest connection takes over, the older one is told it was replaced.
-- A nickname is already used in the same game: the join is refused or the player is asked for another nickname.
+- A nickname is already used in the same game (case-insensitive): the join is refused and the player chooses another nickname in the same form.
 - A nickname is empty, too long, or contains only whitespace/control characters: refused.
 - A player joins while the game is already running: refused for new humans; only reconnection by an already seated session is possible.
-- Host locks a seat that is occupied by a human: the human is removed from the seat with a visible notice (or the lock is refused; see Assumptions).
-- All humans disconnect: the game stays paused and is cleaned up after an idle timeout.
+- Host locks a seat that is occupied by a human: the lock is refused until the human has left; the host can free the seat first (see Assumptions).
+- All humans disconnect: a running game stays paused and is deleted after 24 hours; a game still in the lobby is deleted after 15 minutes. Any human reconnecting in time cancels the deletion.
 - The server restarts: running games are out of scope here (save/load is a later feature), so the games are gone; clients get a clear message.
 - Network flaps repeatedly: each reconnect within the grace period restores the seat; the grace period restarts per disconnect.
 - Actions arrive twice (double click, retransmission): the second one is rejected or ignored without corrupting the state.
@@ -107,7 +114,7 @@ When a player's connection drops or they leave, everyone is warned and an entry 
 **Sessions and identity**
 
 - **FR-001**: The system MUST let a visitor become an anonymous player by entering a nickname; the server issues a secret token that the client keeps to identify the player on reconnect.
-- **FR-002**: The system MUST validate nicknames (length, allowed characters, unique within a game).
+- **FR-002**: The system MUST validate nicknames (length, allowed characters, unique within a game, ignoring case).
 - **FR-003**: The system MUST NOT log or expose tokens or passwords to other players.
 
 **Main lobby and game creation**
