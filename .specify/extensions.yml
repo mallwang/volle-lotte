@@ -2,6 +2,8 @@ installed:
   - git
   - ux-review
   - coverage
+  - sonar-local
+  - sonar
   - docs
 settings:
   auto_execute_hooks: true
@@ -180,6 +182,22 @@ hooks:
       priority: 15
       prompt: Run local coverage audit before pushing?
       description: Run all tests with coverage and report projects below 80%
+      condition: null
+    - extension: sonar-local
+      command: speckit.sonar.local
+      enabled: true
+      optional: true
+      priority: 18
+      prompt: Run the local Sonar scan (Docker, no cloud upload) before pushing?
+      description: Catch Sonar findings locally with SonarQube Community Build before CI's cloud scan
+      condition: null
+    - extension: sonar
+      command: speckit.sonar.validate
+      enabled: true
+      optional: true
+      priority: 20
+      prompt: Check the SonarCloud quality gate for this branch?
+      description: Check the SonarCloud quality gate for the current branch before considering the implementation done
       condition: null
     - extension: docs
       command: speckit.docs.update
