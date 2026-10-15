@@ -147,13 +147,13 @@ description: 'Task list for UI Foundation (PrimeNG)'
 
 ### Tests for User Story 5
 
-- [ ] T039 [P] [US5] Add a keyboard test in `apps/frontend/src/app/table/table.spec.ts`: dice reachable in order, Space/Enter toggles, every allowed action reachable by Tab and activated by Enter
-- [ ] T040 [P] [US5] Add a reduced-motion check in `apps/frontend/src/app/app.spec.ts` (or a small `apps/frontend/src/styles.spec.ts`) asserting the `prefers-reduced-motion` rule exists in `apps/frontend/src/styles.css`
+- [x] T039 [P] [US5] Add a keyboard test in `apps/frontend/src/app/table/table.spec.ts`: dice reachable in order, Space/Enter toggles, every allowed action reachable by Tab and activated by Enter
+- [x] T040 [P] [US5] Add a reduced-motion check in `apps/frontend/src/app/app.spec.ts` (or a small `apps/frontend/src/styles.spec.ts`) asserting the `prefers-reduced-motion` rule exists in `apps/frontend/src/styles.css`
 
 ### Implementation for User Story 5
 
-- [ ] T041 [US5] Audit all migrated screens for visible focus rings, 44x44 px targets, logical tab order and non-colour state cues (selected die, active player, locked seat, offline); fix gaps in the affected component files and `apps/frontend/src/styles.css`
-- [ ] T042 [US5] Verify dialog focus handling for the join dialog (`apps/frontend/src/app/lobby/lobby.ts`) and the host decision dialog (`apps/frontend/src/app/table/disconnect-banner.ts`): focus moves in, is trapped, returns to the trigger; a turn arriving while a dialog is open keeps focus in the dialog
+- [x] T041 [US5] Audit all migrated screens for visible focus rings, 44x44 px targets, logical tab order and non-colour state cues (selected die, active player, locked seat, offline); fix gaps in the affected component files and `apps/frontend/src/styles.css`
+- [x] T042 [US5] Verify dialog focus handling for the join dialog (`apps/frontend/src/app/lobby/lobby.ts`) and the host decision dialog (`apps/frontend/src/app/table/disconnect-banner.ts`): focus moves in, is trapped, returns to the trigger; a turn arriving while a dialog is open keeps focus in the dialog
 
 **Checkpoint**: All five stories are independently functional and accessible.
 
@@ -161,10 +161,10 @@ description: 'Task list for UI Foundation (PrimeNG)'
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
-- [ ] T043 Check the build against `apps/frontend/project.json` budgets (initial 500kb/1mb, anyComponentStyle 4kb/8kb); raise only if PrimeNG requires it and note the reason in the PR description
-- [ ] T044 Run `npm run lint`, `npm run typecheck`, `npm run test`, `npm run build` and `npm run test:coverage`; frontend coverage must stay >= 80% with no new exclusions in `sonar-project.properties`
+- [x] T043 Check the build against `apps/frontend/project.json` budgets (initial 500kb/1mb, anyComponentStyle 4kb/8kb); raise only if PrimeNG requires it and note the reason in the PR description
+- [x] T044 Run `npm run lint`, `npm run typecheck`, `npm run test`, `npm run build` and `npm run test:coverage`; frontend coverage must stay >= 80% with no new exclusions in `sonar-project.properties`
 - [ ] T045 Run the manual scenarios 1-7 in `specs/003-ui-foundation-primeng/quickstart.md` at 320, 360, 768 and 1280 px in light and dark; fix findings
-- [ ] T046 [P] Update `docs/migration.md` with the UI toolkit decision (PrimeNG 22.1, Angular 22.1, Terracotta theme, replaceable tiles for the follow-up dice UI)
+- [x] T046 [P] Update `docs/migration.md` with the UI toolkit decision (PrimeNG 22.1, Angular 22.1, Terracotta theme, replaceable tiles for the follow-up dice UI)
 
 ---
 
