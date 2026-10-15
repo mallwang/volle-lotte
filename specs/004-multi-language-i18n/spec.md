@@ -6,6 +6,8 @@
 
 **Status**: Draft
 
+**Design**: [design.md](design.md)
+
 **Input**: User description: "Multi-language support: browser language as default, per-user language select with flags next to the theme selector, persisted locally, README.de.md, user guide in German and English, review of the docs skill for bilingual docs."
 
 ## User Scenarios & Testing _(mandatory)_
