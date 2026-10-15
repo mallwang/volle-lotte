@@ -103,16 +103,16 @@ description: 'Task list for UI Foundation (PrimeNG)'
 
 ### Tests for User Story 3
 
-- [ ] T027 [P] [US3] Update `apps/frontend/src/app/table/table.spec.ts`: all players rendered for 2, 5 and 8 players with name/score/online, active player marked, only allowed actions enabled, disabled-reason text linked via `aria-describedby`, dice selection toggles and sends `turn:action`, spectating another player's turn offers no actions, turn-end message for bank/bust/Stop/Double Lotte/Plus-Minus/Street/Fireworks/Clover, rejected action shows a toast and the table stays usable, axe light and dark
-- [ ] T028 [P] [US3] Update `apps/frontend/src/app/result/result.spec.ts`: ranking with shared ranks for equal scores, return-to-lobby button, axe light and dark
+- [x] T027 [P] [US3] Update `apps/frontend/src/app/table/table.spec.ts`: all players rendered for 2, 5 and 8 players with name/score/online, active player marked, only allowed actions enabled, disabled-reason text linked via `aria-describedby`, dice selection toggles and sends `turn:action`, spectating another player's turn offers no actions, turn-end message for bank/bust/Stop/Double Lotte/Plus-Minus/Street/Fireworks/Clover, rejected action shows a toast and the table stays usable, axe light and dark
+- [x] T028 [P] [US3] Update `apps/frontend/src/app/result/result.spec.ts`: ranking with shared ranks for equal scores, return-to-lobby button, axe light and dark
 
 ### Implementation for User Story 3
 
-- [ ] T029 [US3] Rebuild the table layout in `apps/frontend/src/app/table/table.ts`: CSS grid, mobile first, 2-column player tiles up to 5 players, compact one-line list rows at 320 px for 6-8 players, tiles around the dice/card centre with a side column from 900 px (research R7); use `PlayerTile`, `CardTile` and `DiceTile`; table keeps ownership of selection state and `socket.send('turn:action', ...)`
-- [ ] T030 [US3] Rework the turn actions in `apps/frontend/src/app/table/table.ts`: PrimeNG `button`s for draw, throw, set aside, bank reusing the existing `can('draw')`, `canThrow()`, `canBank()` predicates; each disabled action shows a short reason ("Not your turn", "Select at least one die", "Banking needs 350 points") as helper text referenced by `aria-describedby`; each core action takes at most 2 taps (SC-003)
-- [ ] T031 [US3] Show the turn-end outcome to all players in `apps/frontend/src/app/table/table.ts` by reusing `logText()` for the events `bank`, `bust`, `turnLost`, `penalty`, `volleLotte`, `gameOver` as a toast/banner (FR-010); show turn points and carried points
-- [ ] T032 [P] [US3] Migrate `apps/frontend/src/app/result/result.ts` to a `card` with an ordered ranked list (rank `tag`, shared rank for equal scores) and a return-to-lobby `button`
-- [ ] T033 [US3] Check `apps/frontend/src/app/game/game.ts` still switches game lobby / table / result by phase and fits the new shell; adjust only the container markup if needed
+- [x] T029 [US3] Rebuild the table layout in `apps/frontend/src/app/table/table.ts`: CSS grid, mobile first, 2-column player tiles up to 5 players, compact one-line list rows at 320 px for 6-8 players, tiles around the dice/card centre with a side column from 900 px (research R7); use `PlayerTile`, `CardTile` and `DiceTile`; table keeps ownership of selection state and `socket.send('turn:action', ...)`
+- [x] T030 [US3] Rework the turn actions in `apps/frontend/src/app/table/table.ts`: PrimeNG `button`s for draw, throw, set aside, bank reusing the existing `can('draw')`, `canThrow()`, `canBank()` predicates; each disabled action shows a short reason ("Not your turn", "Select at least one die", "Banking needs 350 points") as helper text referenced by `aria-describedby`; each core action takes at most 2 taps (SC-003)
+- [x] T031 [US3] Show the turn-end outcome to all players in `apps/frontend/src/app/table/table.ts` by reusing `logText()` for the events `bank`, `bust`, `turnLost`, `penalty`, `volleLotte`, `gameOver` as a toast/banner (FR-010); show turn points and carried points
+- [x] T032 [P] [US3] Migrate `apps/frontend/src/app/result/result.ts` to a `card` with an ordered ranked list (rank `tag`, shared rank for equal scores) and a return-to-lobby `button`
+- [x] T033 [US3] Check `apps/frontend/src/app/game/game.ts` still switches game lobby / table / result by phase and fits the new shell; adjust only the container markup if needed
 
 **Checkpoint**: A full game is playable from lobby to ranked result with the placeholder tiles.
 
@@ -126,14 +126,14 @@ description: 'Task list for UI Foundation (PrimeNG)'
 
 ### Tests for User Story 4
 
-- [ ] T034 [P] [US4] Update `apps/frontend/src/app/table/disconnect-banner.spec.ts`: countdown shown, host sees the decision dialog (computer or free seat) after the grace period, non-host sees a waiting notice, dialog focus moves in and returns, axe light and dark
-- [ ] T035 [P] [US4] Add log tests to `apps/frontend/src/app/table/table.spec.ts`: log container has `role="log"` and `aria-live="polite"`, never takes focus, entries are in order, container is scrollable
+- [x] T034 [P] [US4] Update `apps/frontend/src/app/table/disconnect-banner.spec.ts`: countdown shown, host sees the decision dialog (computer or free seat) after the grace period, non-host sees a waiting notice, dialog focus moves in and returns, axe light and dark
+- [x] T035 [P] [US4] Add log tests to `apps/frontend/src/app/table/table.spec.ts`: log container has `role="log"` and `aria-live="polite"`, never takes focus, entries are in order, container is scrollable
 
 ### Implementation for User Story 4
 
-- [ ] T036 [US4] Add the game log panel to `apps/frontend/src/app/table/table.ts`: scrollable container (`max-height` with `overflow-y: auto`), newest entry visible, `role="log"`, `aria-live="polite"`, no focus handling
-- [ ] T037 [US4] Rework `apps/frontend/src/app/table/disconnect-banner.ts`: reuse its existing countdown source, show the countdown with `progressbar` plus text, host gets a modal `dialog` with computer / free seat choices, others get a `message` "Host is deciding"
-- [ ] T038 [US4] Emit join/leave and connection-loss events as toasts through `MessageService` (FR-014) where the table and lobby handle them; keep errors persistent and info transient
+- [x] T036 [US4] Add the game log panel to `apps/frontend/src/app/table/table.ts`: scrollable container (`max-height` with `overflow-y: auto`), newest entry visible, `role="log"`, `aria-live="polite"`, no focus handling
+- [x] T037 [US4] Rework `apps/frontend/src/app/table/disconnect-banner.ts`: reuse its existing countdown source, show the countdown with `progressbar` plus text, host gets a modal `dialog` with computer / free seat choices, others get a `message` "Host is deciding"
+- [x] T038 [US4] Emit join/leave and connection-loss events as toasts through `MessageService` (FR-014) where the table and lobby handle them; keep errors persistent and info transient
 
 **Checkpoint**: Log, timers, disconnect dialog and notifications all work for host and non-host.
 
