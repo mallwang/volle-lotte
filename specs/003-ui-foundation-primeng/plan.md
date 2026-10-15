@@ -16,9 +16,9 @@ presentational tiles so the later dice UI can replace them. Frontend only: no pr
 
 ## Technical Context
 
-**Language/Version**: TypeScript, Angular 22.1.x (standalone components, signals)
+**Language/Version**: TypeScript, **Angular 22.1.x (required, bumped from 22.0.x)**, standalone components, signals
 
-**Primary Dependencies**: `primeng` ^22.1.2, `@primeuix/themes`, `@angular/cdk` ^22.1 (peer), `axe-core` (dev, a11y tests)
+**Primary Dependencies**: **PrimeNG 22.1.x (required)** (`primeng` ^22.1.2), `@primeuix/themes`, `@angular/cdk` ^22.1 (peer), `axe-core` (dev, a11y tests)
 
 **Storage**: N/A (only a `localStorage` theme preference, key `vl-theme`)
 
