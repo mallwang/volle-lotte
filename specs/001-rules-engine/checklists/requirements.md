@@ -15,7 +15,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain (3 left on purpose: FR-014, FR-015, FR-016; resolved in `/speckit-clarify`)
+- [x] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -33,4 +33,4 @@
 
 ## Notes
 
-- The three open markers were requested to be handled in the clarify phase (Star vs. Fireworks, Street counting, points on Stop after Volle Lotte). The remaining questions from rules.md use the documented proposals as assumptions.
+- The three open markers (Star vs. Fireworks, Street counting, points on Stop after Volle Lotte) were resolved in `/speckit-clarify`, together with Double Lotte scope and Plus/Minus. Remaining questions from rules.md (Clover points, Fireworks bonus on Volle Lotte, tie-break) use the documented proposals as assumptions.
