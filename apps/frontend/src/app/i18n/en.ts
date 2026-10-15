@@ -184,5 +184,22 @@ export const en = {
   'error.notYourTurn': 'It is not your turn.',
   'error.paused': 'The game waits for the host.',
   'error.rejected': 'That move is not allowed.',
-  'error.rejectedEngine': 'That move is not allowed ({engine}).',
+  'error.rejectedEngine': 'That move is not allowed: {engine}.',
+
+  'rules.notObject': 'The rules are invalid.',
+  'rules.targetScore': 'Target score must be a positive whole number.',
+  'rules.minimumPoints': 'Minimum points must be a whole number of 0 or more.',
+  'rules.doubling': 'Four of a kind doubling must be on or off.',
+  'rules.cardCounts': 'The card counts are missing.',
+  'rules.cardCountValues': 'Card counts must be whole numbers of 0 or more.',
+  'rules.deckEmpty': 'The deck needs at least one card.',
+
+  'engine.gameOver': 'the game is over',
+  'engine.wrongPhase': 'not possible in this phase',
+  'engine.emptySelection': 'select at least one die',
+  'engine.invalidIndex': 'unknown die',
+  'engine.duplicateIndex': 'a die was selected twice',
+  'engine.nonScoringDie': 'every selected die must score',
+  'engine.belowMinimum': 'the minimum points are not reached',
+  'engine.nothingToBank': 'there is nothing to bank',
 } as const;

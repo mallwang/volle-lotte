@@ -188,5 +188,22 @@ export const de: Record<keyof typeof en, string> = {
   'error.notYourTurn': 'Du bist nicht dran.',
   'error.paused': 'Das Spiel wartet auf den Gastgeber.',
   'error.rejected': 'Dieser Zug ist nicht erlaubt.',
-  'error.rejectedEngine': 'Dieser Zug ist nicht erlaubt ({engine}).',
+  'error.rejectedEngine': 'Dieser Zug ist nicht erlaubt: {engine}.',
+
+  'rules.notObject': 'Die Regeln sind ungültig.',
+  'rules.targetScore': 'Die Zielpunktzahl muss eine positive ganze Zahl sein.',
+  'rules.minimumPoints': 'Die Mindestpunktzahl muss eine ganze Zahl ab 0 sein.',
+  'rules.doubling': 'Die Verdopplung bei vier Gleichen muss an oder aus sein.',
+  'rules.cardCounts': 'Die Kartenanzahlen fehlen.',
+  'rules.cardCountValues': 'Kartenanzahlen müssen ganze Zahlen ab 0 sein.',
+  'rules.deckEmpty': 'Der Stapel braucht mindestens eine Karte.',
+
+  'engine.gameOver': 'das Spiel ist beendet',
+  'engine.wrongPhase': 'in dieser Phase nicht möglich',
+  'engine.emptySelection': 'wähle mindestens einen Würfel',
+  'engine.invalidIndex': 'unbekannter Würfel',
+  'engine.duplicateIndex': 'ein Würfel wurde doppelt gewählt',
+  'engine.nonScoringDie': 'jeder gewählte Würfel muss zählen',
+  'engine.belowMinimum': 'die Mindestpunktzahl ist nicht erreicht',
+  'engine.nothingToBank': 'es gibt nichts zu notieren',
 };

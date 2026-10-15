@@ -96,7 +96,7 @@ describe('Table', () => {
     expect(toasts).toHaveBeenCalledWith(
       expect.objectContaining({
         severity: 'error',
-        detail: expect.stringContaining('belowMinimum'),
+        detail: expect.stringContaining('minimum points'),
       }),
     );
     expect(button('Draw')).toBeTruthy();

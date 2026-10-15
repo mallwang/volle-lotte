@@ -22,6 +22,8 @@ Documentation in scope:
 - `/apps/*/README.md` — per-app READMEs (if they exist)
 - `/docs/user-guide.md` — English user guide (covers all user-visible screens and workflows)
 - `/docs/user-guide.de.md` — German user guide (mirror of the English guide; update both together)
+- `/docs/how-to-play.md` — English player rules explanation
+- `/docs/how-to-play.de.md` — German player rules explanation (mirror; update both together)
 - `/docs/**/*.md` — other user documentation (e.g. `docs/migration.md`, `docs/rules.md`)
 
 ## User Input
@@ -48,15 +50,17 @@ git diff --name-only origin/main...HEAD
 
 For each doc file in scope, decide whether the implementation touches it:
 
-| Doc file                 | Affected when…                                                                                                                                                                |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/libs/<name>/README.md` | Any file under `libs/<name>/src/` changed, OR the lib's `package.json`/`project.json` changed                                                                                 |
-| `/apps/<name>/README.md` | Any file under `apps/<name>/src/` changed                                                                                                                                     |
-| `/README.md` (root)      | A new lib or app was added/removed; a major public API surface changed; a new end-user feature is described in the spec (`spec.md`)                                           |
-| `/README.de.md`          | Same triggers as `/README.md` — always update both language versions together; the German README is a translation of the English one                                          |
-| `/docs/user-guide.md`    | Any user-visible screen, form field, or workflow was added, changed, or removed — check `spec.md` for user-facing scope; when in doubt, check                                 |
-| `/docs/user-guide.de.md` | Same triggers as `/docs/user-guide.md` — always update both language versions together                                                                                        |
-| `/docs/**/*.md`          | Read the doc file's content and check if any changed source files relate to the topic it covers (e.g. `docs/rules.md` is affected if game rules in `libs/game-rules` changed) |
+| Doc file                  | Affected when…                                                                                                                                                                |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/libs/<name>/README.md`  | Any file under `libs/<name>/src/` changed, OR the lib's `package.json`/`project.json` changed                                                                                 |
+| `/apps/<name>/README.md`  | Any file under `apps/<name>/src/` changed                                                                                                                                     |
+| `/README.md` (root)       | A new lib or app was added/removed; a major public API surface changed; a new end-user feature is described in the spec (`spec.md`)                                           |
+| `/README.de.md`           | Same triggers as `/README.md` — always update both language versions together; the German README is a translation of the English one                                          |
+| `/docs/user-guide.md`     | Any user-visible screen, form field, or workflow was added, changed, or removed — check `spec.md` for user-facing scope; when in doubt, check                                 |
+| `/docs/user-guide.de.md`  | Same triggers as `/docs/user-guide.md` — always update both language versions together                                                                                        |
+| `/docs/how-to-play.md`    | Game rules or card effects changed in `libs/game-rules` or `docs/rules.md`                                                                                                    |
+| `/docs/how-to-play.de.md` | Same triggers as `/docs/how-to-play.md` — always update both language versions together                                                                                       |
+| `/docs/**/*.md`           | Read the doc file's content and check if any changed source files relate to the topic it covers (e.g. `docs/rules.md` is affected if game rules in `libs/game-rules` changed) |
 
 Only proceed with docs whose impact check is positive. If no docs are affected, report that and stop — do not edit anything.
 

@@ -188,13 +188,17 @@ export class CreateGame {
     fourOfAKindDoubling: this.doubling(),
     cardCounts: this.counts(),
   }));
+  private readonly rulesProblem = computed(() => {
+    const code = rulesError(this.rules());
+    return code && this.i18n.t(`rules.${code}`);
+  });
   private readonly problems = computed(() => {
     const [name, password] = [this.name().trim(), this.password()];
     return {
       name: name.length < 1 || name.length > 40 ? this.i18n.t('create.nameError') : null,
       password:
         password.length < 4 || password.length > 64 ? this.i18n.t('create.passwordError') : null,
-      rules: rulesError(this.rules()),
+      rules: this.rulesProblem(),
     };
   });
   /** Per-field messages, shown after the first submit attempt. */

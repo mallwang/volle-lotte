@@ -2,7 +2,7 @@
 
 > Diese Anleitung ist auch auf Deutsch verfügbar: [Deutsche Benutzeranleitung](user-guide.de.md)
 
-Volle Lotte is an online dice game (Tutto) for 2-8 players. Computer opponents can fill empty seats. The full rules are in [rules.md](rules.md).
+Volle Lotte is an online dice game (Tutto) for 2-8 players. Computer opponents can fill empty seats. How to play is explained in [how-to-play.md](how-to-play.md).
 
 ## Table of Contents
 
@@ -48,7 +48,7 @@ The header contains two selectors:
 
 **The page is in the wrong language.** Pick the language in the header; the choice is remembered.
 
-**Texts from the game rules are in English.** Messages about invalid rule values come from the shared rules engine and are not translated yet.
+**Are all messages translated?** Yes. Messages about invalid rule values and rejected moves follow the selected language too.
 
 **My game disappeared.** If the server was restarted, running games are lost. You will see a notice.
 

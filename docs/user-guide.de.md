@@ -2,7 +2,7 @@
 
 > This guide is also available in English: [English user guide](user-guide.md)
 
-Volle Lotte ist ein Online-Würfelspiel (Tutto) für 2-8 Spielende. Computergegner können freie Plätze auffüllen. Die vollständigen Regeln stehen in [rules.md](rules.md) (englisch).
+Volle Lotte ist ein Online-Würfelspiel (Tutto) für 2-8 Spielende. Computergegner können freie Plätze auffüllen. Wie das Spiel funktioniert, steht in der [Spielanleitung](how-to-play.de.md).
 
 ## Inhaltsverzeichnis
 
@@ -48,7 +48,7 @@ Die Kopfzeile enthält zwei Auswahlfelder:
 
 **Die Seite ist in der falschen Sprache.** Wähle die Sprache in der Kopfzeile; die Wahl bleibt gespeichert.
 
-**Meldungen zu den Spielregeln sind englisch.** Meldungen zu ungültigen Regelwerten stammen aus der gemeinsamen Regel-Engine und sind noch nicht übersetzt.
+**Sind alle Meldungen übersetzt?** Ja. Meldungen zu ungültigen Regelwerten und abgelehnten Zügen folgen ebenfalls der gewählten Sprache.
 
 **Mein Spiel ist verschwunden.** Nach einem Serverneustart gehen laufende Spiele verloren. Du siehst einen Hinweis.
 
