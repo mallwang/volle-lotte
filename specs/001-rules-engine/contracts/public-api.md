@@ -32,4 +32,4 @@ type Outcome =
 
 ## Rejection reasons
 
-`gameOver`, `wrongPhase`, `emptySelection`, `invalidIndex`, `duplicateIndex`, `nonScoringDie`, `incompleteFireworks`, `belowMinimum`, `nothingToBank`. Stable strings; the UI maps them to messages.
+`gameOver`, `wrongPhase`, `emptySelection`, `invalidIndex`, `duplicateIndex`, `nonScoringDie`, `belowMinimum`, `nothingToBank`. Stable strings; the UI maps them to messages.

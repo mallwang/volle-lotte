@@ -83,7 +83,6 @@ export type RejectionReason =
   | 'invalidIndex'
   | 'duplicateIndex'
   | 'nonScoringDie'
-  | 'incompleteFireworks'
   | 'belowMinimum'
   | 'nothingToBank';
 
@@ -95,7 +94,7 @@ export interface Rejection {
 export type Event =
   | { readonly type: 'cardDrawn'; readonly card: CardType }
   | { readonly type: 'thrown'; readonly dice: readonly number[] }
-  | { readonly type: 'selected'; readonly points: number }
+  | { readonly type: 'selected'; readonly dice: readonly number[]; readonly points: number }
   | { readonly type: 'volleLotte' }
   | { readonly type: 'bust'; readonly lost: number }
   | { readonly type: 'banked'; readonly points: number }
