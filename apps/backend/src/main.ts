@@ -3,11 +3,14 @@
  * This is only a minimal backend to get started.
  */
 
+import { existsSync } from 'node:fs';
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app/app.module';
 
 async function bootstrap() {
+  // Local development: read .env if present (containers set real environment variables).
+  if (existsSync('.env')) process.loadEnvFile('.env');
   const app = await NestFactory.create(AppModule);
   const globalPrefix = 'api';
   app.setGlobalPrefix(globalPrefix);
