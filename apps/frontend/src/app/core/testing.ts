@@ -1,3 +1,4 @@
+import type { ComponentFixture } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import type { GameView, SeatView } from 'game-rules';
 import { defaultRules } from 'game-rules';
@@ -33,4 +34,25 @@ export function gameView(over: Partial<GameView> = {}, seats: SeatView[] = []): 
     log: [],
     ...over,
   };
+}
+
+/** Fails the test on any axe violation in the rendered fixture (WCAG A/AA rules). */
+export async function expectNoA11yViolations(fixture: ComponentFixture<unknown>): Promise<void> {
+  const axe = (await import('axe-core')).default;
+  const results = await axe.run(fixture.nativeElement as HTMLElement, {
+    runOnly: ['wcag2a', 'wcag2aa'],
+    // jsdom has no layout/paint, so colour contrast is covered by the preset contrast spec.
+    rules: { 'color-contrast': { enabled: false } },
+  });
+  expect(results.violations.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
+}
+
+/** Renders the fixture once per colour mode (class `app-dark` on <html>) and runs the check. */
+export async function inBothModes(fixture: ComponentFixture<unknown>, check: () => Promise<void>) {
+  for (const dark of [false, true]) {
+    document.documentElement.classList.toggle('app-dark', dark);
+    fixture.detectChanges();
+    await check();
+  }
+  document.documentElement.classList.remove('app-dark');
 }

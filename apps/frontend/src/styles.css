@@ -1,9 +1,81 @@
+:root {
+  --vl-mint: #d3e8d6;
+  --vl-on-mint: #1f4a2c;
+  --vl-lavender: #e6dcef;
+  --vl-on-lavender: #44305f;
+  --vl-butter: #f6e3a8;
+  --vl-on-butter: #5a4300;
+  --vl-rose: #f6d0cb;
+  --vl-on-rose: #7a2118;
+}
+.app-dark {
+  --vl-mint: #244a38;
+  --vl-on-mint: #c9f1db;
+  --vl-lavender: #3a3159;
+  --vl-on-lavender: #e0d8fa;
+  --vl-butter: #4d4018;
+  --vl-on-butter: #ffefb0;
+  --vl-rose: #5a2626;
+  --vl-on-rose: #ffd9d9;
+}
+
+body {
+  margin: 0;
+  background: var(--p-surface-50);
+  color: var(--p-text-color);
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+}
+
+/* Status chips: colour is always paired with text or an icon. */
+.vl-status {
+  border-radius: 999px;
+  padding: 0.125rem 0.625rem;
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+.vl-status.mint {
+  background: var(--vl-mint);
+  color: var(--vl-on-mint);
+}
+.vl-status.lavender {
+  background: var(--vl-lavender);
+  color: var(--vl-on-lavender);
+}
+.vl-status.butter {
+  background: var(--vl-butter);
+  color: var(--vl-on-butter);
+}
+.vl-status.rose {
+  background: var(--vl-rose);
+  color: var(--vl-on-rose);
+}
+
+.error {
+  color: var(--vl-on-rose);
+}
+
+/* Touch targets */
 button,
 input,
-select {
+select,
+.p-button,
+.p-inputtext,
+.p-select {
   min-height: 44px;
   min-width: 44px;
 }
-.error {
-  color: #b00020;
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
 }
