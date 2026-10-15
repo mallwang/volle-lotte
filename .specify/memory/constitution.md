@@ -1,64 +1,99 @@
-# [PROJECT_NAME] Constitution
-
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+# Volle Lotte Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
+### I. Server-Authoritative Game State
 
-<!-- Example: I. Library-First -->
+The server owns all game state and every random outcome. Dice throws and card draws MUST use
+`crypto.randomInt` on the server; clients only send intents (select dice, bank, throw) and render
+the state they receive. The dice animation on the client is presentation only. The server MUST
+validate every intent against the rules and the current turn and reject anything else.
 
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+Rationale: online play with up to 8 players is only fair if no client can influence dice, deck or
+scores.
 
-### [PRINCIPLE_2_NAME]
+### II. Pure, Tested Rules Engine
 
-<!-- Example: II. CLI Interface -->
+All game rules (scoring, bust check, turn flow, cards, target score, turn order) live in
+`libs/game-rules` as pure TypeScript functions with no I/O, no framework imports and no hidden
+randomness (the random source is injected). [docs/rules.md](../../docs/rules.md) is the source of
+truth and takes precedence over the Java reference. Every rule MUST have unit tests; the Java
+tests are ported first, then extended for the new rules. The engine is used by the backend and
+MAY be used by the frontend for display hints, never for decisions.
 
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+Rationale: the rules are the core value of the product; a pure engine is cheap to test
+exhaustively and to reuse for computer players and simulations.
 
-### [PRINCIPLE_3_NAME]
+### III. Test Coverage
 
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
+New logic ships with tests in the same change. The target is 80% coverage per project, with
+`libs/game-rules` as the highest-value area (aim for near-complete). Pure bootstrap/config files
+and template-only components may be skipped, and the skip list MUST be mirrored in
+`sonar.coverage.exclusions` (see `.specify/memory/test-coverage-guide.md`). Bug fixes start with
+a failing test.
 
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### IV. One Container, SQLite, Survivable Games
 
-### [PRINCIPLE_4_NAME]
+The app is deployed as a single Docker container: NestJS serves the API (`/api`), the WebSocket
+(`/socket.io`) and the built Angular app, with SQLite on a volume (`/data`). The game state MUST be
+persisted after every turn so that restarts and updates never lose a running game. Loading a
+persisted game returns to the game lobby, and all humans confirm "Ready" again. The backend
+reports a `protocolVersion`; the PWA activates an update only in the lobby or after a game,
+never mid-game.
 
-<!-- Example: IV. Integration Testing -->
+### V. Anonymous Play, Protected Lobbies
 
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+Release 1 has no accounts. Players are identified by a nickname plus a server-issued token. A game
+is created with a password (stored hashed, join attempts rate-limited). Secrets and tokens MUST
+NOT be logged or committed (secretlint runs on commit and in CI). Accounts and e-mail features are
+out of scope until a dedicated spec adds them.
 
-### [PRINCIPLE_5_NAME]
+### VI. UX First
 
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
+Volle Lotte is a game; the experience is a feature. Interfaces MUST work on touch and mouse, on
+phones and desktops, and as an installable PWA. Core interactions (tap a die to secure it, throw,
+bank) MUST be achievable in few steps and without reading instructions. UI changes are reviewed
+with `/speckit-ux-review`. Basic accessibility applies: keyboard operability, visible focus,
+sufficient contrast, no information conveyed by color alone.
 
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### VII. Simplicity
 
-## [SECTION_2_NAME]
+Start with the simplest design that satisfies the spec (YAGNI). No new dependency, abstraction,
+service or configuration option without a concrete requirement. Configurable rules are limited to
+those listed in rules.md; the core rules (e.g. 1/5 scoring) are fixed. Deviations MUST be
+justified in the plan's Complexity Tracking section.
 
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+## Technology & Architecture Constraints
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+- Nx monorepo with npm workspaces (npm >= 11): `apps/frontend` (Angular), `apps/backend`
+  (NestJS), `libs/game-rules` (shared). Everything runs through Nx.
+- Module boundaries are enforced via `scope:frontend|backend|shared` tags; the frontend MUST NOT
+  import backend code and vice versa, only `scope:shared` libs.
+- Realtime via Socket.IO (`@nestjs/websockets`); persistence in SQLite.
+- Everything user-facing and all documentation, code comments, commits and PRs are in English
+  (see CLAUDE.md).
 
-## [SECTION_3_NAME]
+## Development Workflow & Quality Gates
 
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
-
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+- Work is specified with `/speckit-specify`, planned with `/speckit-plan` and broken down with
+  `/speckit-tasks` before implementation.
+- Changes land via small branches and pull requests; `main` is protected and PRs are merged by
+  the maintainer.
+- Commits follow Conventional Commits. Pre-commit (secretlint, eslint, prettier) and pre-push
+  (affected typecheck and tests) hooks MUST NOT be bypassed.
+- CI (lint, format, typecheck, test, build, SonarCloud quality gate) MUST be green before merge.
+- Any deviation from a principle MUST be documented in the PR description; recurring deviations
+  trigger a constitution amendment instead of silent exceptions.
 
 ## Governance
 
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
+This constitution supersedes other project practices where they conflict. Amendments are made via
+`/speckit-constitution` and apply semantic versioning (MAJOR for removing or redefining a
+principle, MINOR for a new principle or materially expanded guidance, PATCH for clarifications)
+and update the `Last Amended` date.
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+All plans MUST include a Constitution Check against the Core Principles; unresolved violations
+MUST be justified in Complexity Tracking or the plan MUST be revised. Reviewers treat this
+constitution as authoritative. Runtime guidance for agents lives in [CLAUDE.md](../../CLAUDE.md).
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-10-15 | **Last Amended**: 2026-10-15

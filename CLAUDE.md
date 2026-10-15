@@ -1,7 +1,7 @@
 # Volle Lotte (web app)
 
 Read [docs/migration.md](docs/migration.md) first: project goal, decisions made, porting map and next steps.
-Game rules: [docs/rules.md](docs/rules.md). Workflow: Spec-Kit (`/speckit-*`); no constitution yet.
+Game rules: [docs/rules.md](docs/rules.md). Workflow: Spec-Kit (`/speckit-*`); principles in [.specify/memory/constitution.md](.specify/memory/constitution.md).
 The Java reference lives as a copy in `tmp/java/` (git-ignored, read-only).
 
 ## Language
