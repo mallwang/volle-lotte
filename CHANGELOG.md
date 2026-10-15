@@ -1,3 +1,9 @@
+## 0.0.3 (2026-10-15)
+
+### 🚀 Features
+
+- **frontend:** add English and German UI language support ([#12](https://github.com/mallwang/volle-lotte/pull/12))
+
 ## 0.0.2 (2026-10-15)
 
 ### 🚀 Features
