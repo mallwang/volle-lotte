@@ -11,6 +11,11 @@ export class AppController {
     return { primengLicense: process.env['PRIMENG_LICENSE'] || undefined };
   }
 
+  @Get('health')
+  health() {
+    return { status: 'ok' };
+  }
+
   @Get()
   getData() {
     return this.appService.getData();
