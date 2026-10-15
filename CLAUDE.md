@@ -17,3 +17,8 @@ The Java reference lives as a copy in `tmp/java/` (git-ignored, read-only).
 - Git hooks (husky): pre-commit runs lint-staged (secretlint, eslint, prettier); pre-push runs affected typecheck and tests.
 - Spec-Kit git extension hooks auto-commit around each `/speckit-*` phase; `/speckit-format` runs before those commits.
 - Releases: `npm run release` (Nx Release, conventional commits, fixed version).
+
+<!-- SPECKIT START -->
+
+Current feature plan: [specs/001-rules-engine/plan.md](specs/001-rules-engine/plan.md)
+<!-- SPECKIT END -->
