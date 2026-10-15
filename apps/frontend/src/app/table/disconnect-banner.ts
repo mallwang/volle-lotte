@@ -4,7 +4,7 @@ import type { Difficulty, GameView } from 'game-rules';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { MessageModule } from 'primeng/message';
-import { errorMessage } from '../core/error-message';
+import { errorMessage, type Msg } from '../core/error-message';
 import { isHost, seatName } from '../core/game-view';
 import { I18nService } from '../core/i18n.service';
 import { SocketService } from '../core/socket.service';
@@ -66,7 +66,7 @@ export const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard', 'random'];
         </div>
       }
       @if (error()) {
-        <p-message severity="error" role="alert">{{ error() }}</p-message>
+        <p-message severity="error" role="alert">{{ error()?.() }}</p-message>
       }
     </p-dialog>
   `,
@@ -79,7 +79,7 @@ export class DisconnectBanner {
   protected readonly graceSeconds = GRACE_SECONDS;
   protected readonly difficulties = DIFFICULTIES;
   protected readonly difficulty = signal<Difficulty>('medium');
-  protected readonly error = signal('');
+  protected readonly error = signal<Msg | null>(null);
   protected readonly host = computed(() => isHost(this.game()));
   protected readonly entries = computed(() => {
     const g = this.game();
@@ -111,6 +111,6 @@ export class DisconnectBanner {
       decision,
       difficulty: decision === 'computer' ? this.difficulty() : undefined,
     });
-    this.error.set(ack.ok ? '' : errorMessage(ack, this.i18n));
+    this.error.set(ack.ok ? null : () => errorMessage(ack, this.i18n));
   }
 }

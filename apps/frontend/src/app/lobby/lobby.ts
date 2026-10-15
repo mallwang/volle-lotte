@@ -8,7 +8,7 @@ import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
 import { TagModule } from 'primeng/tag';
-import { errorMessage } from '../core/error-message';
+import { errorMessage, type Msg } from '../core/error-message';
 import { I18nService } from '../core/i18n.service';
 import { SocketService } from '../core/socket.service';
 import { TranslatePipe } from '../core/translate.pipe';
@@ -92,7 +92,7 @@ import { TranslatePipe } from '../core/translate.pipe';
           }}</p-message>
         }
         @if (error() && retry() === 0) {
-          <p-message severity="error" role="alert">{{ error() }}</p-message>
+          <p-message severity="error" role="alert">{{ error()?.() }}</p-message>
         }
         <div class="vl-actions">
           <p-button type="submit" [label]="'lobby.enter' | t" [disabled]="retry() > 0" />
@@ -110,7 +110,7 @@ export class Lobby {
     () => this.socket.games().find((g) => g.id === this.selected()) ?? null,
   );
   protected readonly password = signal('');
-  protected readonly error = signal('');
+  protected readonly error = signal<Msg | null>(null);
   protected readonly retry = signal(0);
   private timer?: ReturnType<typeof setInterval>;
   private trigger?: HTMLElement;
@@ -121,7 +121,7 @@ export class Lobby {
 
   protected open(id: string, event: Event): void {
     this.trigger = (event.target as HTMLElement).closest('button') ?? undefined;
-    this.error.set('');
+    this.error.set(null);
     this.selected.set(id);
   }
 
@@ -137,7 +137,7 @@ export class Lobby {
       this.password.set('');
       await this.router.navigate(['/game', g.id]);
     } else {
-      this.error.set(errorMessage(ack, this.i18n));
+      this.error.set(() => errorMessage(ack, this.i18n));
       if (ack.reason === 'locked') this.lock(Math.ceil((ack.retryAfterMs ?? 0) / 1000));
     }
   }

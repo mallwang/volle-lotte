@@ -5,7 +5,7 @@ import { AvatarModule } from 'primeng/avatar';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
 import { TagModule } from 'primeng/tag';
-import { errorMessage } from '../core/error-message';
+import { errorMessage, type Msg } from '../core/error-message';
 import { isHost, seatName } from '../core/game-view';
 import { I18nService } from '../core/i18n.service';
 import { SocketService } from '../core/socket.service';
@@ -130,7 +130,7 @@ import { DIFFICULTIES, DisconnectBanner } from '../table/disconnect-banner';
       }
       <p-button [label]="'game.leave' | t" severity="secondary" (onClick)="socket.leave()" />
       @if (error()) {
-        <p-message severity="error" role="alert">{{ error() }}</p-message>
+        <p-message severity="error" role="alert">{{ error()?.() }}</p-message>
       }
     }
   `,
@@ -139,7 +139,7 @@ export class GameLobby {
   protected readonly socket = inject(SocketService);
   private readonly i18n = inject(I18nService);
   protected readonly difficulties = DIFFICULTIES;
-  protected readonly error = signal('');
+  protected readonly error = signal<Msg | null>(null);
   protected readonly host = computed(() => {
     const g = this.socket.game();
     return !!g && isHost(g);
@@ -159,7 +159,7 @@ export class GameLobby {
 
   private async run(p: Promise<Ack>): Promise<void> {
     const ack = await p;
-    this.error.set(ack.ok ? '' : errorMessage(ack, this.i18n));
+    this.error.set(ack.ok ? null : () => errorMessage(ack, this.i18n));
   }
 
   protected ready(ready: boolean): Promise<void> {

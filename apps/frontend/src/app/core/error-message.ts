@@ -1,6 +1,9 @@
 import type { ErrorAck } from 'game-rules';
 import type { I18nService } from './i18n.service';
 
+/** A message translated on display, so it follows a language switch. */
+export type Msg = () => string;
+
 export function errorMessage(ack: ErrorAck, i18n: I18nService): string {
   if (ack.reason === 'wrongPassword' && ack.attemptsLeft !== undefined)
     return i18n.t('error.wrongPasswordLeft', { attemptsLeft: ack.attemptsLeft });

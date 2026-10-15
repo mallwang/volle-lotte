@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { providePrimeNG } from 'primeng/config';
+import { I18nService } from '../core/i18n.service';
 import { SocketService } from '../core/socket.service';
 import { expectNoA11yViolations, inBothModes, stubSocket } from '../core/testing';
 import { Nickname } from './nickname';
@@ -42,6 +43,15 @@ describe('Nickname', () => {
     socket.start.mockResolvedValue({ ok: false, reason: 'nicknameTaken' });
     await submit('Ann');
     expect(el.querySelector('[role=alert]')?.textContent).toContain('already used');
+  });
+
+  it('retranslates a shown error when the language changes', async () => {
+    const { fixture, el, submit } = await setup();
+    await submit('a');
+    TestBed.inject(I18nService).set('de');
+    fixture.detectChanges();
+    expect(el.querySelector('[role=alert]')?.textContent).toContain('Zeichen');
+    TestBed.inject(I18nService).set('en');
   });
 
   it('blocks submit and flags the field while invalid', async () => {

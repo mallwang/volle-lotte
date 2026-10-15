@@ -7,7 +7,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { CARD_TYPES, defaultRules, rulesError, type CardType, type Rules } from 'game-rules';
-import { errorMessage } from '../core/error-message';
+import { errorMessage, type Msg } from '../core/error-message';
 import { I18nService } from '../core/i18n.service';
 import { SocketService } from '../core/socket.service';
 import { TranslatePipe } from '../core/translate.pipe';
@@ -137,7 +137,7 @@ import { TranslatePipe } from '../core/translate.pipe';
         <a routerLink="/lobby">{{ 'create.cancel' | t }}</a>
       </div>
       @if (error()) {
-        <p-message severity="error" role="alert">{{ error() }}</p-message>
+        <p-message severity="error" role="alert">{{ error()?.() }}</p-message>
       }
     </form>
   `,
@@ -175,7 +175,7 @@ export class CreateGame {
   protected readonly minimumPoints = signal(this.defaults.minimumPoints);
   protected readonly doubling = signal(this.defaults.fourOfAKindDoubling);
   protected readonly counts = signal<Record<CardType, number>>({ ...this.defaults.cardCounts });
-  protected readonly error = signal('');
+  protected readonly error = signal<Msg | null>(null);
 
   protected setCount(type: CardType, value: number): void {
     this.counts.update((c) => ({ ...c, [type]: value }));
@@ -216,6 +216,6 @@ export class CreateGame {
       rules: this.rules(),
     });
     if (ack.ok) await this.router.navigate(['/game', ack.game.id]);
-    else this.error.set(errorMessage(ack, this.i18n));
+    else this.error.set(() => errorMessage(ack, this.i18n));
   }
 }
