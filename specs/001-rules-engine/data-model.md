@@ -88,11 +88,11 @@ decide ──throw──▶ select | ──bank──▶ credit carried+run, tur
 | Bonus        | `run += bonus`, phase `decide` (`bank` or `draw`; `draw` moves `run` into `carried`)                   |
 | Double Lotte | `run *= 2` (must reach the minimum, else the turn is lost), credit `carried + run`, turn ends          |
 | Fireworks    | credit `carried + run`, turn ends                                                                      |
-| Street       | success when all six values are collected: credit `carried + 2000`, turn ends (see note)               |
+| Street       | success when all six values are collected: credit 2000 (`carried` is discarded), turn ends             |
 | Plus/Minus   | player gets +1,000 (turn points discarded), leaders lose 1,000, turn ends                              |
 | Clover       | `volleLottes += 1`, on 2 the game ends; otherwise 6 fresh dice (`free = 6`, `run` kept), phase `throw` |
 
-Street note: rules.md gives 2,000 points on success and says a bust loses earlier turn points; it does not say what happens to them on success. This plan credits `carried` as well (the Street points replace only the points collected during the Street run). Confirm in review; one test pins the behaviour.
+Street note: a successful Street credits exactly 2,000 regardless of `carried` (earlier turn points are replaced, not added), so drawing a Street with a high score is a real gamble: a bust loses everything. One test pins the behaviour (2,300 held, Street succeeds, 2,000 credited).
 
 After a Volle Lotte on a Bonus card followed by `draw`, a next Bonus card needs `run >= minimumPoints` for that card before `bank`, else the turn is lost; a next Street, Double Lotte or Clover must succeed, else everything is lost. A Stop drawn there credits `carried`.
 
