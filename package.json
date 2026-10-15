@@ -17,6 +17,10 @@
     "lint:fix": "nx run-many -t lint --fix",
     "typecheck": "nx run-many -t typecheck",
     "release": "nx release",
+    "test:coverage": "nx run-many -t test --coverage --outputStyle=static",
+    "sonar:local": "bash scripts/sonar-local.sh",
+    "sonar:local:up": "docker compose -f docker-compose.sonar.yml up -d",
+    "sonar:local:down": "docker compose -f docker-compose.sonar.yml down",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "husky"
@@ -64,6 +68,7 @@
     "@types/jest": "~30.0.0",
     "@types/node": "^22.0.0",
     "@typescript-eslint/utils": "^8.58.0",
+    "@vitest/coverage-v8": "^4.1.11",
     "angular-eslint": "^22.0.0",
     "eslint": "^9.8.0",
     "eslint-config-prettier": "^10.0.0",

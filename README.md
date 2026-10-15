@@ -8,4 +8,4 @@ Developed with [Spec-Kit](https://github.com/github/spec-kit) (`/speckit-*`); pr
 
 ## Status
 
-No code yet. Next steps: constitution, then spec 1 (rules engine). See [docs/migration.md](docs/migration.md).
+Workspace, CI (lint, typecheck, test, build, SonarCloud) and the constitution are in place; rules engine (spec 1) is next. See [docs/migration.md](docs/migration.md).
