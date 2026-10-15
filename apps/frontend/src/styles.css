@@ -1,1 +1,9 @@
-/* You can add global styles to this file, and also import other style files */
+button,
+input,
+select {
+  min-height: 44px;
+  min-width: 44px;
+}
+.error {
+  color: #b00020;
+}

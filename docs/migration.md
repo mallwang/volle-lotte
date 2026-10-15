@@ -56,13 +56,13 @@ Java quirks that stay: 350 minimum points (configurable), four-of-a-kind doublin
 ## State of this repo
 
 - Done: `git init`, Spec-Kit 0.16.2, constitution v1.0.0, Nx workspace with CI (lint, typecheck, test, build, SonarCloud), `docs/rules.md`, card images, rules engine in `libs/game-rules` (feature 001, see Port status below).
-- In progress: feature 002 (lobby and multiplayer, including computer players with difficulties), spec and clarifications in `specs/002-lobby-multiplayer/`, UX mockup approved; `/speckit-plan` is next.
-- **Not** created: backend gateway, frontend UI, Docker.
+- Done: feature 002 (lobby and multiplayer, including computer players with difficulties; backend gateway in `apps/backend/src/app/lobby/`, frontend screens, wire protocol in `libs/game-rules/src/lib/protocol.ts`, `PROTOCOL_VERSION = 1`). The manual two-browser run (quickstart) is still open.
+- **Not** created: dice UI, save/load, PWA, Docker.
 - Vaultfolio reference: read its constitution (`.specify/memory/constitution.md`) and `CLAUDE.md` as a template for tooling rules, do not copy blindly (Vaultfolio-specific: encryption, Turnstile, PrimeNG, domains).
 
 ## Next steps
 
-1. Feature 002: `/speckit-plan`, `/speckit-tasks`, `/speckit-implement` (lobby, WebSocket gateway, turn flow, computer players).
+1. Walk through `specs/002-lobby-multiplayer/quickstart.md` with two browser windows.
 2. Further features in this order: dice UI, save/load, PWA and safe updates, game log, Docker deployment.
 
 ## Open decisions

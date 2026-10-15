@@ -8,4 +8,4 @@ Developed with [Spec-Kit](https://github.com/github/spec-kit) (`/speckit-*`); pr
 
 ## Status
 
-Workspace, CI (lint, typecheck, test, build, SonarCloud), the constitution and the pure rules engine (`libs/game-rules`, spec 001) are in place; lobby and multiplayer (spec 002) is specified and next to be planned. See [docs/migration.md](docs/migration.md).
+Workspace, CI (lint, typecheck, test, build, SonarCloud), the constitution and the pure rules engine (`libs/game-rules`, spec 001) are in place; lobby and multiplayer (spec 002) is implemented: a NestJS Socket.IO gateway (password-protected games, 2-8 seats, computer players, reconnect with a 60 s grace period, protocol version 1) and the Angular lobby, game lobby and table screens. Dependencies added: `socket.io`, `@nestjs/websockets`, `@nestjs/platform-socket.io`, `socket.io-client`. See [docs/migration.md](docs/migration.md).

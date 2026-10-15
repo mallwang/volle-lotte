@@ -32,4 +32,4 @@
 ## Notes
 
 - FR-014 names `libs/game-rules` because the project constitution mandates it; accepted as a project constraint.
-- Open points deferred to `/speckit-plan` or `/speckit-clarify`: password attempt limits, nickname-collision handling.
+- Password attempt limits and nickname collisions are resolved (see spec Clarifications and `research.md`).

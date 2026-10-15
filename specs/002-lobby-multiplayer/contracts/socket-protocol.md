@@ -32,7 +32,7 @@ Namespace `/`, path `/socket.io`. Types live in `libs/game-rules/src/lib/protoco
 | `game:state`       | `{ game: GameView }`       | after every accepted change, to every connected seat of the game (FR-016)         |
 | `game:log`         | `{ entries: LogEntry[] }`  | log appends (also contained in the next `game:state`)                             |
 | `session:replaced` | none                       | a newer connection took over this token (FR-023); the socket is then disconnected |
-| `game:closed`      | `{ reason: 'cleanup' }`    | the game was removed (15 min / 24 h cleanup)                                      |
+| `game:closed`      | `{ reason: 'cleanup'       | 'removed' }`                                                                      | cleanup (15 min / 24 h), or the host replaced your seat in the lobby |
 
 `game:state` is a full snapshot (idempotent), so a client that reconnects only needs the ack of `session:start` (which carries `game`) or the next push.
 

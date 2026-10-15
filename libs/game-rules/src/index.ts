@@ -5,3 +5,5 @@ export * from './lib/cards.js';
 export * from './lib/turn.js';
 export * from './lib/game.js';
 export * from './lib/serialize.js';
+export * from './lib/protocol.js';
+export * from './lib/computer.js';
