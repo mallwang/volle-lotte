@@ -60,7 +60,7 @@ import { DisconnectBanner } from './disconnect-banner';
           <button type="button" [disabled]="!can('draw')" (click)="act({ type: 'draw' })">
             Draw card
           </button>
-          <button type="button" [disabled]="!can('throw')" (click)="act({ type: 'throw' })">
+          <button type="button" [disabled]="!canThrow()" (click)="act({ type: 'throw' })">
             Throw dice
           </button>
           <button
@@ -70,7 +70,7 @@ import { DisconnectBanner } from './disconnect-banner';
           >
             Set aside selected
           </button>
-          <button type="button" [disabled]="!can('decide')" (click)="act({ type: 'bank' })">
+          <button type="button" [disabled]="!canBank()" (click)="act({ type: 'bank' })">
             Bank points
           </button>
         }
@@ -105,6 +105,18 @@ export class Table {
 
   protected can(phase: string): boolean {
     return this.mine() && this.socket.game()?.game?.turn?.phase === phase;
+  }
+
+  /** After a partial selection (phase decide) the remaining free dice can be thrown again. */
+  protected canThrow(): boolean {
+    const turn = this.socket.game()?.game?.turn;
+    return this.can('throw') || (this.can('decide') && (turn?.free ?? 0) > 0);
+  }
+
+  /** Fireworks and Street must run to a bust or Volle Lotte, so banking is never offered. */
+  protected canBank(): boolean {
+    const card = this.socket.game()?.game?.turn?.card;
+    return this.can('decide') && card !== 'fireworks' && card !== 'street';
   }
 
   protected toggle(i: number): void {

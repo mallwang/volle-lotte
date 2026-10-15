@@ -19,7 +19,9 @@ export function logText(g: GameView, e: LogEntry): string {
       case 'thrown':
         return `${who} threw ${ev.dice.join(' ')}`;
       case 'selected':
-        return `${who} set aside ${ev.points} points`;
+        return ev.points > 0
+          ? `${who} set aside ${ev.dice.join(' ')} for ${ev.points} points`
+          : `${who} set aside ${ev.dice.join(' ')}`; // Street: dice count by value, not points
       case 'volleLotte':
         return `${who} got a Volle Lotte`;
       case 'bust':
