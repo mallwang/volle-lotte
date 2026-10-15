@@ -1,0 +1,12 @@
+# Portainer stack (Repository or Web editor). Variables go into the stack's environment.
+services:
+  app:
+    image: ${DOCKERHUB_USER:-walefish}/volle-lotte:${TAG:-latest}
+    restart: unless-stopped
+    environment:
+      PRIMENG_LICENSE: ${PRIMENG_LICENSE:-}
+    volumes:
+      - /opt/volle-lotte/data:/data
+    # Reverse proxy (volle-lotte.allwang.family) must allow WebSocket upgrades.
+    ports:
+      - '${PORT:-8080}:3000'
