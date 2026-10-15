@@ -4,7 +4,7 @@
   "description": "Online multiplayer web app for the dice game Volle Lotte (Tutto). Angular + NestJS + SQLite.",
   "private": true,
   "engines": {
-    "node": ">=22",
+    "node": ">=24",
     "npm": ">=10"
   },
   "packageManager": "npm@11.19.0",
