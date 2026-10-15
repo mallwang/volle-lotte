@@ -20,5 +20,5 @@ The Java reference lives as a copy in `tmp/java/` (git-ignored, read-only).
 
 <!-- SPECKIT START -->
 
-Current feature plan: [specs/003-ui-foundation-primeng/plan.md](specs/003-ui-foundation-primeng/plan.md)
+Current feature plan: [specs/004-multi-language-i18n/plan.md](specs/004-multi-language-i18n/plan.md)
 <!-- SPECKIT END -->
