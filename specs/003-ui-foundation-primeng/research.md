@@ -99,3 +99,12 @@ Dice, cards and seat tiles are app components because the later "dice UI" featur
 - **Decision**: Keep the 80% frontend coverage. Component specs updated for the new templates; `ThemeService`,
   preset contrast, tiles and layout class logic get unit tests. `app.config.ts` is already a coverage exclusion; the
   preset file is data and covered by the contrast test, so no new Sonar exclusion is needed.
+
+## R6 follow-up - verified against the installed packages (T003)
+
+Context7 has no PrimeNG v22 docs, so these were read from `node_modules` (primeng 22.1.2, @primeuix/themes 3.0.1):
+
+- `provideAnimationsAsync` is **not needed**: primeng 22.1 has no `@angular/animations` peer; no animations provider is added.
+- `providePrimeNG({ theme: { preset, options: { prefix, darkModeSelector, cssLayer } } })` is unchanged.
+- `Aura` imports from `@primeuix/themes/aura`; `definePreset` from `@primeuix/themes`.
+- Angular 22.1.8 requires removing stale `@angular/*` lockfile entries before `npm install` (exact peer pins); `@nx/angular` 23.1.1 accepts 22.1 (peer `< 23`), so no Nx bump.

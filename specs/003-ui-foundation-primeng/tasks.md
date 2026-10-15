@@ -21,9 +21,9 @@ description: 'Task list for UI Foundation (PrimeNG)'
 
 **Purpose**: Dependency bump in one step (FR-019, research R1)
 
-- [ ] T001 Bump every `@angular/*` package and the Angular CLI/build/devkit packages in `package.json` from `~22.0.4` to `~22.1.x`; add `@angular/cdk` `~22.1.x`, `primeng` `^22.1.2`, `@primeuix/themes`, and dev dependency `axe-core`; run `npm install`
-- [ ] T002 Verify the toolchain on Angular 22.1: `npm ls @angular/core primeng @angular/cdk`, then `npm run build`, `npm run typecheck`, `npm run test`; if `@nx/angular` 23.1.1 rejects Angular 22.1, bump the Nx packages in the same step (research R1)
-- [ ] T003 Using Context7 (`primeng` 22.1) confirm the v22 specifics deferred in research.md R6: whether `provideAnimationsAsync` is still required, the `providePrimeNG` option names, and `definePreset` import path from `@primeuix/themes/aura`; note findings at the end of `specs/003-ui-foundation-primeng/research.md`
+- [x] T001 Bump every `@angular/*` package and the Angular CLI/build/devkit packages in `package.json` from `~22.0.4` to `~22.1.x`; add `@angular/cdk` `~22.1.x`, `primeng` `^22.1.2`, `@primeuix/themes`, and dev dependency `axe-core`; run `npm install`
+- [x] T002 Verify the toolchain on Angular 22.1: `npm ls @angular/core primeng @angular/cdk`, then `npm run build`, `npm run typecheck`, `npm run test`; if `@nx/angular` 23.1.1 rejects Angular 22.1, bump the Nx packages in the same step (research R1)
+- [x] T003 Using Context7 (`primeng` 22.1) confirm the v22 specifics deferred in research.md R6: whether `provideAnimationsAsync` is still required, the `providePrimeNG` option names, and `definePreset` import path from `@primeuix/themes/aura`; note findings at the end of `specs/003-ui-foundation-primeng/research.md`
 
 **Checkpoint**: App builds and all existing tests pass on Angular 22.1 with the new dependencies installed (no UI change yet).
 
