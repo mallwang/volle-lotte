@@ -6,19 +6,19 @@
 
 **Status**: Draft
 
-**Input**: User description: "Feature 1: Rules engine for Volle Lotte. A pure, fully tested library implementing the complete game rules from docs/rules.md: scoring, bust check, one turn (select dice, throw, bank, lost), game state (2-8 players, target score, turn order), card deck and card effects (configurable card counts, reshuffle when empty, Star is the Fireworks card, deck stays at 56 cards). Server-authoritative: dice randomness is injected, no UI, no I/O. Port the Java tests 1:1 and extend them for the new rules. Game state must be serializable as JSON."
+**Input**: User description: "Feature 1: Rules engine for Volle Lotte. A pure, fully tested library implementing the complete game rules from docs/rules.md: scoring, bust check, one turn (select dice, throw, bank, lost), game state (2-8 players, target score, turn order), card deck and card effects (configurable card counts, reshuffle when empty, deck stays at 56 cards). Server-authoritative: dice randomness is injected, no UI, no I/O. Port the Java tests 1:1 and extend them for the new rules. Game state must be serializable as JSON."
 
 ## Clarifications
 
 ### Session 2026-10-15
 
-- Q: Is Star part of the 5 Fireworks cards or additional? → A: Star is not a separate card; it is the Fireworks card (same type). The default deck stays at 56 cards.
+- Q: How many Star cards are in the deck? → A: 5; there is no separate card type. The default deck stays at 56 cards.
 - Q: How does Street count? → A: Cumulatively across throws, one die per value 1-6 is set aside. A bust is a throw without any still-missing value; on a bust the player gets 0 points and the turn points collected before are lost too. Success gives exactly 2,000 points, whatever was collected earlier in the turn (earlier turn points are replaced, not added).
 - Q: What happens when a Stop card is drawn after a Volle Lotte? → A: The points collected so far in the turn are credited and the next player is up (after a Volle Lotte on a Bonus card the total is at least 6x50 + 200 = 500, so the minimum is always met).
-- Q: What do Street, Plus/Minus and Double Lotte do on success? → A: A Volle Lotte can only be continued (new card) on a Bonus card; Fireworks ends the turn on a Volle Lotte. On Street, Plus/Minus and Double Lotte the turn ends directly after the successful attempt and the next player is up (for example a successful Street gives 2,000 points and ends the turn).
+- Q: What do Street, Plus/Minus and Double Lotte do on success? → A: A Volle Lotte can only be continued (new card) on a Bonus card; Star ends the turn on a Volle Lotte. On Street, Plus/Minus and Double Lotte the turn ends directly after the successful attempt and the next player is up (for example a successful Street gives 2,000 points and ends the turn).
 - Q: What happens on Plus/Minus with the collected turn points and the scores? → A: On Volle Lotte the player gets only +1,000; the collected turn points are discarded. Every leader (tied leaders all) loses 1,000, a leading player loses nothing, and no score drops below 0.
-- Q: What happens after a Volle Lotte on a Bonus card? → A: The player may bank (the minimum is always met) or draw a new card. For a new Bonus card the player must again collect at least the minimum (350) in that run before banking; otherwise the whole turn is lost. If that succeeds and the player banks, all turn points are added. Street, Double Lotte and Clover as the next card count as their own type and the player must succeed, otherwise all turn points are lost. Stop credits the points so far. A Fireworks card needs no minimum (see next answer).
-- Q: What does Fireworks do on a Volle Lotte? → A: The turn ends and no new card is drawn. The player throws until a bust and all points of the turn (including earlier Volle Lotte runs) are credited, with no minimum; a bust credits instead of losing them.
+- Q: What happens after a Volle Lotte on a Bonus card? → A: The player may bank (the minimum is always met) or draw a new card. For a new Bonus card the player must again collect at least the minimum (350) in that run before banking; otherwise the whole turn is lost. If that succeeds and the player banks, all turn points are added. Street, Double Lotte and Clover as the next card count as their own type and the player must succeed, otherwise all turn points are lost. Stop credits the points so far. A Star card needs no minimum (see next answer).
+- Q: What does Star do on a Volle Lotte? → A: The turn ends and no new card is drawn. The player throws until a bust and all points of the turn (including earlier Volle Lotte runs) are credited, with no minimum; a bust credits instead of losing them.
 - Q: Clover points? → A: Points do not matter; two new Volle Lotte in a row after the Clover card was drawn win the game (earlier Volle Lotte of the turn do not count), a bust loses all turn points as usual and no win.
 - Q: Target score reached and ranking? → A: The game ends immediately when a player reaches the target score; the other players are ranked by score (equal scores share a rank). No "finish the round" option.
 - Q: What does Double Lotte double? → A: Only the points collected since the Double Lotte card was drawn (the current 6-dice run); earlier turn points count once. The doubled value must reach the minimum (350, always true in practice), then the turn ends and the next player is up.
@@ -68,7 +68,7 @@ A player throws, sets aside scoring dice, and either banks the points or throws 
 
 ### User Story 3 - Cards and their effects (Priority: P1)
 
-A turn starts by drawing a card. Each card type changes the turn: Bonus cards add points on Volle Lotte, Double Lotte doubles, Stop ends the turn, Fireworks protects against loss, Street is a collection challenge, Plus/Minus shifts scores on Volle Lotte, and Clover wins after two Volle Lottes in a row. The deck is shuffled, and reshuffled when empty.
+A turn starts by drawing a card. Each card type changes the turn: Bonus cards add points on Volle Lotte, Double Lotte doubles, Stop ends the turn, Star protects against loss, Street is a collection challenge, Plus/Minus shifts scores on Volle Lotte, and Clover wins after two Volle Lottes in a row. The deck is shuffled, and reshuffled when empty.
 
 **Why this priority**: Cards are what distinguishes Volle Lotte from a plain dice game and are part of the complete rules.
 
@@ -79,7 +79,7 @@ A turn starts by drawing a card. Each card type changes the turn: Bonus cards ad
 1. **Given** a Bonus card of N points, **When** the player reaches Volle Lotte, **Then** N points are added to the turn.
 2. **Given** a Double Lotte card, **When** the player reaches Volle Lotte, **Then** the points collected since this card are doubled (earlier turn points count once), credited (the doubled value must reach the minimum), and the turn ends with the next player up.
 3. **Given** a Stop card is drawn, **When** the turn starts, **Then** the turn ends immediately and the next player is up.
-4. **Given** a Fireworks card, **When** the player busts, **Then** the points are credited instead of lost; **When** Volle Lotte is reached, **Then** no new card is drawn, all points of the turn are credited without a minimum, and the turn ends with the next player up.
+4. **Given** a Star card, **When** the player busts, **Then** the points are credited instead of lost; **When** Volle Lotte is reached, **Then** no new card is drawn, all points of the turn are credited without a minimum, and the turn ends with the next player up.
 5. **Given** a Street card, **When** the player sets aside one die per value 1 to 6 (cumulatively across throws), **Then** the player receives exactly 2,000 points, regardless of earlier turn points; **When** a throw shows no still-missing value, **Then** it is a bust and the player gets 0 points, including the turn points collected before; **When** Street succeeds, **Then** the turn ends with the next player up.
 6. **Given** a Plus/Minus card, **When** the player reaches Volle Lotte, **Then** the player gains only 1,000 (the collected turn points are discarded) and every leader loses 1,000 (a leading player loses nothing, no score drops below 0), and the turn ends with the next player up.
 7. **Given** a Clover card, **When** the player reaches two new Volle Lotte in a row (earlier ones in the turn do not count), **Then** the player wins the game immediately.
@@ -151,17 +151,17 @@ At any point the game state, including the deck order and the turn in progress, 
 
 - **FR-005**: The engine MUST require at least one scoring die to be set aside after every throw before the player can bank or throw again.
 - **FR-006**: The engine MUST let the player bank the turn's points (adding them to the score and ending the turn) or throw the remaining dice again.
-- **FR-007**: On a bust the engine MUST end the turn and discard the turn's points, except where a card rule says otherwise (Fireworks).
+- **FR-007**: On a bust the engine MUST end the turn and discard the turn's points, except where a card rule says otherwise (Star).
 - **FR-008**: The engine MUST detect Volle Lotte (all six dice score); on a Bonus card the player may bank or draw a new card, keeping the points collected so far in the turn and getting six fresh dice.
-- **FR-009**: The engine MUST reject banking when the points collected since the current card was drawn are below the configured minimum (default 350; 0 disables it), except after a Volle Lotte, on Stop and on Fireworks.
+- **FR-009**: The engine MUST reject banking when the points collected since the current card was drawn are below the configured minimum (default 350; 0 disables it), except after a Volle Lotte, on Stop and on Star.
 - **FR-010**: The engine MUST reject any action that is invalid in the current phase, for the wrong player, or after the game ended, and MUST leave the state unchanged in that case.
 
 **Cards**
 
 - **FR-011**: Each turn MUST start by drawing a card from the deck; an empty deck MUST be reshuffled from the full configured card set.
-- **FR-012**: The engine MUST implement the card effects Bonus 200/300/400/500/600, Double Lotte, Stop, Fireworks, Street, Plus/Minus and Clover as described in [docs/rules.md](../../docs/rules.md).
+- **FR-012**: The engine MUST implement the card effects Bonus 200/300/400/500/600, Double Lotte, Stop, Star, Street, Plus/Minus and Clover as described in [docs/rules.md](../../docs/rules.md).
 - **FR-013**: The number of cards per type MUST be configurable at game creation; the default set is the 56-card set from rules.md.
-- **FR-014**: Star is not a separate card type; the Fireworks card is the only card with this effect, and the default set stays at 56 cards (5 Fireworks).
+- **FR-014**: Star is the only card with this effect, and the default set stays at 56 cards (5 Star).
 - **FR-015**: On a Street card the engine MUST count dice cumulatively across throws (one die per value 1 to 6); a throw without any still-missing value is a bust (0 points, earlier turn points lost); completing all six values awards exactly 2,000 points for the turn; earlier turn points are discarded, not added.
 - **FR-016**: When a Stop card is drawn after a Volle Lotte, the engine MUST credit the points collected so far and end the turn.
 - **FR-016a**: On Street, Plus/Minus and Double Lotte the turn MUST end directly after the successful attempt; no new card is drawn and the next player is up.
@@ -169,7 +169,7 @@ At any point the game state, including the deck order and the turn in progress, 
 - **FR-016c**: On a Volle Lotte with a Plus/Minus card the engine MUST add 1,000 to the player and discard the turn points, and subtract 1,000 from each leader (never below 0), unless the player leads.
 - **FR-016d**: After a Volle Lotte on a Bonus card the engine MUST let the player bank or draw a new card; if the new card is a Bonus card, banking requires at least the minimum in that run, otherwise (bust or abandoned) the whole turn is lost.
 - **FR-016e**: If the card drawn after a Volle Lotte is Street, Double Lotte or Clover, the engine MUST apply that card's rules and discard all turn points on failure.
-- **FR-016f**: On Fireworks the engine MUST end the turn on a Volle Lotte (no new card) and credit all turn points with no minimum, also on a bust.
+- **FR-016f**: On Star the engine MUST end the turn on a Volle Lotte (no new card) and credit all turn points with no minimum, also on a bust.
 
 **Game**
 

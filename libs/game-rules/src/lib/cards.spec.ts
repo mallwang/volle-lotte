@@ -9,7 +9,7 @@ describe('cards', () => {
   it('default deck has 56 cards with the default counts', () => {
     const deck = buildDeck(defaultRules(), seededRandomInt(1));
     expect(deck).toHaveLength(56);
-    expect(count(deck, 'fireworks')).toBe(5);
+    expect(count(deck, 'star')).toBe(5);
     expect(count(deck, 'stop')).toBe(10);
     expect(count(deck, 'clover')).toBe(1);
   });

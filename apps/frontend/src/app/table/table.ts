@@ -198,10 +198,10 @@ export class Table {
     return this.can('throw') || (this.can('decide') && (turn?.free ?? 0) > 0);
   }
 
-  /** Fireworks and Street must run to a bust or Volle Lotte, so banking is never offered. */
+  /** Star and Street must run to a bust or Volle Lotte, so banking is never offered. */
   protected canBank(): boolean {
     const card = this.socket.game()?.game?.turn?.card;
-    return this.can('decide') && card !== 'fireworks' && card !== 'street';
+    return this.can('decide') && card !== 'star' && card !== 'street';
   }
 
   protected toggle(i: number): void {

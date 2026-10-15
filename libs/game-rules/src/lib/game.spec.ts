@@ -25,7 +25,7 @@ const act = (state: GameState, action: Action, rng = none): GameState => {
   return out.state;
 };
 
-/** Plays a whole Bonus/Fireworks-style Volle Lotte: draw, throw six scoring dice, select all. */
+/** Plays a whole Bonus/Star-style Volle Lotte: draw, throw six scoring dice, select all. */
 const volleLotte = (state: GameState) => {
   const s = act(state, { type: 'draw' });
   const t = act(s, { type: 'throw' }, rolls(1, 1, 1, 5, 5, 5));

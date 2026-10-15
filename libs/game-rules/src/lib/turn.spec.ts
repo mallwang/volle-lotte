@@ -158,27 +158,27 @@ describe('cards', () => {
     });
   });
 
-  describe('Fireworks', () => {
+  describe('Star', () => {
     it('may select just some of the scoring dice', () => {
-      const t = run(turnOf('fireworks'), { type: 'throw' }, rolls(1, 5, 2, 3, 4, 6)).turn as Turn;
+      const t = run(turnOf('star'), { type: 'throw' }, rolls(1, 5, 2, 3, 4, 6)).turn as Turn;
       expect(reason(t, select(0))).toBe('accepted');
       expect(reason(t, select(0, 1))).toBe('accepted');
     });
 
     it('a bust credits all points of the turn', () => {
-      const t = turnOf('fireworks', { phase: 'decide', free: 3, run: 300, carried: 200 });
+      const t = turnOf('star', { phase: 'decide', free: 3, run: 300, carried: 200 });
       expect(run(t, { type: 'throw' }, rolls(2, 3, 4))).toMatchObject({ turn: null, credit: 500 });
     });
 
     it('bank is never allowed', () => {
-      const t = turnOf('fireworks', { phase: 'decide', free: 3, run: 600 });
+      const t = turnOf('star', { phase: 'decide', free: 3, run: 600 });
       expect(reason(t, { type: 'bank' })).toBe('wrongPhase');
     });
 
     it('a Volle Lotte credits everything, even below the minimum', () => {
-      const r = throwAndSelect(turnOf('fireworks'), allSix, [0, 1, 2, 3, 4, 5]);
+      const r = throwAndSelect(turnOf('star'), allSix, [0, 1, 2, 3, 4, 5]);
       expect(r).toMatchObject({ turn: null, credit: 1500 });
-      const low = throwAndSelect(turnOf('fireworks'), allSix, [0, 1, 2, 3, 4, 5], {
+      const low = throwAndSelect(turnOf('star'), allSix, [0, 1, 2, 3, 4, 5], {
         ...rules,
         minimumPoints: 5000,
       });

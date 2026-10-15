@@ -8,7 +8,7 @@ The sources agree on scoring and card effects. Differences are marked as **House
 - 6 dice. Scoring: a single 1 = 100, a single 5 = 50. Other single dice do not score.
 - Three of a kind in **one** throw: 1s = 1,000, 2s-6s = face value x 100 (5s = 500). Combinations cannot be built across several throws.
 - After every throw at least one scoring die must be set aside. Then the player either stops (banks the points) or throws the remaining dice again.
-- A throw without a scoring die (bust): the turn ends and all points of the turn are lost (exception: Fireworks).
+- A throw without a scoring die (bust): the turn ends and all points of the turn are lost (exception: Star).
 - **Volle Lotte** (Tutto): all 6 dice score. After a Volle Lotte on a Bonus card the player may bank, or draw a new card and continue with 6 fresh dice; the points collected so far stay in the turn (a bust loses everything).
 - A turn starts by drawing a card. An empty deck is reshuffled (Java behaviour).
 - **Minimum points** (default 350): banking needs at least the minimum in the current run, i.e. since the current card was drawn. After a Volle Lotte on a Bonus card the player may bank at once (the total is always at least 6x50 + 200 = 500). If the player draws a new Bonus card instead, at least the minimum must be collected for that card before banking, otherwise the whole turn is lost; on success all turn points are added.
@@ -16,7 +16,7 @@ The sources agree on scoring and card effects. Differences are marked as **House
   - **Bonus 200/300/400/500/600**: on Volle Lotte the bonus points are added; the player may then draw the next card (see above).
   - **Double Lotte**: on Volle Lotte only the points collected since this card are doubled (earlier turn points count once; the doubled value must reach the minimum). The turn ends, the next player is up.
   - **Stop**: the turn ends immediately, the next player is up. Drawn after a Volle Lotte, the points collected so far are credited.
-  - **Fireworks** (the Star card of the Java version is the same card; the deck stays at 56 cards): the normal selection rule applies (at least one scoring die per throw, more if the player wants) and the player throws until a bust. All points of the turn are credited at the end, with no minimum. On a Volle Lotte no new card is drawn and the turn ends, crediting all points.
+  - **Star**: the normal selection rule applies (at least one scoring die per throw, more if the player wants) and the player throws until a bust. All points of the turn are credited at the end, with no minimum. On a Volle Lotte no new card is drawn and the turn ends, crediting all points.
   - **Street**: collect one die per value 1-6, cumulatively across throws. A throw without a still-missing value is a bust (0 points, earlier turn points are lost too). Success: exactly 2,000 points for the turn (earlier turn points are replaced, not added) and the turn ends.
   - **Plus/Minus**: on Volle Lotte the player gets only +1,000 (the turn points are discarded). Every leader (all if tied) loses 1,000; a leading player loses nothing; no score drops below 0. The turn ends.
   - **Clover** (only 1 card): two **new** Volle Lotte in a row after drawing the card win the game immediately (earlier Volle Lotte of the turn do not count); points do not matter. A bust loses all turn points as usual.
@@ -36,5 +36,4 @@ The sources agree on scoring and card effects. Differences are marked as **House
 
 ### Default set (56 cards)
 
-Bonus 200/300/400/500/600 5 each (25), Double Lotte 5, Stop 10, Fireworks 5, Street 5, Plus/Minus 5, Clover 1.
-Star is not an extra card; it is the Fireworks card.
+Bonus 200/300/400/500/600 5 each (25), Double Lotte 5, Stop 10, Star 5, Street 5, Plus/Minus 5, Clover 1.

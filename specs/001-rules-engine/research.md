@@ -16,7 +16,7 @@ No `NEEDS CLARIFICATION` remained after `/speckit-clarify`. The following design
 
 ## 3. Volle Lotte handling
 
-- **Decision**: When `select` secures the last free die, the engine resolves it by card: Bonus adds the bonus and moves to phase `decide` (`bank` or `draw`); Double Lotte, Street, Plus/Minus, Fireworks and Clover resolve and end the turn as in rules.md (Clover counts consecutive new Volle Lotte, see data model).
+- **Decision**: When `select` secures the last free die, the engine resolves it by card: Bonus adds the bonus and moves to phase `decide` (`bank` or `draw`); Double Lotte, Street, Plus/Minus, Star and Clover resolve and end the turn as in rules.md (Clover counts consecutive new Volle Lotte, see data model).
 - **Rationale**: The rules differ only in what follows the Volle Lotte, so one branch per card in `turn.ts` keeps each effect local and testable.
 
 ## 4. Randomness
@@ -55,5 +55,5 @@ No `NEEDS CLARIFICATION` remained after `/speckit-clarify`. The following design
 
 ## 10. Selection rules to implement
 
-- **Decision**: A selection is valid if it is non-empty, only indexes of dice from the latest throw that are not yet set aside, and every selected die belongs to a scoring combination (per `scoreDice`). With Fireworks every scoring die and combination of the throw must be selected; with Street the selection is exactly the dice that carry a still-missing value, one die per value.
-- **Rationale**: Directly from FR-004, FR-005, FR-015 and the Fireworks rule; `legalActions` enumerates the valid subsets (at most 63 per throw).
+- **Decision**: A selection is valid if it is non-empty, only indexes of dice from the latest throw that are not yet set aside, and every selected die belongs to a scoring combination (per `scoreDice`). With Star every scoring die and combination of the throw must be selected; with Street the selection is exactly the dice that carry a still-missing value, one die per value.
+- **Rationale**: Directly from FR-004, FR-005, FR-015 and the Star rule; `legalActions` enumerates the valid subsets (at most 63 per throw).

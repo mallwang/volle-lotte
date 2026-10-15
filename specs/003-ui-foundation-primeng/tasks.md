@@ -103,7 +103,7 @@ description: 'Task list for UI Foundation (PrimeNG)'
 
 ### Tests for User Story 3
 
-- [x] T027 [P] [US3] Update `apps/frontend/src/app/table/table.spec.ts`: all players rendered for 2, 5 and 8 players with name/score/online, active player marked, only allowed actions enabled, disabled-reason text linked via `aria-describedby`, dice selection toggles and sends `turn:action`, spectating another player's turn offers no actions, turn-end message for bank/bust/Stop/Double Lotte/Plus-Minus/Street/Fireworks/Clover, rejected action shows a toast and the table stays usable, axe light and dark
+- [x] T027 [P] [US3] Update `apps/frontend/src/app/table/table.spec.ts`: all players rendered for 2, 5 and 8 players with name/score/online, active player marked, only allowed actions enabled, disabled-reason text linked via `aria-describedby`, dice selection toggles and sends `turn:action`, spectating another player's turn offers no actions, turn-end message for bank/bust/Stop/Double Lotte/Plus-Minus/Street/Star/Clover, rejected action shows a toast and the table stays usable, axe light and dark
 - [x] T028 [P] [US3] Update `apps/frontend/src/app/result/result.spec.ts`: ranking with shared ranks for equal scores, return-to-lobby button, axe light and dark
 
 ### Implementation for User Story 3

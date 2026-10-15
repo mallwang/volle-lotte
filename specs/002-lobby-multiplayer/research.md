@@ -56,7 +56,7 @@ Every item below was an open question in the spec or constitution. No `NEEDS CLA
 
 - **Decision**: pure `chooseAction(state, difficulty, rng): Action` in `libs/game-rules/src/lib/computer.ts`. It enumerates `legalActions(state)` and decides by phase:
   - `draw`/`throw`: take that action.
-  - `select`: choose the legal selection that keeps the most free dice (take the fewest points that still score) for easy and medium; for hard also take all scoring dice when that gives a Volle Lotte, otherwise the highest points per die used. Fireworks and Street follow the legal set.
+  - `select`: choose the legal selection that keeps the most free dice (take the fewest points that still score) for easy and medium; for hard also take all scoring dice when that gives a Volle Lotte, otherwise the highest points per die used. Star and Street follow the legal set.
   - `decide`: bank when `turn points >= threshold`, otherwise throw. Thresholds by free dice: easy bank at 300 with any dice left, medium 450 (never with >= 5 free), hard 650 (never with >= 4 free); the initial numbers are tunable constants and calibrated later by simulation.
   - Always falls back to a legal action, so a computer can never act illegally.
   - `random` picks easy/medium/hard once when assigned.
