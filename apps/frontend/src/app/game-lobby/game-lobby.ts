@@ -14,6 +14,7 @@ import { DIFFICULTIES, DisconnectBanner } from '../table/disconnect-banner';
 
 @Component({
   selector: 'app-game-lobby',
+  host: { class: 'vl-narrow' },
   imports: [
     FormsModule,
     DisconnectBanner,
@@ -40,7 +41,7 @@ import { DIFFICULTIES, DisconnectBanner } from '../table/disconnect-banner';
       <app-disconnect-banner [game]="game" />
       <ul class="vl-cards">
         @for (s of game.seats; track $index) {
-          <li class="vl-seat">
+          <li class="vl-seat" [class.vl-seat-locked]="s.state === 'locked'">
             <p-avatar [label]="'' + ($index + 1)" shape="circle" aria-hidden="true" />
             <span class="vl-seat-name">{{ 'gameLobby.seat' | t: { n: $index + 1 } }}</span>
             @switch (s.state) {
@@ -58,7 +59,7 @@ import { DIFFICULTIES, DisconnectBanner } from '../table/disconnect-banner';
                   [severity]="s.ready ? 'success' : 'warn'"
                 />
                 @if ($index === game.you.seat) {
-                  <label>
+                  <label class="vl-check">
                     <input
                       type="checkbox"
                       [checked]="s.ready"
@@ -77,8 +78,8 @@ import { DIFFICULTIES, DisconnectBanner } from '../table/disconnect-banner';
                 />
                 @if (host()) {
                   <label>
-                    {{ 'gameLobby.difficultySeat' | t: { n: $index + 1 } }}
                     <select
+                      [attr.aria-label]="'gameLobby.difficultySeat' | t: { n: $index + 1 }"
                       [value]="s.difficulty"
                       (change)="setSeat($index, 'computer', $any($event.target).value)"
                     >
@@ -95,7 +96,12 @@ import { DIFFICULTIES, DisconnectBanner } from '../table/disconnect-banner';
                 }
               }
               @case ('locked') {
-                <p-tag [value]="'gameLobby.locked' | t" icon="pi pi-lock" severity="secondary" />
+                <p-tag
+                  [value]="'gameLobby.locked' | t"
+                  icon="pi pi-lock"
+                  severity="secondary"
+                  styleClass="vl-tag-locked"
+                />
                 @if (host()) {
                   <p-button
                     [label]="'gameLobby.unlock' | t"
@@ -123,12 +129,15 @@ import { DIFFICULTIES, DisconnectBanner } from '../table/disconnect-banner';
           </li>
         }
       </ul>
-      @if (host()) {
-        <p-button [label]="'gameLobby.start' | t" [disabled]="!canStart()" (onClick)="start()" />
-      } @else {
+      @if (!host()) {
         <p>{{ 'gameLobby.waiting' | t: { name: hostName() } }}</p>
       }
-      <p-button [label]="'game.leave' | t" severity="secondary" (onClick)="socket.leave()" />
+      <div class="vl-actions">
+        <p-button [label]="'game.leave' | t" severity="secondary" (onClick)="socket.leave()" />
+        @if (host()) {
+          <p-button [label]="'gameLobby.start' | t" [disabled]="!canStart()" (onClick)="start()" />
+        }
+      </div>
       @if (error()) {
         <p-message severity="error" role="alert">{{ error()?.() }}</p-message>
       }

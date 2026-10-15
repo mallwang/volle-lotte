@@ -10,7 +10,7 @@ import { I18nService } from './core/i18n.service';
 import { ThemeService } from './core/theme.service';
 
 function setup(connection = 'connected') {
-  const theme = { mode: signal('system'), set: vi.fn() };
+  const theme = { mode: signal('system'), next: vi.fn() };
   const socket = { connection: signal(connection), session: signal(null), game: signal(null) };
   TestBed.configureTestingModule({
     imports: [App],
@@ -35,20 +35,16 @@ describe('App', () => {
     expect(el.querySelector('main')).not.toBeNull();
   });
 
-  it('theme toggle sets the mode and reflects the selection', async () => {
+  it('theme button cycles the mode and names the current one', async () => {
     const { fixture, theme, el } = setup();
-    const buttons = Array.from(
-      el.querySelectorAll<HTMLElement>(
-        'p-selectbutton [role="radio"], p-selectbutton button, p-selectbutton .p-togglebutton',
-      ),
-    );
-    const dark = buttons.find((b) => b.textContent?.includes('Dark'));
-    dark?.click();
-    expect(theme.set).toHaveBeenCalledWith('dark');
+    const button = el.querySelector<HTMLButtonElement>('p-button button')!;
+    expect(button.getAttribute('aria-label')).toBe('Colour theme: System');
+    button.click();
+    expect(theme.next).toHaveBeenCalled();
     theme.mode.set('light');
     fixture.detectChanges();
     await fixture.whenStable();
-    expect(el.querySelector('p-selectbutton')?.textContent).toContain('Light');
+    expect(button.getAttribute('aria-label')).toBe('Colour theme: Light');
   });
 
   it('shows the offline notice only while not connected', () => {
@@ -66,7 +62,9 @@ describe('App', () => {
     TestBed.inject(I18nService).set('de');
     fixture.detectChanges();
     await fixture.whenStable();
-    expect(el.querySelector('p-selectbutton')?.textContent).toContain('Dunkel');
+    expect(el.querySelector<HTMLElement>('p-button button')?.getAttribute('aria-label')).toBe(
+      'Farbschema: System',
+    );
     expect(el.querySelector('p-select.vl-lang [aria-label="Sprache"]')).not.toBeNull();
     localStorage.clear();
   });

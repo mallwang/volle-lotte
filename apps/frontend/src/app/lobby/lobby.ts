@@ -15,6 +15,7 @@ import { TranslatePipe } from '../core/translate.pipe';
 
 @Component({
   selector: 'app-lobby',
+  host: { class: 'vl-narrow' },
   imports: [
     FormsModule,
     RouterLink,
@@ -27,7 +28,7 @@ import { TranslatePipe } from '../core/translate.pipe';
     TranslatePipe,
   ],
   template: `
-    <div class="vl-header">
+    <div class="vl-page-header">
       <h2>{{ 'lobby.title' | t }}</h2>
       <a routerLink="/create-game" class="p-button p-component">{{ 'lobby.create' | t }}</a>
     </div>

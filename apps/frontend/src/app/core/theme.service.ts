@@ -4,7 +4,7 @@ import { Injectable, computed, effect, inject, signal } from '@angular/core';
 export type ThemeMode = 'system' | 'light' | 'dark';
 /** localStorage key; keep in sync with the pre-paint script in index.html. */
 export const THEME_KEY = 'vl-theme';
-const MODES: readonly string[] = ['system', 'light', 'dark'];
+const MODES: readonly ThemeMode[] = ['system', 'light', 'dark'];
 
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
@@ -34,10 +34,15 @@ export class ThemeService {
     }
   }
 
+  /** Cycles system → light → dark. */
+  next(): void {
+    this.set(MODES[(MODES.indexOf(this.mode()) + 1) % MODES.length]);
+  }
+
   private read(): ThemeMode {
     try {
       const v = localStorage.getItem(THEME_KEY);
-      return v !== null && MODES.includes(v) ? (v as ThemeMode) : 'system';
+      return v !== null && (MODES as readonly string[]).includes(v) ? (v as ThemeMode) : 'system';
     } catch {
       return 'system';
     }

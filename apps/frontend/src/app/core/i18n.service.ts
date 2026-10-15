@@ -8,7 +8,7 @@ export interface Language {
   code: LanguageCode;
   /** Native name. */
   name: string;
-  /** Decorative flag emoji. */
+  /** Decorative flag image under /flags. */
   flag: string;
 }
 
@@ -21,8 +21,8 @@ export class I18nService {
   private readonly doc = inject(DOCUMENT);
 
   readonly languages: Language[] = [
-    { code: 'en', name: 'English', flag: '🇬🇧' },
-    { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
+    { code: 'en', name: 'English', flag: '/flags/en.svg' },
+    { code: 'de', name: 'Deutsch', flag: '/flags/de.svg' },
   ];
   readonly lang = signal<LanguageCode>(this.initial());
 

@@ -1,13 +1,4 @@
-import {
-  afterRenderEffect,
-  Component,
-  computed,
-  effect,
-  ElementRef,
-  inject,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import type { Action } from 'game-rules';
 import { ButtonModule } from 'primeng/button';
 import { MessageService } from 'primeng/api';
@@ -105,15 +96,23 @@ const ANNOUNCED: Record<string, 'info' | 'warn' | 'success'> = {
                 </li>
               }
             </ul>
+            <h3>{{ 'table.log' | t }}</h3>
+            <ol class="vl-log" role="log" aria-live="polite">
+              @for (e of newestFirst(); track e) {
+                <li>
+                  @for (part of parts(e); track $index) {
+                    @if (part.die) {
+                      <span class="vl-log-die">{{ part.text }}</span>
+                    } @else {
+                      {{ part.text }}
+                    }
+                  }
+                </li>
+              }
+            </ol>
           </section>
         </div>
       }
-      <h3>{{ 'table.log' | t }}</h3>
-      <ol #logEl class="vl-log" role="log" aria-live="polite">
-        @for (e of view.log; track $index) {
-          <li>{{ text(e) }}</li>
-        }
-      </ol>
       <p-button [label]="'game.leave' | t" severity="secondary" (onClick)="socket.leave()" />
     }
   `,
@@ -129,9 +128,10 @@ export class Table {
     this.mine() ? this.chosen() : (this.socket.game()?.preview ?? []),
   );
   private readonly messages = inject(MessageService);
-  private readonly logEl = viewChild<ElementRef<HTMLElement>>('logEl');
   /** Log entries already announced; the server log keeps growing, so the length is a stable cursor. */
   private seen = this.socket.game()?.log.length ?? 0;
+  /** Newest entry on top, so nobody has to scroll to see what just happened. */
+  protected readonly newestFirst = computed(() => [...(this.socket.game()?.log ?? [])].reverse());
   protected readonly seats = computed(() => {
     const g = this.socket.game();
     return g ? playerSeats(g) : [];
@@ -196,10 +196,6 @@ export class Table {
       }
       this.seen = g.log.length;
     });
-    afterRenderEffect(() => {
-      const el = this.logEl()?.nativeElement;
-      if (el && this.socket.game()?.log.length) el.scrollTop = el.scrollHeight;
-    });
   }
 
   protected can(phase: string): boolean {
@@ -227,6 +223,20 @@ export class Table {
   protected text = (e: Parameters<typeof logText>[1]): string => {
     const g = this.socket.game();
     return g ? logText(g, e, this.i18n) : '';
+  };
+
+  /** Log text split so every thrown or set-aside die can be framed. */
+  protected parts = (e: Parameters<typeof logText>[1]): { text: string; die: boolean }[] => {
+    const text = this.text(e);
+    const data = e.kind === 'turn' && typeof e.data === 'object' ? e.data : null;
+    const dice = data && 'dice' in data ? data.dice.join(' ') : '';
+    const at = dice ? text.indexOf(dice) : -1;
+    if (at < 0) return [{ text, die: false }];
+    return [
+      { text: text.slice(0, at), die: false },
+      ...dice.split(' ').map((text) => ({ text, die: true })),
+      { text: text.slice(at + dice.length), die: false },
+    ];
   };
 
   protected select(): Promise<void> {

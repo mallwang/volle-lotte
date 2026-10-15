@@ -133,8 +133,8 @@ import { TranslatePipe } from '../core/translate.pipe';
         }
       </details>
       <div class="vl-actions">
-        <p-button type="submit" [label]="'create.submit' | t" />
         <a routerLink="/lobby">{{ 'create.cancel' | t }}</a>
+        <p-button type="submit" [label]="'create.submit' | t" />
       </div>
       @if (error()) {
         <p-message severity="error" role="alert">{{ error()?.() }}</p-message>
