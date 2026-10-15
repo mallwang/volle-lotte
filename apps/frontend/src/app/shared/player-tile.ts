@@ -1,8 +1,10 @@
 import { Component, input } from '@angular/core';
+import { TranslatePipe } from '../core/translate.pipe';
 
 /** Name, score, role and state of one player; the active player is marked by text, not colour alone. */
 @Component({
   selector: 'app-player-tile',
+  imports: [TranslatePipe],
   template: `
     <div class="vl-player" [attr.aria-current]="active() ? 'true' : null">
       <i
@@ -10,20 +12,20 @@ import { Component, input } from '@angular/core';
         [class.pi-desktop]="computer()"
         [class.pi-user]="!computer()"
         role="img"
-        [attr.aria-label]="computer() ? 'Computer' : 'Human'"
+        [attr.aria-label]="(computer() ? 'player.computer' : 'player.human') | t"
       ></i>
       <strong>{{ name() }}</strong>
       @if (active()) {
-        <span class="vl-status vl-status-mint">Active</span>
+        <span class="vl-status vl-status-mint">{{ 'player.active' | t }}</span>
       }
       @if (role()) {
         <span class="vl-status vl-status-lavender">{{ role() }}</span>
       }
       @if (!online()) {
-        <span class="vl-status vl-status-rose">{{ reconnect() ?? 'Offline' }}</span>
+        <span class="vl-status vl-status-rose">{{ reconnect() ?? ('player.offline' | t) }}</span>
       }
       @if (score() !== null) {
-        <span>Score: {{ score() }}</span>
+        <span>{{ 'player.score' | t: { score: score() ?? 0 } }}</span>
       }
     </div>
   `,

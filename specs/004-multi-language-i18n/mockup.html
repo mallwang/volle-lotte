@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Volle Lotte – language select mockup</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      :root {
+        --bg: #fbf1ea;
+        --surface: #fffaf6;
+        --surface2: #f3dccd;
+        --line: #e6c3ad;
+        --text: #3a241b;
+        --muted: #7b5a4c;
+        --primary: #a8431f;
+        --onp: #fff;
+      }
+      .dark {
+        --bg: #1c1411;
+        --surface: #2a1d18;
+        --surface2: #3b2a22;
+        --line: #52382c;
+        --text: #f5e6dc;
+        --muted: #cbaa98;
+        --primary: #f08a5d;
+        --onp: #2a1008;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: system-ui, sans-serif;
+        background: #f3f2ee;
+        color: #2c2a25;
+      }
+      .review {
+        padding: 1rem 2rem;
+        background: #fff;
+        border-bottom: 1px solid #ddd9d0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem 1.5rem;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+      .review h1 {
+        font-size: 1.1rem;
+        margin: 0;
+        width: 100%;
+      }
+      .review p {
+        margin: 0;
+        font-size: 0.85rem;
+        color: #7a7669;
+        width: 100%;
+      }
+      .review button {
+        border: 1px solid #ddd9d0;
+        background: #fff;
+        padding: 0.35rem 0.7rem;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      .review button[aria-pressed='true'] {
+        background: #b45f2c;
+        color: #fff;
+        border-color: #b45f2c;
+      }
+      .stage {
+        margin: 1.5rem auto;
+        transition: width 0.2s;
+        background: var(--bg);
+        color: var(--text);
+        border: 1px solid #ddd9d0;
+        border-radius: 8px;
+        min-height: 420px;
+        width: min(100%, 1000px);
+        position: relative;
+      }
+      .stage.mobile {
+        width: 375px;
+      }
+      .bar {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.6rem 1rem;
+        background: var(--surface);
+        border-bottom: 1px solid var(--line);
+        border-radius: 8px 8px 0 0;
+        flex-wrap: wrap;
+      }
+      .bar h2 {
+        margin: 0;
+        font-size: 1.1rem;
+        color: var(--primary);
+        margin-right: auto;
+      }
+      .seg {
+        display: inline-flex;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      .seg span {
+        padding: 0.35rem 0.7rem;
+        font-size: 0.85rem;
+      }
+      .seg .on {
+        background: var(--primary);
+        color: var(--onp);
+      }
+      .lang {
+        position: relative;
+      }
+      .lang > button {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        border: 1px solid var(--line);
+        background: var(--surface);
+        color: var(--text);
+        padding: 0.35rem 0.6rem;
+        border-radius: 8px;
+        font: inherit;
+        font-size: 0.85rem;
+        cursor: pointer;
+      }
+      .lang .name {
+      }
+      .stage.mobile .lang .name {
+        display: none;
+      }
+      .menu {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: calc(100% + 4px);
+        min-width: 160px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        box-shadow: 0 6px 16px #0003;
+        list-style: none;
+        margin: 0;
+        padding: 0.25rem;
+        z-index: 5;
+      }
+      .open .menu {
+        display: block;
+      }
+      .menu li {
+        padding: 0.45rem 0.6rem;
+        border-radius: 6px;
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        font-size: 0.9rem;
+      }
+      .menu li.sel {
+        background: var(--surface2);
+        font-weight: 600;
+      }
+      .menu li:focus-visible,
+      .lang > button:focus-visible {
+        outline: 2px solid var(--primary);
+      }
+      .content {
+        padding: 1.5rem;
+      }
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 1rem;
+        max-width: 420px;
+        margin: 0 auto;
+      }
+      .card button {
+        background: var(--primary);
+        color: var(--onp);
+        border: 0;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+      }
+      .card input {
+        width: 100%;
+        padding: 0.5rem;
+        margin: 0.5rem 0 1rem;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--bg);
+        color: var(--text);
+      }
+      [data-lang] {
+        display: none;
+      }
+      .stage[data-l='en'] [data-lang='en'],
+      .stage[data-l='de'] [data-lang='de'] {
+        display: revert;
+      }
+      .note {
+        font-size: 0.8rem;
+        color: var(--muted);
+        max-width: 420px;
+        margin: 1rem auto 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="review">
+      <h1>Language select – review mockup (static, non-functional)</h1>
+      <p>
+        Select sits in the app bar directly left of the theme toggle. Toggle viewport, theme, active
+        language and open menu below.
+      </p>
+      <span
+        >Viewport:
+        <button data-vp="desktop" aria-pressed="true">Desktop</button>
+        <button data-vp="mobile" aria-pressed="false">Mobile</button></span
+      >
+      <span
+        >Language:
+        <button data-l="en" aria-pressed="true">EN</button>
+        <button data-l="de" aria-pressed="false">DE</button></span
+      >
+      <span
+        >Theme: <button data-th="light" aria-pressed="true">Light</button>
+        <button data-th="dark" aria-pressed="false">Dark</button></span
+      >
+      <span>Menu: <button data-menu aria-pressed="false">Open</button></span>
+    </div>
+
+    <div class="stage" id="stage" data-l="en">
+      <header class="bar">
+        <h2>Volle Lotte</h2>
+        <div class="lang" id="lang">
+          <button aria-haspopup="listbox" aria-expanded="false" aria-label="Language: English">
+            <span aria-hidden="true">🇬🇧</span><span class="name" data-lang="en">English</span
+            ><span class="name" data-lang="de">Deutsch</span><span aria-hidden="true">▾</span>
+          </button>
+          <ul class="menu" role="listbox" aria-label="Language">
+            <li role="option" tabindex="0" data-pick="de">
+              <span aria-hidden="true">🇩🇪</span> Deutsch
+            </li>
+            <li role="option" tabindex="0" data-pick="en">
+              <span aria-hidden="true">🇬🇧</span> English
+            </li>
+          </ul>
+        </div>
+        <div class="seg" role="group" aria-label="Colour theme">
+          <span>Auto</span><span class="on">Light</span><span>Dark</span>
+        </div>
+      </header>
+      <main class="content">
+        <div class="card">
+          <h3 data-lang="en">Choose a nickname</h3>
+          <h3 data-lang="de">Wähle einen Spitznamen</h3>
+          <label
+            ><span data-lang="en">Nickname</span><span data-lang="de">Spitzname</span
+            ><input value="Anna"
+          /></label>
+          <button data-lang="en">Continue</button><button data-lang="de">Weiter</button>
+        </div>
+        <p class="note" data-lang="en">
+          Language names are always shown as text on desktop; on phones only the flag is visible,
+          the accessible name stays the language name.
+        </p>
+        <p class="note" data-lang="de">
+          Sprachnamen stehen am Desktop immer als Text; am Handy ist nur die Flagge sichtbar, der
+          zugängliche Name bleibt der Sprachname.
+        </p>
+      </main>
+    </div>
+
+    <script>
+      const stage = document.getElementById('stage'),
+        lang = document.getElementById('lang');
+      const flags = { en: '🇬🇧', de: '🇩🇪' };
+      function press(sel, v) {
+        document
+          .querySelectorAll(sel)
+          .forEach((b) =>
+            b.setAttribute('aria-pressed', b.dataset[Object.keys(b.dataset)[0]] === v),
+          );
+      }
+      function setLang(l) {
+        stage.dataset.l = l;
+        document.documentElement.lang = l;
+        press('.review [data-l]', l);
+        lang.querySelector('button span').textContent = flags[l];
+        lang
+          .querySelectorAll('li')
+          .forEach((li) => li.classList.toggle('sel', li.dataset.pick === l));
+        lang
+          .querySelector('button')
+          .setAttribute('aria-label', l === 'de' ? 'Sprache: Deutsch' : 'Language: English');
+      }
+      document
+        .querySelectorAll('.review [data-l]')
+        .forEach((b) => (b.onclick = () => setLang(b.dataset.l)));
+      document.querySelectorAll('[data-pick]').forEach(
+        (li) =>
+          (li.onclick = () => {
+            setLang(li.dataset.pick);
+            lang.classList.remove('open');
+          }),
+      );
+      document.querySelectorAll('[data-vp]').forEach(
+        (b) =>
+          (b.onclick = () => {
+            stage.classList.toggle('mobile', b.dataset.vp === 'mobile');
+            press('[data-vp]', b.dataset.vp);
+          }),
+      );
+      document.querySelectorAll('[data-th]').forEach(
+        (b) =>
+          (b.onclick = () => {
+            stage.classList.toggle('dark', b.dataset.th === 'dark');
+            press('[data-th]', b.dataset.th);
+          }),
+      );
+      document.querySelector('[data-menu]').onclick = (e) => {
+        const o = lang.classList.toggle('open');
+        e.target.setAttribute('aria-pressed', o);
+      };
+      lang.querySelector('button').onclick = () => lang.classList.toggle('open');
+      setLang('en');
+    </script>
+  </body>
+</html>

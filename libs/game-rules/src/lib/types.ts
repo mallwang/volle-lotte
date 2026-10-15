@@ -128,23 +128,29 @@ export function defaultRules(): Rules {
   };
 }
 
+/** Machine-readable problem codes of `rulesError`; the UI translates them (`rules.<code>`). */
+export type RulesErrorCode =
+  | 'notObject'
+  | 'targetScore'
+  | 'minimumPoints'
+  | 'doubling'
+  | 'cardCounts'
+  | 'cardCountValues'
+  | 'deckEmpty';
+
 /** First problem found in `rules` (also for untyped input), or null if they are valid. */
-export function rulesError(rules: unknown): string | null {
-  if (typeof rules !== 'object' || rules === null) return 'rules must be an object';
+export function rulesError(rules: unknown): RulesErrorCode | null {
+  if (typeof rules !== 'object' || rules === null) return 'notObject';
   const { targetScore, minimumPoints, fourOfAKindDoubling, cardCounts } = rules as Record<
     string,
     unknown
   >;
-  if (!Number.isInteger(targetScore) || (targetScore as number) <= 0)
-    return 'targetScore must be a positive integer';
-  if (!Number.isInteger(minimumPoints) || (minimumPoints as number) < 0)
-    return 'minimumPoints must be an integer >= 0';
-  if (typeof fourOfAKindDoubling !== 'boolean') return 'fourOfAKindDoubling must be a boolean';
-  if (typeof cardCounts !== 'object' || cardCounts === null) return 'cardCounts must be an object';
+  if (!Number.isInteger(targetScore) || (targetScore as number) <= 0) return 'targetScore';
+  if (!Number.isInteger(minimumPoints) || (minimumPoints as number) < 0) return 'minimumPoints';
+  if (typeof fourOfAKindDoubling !== 'boolean') return 'doubling';
+  if (typeof cardCounts !== 'object' || cardCounts === null) return 'cardCounts';
   const counts = CARD_TYPES.map((c) => (cardCounts as Record<string, unknown>)[c]);
-  if (!counts.every((n) => Number.isInteger(n) && (n as number) >= 0))
-    return 'card counts must be integers >= 0';
-  if (counts.reduce((sum: number, n) => sum + (n as number), 0) < 1)
-    return 'the deck needs at least one card';
+  if (!counts.every((n) => Number.isInteger(n) && (n as number) >= 0)) return 'cardCountValues';
+  if (counts.reduce((sum: number, n) => sum + (n as number), 0) < 1) return 'deckEmpty';
   return null;
 }

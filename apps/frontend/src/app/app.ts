@@ -1,11 +1,15 @@
 import { Component, effect, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
-import { SelectButtonModule } from 'primeng/selectbutton';
+import { SelectModule } from 'primeng/select';
+import { TooltipModule } from 'primeng/tooltip';
 import { ToastModule } from 'primeng/toast';
+import { I18nService } from './core/i18n.service';
 import { SocketService } from './core/socket.service';
-import { ThemeService, type ThemeMode } from './core/theme.service';
+import { ThemeService } from './core/theme.service';
+import { TranslatePipe } from './core/translate.pipe';
 
 @Component({
   imports: [
@@ -14,8 +18,11 @@ import { ThemeService, type ThemeMode } from './core/theme.service';
     RouterLinkActive,
     FormsModule,
     MessageModule,
-    SelectButtonModule,
+    ButtonModule,
+    TooltipModule,
+    SelectModule,
     ToastModule,
+    TranslatePipe,
   ],
   selector: 'app-root',
   templateUrl: './app.html',
@@ -23,11 +30,7 @@ import { ThemeService, type ThemeMode } from './core/theme.service';
 export class App {
   protected readonly socket = inject(SocketService);
   protected readonly theme = inject(ThemeService);
-  protected readonly modes: { label: string; value: ThemeMode }[] = [
-    { label: 'System', value: 'system' },
-    { label: 'Light', value: 'light' },
-    { label: 'Dark', value: 'dark' },
-  ];
+  protected readonly i18n = inject(I18nService);
   private readonly router = inject(Router);
   private signedIn = false;
 

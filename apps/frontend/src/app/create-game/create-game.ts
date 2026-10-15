@@ -7,8 +7,10 @@ import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { CARD_TYPES, defaultRules, rulesError, type CardType, type Rules } from 'game-rules';
-import { errorMessage } from '../core/error-message';
+import { errorMessage, type Msg } from '../core/error-message';
+import { I18nService } from '../core/i18n.service';
 import { SocketService } from '../core/socket.service';
+import { TranslatePipe } from '../core/translate.pipe';
 
 @Component({
   selector: 'app-create-game',
@@ -20,13 +22,14 @@ import { SocketService } from '../core/socket.service';
     InputTextModule,
     MessageModule,
     SelectButtonModule,
+    TranslatePipe,
   ],
   template: `
     <form class="vl-form" (ngSubmit)="submit()">
-      <h2>Create game</h2>
+      <h2>{{ 'create.title' | t }}</h2>
       <div class="vl-row">
         <div class="vl-field">
-          <label for="game-name">Name</label>
+          <label for="game-name">{{ 'create.name' | t }}</label>
           <input
             pInputText
             id="game-name"
@@ -43,7 +46,7 @@ import { SocketService } from '../core/socket.service';
           }
         </div>
         <div class="vl-field">
-          <label for="game-password">Password</label>
+          <label for="game-password">{{ 'create.password' | t }}</label>
           <input
             pInputText
             id="game-password"
@@ -61,7 +64,7 @@ import { SocketService } from '../core/socket.service';
         </div>
       </div>
       <div class="vl-field">
-        <span id="seats-label">Seats</span>
+        <span id="seats-label">{{ 'create.seats' | t }}</span>
         <p-selectbutton
           [options]="seatOptions"
           optionLabel="label"
@@ -74,12 +77,14 @@ import { SocketService } from '../core/socket.service';
       </div>
       <details class="vl-rules">
         <summary>
-          <span>Rules <small>(fixed once the game is created)</small></span>
+          <span
+            >{{ 'create.rules' | t }} <small>{{ 'create.rulesFixed' | t }}</small></span
+          >
           <i class="pi pi-chevron-down" aria-hidden="true"></i>
         </summary>
         <div class="vl-row">
           <div class="vl-field">
-            <label for="target">Target score</label>
+            <label for="target">{{ 'create.target' | t }}</label>
             <input
               pInputText
               id="target"
@@ -90,7 +95,7 @@ import { SocketService } from '../core/socket.service';
             />
           </div>
           <div class="vl-field">
-            <label for="minimum">Minimum points</label>
+            <label for="minimum">{{ 'create.minimum' | t }}</label>
             <input
               pInputText
               id="minimum"
@@ -103,14 +108,14 @@ import { SocketService } from '../core/socket.service';
         </div>
         <div class="vl-actions">
           <p-checkbox inputId="doubling" name="doubling" [binary]="true" [(ngModel)]="doubling" />
-          <label for="doubling">Four of a kind doubles</label>
+          <label for="doubling">{{ 'create.doubling' | t }}</label>
         </div>
-        <h3>Cards per type</h3>
+        <h3>{{ 'create.cardsPerType' | t }}</h3>
         <div class="vl-card-grid">
           @for (t of cardTypes; track t) {
             <div class="vl-card-input">
               <span class="vl-card-face" aria-hidden="true">{{ cardLabels[t] }}</span>
-              <label [for]="'card-' + t">{{ cardNames[t] }}</label>
+              <label [for]="'card-' + t">{{ 'card.' + t | t }}</label>
               <input
                 pInputText
                 [id]="'card-' + t"
@@ -128,11 +133,11 @@ import { SocketService } from '../core/socket.service';
         }
       </details>
       <div class="vl-actions">
-        <p-button type="submit" label="Create" />
-        <a routerLink="/lobby">Cancel</a>
+        <a routerLink="/lobby">{{ 'create.cancel' | t }}</a>
+        <p-button type="submit" [label]="'create.submit' | t" />
       </div>
       @if (error()) {
-        <p-message severity="error" role="alert">{{ error() }}</p-message>
+        <p-message severity="error" role="alert">{{ error()?.() }}</p-message>
       }
     </form>
   `,
@@ -160,27 +165,17 @@ export class CreateGame {
     plusMinus: '±',
     clover: '☘',
   };
-  protected readonly cardNames: Record<CardType, string> = {
-    bonus200: 'Bonus 200',
-    bonus300: 'Bonus 300',
-    bonus400: 'Bonus 400',
-    bonus500: 'Bonus 500',
-    bonus600: 'Bonus 600',
-    doubleLotte: 'Double Lotte',
-    stop: 'Stop',
-    star: 'Star',
-    street: 'Street',
-    plusMinus: 'Plus/Minus',
-    clover: 'Clover',
-  };
-  protected readonly name = signal(`${this.socket.session()?.nickname ?? 'My'}'s Game`);
+  private readonly i18n = inject(I18nService);
+  protected readonly name = signal(
+    this.i18n.t('create.defaultName', { nickname: this.socket.session()?.nickname ?? 'My' }),
+  );
   protected readonly password = signal('');
   protected readonly seats = signal(4);
   protected readonly targetScore = signal(this.defaults.targetScore);
   protected readonly minimumPoints = signal(this.defaults.minimumPoints);
   protected readonly doubling = signal(this.defaults.fourOfAKindDoubling);
   protected readonly counts = signal<Record<CardType, number>>({ ...this.defaults.cardCounts });
-  protected readonly error = signal('');
+  protected readonly error = signal<Msg | null>(null);
 
   protected setCount(type: CardType, value: number): void {
     this.counts.update((c) => ({ ...c, [type]: value }));
@@ -193,13 +188,17 @@ export class CreateGame {
     fourOfAKindDoubling: this.doubling(),
     cardCounts: this.counts(),
   }));
+  private readonly rulesProblem = computed(() => {
+    const code = rulesError(this.rules());
+    return code && this.i18n.t(`rules.${code}`);
+  });
   private readonly problems = computed(() => {
     const [name, password] = [this.name().trim(), this.password()];
     return {
-      name: name.length < 1 || name.length > 40 ? 'Name must have 1-40 characters.' : null,
+      name: name.length < 1 || name.length > 40 ? this.i18n.t('create.nameError') : null,
       password:
-        password.length < 4 || password.length > 64 ? 'Password must have 4-64 characters.' : null,
-      rules: rulesError(this.rules()),
+        password.length < 4 || password.length > 64 ? this.i18n.t('create.passwordError') : null,
+      rules: this.rulesProblem(),
     };
   });
   /** Per-field messages, shown after the first submit attempt. */
@@ -217,6 +216,6 @@ export class CreateGame {
       rules: this.rules(),
     });
     if (ack.ok) await this.router.navigate(['/game', ack.game.id]);
-    else this.error.set(errorMessage(ack));
+    else this.error.set(() => errorMessage(ack, this.i18n));
   }
 }

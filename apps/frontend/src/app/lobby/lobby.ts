@@ -8,11 +8,14 @@ import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
 import { TagModule } from 'primeng/tag';
-import { errorMessage } from '../core/error-message';
+import { errorMessage, type Msg } from '../core/error-message';
+import { I18nService } from '../core/i18n.service';
 import { SocketService } from '../core/socket.service';
+import { TranslatePipe } from '../core/translate.pipe';
 
 @Component({
   selector: 'app-lobby',
+  host: { class: 'vl-narrow' },
   imports: [
     FormsModule,
     RouterLink,
@@ -22,32 +25,44 @@ import { SocketService } from '../core/socket.service';
     InputTextModule,
     MessageModule,
     TagModule,
+    TranslatePipe,
   ],
   template: `
-    <div class="vl-header">
-      <h2>Games</h2>
-      <a routerLink="/create-game" class="p-button p-component">Create game</a>
+    <div class="vl-page-header">
+      <h2>{{ 'lobby.title' | t }}</h2>
+      <a routerLink="/create-game" class="p-button p-component">{{ 'lobby.create' | t }}</a>
     </div>
     @if (socket.games().length === 0) {
-      <p class="vl-empty"><i class="pi pi-inbox" aria-hidden="true"></i> No open games.</p>
+      <p class="vl-empty"><i class="pi pi-inbox" aria-hidden="true"></i> {{ 'lobby.empty' | t }}</p>
     }
     <ul class="vl-cards">
       @for (g of socket.games(); track g.id) {
         <li>
-          <p-card [header]="g.name" [subheader]="'Host ' + g.host">
+          <p-card [header]="g.name" [subheader]="'lobby.host' | t: { name: g.host }">
             <p>
-              Target {{ g.targetScore }}, seats {{ g.seatsUsed }}/{{ g.seatsTotal }}
+              {{
+                'lobby.summary'
+                  | t: { target: g.targetScore, used: g.seatsUsed, total: g.seatsTotal }
+              }}
               <p-tag
-                [value]="g.seatsUsed < g.seatsTotal ? g.seatsTotal - g.seatsUsed + ' free' : 'Full'"
+                [value]="
+                  g.seatsUsed < g.seatsTotal
+                    ? ('lobby.free' | t: { n: g.seatsTotal - g.seatsUsed })
+                    : ('lobby.full' | t)
+                "
                 [icon]="g.seatsUsed < g.seatsTotal ? 'pi pi-user-plus' : 'pi pi-ban'"
                 [severity]="g.seatsUsed < g.seatsTotal ? 'success' : 'secondary'"
               />
-              <i class="pi pi-lock" role="img" aria-label="password protected"></i>
+              <i
+                class="pi pi-lock"
+                role="img"
+                [attr.aria-label]="'lobby.passwordProtected' | t"
+              ></i>
             </p>
             @if (g.phase === 'lobby') {
-              <p-button label="Join" (onClick)="open(g.id, $event)" />
+              <p-button [label]="'lobby.join' | t" (onClick)="open(g.id, $event)" />
             } @else {
-              <p-tag value="Running" icon="pi pi-play" severity="info" />
+              <p-tag [value]="'lobby.running' | t" icon="pi pi-play" severity="info" />
             }
           </p-card>
         </li>
@@ -57,13 +72,13 @@ import { SocketService } from '../core/socket.service';
       [visible]="!!selectedGame()"
       (visibleChange)="!$event && close()"
       [modal]="true"
-      [header]="'Join ' + selectedGame()?.name"
+      [header]="'lobby.joinTitle' | t: { name: selectedGame()?.name ?? '' }"
       appendTo="self"
       [style]="{ width: '24rem', maxWidth: '95vw' }"
     >
       <form class="vl-form" (ngSubmit)="join(selectedGame()!)">
         <label class="vl-field">
-          Password for {{ selectedGame()?.name }}
+          {{ 'lobby.passwordFor' | t: { name: selectedGame()?.name ?? '' } }}
           <input
             pInputText
             name="password"
@@ -73,13 +88,15 @@ import { SocketService } from '../core/socket.service';
           />
         </label>
         @if (retry() > 0) {
-          <p-message severity="warn" role="status">Locked. Try again in {{ retry() }} s.</p-message>
+          <p-message severity="warn" role="status">{{
+            'lobby.locked' | t: { n: retry() }
+          }}</p-message>
         }
         @if (error() && retry() === 0) {
-          <p-message severity="error" role="alert">{{ error() }}</p-message>
+          <p-message severity="error" role="alert">{{ error()?.() }}</p-message>
         }
         <div class="vl-actions">
-          <p-button type="submit" label="Enter game" [disabled]="retry() > 0" />
+          <p-button type="submit" [label]="'lobby.enter' | t" [disabled]="retry() > 0" />
         </div>
       </form>
     </p-dialog>
@@ -88,12 +105,13 @@ import { SocketService } from '../core/socket.service';
 export class Lobby {
   protected readonly socket = inject(SocketService);
   private readonly router = inject(Router);
+  private readonly i18n = inject(I18nService);
   protected readonly selected = signal<string | null>(null);
   protected readonly selectedGame = computed(
     () => this.socket.games().find((g) => g.id === this.selected()) ?? null,
   );
   protected readonly password = signal('');
-  protected readonly error = signal('');
+  protected readonly error = signal<Msg | null>(null);
   protected readonly retry = signal(0);
   private timer?: ReturnType<typeof setInterval>;
   private trigger?: HTMLElement;
@@ -104,7 +122,7 @@ export class Lobby {
 
   protected open(id: string, event: Event): void {
     this.trigger = (event.target as HTMLElement).closest('button') ?? undefined;
-    this.error.set('');
+    this.error.set(null);
     this.selected.set(id);
   }
 
@@ -120,7 +138,7 @@ export class Lobby {
       this.password.set('');
       await this.router.navigate(['/game', g.id]);
     } else {
-      this.error.set(errorMessage(ack));
+      this.error.set(() => errorMessage(ack, this.i18n));
       if (ack.reason === 'locked') this.lock(Math.ceil((ack.retryAfterMs ?? 0) / 1000));
     }
   }

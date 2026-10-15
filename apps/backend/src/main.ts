@@ -46,4 +46,4 @@ function serveFrontend(app: NestExpressApplication) {
   });
 }
 
-bootstrap();
+void bootstrap();

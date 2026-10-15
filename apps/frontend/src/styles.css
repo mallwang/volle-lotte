@@ -1,3 +1,5 @@
+@import 'primeicons/primeicons.css';
+
 :root {
   --vl-mint: #d3e8d6;
   --vl-on-mint: #1f4a2c;
@@ -93,6 +95,25 @@ select,
 .vl-header h1 {
   margin: 0;
   font-size: 1.5rem;
+}
+.vl-header .vl-lang {
+  margin-left: auto;
+}
+.vl-lang-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.vl-theme-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+.vl-flag {
+  display: block;
+  width: 1.75rem;
+  height: auto;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
 }
 .vl-main {
   max-width: 64rem;
@@ -194,6 +215,23 @@ select,
   flex-wrap: wrap;
   gap: 0.5rem;
   align-items: center;
+  justify-content: space-between;
+}
+/* a lone primary action sits on the right */
+.vl-actions > :only-child {
+  margin-left: auto;
+}
+.vl-narrow {
+  display: block;
+  max-width: 40rem;
+  margin-inline: auto;
+}
+.vl-page-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: space-between;
 }
 .vl-seat {
   display: flex;
@@ -225,6 +263,7 @@ select,
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+  margin: 1.25rem 0;
 }
 .vl-turn-actions {
   display: grid;
@@ -236,7 +275,9 @@ select,
   min-height: 1.25rem;
 }
 .vl-log {
-  max-height: 12rem;
+  max-height: 14rem;
+  font-size: 0.8125rem;
+  line-height: 1.3;
   overflow-y: auto;
   margin: 0;
   padding-left: 1.5rem;
@@ -245,4 +286,78 @@ select,
   .vl-table {
     grid-template-columns: 1fr 18rem;
   }
+}
+.vl-lang .p-select-label {
+  display: flex;
+  align-items: center;
+  padding-inline-end: 0;
+}
+.vl-lang.p-select,
+.vl-lang.p-select:not(.p-disabled):hover {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+.vl-lang .p-select-dropdown {
+  width: 1.75rem;
+}
+.vl-lang.p-select:focus-within {
+  outline: 2px solid var(--p-primary-color);
+  outline-offset: 2px;
+}
+.vl-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+.vl-empty {
+  text-align: center;
+}
+
+.vl-seat-locked {
+  background: var(--p-surface-200);
+  color: var(--p-text-muted-color);
+}
+.app-dark .vl-seat-locked {
+  background: var(--p-surface-800);
+}
+.vl-tag-locked {
+  background: var(--p-surface-400);
+  color: var(--p-surface-900);
+}
+.vl-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+}
+.vl-check input {
+  min-width: 0;
+  min-height: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0;
+}
+.vl-seat select {
+  min-height: 2.25rem;
+  padding: 0 0.5rem;
+  font: inherit;
+}
+.vl-log-die {
+  display: inline-block;
+  min-width: 1.5rem;
+  margin: 0 0.1rem;
+  border: 1px solid currentcolor;
+  border-radius: 0.3rem;
+  text-align: center;
+  line-height: 1.4;
+}
+.vl-actions a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--p-text-color);
 }

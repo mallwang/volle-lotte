@@ -48,10 +48,12 @@ export async function expectNoA11yViolations(fixture: ComponentFixture<unknown>)
 
 /** Renders the fixture once per colour mode (class `app-dark` on <html>) and runs the check. */
 export async function inBothModes(fixture: ComponentFixture<unknown>, check: () => Promise<void>) {
-  for (const dark of [false, true]) {
+  const run = async (dark: boolean) => {
     document.documentElement.classList.toggle('app-dark', dark);
     fixture.detectChanges();
     await check();
-  }
+  };
+  await run(false);
+  await run(true);
   document.documentElement.classList.remove('app-dark');
 }

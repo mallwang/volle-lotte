@@ -96,7 +96,7 @@ describe('Table', () => {
     expect(toasts).toHaveBeenCalledWith(
       expect.objectContaining({
         severity: 'error',
-        detail: expect.stringContaining('belowMinimum'),
+        detail: expect.stringContaining('minimum points'),
       }),
     );
     expect(button('Draw')).toBeTruthy();
@@ -120,7 +120,7 @@ describe('Table', () => {
     expect(el.querySelectorAll('app-player-tile')).toHaveLength(n);
   });
 
-  it('has a polite, unfocusable log in order', async () => {
+  it('has a polite, unfocusable log newest first', async () => {
     const log = [
       { kind: 'joined', seat: 0 },
       { kind: 'left', seat: 1 },
@@ -129,9 +129,20 @@ describe('Table', () => {
     const ol = el.querySelector('[role=log]')!;
     expect(ol.getAttribute('aria-live')).toBe('polite');
     expect(ol.hasAttribute('tabindex')).toBe(false);
-    expect([...ol.querySelectorAll('li')].map((l) => l.textContent)).toEqual([
-      'Ann joined',
+    expect([...ol.querySelectorAll('li')].map((l) => l.textContent?.trim())).toEqual([
       'Bob left',
+      'Ann joined',
+    ]);
+  });
+
+  it('frames each thrown die in the log', async () => {
+    const log = [{ kind: 'turn', seat: 0, data: { type: 'thrown', dice: [6, 4, 3, 4] } }];
+    const { el } = await setup(0, { log });
+    expect([...el.querySelectorAll('.vl-log-die')].map((d) => d.textContent)).toEqual([
+      '6',
+      '4',
+      '3',
+      '4',
     ]);
   });
 

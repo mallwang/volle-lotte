@@ -10,6 +10,7 @@ import {
   type Pushes,
 } from 'game-rules';
 import { errorMessage } from './error-message';
+import { I18nService } from './i18n.service';
 
 /** The subset of the socket.io client the service uses (replaceable in tests). */
 export interface SocketLike {
@@ -46,6 +47,7 @@ export class SocketService {
   readonly game = signal<GameView | null>(null);
   readonly connection = signal<Connection>(this.socket.connected ? 'connected' : 'connecting');
   private readonly messages = inject(MessageService);
+  private readonly i18n = inject(I18nService);
 
   constructor() {
     this.socket.on('connect', () => {
@@ -59,11 +61,11 @@ export class SocketService {
       this.active = false;
       this.session.set(null);
       this.game.set(null);
-      this.notify('warn', 'Your session was opened in another window or tab.');
+      this.notify('warn', this.i18n.t('server.replaced'));
     }) as never);
     this.socket.on('game:closed', (() => {
       this.game.set(null);
-      this.notify('info', 'The game was closed.');
+      this.notify('info', this.i18n.t('server.closed'));
     }) as never);
   }
 
@@ -142,7 +144,7 @@ export class SocketService {
       this.active = false;
       this.session.set(null);
       this.game.set(null);
-      this.notify('error', errorMessage(ack));
+      this.notify('error', errorMessage(ack, this.i18n));
       return;
     }
     this.stored = { token: ack.token, nickname: ack.nickname };
@@ -151,7 +153,7 @@ export class SocketService {
     if (ack.game) this.game.set(ack.game);
     else {
       this.game.set(null);
-      if (hadGame) this.notify('warn', 'The server was restarted and your game is gone.');
+      if (hadGame) this.notify('warn', this.i18n.t('server.restarted'));
     }
     await this.refreshLobby();
   }
