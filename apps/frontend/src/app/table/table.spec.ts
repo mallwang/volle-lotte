@@ -148,6 +148,77 @@ describe('Table', () => {
     ]);
   });
 
+  describe('bonus Volle Lotte', () => {
+    const decide = (over: object, current = 0) => ({
+      game: {
+        ...state(current),
+        turn: { ...state(current).turn!, phase: 'decide', dice: [], ...over },
+      },
+    });
+
+    it('lets the player draw the next card instead of banking', async () => {
+      const { button } = await setup(0, decide({ free: 0, run: 700 }));
+      expect(button('Draw')!.disabled).toBe(false);
+    });
+
+    it.each([
+      ['dice are still free', { free: 2, card: 'bonus200' }],
+      ['the card is not a bonus', { free: 0, card: 'star' }],
+    ])('does not offer drawing when %s', async (_, over) => {
+      const { button } = await setup(0, decide(over));
+      expect(button('Draw')!.disabled).toBe(true);
+    });
+
+    it('does not offer drawing to other players', async () => {
+      const { button } = await setup(1, decide({ free: 0 }, 1));
+      expect(button('Draw')!.disabled).toBe(true);
+    });
+  });
+
+  describe('Street', () => {
+    const card = { kind: 'turn', seat: 0, data: { type: 'cardDrawn', card: 'street' } };
+    const pick = (dice: number[]) => ({
+      kind: 'turn',
+      seat: 0,
+      data: { type: 'selected', dice, points: 0 },
+    });
+    const street = (log: object[], collected: number[]) =>
+      setup(0, {
+        log,
+        game: { ...state(0), turn: { ...state(0).turn!, card: 'street', street: collected } },
+      });
+
+    it('shows all six dice with the missing ones greyed out', async () => {
+      const { el } = await street([card, pick([1]), pick([3])], [1, 3]);
+      const faces = [...el.querySelectorAll('.vl-street > span')];
+      expect(faces).toHaveLength(6);
+      expect(faces.map((f) => f.classList.contains('vl-missing'))).toEqual([
+        false,
+        true,
+        false,
+        true,
+        true,
+        true,
+      ]);
+    });
+
+    it('shows everything greyed out before the first pick', async () => {
+      const { el } = await street([card], []);
+      expect(el.querySelectorAll('.vl-street .vl-missing')).toHaveLength(6);
+    });
+
+    it('shows the points instead after a bust', async () => {
+      const bust = { kind: 'turn', seat: 0, data: { type: 'bust', lost: 0 } };
+      const { el } = await street([card, pick([1]), bust], [1]);
+      expect(el.querySelector('.vl-street')).toBeNull();
+    });
+
+    it('shows the points on other cards', async () => {
+      const { el } = await setup(0);
+      expect(el.querySelector('.vl-street')).toBeNull();
+    });
+  });
+
   describe('rolling', () => {
     const thrown = { kind: 'turn', seat: 0, data: { type: 'thrown', dice: [6, 4] } };
     const logLen = (el: HTMLElement) => el.querySelectorAll('.vl-log li').length;

@@ -479,3 +479,11 @@ select,
   min-height: 1.5rem;
   margin: 0;
 }
+.vl-missing {
+  opacity: 0.25;
+}
+.vl-street {
+  flex-wrap: nowrap;
+  gap: 0.25rem;
+  font-size: 1.5rem;
+}
