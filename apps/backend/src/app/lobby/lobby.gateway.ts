@@ -243,6 +243,14 @@ export class LobbyGateway implements OnGatewayDisconnect {
     return this.inRoom(client, (room, session) => room.setPreview(session.playerId, dice));
   }
 
+  @SubscribeMessage('game:settings')
+  settings(@ConnectedSocket() client: Socket, @MessageBody() b: unknown): Ack {
+    const fast = isObj(b) ? b['fastComputerDice'] : undefined;
+    if (typeof fast !== 'boolean')
+      return this.session(client) ? bad('invalidRequest') : bad('noSession');
+    return this.inRoom(client, (room, session) => room.setSettings(session.playerId, fast));
+  }
+
   // ---- helpers
 
   private session(client: Socket): Session | undefined {

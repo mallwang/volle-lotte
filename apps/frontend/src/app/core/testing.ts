@@ -15,6 +15,7 @@ export function stubSocket(game: GameView | null = null) {
     create: vi.fn(),
     join: vi.fn(),
     leave: vi.fn(),
+    settings: vi.fn(),
   };
 }
 
@@ -30,6 +31,7 @@ export function gameView(over: Partial<GameView> = {}, seats: SeatView[] = []): 
     seats: [...seats, ...Array.from({ length: 4 - seats.length }, () => open)],
     pending: [],
     graceEndsAt: {},
+    fastComputerDice: false,
     log: [],
     ...over,
   };

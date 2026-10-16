@@ -33,6 +33,13 @@ Wenn du dran bist:
 3. **Würfel wählen** - wähle mindestens einen wertenden Würfel (eine 1, eine 5 oder einen Dreierpasch) und drücke **Auswahl beiseitelegen**.
 4. **Punkte sichern** oder erneut würfeln. Ein Wurf ohne wertenden Würfel ist ein Fehlwurf, die Punkte des Zuges gehen verloren.
 
+Die Würfel werden mit Augen dargestellt. Jeder geworfene Würfel rollt 2-5 Sekunden und bleibt auf dem Wert liegen, den der Server gewürfelt hat; Protokolleintrag und Hinweise zum Wurf erscheinen, sobald der letzte Würfel stillsteht, bis dahin sind Aktionen gesperrt. Die Wahl des Computers wird (mit Computer-Symbol) zwei Sekunden hervorgehoben, bevor sie angewendet wird. Ist in deinem System reduzierte Bewegung aktiviert, rollen die Würfel nicht; sie bleiben leer, bis sie stillstehen, und „Würfel rollen…“ wird angesagt.
+
+Unter **Einstellungen** am Tisch änderst du:
+
+- **Würfelanimation überspringen** - nur auf deinem Gerät; Würfel und Protokoll erscheinen sofort.
+- **Schnelle Computerwürfel** - nur die Gastgebenden, andere sehen es schreibgeschützt. Computerwürfe dauern 1-2,5 Sekunden.
+
 Nicht verfügbare Schaltflächen nennen den Grund (zum Beispiel „Du bist nicht dran“). Das Protokoll listet, was passiert ist; wer die Verbindung verliert, hat 60 Sekunden zur Rückkehr, danach entscheiden die Gastgebenden über den Platz.
 
 Erreicht jemand die Zielpunktzahl, zeigt der Ergebnisbildschirm die Rangliste. **Zurück zur Lobby** führt zur Spieleliste.

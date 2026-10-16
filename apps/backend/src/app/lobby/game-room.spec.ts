@@ -153,3 +153,64 @@ describe('GameRoom connection', () => {
     room.dispose();
   });
 });
+
+describe('GameRoom settings and computer pacing', () => {
+  beforeEach(() => jest.useFakeTimers());
+  afterEach(() => jest.useRealTimers());
+
+  it('lets only the host change fast computer dice, and not after the game ended', () => {
+    const { room, changes } = make();
+    room.join('p', 'Pia');
+    expect(room.setSettings('p', true)).toMatchObject({ reason: 'notHost' });
+    expect(room.fastComputerDice).toBe(false);
+    const before = changes.length;
+    expect(room.setSettings('h', true)).toEqual({ ok: true });
+    expect(room.fastComputerDice).toBe(true);
+    expect(changes).toHaveLength(before + 1);
+    expect(toView(room, 'p').fastComputerDice).toBe(true);
+    room.phase = 'finished';
+    expect(room.setSettings('h', false)).toMatchObject({ reason: 'notInGame' });
+  });
+
+  /** Host plays until a computer is up; returns the room and whether the last action was a throw. */
+  const untilComputer = (fast: boolean) => {
+    const { room } = make(2);
+    room.setSeat('h', 1, 'computer', 'easy');
+    room.setSettings('h', fast);
+    room.setReady('h', true);
+    expect(room.start('h')).toEqual({ ok: true });
+    const move = { draw: 'draw', decide: 'bank' } as Record<string, 'draw' | 'bank'>;
+    // seats are in turn order, so engine player 1 is the computer
+    for (let i = 0; i < 200 && room.game?.current === 0; i++) {
+      const phase = room.game?.turn?.phase ?? '';
+      room.act(
+        'h',
+        phase === 'select' ? { type: 'select', dice: [0] } : { type: move[phase] ?? 'throw' },
+      );
+    }
+    const last = room.log[room.log.length - 1];
+    return { room, thrown: JSON.stringify(last).includes('"thrown"') };
+  };
+
+  it('waits for the dice to stop before the computer acts, else 2 s', () => {
+    const { room, thrown } = untilComputer(false);
+    const n = room.log.length;
+    const delay = thrown ? 5000 + 3250 : 2000;
+    jest.advanceTimersByTime(delay - 1);
+    expect(room.log).toHaveLength(n);
+    jest.advanceTimersByTime(1);
+    expect(room.log.length).toBeGreaterThan(n);
+    room.dispose();
+  });
+
+  it('shows a computer pick as preview for 2 s before applying it', () => {
+    const { room } = untilComputer(false);
+    // step the computer until its pick is shown but not yet applied
+    for (let i = 0; i < 2000 && room.preview.length === 0; i++) jest.advanceTimersByTime(100);
+    expect(room.preview.length).toBeGreaterThan(0);
+    expect(room.game?.turn?.phase).toBe('select');
+    jest.advanceTimersByTime(2000);
+    expect(room.preview).toEqual([]);
+    room.dispose();
+  });
+});

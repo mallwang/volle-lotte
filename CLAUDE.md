@@ -20,5 +20,5 @@ The Java reference lives as a copy in `tmp/java/` (git-ignored, read-only).
 
 <!-- SPECKIT START -->
 
-Current feature plan: [specs/004-multi-language-i18n/plan.md](specs/004-multi-language-i18n/plan.md)
+Current feature plan: [specs/005-dice-pips-rolling-animation/plan.md](specs/005-dice-pips-rolling-animation/plan.md)
 <!-- SPECKIT END -->

@@ -37,6 +37,7 @@ export function toView(room: GameRoom, playerId: string): GameView {
     seats,
     pending: [...room.pending],
     graceEndsAt,
+    fastComputerDice: room.fastComputerDice,
     log: room.log,
   };
   if (room.game) {
