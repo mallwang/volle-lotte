@@ -3,6 +3,7 @@ import {
   applyAction,
   chooseAction,
   createGame,
+  skipTurn,
   type Action,
   type ComputerLevel,
   type Difficulty,
@@ -11,6 +12,7 @@ import {
   type GameSummary,
   type LogEntry,
   type LogKind,
+  type Phase,
   type RandomInt,
   type RejectionReason,
   type RoomPhase,
@@ -109,6 +111,11 @@ export class GameRoom {
   private seatOfEngine: number[] = [];
   private readonly graceTimers = new Map<number, NodeJS.Timeout>();
   private computerTimer?: NodeJS.Timeout;
+  private turnTimer?: NodeJS.Timeout;
+  /** Extra wait before a human's limit starts: the client's dice are still rolling. */
+  private turnDelay = 0;
+  /** When the human to act is auto-played; only set while a human is up. */
+  turnDeadline?: { at: number; phase: Phase };
 
   constructor(o: RoomOptions) {
     this.id = o.id;
@@ -267,7 +274,10 @@ export class GameRoom {
     const seat = this.seatOf(playerId);
     if (seat < 0) return fail('notInGame');
     if (seat !== this.currentSeat()) return fail('notYourTurn');
-    return this.apply(action);
+    const res = this.apply(action);
+    const human = this.seats[seat];
+    if (res.ok && human.state === 'human') human.timeouts = 0;
+    return res;
   }
 
   setPreview(playerId: string, dice: number[]): Res {
@@ -299,13 +309,14 @@ export class GameRoom {
     if (!outcome.ok) return { ok: false, reason: 'rejected', engine: outcome.reason };
     this.game = outcome.state;
     this.preview = [];
+    this.stopTurnTimer();
     const rollMax =
       this.seats[seat]?.state === 'computer' && this.fastComputerDice
         ? ROLL_MAX_FAST_MS
         : ROLL_MAX_MS;
-    this.computerDelay = outcome.events.some((e) => e.type === 'thrown')
-      ? rollMax + AFTER_ROLL_MS
-      : COMPUTER_PAUSE_MS;
+    const thrown = outcome.events.some((e) => e.type === 'thrown');
+    this.computerDelay = thrown ? rollMax + AFTER_ROLL_MS : COMPUTER_PAUSE_MS;
+    this.turnDelay = thrown ? ROLL_MAX_MS + AFTER_ROLL_MS : 0;
     for (const event of outcome.events) this.add('turn', seat, event);
     if (outcome.state.result) {
       this.phase = 'finished';
@@ -343,6 +354,47 @@ export class GameRoom {
       }, COMPUTER_PAUSE_MS);
       this.emit();
     }, this.computerDelay);
+  }
+
+  /** Arms one limit per human turn step; kept across emits that change nothing about whose move it is. */
+  private scheduleTurnTimer() {
+    const phase = this.game?.turn?.phase;
+    const human = this.phase === 'running' && this.seats[this.currentSeat()]?.state === 'human';
+    if (!human || !phase) return this.stopTurnTimer();
+    if (this.turnTimer) return;
+    const ms = this.turnDelay + TURN_LIMIT_MS[phase];
+    this.turnDeadline = { at: this.now() + ms, phase };
+    this.turnTimer = setTimeout(() => this.turnExpired(), ms);
+    this.turnTimer.unref(); // never keeps the process alive
+  }
+
+  private stopTurnTimer() {
+    clearTimeout(this.turnTimer);
+    this.turnTimer = undefined;
+    this.turnDeadline = undefined;
+  }
+
+  /** Plays the automatic move for the idle human; the 3rd strike in a row hands the seat to a computer. */
+  private turnExpired() {
+    this.stopTurnTimer();
+    const seat = this.currentSeat();
+    const human = this.seats[seat];
+    const phase = this.game?.turn?.phase;
+    if (this.phase !== 'running' || !this.game || !phase || human?.state !== 'human') return;
+    const action: Action | undefined =
+      phase === 'select' ? undefined : { type: phase === 'decide' ? 'bank' : phase };
+    this.add('timedOut', seat, action?.type ?? 'skip');
+    human.timeouts++;
+    if (human.timeouts >= MAX_TIMEOUTS) this.replaceByBot(seat, 'timeouts');
+    if (action) {
+      this.apply(action);
+      return;
+    }
+    this.game = skipTurn(this.game);
+    this.preview = [];
+    this.computerDelay = COMPUTER_PAUSE_MS;
+    this.turnDelay = 0;
+    this.emit();
   }
 
   // ---- connection, replacement
@@ -412,6 +464,7 @@ export class GameRoom {
     this.graceTimers.clear();
     clearTimeout(this.computerTimer);
     this.computerTimer = undefined;
+    this.stopTurnTimer();
   }
 
   private clearGrace(seat: number) {
@@ -438,6 +491,7 @@ export class GameRoom {
 
   private emit() {
     this.scheduleComputer();
+    this.scheduleTurnTimer();
     const entries = this.fresh;
     this.fresh = [];
     this.onChange?.(entries);

@@ -38,6 +38,7 @@ export function toView(room: GameRoom, playerId: string): GameView {
     const { deck, ...rest } = room.game;
     view.game = { ...rest, deckSize: deck.length };
     view.preview = room.preview;
+    if (room.turnDeadline) view.turnDeadline = room.turnDeadline;
   }
   return view;
 }

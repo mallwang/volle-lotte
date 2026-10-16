@@ -45,5 +45,10 @@ export function logText(g: GameView, e: LogEntry, i18n: I18nService): string {
         return t('gameOver');
     }
   }
+  if (e.kind === 'replaced') {
+    // the seat is a computer by now; name the human it replaced
+    const former = e.seat === undefined ? undefined : g.seats[e.seat]?.former?.nickname;
+    return i18n.t(`log.replaced.${e.data}`, { who: former ?? who });
+  }
   return i18n.t(`log.${e.kind}`, { who }).trim();
 }

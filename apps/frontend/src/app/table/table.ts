@@ -3,6 +3,7 @@ import { Component, computed, effect, inject, signal } from '@angular/core';
 import type { Action, GameView, LogEntry } from 'game-rules';
 import { ButtonModule } from 'primeng/button';
 import { MessageService } from 'primeng/api';
+import { MessageModule } from 'primeng/message';
 import { DicePrefs } from '../core/dice-prefs';
 import { DiceRollService } from '../core/dice-roll';
 import { errorMessage } from '../core/error-message';
@@ -15,6 +16,7 @@ import { DiceTile } from '../shared/dice-tile';
 import { DieFace } from '../shared/die-face';
 import { PlayerTile } from '../shared/player-tile';
 import { SettingsDialog } from './settings-dialog';
+import { TurnTimer } from './turn-timer';
 
 /** Log events shown as a toast to every player, by severity (FR-010, FR-014). */
 const ANNOUNCED: Record<string, 'info' | 'warn' | 'success'> = {
@@ -28,6 +30,8 @@ const ANNOUNCED: Record<string, 'info' | 'warn' | 'success'> = {
   left: 'info',
   disconnected: 'warn',
   reconnected: 'info',
+  timedOut: 'warn',
+  replaced: 'warn',
 };
 
 /** How long a bust stays on the table before the next player's turn starts. */
@@ -40,10 +44,12 @@ const BUST_MS = 5000;
     CardTile,
     DiceTile,
     DieFace,
+    MessageModule,
     NgTemplateOutlet,
     PlayerTile,
     SettingsDialog,
     TranslatePipe,
+    TurnTimer,
   ],
   template: `
     @if (socket.game(); as view) {
@@ -77,6 +83,14 @@ const BUST_MS = 5000;
                         }
                 }}
               </p>
+              @if (view.turnDeadline; as d) {
+                @if (!roll.rolling() && !bust()) {
+                  <app-turn-timer [at]="d.at" />
+                }
+              }
+              @if (view.you.timeoutWarning) {
+                <p-message severity="warn" role="alert">{{ 'turn.warning' | t }}</p-message>
+              }
               <ng-template #act let-a>
                 <div class="vl-action">
                   <button

@@ -1,5 +1,5 @@
 import { defaultRules, seededRandomInt } from 'game-rules';
-import { GameRoom, GRACE_MS } from './game-room';
+import { GameRoom, GRACE_MS, MAX_TIMEOUTS, TURN_LIMIT_MS } from './game-room';
 import { toView } from './view';
 
 const make = (seatCount = 3) => {
@@ -237,6 +237,57 @@ describe('GameRoom settings and computer pacing', () => {
     expect(room.game?.turn?.phase).toBe('select');
     jest.advanceTimersByTime(2000);
     expect(room.preview).toEqual([]);
+    room.dispose();
+  });
+});
+
+type Human = Extract<GameRoom['seats'][number], { state: 'human' }>;
+
+describe('GameRoom turn timer', () => {
+  beforeEach(() => jest.useFakeTimers());
+  afterEach(() => jest.useRealTimers());
+
+  it('auto-plays the idle human, counts strikes and warns before the last one', () => {
+    const room = started();
+    const first = room.seats[room.game?.current === 0 ? 0 : 1] as Human;
+    expect(room.turnDeadline).toMatchObject({ phase: 'draw' });
+    jest.advanceTimersByTime(TURN_LIMIT_MS.draw - 1);
+    expect(room.log.some((e) => e.kind === 'timedOut')).toBe(false);
+    jest.advanceTimersByTime(1);
+    expect(room.log.find((e) => e.kind === 'timedOut')).toMatchObject({ data: 'draw' });
+    expect(first.timeouts).toBe(1);
+    room.dispose();
+  });
+
+  it('an own action resets the strikes and the 3rd timeout replaces the seat', () => {
+    const room = started();
+    const current = () => room.seats[room.game?.current === 0 ? 0 : 1] as Human;
+    const first = current();
+    jest.advanceTimersByTime(TURN_LIMIT_MS.draw);
+    expect(first.timeouts).toBe(1);
+    // whoever is up now plays: their strikes reset
+    const up = current();
+    room.act(up.playerId, { type: room.game?.turn?.phase === 'draw' ? 'draw' : 'throw' });
+    expect(up.timeouts).toBe(0);
+    // idle until a seat is handed over; every limit passes without input
+    for (let i = 0; i < 200 && !room.log.some((e) => e.kind === 'replaced'); i++)
+      jest.advanceTimersByTime(1000);
+    const replaced = room.log.find((e) => e.kind === 'replaced');
+    expect(replaced).toMatchObject({ data: 'timeouts' });
+    expect(room.log.filter((e) => e.kind === 'timedOut' && e.seat === replaced?.seat)).toHaveLength(
+      MAX_TIMEOUTS,
+    );
+    expect(room.seats[replaced?.seat ?? 0]).toMatchObject({ state: 'computer' });
+    room.dispose();
+  });
+
+  it('does not send a deadline while a computer is up', () => {
+    const { room } = make(2);
+    room.setSeat('h', 1, 'computer', 'easy');
+    room.setReady('h', true);
+    room.start('h');
+    const humanFirst = room.game?.current === 0;
+    expect(room.turnDeadline !== undefined).toBe(humanFirst);
     room.dispose();
   });
 });

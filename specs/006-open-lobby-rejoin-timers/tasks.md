@@ -61,13 +61,13 @@
 
 **Independent Test**: With one human, idle in each phase and observe automatic outcome and countdown.
 
-- [ ] T012 [US5] `B/game-room.ts`: single `turnTimer` armed in `emit()` when a human is to act; limit by phase (draw/throw 10 s, select 15 s, decide 15 s); start delay `ROLL_MAX_MS + AFTER_ROLL_MS` after a `thrown` event; set `turnDeadline`; clear in `apply`/`dispose`; not armed for computer seats; keep running while disconnected
-- [ ] T013 [US5] `B/game-room.ts`: expiry actions draw→`draw`, throw→`throw`, select→`skipTurn`, decide→`bank`; log `timedOut` (data = action); increment seat `timeouts`; own action resets to 0; 3rd timeout calls `replaceByBot(seat, 'timeouts')`; bust ends the turn without a decide timer
-- [ ] T014 [US5] `B/view.ts`: send `turnDeadline` only while a human is to act and `you.timeoutWarning` when `timeouts === MAX_TIMEOUTS - 1`
-- [ ] T015 [US5] Tests in `B/game-room.spec.ts` with fake timers: each phase expiry outcome, no timer on bot turns, timer starts after animation delay, racing action vs expiry applies once, strike counting/reset/warning flag, 3rd strike replaces by bot, disconnected player still times out
-- [ ] T016 [P] [US5] Create `F/table/turn-timer.ts` (+ `turn-timer.spec.ts`): countdown bar from `turnDeadline.at`, shown for all players, hidden before animation end and on bot turns
-- [ ] T017 [US5] `F/table/table.ts`: embed `turn-timer`, show timeout warning banner when `you.timeoutWarning`, render `timedOut`/`replaced` log entries; update `F/table/table.spec.ts`
-- [ ] T018 [P] [US5] Add EN + DE texts for timer, warning and timeout log entries in `F/i18n/en.ts` and `F/i18n/de.ts`
+- [x] T012 [US5] `B/game-room.ts`: single `turnTimer` armed in `emit()` when a human is to act; limit by phase (draw/throw 10 s, select 15 s, decide 15 s); start delay `ROLL_MAX_MS + AFTER_ROLL_MS` after a `thrown` event; set `turnDeadline`; clear in `apply`/`dispose`; not armed for computer seats; keep running while disconnected
+- [x] T013 [US5] `B/game-room.ts`: expiry actions draw→`draw`, throw→`throw`, select→`skipTurn`, decide→`bank`; log `timedOut` (data = action); increment seat `timeouts`; own action resets to 0; 3rd timeout calls `replaceByBot(seat, 'timeouts')`; bust ends the turn without a decide timer
+- [x] T014 [US5] `B/view.ts`: send `turnDeadline` only while a human is to act and `you.timeoutWarning` when `timeouts === MAX_TIMEOUTS - 1`
+- [x] T015 [US5] Tests in `B/game-room.spec.ts` with fake timers: each phase expiry outcome, no timer on bot turns, timer starts after animation delay, racing action vs expiry applies once, strike counting/reset/warning flag, 3rd strike replaces by bot, disconnected player still times out
+- [x] T016 [P] [US5] Create `F/table/turn-timer.ts` (+ `turn-timer.spec.ts`): countdown bar from `turnDeadline.at`, shown for all players, hidden before animation end and on bot turns
+- [x] T017 [US5] `F/table/table.ts`: embed `turn-timer`, show timeout warning banner when `you.timeoutWarning`, render `timedOut`/`replaced` log entries; update `F/table/table.spec.ts`
+- [x] T018 [P] [US5] Add EN + DE texts for timer, warning and timeout log entries in `F/i18n/en.ts` and `F/i18n/de.ts`
 
 **Checkpoint**: US5 works independently.
 
