@@ -27,17 +27,22 @@ import { TurnTimer } from './turn-timer';
         <strong [title]="name()">{{ name() }}</strong>
       </div>
       <span class="vl-pseat-score">{{ 'player.score' | t: { score: score() } }}</span>
-      <div class="vl-pseat-chips">
-        @if (you()) {
-          <span class="vl-status vl-status-lavender">{{ 'player.you' | t }}</span>
+      <span class="vl-pseat-line">{{ marks() }}</span>
+      <span class="vl-pseat-line" [class.mid]="active() && !you()">
+        @if (active() && computer()) {
+          <span class="vl-hourglass" aria-hidden="true">⏳</span>
+          <span class="vl-sr-only">{{ 'table.thinking' | t }}</span>
         }
-        @if (active()) {
-          <span class="vl-status vl-status-mint">{{ 'player.active' | t }}</span>
-        }
-        @if (!online()) {
-          <span class="vl-status vl-status-rose">{{ 'player.offline' | t }}</span>
-        }
-      </div>
+        {{
+          active()
+            ? computer() && action()
+              ? action()
+              : you()
+                ? ('player.active' | t)
+                : '⛔ ' + ('player.waiting' | t)
+            : ('player.waiting' | t)
+        }}
+      </span>
       @if (deadlineAt(); as at) {
         <div class="vl-pseat-timer"><app-turn-timer [at]="at" /></div>
       }
@@ -52,8 +57,18 @@ export class PlayerSeat {
   readonly online = input(true);
   readonly active = input(false);
   readonly you = input(false);
+  /** Current phase shown instead of "on turn" while a computer plays. */
+  readonly action = input<string | null>(null);
   /** Epoch ms of the server deadline; the timer shows only while set. */
   readonly deadlineAt = input<number | null>(null);
+
+  /** "You" and "Offline" on one line, so every seat keeps the same height. */
+  protected readonly marks = computed(() =>
+    [
+      ...(this.you() ? [this.i18n.t('player.you')] : []),
+      ...(this.online() ? [] : [this.i18n.t('player.offline')]),
+    ].join(' · '),
+  );
 
   protected readonly label = computed(() =>
     [

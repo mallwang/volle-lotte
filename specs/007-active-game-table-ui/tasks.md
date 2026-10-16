@@ -77,13 +77,13 @@
 
 **Independent Test**: full turn (draw, throw, select, bank) and a bust; computer turn; long log scrolls inside its panel.
 
-- [ ] T023 [P] [US3] Add dice-area/secured/log panel styles to `apps/frontend/src/styles.css` (log scrolls inside its panel, table does not move)
-- [ ] T024 [P] [US3] Create `app/table/dice-area.ts` (`DiceArea`: inputs per contracts/components.md: `dice`, `selected`, `rolling`, `bust`, `canSelect`, `computerPick`, action state/callbacks, secured data (street, groups, carried), min-points hint, disabled reasons; output `toggled(index)`); move markup only, logic stays in `Table`; keep existing `aria-label`s and `role="status"`
-- [ ] T025 [P] [US3] Create `app/table/game-log.ts` (`GameLog`: inputs `entries`, text renderer; `role="log"`, scrolls inside its panel)
-- [ ] T026 [P] [US3] Create `app/table/dice-area.spec.ts` (toggle output, disabled when not `canSelect`, bust display, computer-pick highlight, Street progress)
-- [ ] T027 [P] [US3] Create `app/table/game-log.spec.ts` (renders entries, `role="log"`)
-- [ ] T028 [US3] Update `app/table/table.ts`: replace the dice/secured/actions/log markup with `DiceArea` and `GameLog`; `Table` stays the thin container (state, roll/bust, log reveal, dialogs, leave/settings); target ~150–250 lines
-- [ ] T029 [US3] Run `table.spec.ts` unchanged for turn behaviour (draw, throw, select, bank, bust countdown, computer thinking hint); fix regressions in the components, not by loosening tests
+- [x] T023 [P] [US3] Add dice-area/secured/log panel styles to `apps/frontend/src/styles.css` (log scrolls inside its panel, table does not move)
+- [x] T024 [P] [US3] Create `app/table/dice-area.ts` (`DiceArea`: inputs per contracts/components.md: `dice`, `selected`, `rolling`, `bust`, `canSelect`, `computerPick`, action state/callbacks, secured data (street, groups, carried), min-points hint, disabled reasons; output `toggled(index)`); move markup only, logic stays in `Table`; keep existing `aria-label`s and `role="status"`
+- [x] T025 [P] [US3] Create `app/table/game-log.ts` (`GameLog`: inputs `entries`, text renderer; `role="log"`, scrolls inside its panel)
+- [x] T026 [P] [US3] Create `app/table/dice-area.spec.ts` (toggle output, disabled when not `canSelect`, bust display, computer-pick highlight, Street progress)
+- [x] T027 [P] [US3] Create `app/table/game-log.spec.ts` (renders entries, `role="log"`)
+- [x] T028 [US3] Update `app/table/table.ts`: replace the dice/secured/actions/log markup with `DiceArea` and `GameLog`; `Table` stays the thin container (state, roll/bust, log reveal, dialogs, leave/settings); target ~150–250 lines
+- [x] T029 [US3] Run `table.spec.ts` unchanged for turn behaviour (draw, throw, select, bank, bust countdown, computer thinking hint); fix regressions in the components, not by loosening tests
 
 **Checkpoint**: all stories complete.
 
@@ -91,9 +91,9 @@
 
 ## Phase 6: Polish
 
-- [ ] T030 Check component style budgets (4kb warn / 8kb error) with `npm run build`; move shared rules into `styles.css` if exceeded
+- [x] T030 Check component style budgets (4kb warn / 8kb error) with `npm run build`; move shared rules into `styles.css` if exceeded
 - [ ] T031 [P] Verify keyboard order (clockwise seats), visible focus, contrast in light/dark and EN/DE per quickstart.md; fix gaps
-- [ ] T032 [P] Update `docs/migration.md` (frontend table structure) if it describes the old `Table`/tiles
+- [x] T032 [P] Update `docs/migration.md` (frontend table structure) if it describes the old `Table`/tiles
 - [ ] T033 Run `npm run typecheck && npm run lint && npm run test` (coverage ≥ 80%), then the quickstart.md manual walk-through at 1024 px and wider for 2, 4, 8 players
 
 ---

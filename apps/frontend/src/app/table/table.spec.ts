@@ -37,7 +37,7 @@ const state = (current: number): GameStateView => ({
   result: null,
 });
 
-async function setup(current: number, over = {}) {
+async function setup(current: number, over = {}, showLog = true) {
   const socket = stubSocket(
     gameView({ phase: 'running', game: state(current), ...over }, [
       human('p0', 'Ann'),
@@ -54,6 +54,10 @@ async function setup(current: number, over = {}) {
   const button = (text: string) =>
     [...el.querySelectorAll('button')].find((b) => b.textContent?.includes(text)) as
       HTMLButtonElement | undefined;
+  if (showLog) {
+    button('Log')?.click();
+    await fixture.whenStable();
+  }
   const toasts = vi.spyOn(TestBed.inject(MessageService), 'add');
   return { socket, el, button, fixture, toasts };
 }
@@ -61,7 +65,7 @@ async function setup(current: number, over = {}) {
 describe('Table', () => {
   it('shows scores, deck size and offline tag', async () => {
     const { el } = await setup(0);
-    expect(el.textContent).toContain('Target');
+    expect(el.textContent).toContain('Points: ');
     expect(el.querySelector('app-card-deck [aria-label^="Draw pile: 42 cards"]')).not.toBeNull();
     expect(el.querySelector('app-discard-pile [aria-label^="Discard pile"]')).not.toBeNull();
     expect(el.textContent).toContain('Bob');
@@ -69,10 +73,15 @@ describe('Table', () => {
     expect(el.querySelector('[aria-current=true]')?.textContent).toContain('Ann');
   });
 
+  it('hides the log until toggled', async () => {
+    const { el } = await setup(0, {}, false);
+    expect(el.querySelector('.vl-log')).toBeNull();
+  });
+
   it('lets the active player select dice and sends the indices', async () => {
     const { socket, el, button, fixture } = await setup(0);
     socket.send.mockResolvedValue({ ok: true });
-    expect(button('Set aside')!.disabled).toBe(true);
+    expect(button('Set aside')).toBeUndefined();
     const dice = el.querySelectorAll<HTMLButtonElement>('[aria-label=Dice] button');
     dice[1].click();
     dice[0].click();
@@ -83,10 +92,11 @@ describe('Table', () => {
     });
   });
 
-  it('disables controls when it is not my turn', async () => {
+  it('hides the action buttons when it is not my turn', async () => {
     const { button } = await setup(1);
-    expect(button('Set aside')!.disabled).toBe(true);
-    expect(button('Throw')!.disabled).toBe(true);
+    expect(button('Set aside')).toBeUndefined();
+    expect(button('Throw')).toBeUndefined();
+    expect(button('Draw')).toBeUndefined();
   });
 
   it('renders a rejected move', async () => {
@@ -103,19 +113,17 @@ describe('Table', () => {
         detail: expect.stringContaining('minimum points'),
       }),
     );
-    expect(button('Draw')).toBeTruthy();
+    expect(button('Draw')).toBeUndefined();
   });
 
-  it('explains disabled actions via aria-describedby', async () => {
-    const { el, button } = await setup(1);
-    const id = button('Throw')!.getAttribute('aria-describedby')!;
-    expect(el.querySelector(`#${id}`)?.textContent).toContain('Not your turn');
+  it('shows no reason to players who are not on turn', async () => {
+    const { el } = await setup(1);
+    expect(el.textContent).not.toContain('Not your turn');
   });
 
-  it('gives the active player a reason for an empty selection', async () => {
-    const { el, button } = await setup(0);
-    const id = button('Set aside')!.getAttribute('aria-describedby')!;
-    expect(el.querySelector(`#${id}`)?.textContent).toContain('Select at least one die');
+  it('names the next action for an empty selection', async () => {
+    const { el } = await setup(0);
+    expect(el.querySelector('.vl-next')?.textContent).toContain('Select at least one die');
   });
 
   it.each([2, 5, 8])('renders %i players', async (n) => {
@@ -124,10 +132,10 @@ describe('Table', () => {
     expect(el.querySelectorAll('app-player-seat')).toHaveLength(n);
   });
 
-  it('seats me first at the bottom and marks the offline seat', async () => {
+  it('seats me first at the top left and marks the offline seat', async () => {
     const { el } = await setup(0);
     const seats = [...el.querySelectorAll('ul.vl-seats > li')];
-    expect(seats.map((li) => li.className)).toEqual(['vl-area-b', 'vl-area-t']);
+    expect(seats.map((li) => li.className)).toEqual(['vl-area-l1', 'vl-area-r1']);
     expect(seats[0].textContent).toContain('Ann');
     expect(seats[0].textContent).toContain('You');
     expect(seats[1].textContent).toContain('Offline');
@@ -177,12 +185,12 @@ describe('Table', () => {
       ['the card is not a bonus', { free: 0, card: 'star' }],
     ])('does not offer drawing when %s', async (_, over) => {
       const { button } = await setup(0, decide(over));
-      expect(button('Draw')!.disabled).toBe(true);
+      expect(button('Draw')).toBeUndefined();
     });
 
     it('does not offer drawing to other players', async () => {
       const { button } = await setup(1, decide({ free: 0 }, 1));
-      expect(button('Draw')!.disabled).toBe(true);
+      expect(button('Draw')).toBeUndefined();
     });
   });
 
@@ -250,7 +258,7 @@ describe('Table', () => {
       const { el, fixture, button } = await throwOne();
       expect(logLen(el)).toBe(0);
       expect(el.querySelector('.vl-roll-status')?.textContent).toContain('rolling');
-      expect(button('Throw')!.disabled).toBe(true);
+      expect(button('Throw')).toBeUndefined();
       vi.advanceTimersByTime(5000);
       fixture.detectChanges();
       expect(logLen(el)).toBe(1);
@@ -318,8 +326,8 @@ describe('Table', () => {
   });
 
   it('asks for confirmation before leaving', async () => {
-    const { socket, button, fixture } = await setup(0);
-    button('Leave game')!.click();
+    const { socket, el, fixture } = await setup(0);
+    el.querySelector<HTMLButtonElement>('[aria-label="Leave game"]')!.click();
     fixture.detectChanges();
     await fixture.whenStable();
     expect(socket.leave).not.toHaveBeenCalled();
@@ -327,7 +335,7 @@ describe('Table', () => {
     expect(socket.leave).toHaveBeenCalled();
   });
 
-  it('toasts a new turn-end event', async () => {
+  it('shows a new bank as a notice instead of a toast', async () => {
     const { socket, toasts, fixture } = await setup(0);
     const view = socket.game()!;
     socket.game.set({
@@ -336,7 +344,8 @@ describe('Table', () => {
     } as never);
     fixture.detectChanges();
     await fixture.whenStable();
-    expect(toasts).toHaveBeenCalledWith(expect.objectContaining({ detail: 'Ann banked 300' }));
+    expect(toasts).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.querySelector('.vl-bust')?.textContent).toContain('banked 300');
   });
 
   it('is keyboard operable: dice then actions are native buttons in order', async () => {

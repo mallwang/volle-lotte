@@ -6,6 +6,7 @@ import {
   pileLevel,
   playedCards,
   seatAreas,
+  seatRows,
   seatViews,
   totalCards,
 } from './table-view';
@@ -25,26 +26,16 @@ const view = (n: number, current: number, youSeat: number): GameView =>
   }) as unknown as GameView;
 
 describe('table-view', () => {
-  it.each([1, 2, 3, 4, 5, 6, 7, 8])('seat areas for %i are unique and start at b', (n) => {
-    const a = seatAreas(n);
-    expect(a).toHaveLength(n);
-    expect(new Set(a).size).toBe(n);
-    expect(a[0]).toBe('b');
-  });
-
-  it('uses the documented layouts', () => {
-    expect(seatAreas(2)).toEqual(['b', 't']);
-    expect(seatAreas(4)).toEqual(['b', 'l', 't', 'r']);
-    const eight = seatAreas(8);
-    expect(eight.filter((x) => x.startsWith('t'))).toHaveLength(3);
-    expect(eight.filter((x) => x.startsWith('b'))).toHaveLength(3);
+  it('fills the sides top to bottom, alternating left and right', () => {
+    expect(seatAreas(5)).toEqual(['l1', 'r1', 'l2', 'r2', 'l3']);
     expect(seatAreas(0)).toEqual([]);
     expect(seatAreas(9)).toHaveLength(8);
+    expect(seatRows(5)).toBe(3);
   });
 
-  it.each([0, 1, 2, 3])('rotates so that seat %i is at the bottom', (me) => {
+  it.each([0, 1, 2, 3])('rotates so that seat %i is first', (me) => {
     const s = seatViews(view(4, 2, me));
-    expect(s[0]).toMatchObject({ you: true, area: 'b', name: `P${me}` });
+    expect(s[0]).toMatchObject({ you: true, area: 'l1', name: `P${me}` });
     expect(s.map((x) => x.name)).toEqual([0, 1, 2, 3].map((k) => `P${(me + k) % 4}`));
     expect(s.filter((x) => x.active)).toHaveLength(1);
   });

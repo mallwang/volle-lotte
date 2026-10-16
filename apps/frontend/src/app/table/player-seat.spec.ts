@@ -25,7 +25,7 @@ describe('PlayerSeat', () => {
     const el = make({});
     expect(el.querySelector('.pi-user')).not.toBeNull();
     expect(el.querySelector('[aria-current]')).toBeNull();
-    expect(el.querySelector('.vl-status')).toBeNull();
+    expect(el.textContent).toContain('Waiting');
   });
 
   it('shows the timer only with a deadline', () => {

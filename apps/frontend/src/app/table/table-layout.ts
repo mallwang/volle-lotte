@@ -1,6 +1,6 @@
 import { Component, input } from '@angular/core';
 
-/** Oval table: project seats as `<li seat class="vl-area-b">` (clockwise DOM order) and the centre content. */
+/** Oval table: project seats as `<li seat class="vl-area-l1">` (clockwise DOM order) and the centre content. */
 @Component({
   selector: 'app-table-layout',
   template: `

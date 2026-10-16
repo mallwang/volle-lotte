@@ -22,6 +22,6 @@ describe('CardDeck', () => {
     expect(el.querySelector('[role=img]')!.getAttribute('aria-label')).toBe(
       `Draw pile: ${size} cards (${level})`,
     );
-    expect(el.querySelector('.vl-pile-label')!.textContent).toBe(String(size));
+    expect(el.querySelector('.vl-pile-label')!.textContent).toBe(`Left: ${size}`);
   });
 });

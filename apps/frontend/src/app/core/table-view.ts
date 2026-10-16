@@ -1,8 +1,8 @@
 import type { GameView, Rules } from 'game-rules';
 import { playerSeats } from './game-view';
 
-/** Grid area of a seat around the table (top/bottom/left/right). */
-export type SeatArea = 't' | 'tl' | 'tr' | 'l' | 'r' | 'b' | 'bl' | 'br';
+/** Grid area of a seat: side (l/r) and row from the top, e.g. `l1`, `r1`, `l2`. */
+export type SeatArea = `${'l' | 'r'}${number}`;
 export type PileLevel = 'many' | 'medium' | 'few' | 'empty';
 
 export interface TableSeat {
@@ -15,23 +15,16 @@ export interface TableSeat {
   area: SeatArea;
 }
 
-/** Clockwise from the bottom; symmetric subsets of the 8 positions. */
-const AREAS: readonly (readonly SeatArea[])[] = [
-  [],
-  ['b'],
-  ['b', 't'],
-  ['b', 'tl', 'tr'],
-  ['b', 'l', 't', 'r'],
-  ['b', 'l', 'tl', 'tr', 'r'],
-  ['b', 'l', 'tl', 't', 'tr', 'r'],
-  ['b', 'bl', 'l', 'tl', 'tr', 'r', 'br'],
-  ['b', 'bl', 'l', 'tl', 't', 'tr', 'r', 'br'],
-];
-
+/** Seats fill the sides top to bottom, alternating left and right. */
 export const seatAreas = (count: number): readonly SeatArea[] =>
-  AREAS[Math.min(Math.max(count, 0), 8)];
+  Array.from<unknown, SeatArea>({ length: Math.min(Math.max(count, 0), 8) }, (_, k) =>
+    k % 2 === 0 ? `l${k / 2 + 1}` : `r${(k - 1) / 2 + 1}`,
+  );
 
-/** Players clockwise, own seat first (bottom). Without an own seat (replaced) engine order. */
+/** Rows needed on each side. */
+export const seatRows = (count: number): number => Math.ceil(Math.min(Math.max(count, 0), 8) / 2);
+
+/** Players in turn order, own seat first (top left). Without an own seat (replaced) engine order. */
 export function seatViews(g: GameView): TableSeat[] {
   const state = g.game;
   if (!state) return [];

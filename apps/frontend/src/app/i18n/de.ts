@@ -77,6 +77,7 @@ export const de: Record<keyof typeof en, string> = {
   'difficulty.random': 'zufällig',
 
   'gameLobby.summary': 'Ziel {target}, Minimum {minimum}, Vierling-Verdopplung {doubling}.',
+  'gameLobby.cards': 'Karten: {list}.',
   'gameLobby.on': 'an',
   'gameLobby.off': 'aus',
   'gameLobby.seat': 'Platz {n}',
@@ -110,8 +111,9 @@ export const de: Record<keyof typeof en, string> = {
   'player.computer': 'Computer',
 
   'table.table': 'Tisch',
-  'table.target': 'Ziel {target}.',
-  'table.active': 'Am Zug: {name}. Phase: {phase}. Mitgenommen {carried}, Serie {run}.',
+  'table.rules': 'Punkte: {target} · Min. Punkte: {minimum}',
+  'table.volleLottes': 'Volle Lotte: {count}',
+  'table.round': 'Runde {round}',
   'table.phase.draw': 'Ziehen',
   'table.phase.throw': 'Würfeln',
   'table.phase.select': 'Auswählen',
@@ -122,14 +124,15 @@ export const de: Record<keyof typeof en, string> = {
   'turn.timer': 'Zeitlimit für diesen Zug',
   'turn.warning':
     'Du hast zweimal in Folge die Zeit überschritten. Beim nächsten Mal übernimmt ein Computer deinen Platz.',
-  'table.notYourTurn': 'Du bist nicht dran',
-  'table.draw': 'Karte ziehen',
+  'table.or': ' oder ',
+  'table.draw': 'Ziehen',
   'table.throw': 'Würfeln',
   'table.drawFirst': 'Zuerst eine Karte ziehen',
   'table.setAsideFirst': 'Zuerst Würfel beiseitelegen',
   'table.select': 'Auswahl beiseitelegen',
   'table.selectOne': 'Mindestens einen Würfel auswählen',
   'table.safe': 'Gesichert',
+  'table.safePoints': 'Gesichert: {points} Punkte',
   'table.belowMinimum': 'Die Mindestpunktzahl von {min} Punkten wurde noch nicht erreicht.',
   'table.bank': 'Punkte sichern',
 
@@ -139,6 +142,10 @@ export const de: Record<keyof typeof en, string> = {
   'dice.notSelected': 'nicht ausgewählt',
   'table.bustYou': 'Du hast überworfen. Nächster Spieler ({next}) ist an der Reihe.',
   'table.bustOther': '{who} hat überworfen. Nächster Spieler ({next}) ist an der Reihe.',
+  'table.bankedYou':
+    'Du hast {points} Punkte gesichert. Nächster Spieler ({next}) ist an der Reihe.',
+  'table.bankedOther':
+    '{who} hat {points} Punkte gesichert. Nächster Spieler ({next}) ist an der Reihe.',
   'dice.rolling': 'Die Würfel rollen…',
   'dice.computerPick': 'Auswahl des Computers',
   'dice.blank': 'Würfel nicht sichtbar',
@@ -155,6 +162,7 @@ export const de: Record<keyof typeof en, string> = {
   'player.human': 'Mensch',
   'player.active': 'Am Zug',
   'player.offline': 'Offline',
+  'player.waiting': 'Warten',
   'player.score': 'Punkte: {score}',
   'player.you': 'Du',
   'pile.level.many': 'viele',
@@ -162,6 +170,8 @@ export const de: Record<keyof typeof en, string> = {
   'pile.level.few': 'wenige',
   'pile.level.empty': 'leer',
   'pile.draw': 'Nachziehstapel: {size} Karten ({level})',
+  'pile.rest': 'Rest: {count}',
+  'pile.discarded': 'Abgelegt: {count}',
   'pile.discard': 'Ablagestapel: {count} Karten',
 
   'result.title': 'Ergebnis',

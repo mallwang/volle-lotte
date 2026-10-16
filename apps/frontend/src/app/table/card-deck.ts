@@ -20,9 +20,7 @@ const LAYERS = { empty: 0, few: 2, medium: 4, many: 6 } as const;
           [style.transform]="'translate(' + l * 0.12 + 'px,' + -l * 0.12 + 'px)'"
         ></span>
       }
-      <span class="vl-pile-label" aria-hidden="true"
-        ><b>{{ size() }}</b></span
-      >
+      <span class="vl-pile-label" aria-hidden="true">{{ text() }}</span>
     </div>
   `,
 })
@@ -34,6 +32,7 @@ export class CardDeck {
   protected readonly layers = computed(() =>
     Array.from({ length: LAYERS[this.level()] }, (_, i) => i),
   );
+  protected readonly text = computed(() => this.i18n.t('pile.rest', { count: this.size() }));
   protected readonly label = computed(() =>
     this.i18n.t('pile.draw', {
       size: this.size(),
