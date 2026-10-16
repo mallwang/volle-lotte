@@ -22,18 +22,18 @@ describe('DiceRollService', () => {
     expect(s.rolling()).toBe(true);
     expect(s.isRolling(0) && s.isRolling(1)).toBe(true);
     expect(s.faceFor(0, 4)).toBeGreaterThanOrEqual(1);
-    vi.advanceTimersByTime(1999); // every die rolls at least 2 s
+    vi.advanceTimersByTime(999); // every die rolls at least 1 s
     expect(s.rolling()).toBe(true);
-    vi.advanceTimersByTime(3001); // and at most 5 s
+    vi.advanceTimersByTime(2001); // and at most 3 s
     expect(s.rolling()).toBe(false);
     expect(s.faceFor(0, 4)).toBe(4);
     expect(s.faceFor(1, 6)).toBe(6);
   });
 
-  it('computer-fast ends within 2.5 s', () => {
+  it('computer-fast ends within 1.5 s', () => {
     const s = svc();
     s.start(3, { computerFast: true });
-    vi.advanceTimersByTime(2500);
+    vi.advanceTimersByTime(1500);
     expect(s.rolling()).toBe(false);
   });
 
@@ -47,7 +47,7 @@ describe('DiceRollService', () => {
     const s = svc();
     s.start(2);
     s.start(1, { computerFast: true });
-    vi.advanceTimersByTime(2500);
+    vi.advanceTimersByTime(1500);
     expect(s.rolling()).toBe(false);
   });
 });
