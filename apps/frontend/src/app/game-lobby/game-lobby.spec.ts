@@ -51,11 +51,10 @@ describe('GameLobby', () => {
     expect(socket.send).toHaveBeenCalledWith('game:start');
   });
 
-  it("lets the host close another player's seat", async () => {
+  it('lets the host remove another player', async () => {
     const { socket, button } = await setup(gameView({}, [me(true), other(true)]));
     socket.send.mockResolvedValue({ ok: true });
-    expect(button('Close seat 1')).toBeUndefined();
-    button('Close seat 2')!.click();
+    button('Remove this player')!.click();
     expect(socket.send).toHaveBeenCalledWith('seat:remove', { seat: 1 });
   });
 

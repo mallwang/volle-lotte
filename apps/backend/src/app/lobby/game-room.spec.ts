@@ -282,7 +282,7 @@ describe('GameRoom turn timer', () => {
     jest.advanceTimersByTime(TURN_LIMIT_MS.draw - 1);
     expect(room.log.some((e) => e.kind === 'timedOut')).toBe(false);
     jest.advanceTimersByTime(1);
-    expect(room.log.find((e) => e.kind === 'timedOut')).toMatchObject({ data: 'draw' });
+    expect(room.log.find((e) => e.kind === 'timedOut')).toMatchObject({ data: 'skip' });
     expect(first.timeouts).toBe(1);
     room.dispose();
   });

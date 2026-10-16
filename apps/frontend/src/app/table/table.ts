@@ -64,6 +64,7 @@ const BUST_MS = 5000;
           [text]="true"
           severity="secondary"
           [ariaLabel]="'settings.open' | t"
+          [disabled]="removed()"
           (onClick)="settingsOpen.set(true)"
         />
       </div>
@@ -90,6 +91,11 @@ const BUST_MS = 5000;
                 @if (!roll.rolling() && !bust()) {
                   <app-turn-timer [at]="d.at" />
                 }
+              }
+              @if (computerTurn()) {
+                <p role="status">
+                  <i class="pi pi-hourglass pi-spin"></i> {{ 'table.thinking' | t }}
+                </p>
               }
               @if (view.you.timeoutWarning) {
                 <p-message severity="warn" role="alert">{{ 'turn.warning' | t }}</p-message>
@@ -213,7 +219,26 @@ const BUST_MS = 5000;
         </div>
       }
       <app-settings-dialog [(visible)]="settingsOpen" />
-      <p-button [label]="'game.leave' | t" severity="secondary" (onClick)="leaveOpen.set(true)" />
+      <p-button
+        [label]="'game.leave' | t"
+        severity="secondary"
+        [disabled]="removed()"
+        (onClick)="leaveOpen.set(true)"
+      />
+      <p-dialog
+        [header]="'removed.title' | t"
+        [style]="{ width: '28rem', maxWidth: '95vw' }"
+        [visible]="removed()"
+        [modal]="true"
+        [closable]="false"
+        [closeOnEscape]="false"
+        [draggable]="false"
+      >
+        <p>{{ 'removed.body' | t }}</p>
+        <div class="vl-actions">
+          <p-button [label]="'removed.confirm' | t" (onClick)="socket.leave()" />
+        </div>
+      </p-dialog>
       <p-dialog
         [header]="'leave.title' | t"
         [style]="{ width: '28rem', maxWidth: '95vw' }"
@@ -247,6 +272,8 @@ export class Table {
   private readonly prefs = inject(DicePrefs);
   protected readonly settingsOpen = signal(false);
   protected readonly leaveOpen = signal(false);
+  /** A computer took over my seat (timeouts); nothing here is playable anymore. */
+  protected readonly removed = computed(() => (this.socket.game()?.you.seat ?? 0) < 0);
   protected readonly BUST_MS = BUST_MS;
   /** Bust notice: keeps the busting throw visible until the next player takes over. */
   protected readonly bust = signal<{ dice: readonly number[]; text: string } | null>(null);
@@ -300,7 +327,7 @@ export class Table {
   /** It is my turn. */
   protected readonly mine = computed(() => {
     const g = this.socket.game();
-    if (!g?.game || this.bust()) return false;
+    if (!g?.game || this.bust() || this.removed()) return false;
     return this.seats()[g.game.current] === g.you.seat;
   });
 

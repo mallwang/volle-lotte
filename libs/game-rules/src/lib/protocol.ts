@@ -1,6 +1,6 @@
 import type { Action, Event, GameState, RejectionReason, Rules } from './types.js';
 
-export const PROTOCOL_VERSION = 3;
+export const PROTOCOL_VERSION = 4;
 
 export type Difficulty = 'easy' | 'medium' | 'hard' | 'random';
 export type RoomPhase = 'lobby' | 'running' | 'finished';
@@ -107,6 +107,8 @@ export interface GameSummary {
   protected: boolean;
   /** The requesting player's own bot-held seat is in this game. */
   rejoinable: boolean;
+  /** The host removed the requesting player from this game. */
+  banned: boolean;
   phase: RoomPhase;
 }
 

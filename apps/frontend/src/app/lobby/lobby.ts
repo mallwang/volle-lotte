@@ -66,7 +66,9 @@ import { TranslatePipe } from '../core/translate.pipe';
                 <p-tag [value]="'lobby.open' | t" icon="pi pi-lock-open" severity="success" />
               }
             </p>
-            @if (g.phase === 'lobby') {
+            @if (g.banned) {
+              <p-message severity="error" role="alert">{{ 'error.banned' | t }}</p-message>
+            } @else if (g.phase === 'lobby') {
               @if (g.seatsUsed < g.seatsTotal) {
                 <p-button [label]="'lobby.join' | t" (onClick)="open(g, $event)" />
               }

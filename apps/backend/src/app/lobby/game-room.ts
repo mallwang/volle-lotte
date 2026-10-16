@@ -26,7 +26,7 @@ export const TURN_LIMIT_MS = {
   draw: 10_000,
   throw: 10_000,
   select: 15_000,
-  decide: 15_000,
+  decide: 20_000,
 } as const;
 /** The 3rd timeout in a row hands the seat to a computer. */
 export const MAX_TIMEOUTS = 3;
@@ -161,6 +161,7 @@ export class GameRoom {
       seatsTotal: this.seats.filter((s) => s.state !== 'locked').length,
       protected: this.passwordHash !== '',
       rejoinable: this.formerSeat(forPlayer) >= 0,
+      banned: !!forPlayer && this.banned.has(forPlayer),
       phase: this.phase,
     };
   }
@@ -210,7 +211,8 @@ export class GameRoom {
   /** Deliberate leave. Returns whether the room has no human left. */
   leave(playerId: string): Res<{ empty: boolean }> {
     const seat = this.seatOf(playerId);
-    if (seat < 0) return fail('notInGame');
+    // seatless: a computer already took over after timeouts; the player only dismisses the notice
+    if (seat < 0) return { ok: true, empty: this.humans().length === 0 };
     this.clearGrace(seat);
     if (this.phase === 'running') {
       this.replaceByBot(seat, 'left');
@@ -258,16 +260,16 @@ export class GameRoom {
     return { ok: true, removed };
   }
 
-  /** Host closes a human's seat and bans them from this game. */
+  /** Host removes a human and bans them from this game; the seat stays open for others. */
   removeSeat(playerId: string, seat: number): Res<{ removed: string }> {
     if (playerId !== this.hostId) return fail('notHost');
     if (this.phase !== 'lobby') return fail('gameStarted');
     const current = this.seats[seat];
     if (current?.state !== 'human' || current.playerId === this.hostId) return fail('seatNotFree');
     this.banned.add(current.playerId);
-    this.seats[seat] = { state: 'locked' };
+    this.seats[seat] = { state: 'open' };
     this.resetReady();
-    this.add('seatChanged', seat, 'locked');
+    this.add('seatChanged', seat, 'open');
     this.emit();
     return { ok: true, removed: current.playerId };
   }
@@ -371,6 +373,8 @@ export class GameRoom {
   private scheduleComputer() {
     if (this.computerTimer || this.phase !== 'running' || !this.game) return;
     if (this.seats[this.currentSeat()]?.state !== 'computer') return;
+    // nobody to play against: wait (a rejoin emits and resumes), cleanup closes the room
+    if (this.humans().length === 0) return;
     const stillMine = () => {
       this.computerTimer = undefined;
       const seat = this.seats[this.currentSeat()];
@@ -418,8 +422,11 @@ export class GameRoom {
     const human = this.seats[seat];
     const phase = this.game?.turn?.phase;
     if (this.phase !== 'running' || !this.game || !phase || human?.state !== 'human') return;
+    // no card is drawn for an idle player: a drawn Stop would read as their choice
     const action: Action | undefined =
-      phase === 'select' ? undefined : { type: phase === 'decide' ? 'bank' : phase };
+      phase === 'select' || phase === 'draw'
+        ? undefined
+        : { type: phase === 'decide' ? 'bank' : phase };
     this.add('timedOut', seat, action?.type ?? 'skip');
     human.timeouts++;
     if (human.timeouts >= MAX_TIMEOUTS) this.replaceByBot(seat, 'timeouts');

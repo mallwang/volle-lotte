@@ -228,7 +228,7 @@ describe('game settings', () => {
 });
 
 describe('seat:remove', () => {
-  it('is host only, locks and bans the player, who cannot rejoin', async () => {
+  it('is host only, bans the player and frees the seat, who cannot rejoin', async () => {
     const host = await Client.start('Banhost');
     const { game } = await create(host, 4);
     const p = await Client.start('Banguest');
@@ -242,8 +242,8 @@ describe('seat:remove', () => {
     expect(await p.send('game:join', { gameId: game.id, password: 'secret' })).toMatchObject({
       reason: 'banned',
     });
-    const state = await host.until('game:state', (s) => s.game.seats[1].state === 'locked');
-    expect(state.game.seats[1]).toEqual({ state: 'locked' });
+    const state = await host.until('game:state', (s) => s.game.seats[1].state === 'open');
+    expect(state.game.seats[1]).toEqual({ state: 'open' });
   });
 
   it('does not ban a player who leaves voluntarily', async () => {

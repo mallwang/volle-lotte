@@ -52,7 +52,7 @@ const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard', 'random'];
                 />
                 @if (host() && s.playerId !== game.hostId) {
                   <p-button
-                    [label]="'gameLobby.removePlayer' | t: { n: $index + 1 }"
+                    [label]="'gameLobby.removePlayer' | t"
                     severity="secondary"
                     (onClick)="removeSeat($index)"
                   />
@@ -132,7 +132,11 @@ const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard', 'random'];
         <p>{{ 'gameLobby.waiting' | t: { name: hostName() } }}</p>
       }
       <div class="vl-actions">
-        <p-button [label]="'game.leave' | t" severity="secondary" (onClick)="socket.leave()" />
+        <p-button
+          [label]="(host() ? 'gameLobby.withdraw' : 'game.leave') | t"
+          severity="secondary"
+          (onClick)="socket.leave()"
+        />
         @if (host()) {
           <p-button [label]="'gameLobby.start' | t" [disabled]="!canStart()" (onClick)="start()" />
         }

@@ -16,6 +16,7 @@ const summary: GameSummary = {
   seatsTotal: 4,
   protected: true,
   rejoinable: false,
+  banned: false,
   phase: 'lobby',
 };
 

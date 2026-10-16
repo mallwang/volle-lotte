@@ -333,9 +333,16 @@ export class LobbyGateway implements OnGatewayDisconnect {
   }
 
   private push(room: GameRoom, entries: LogEntry[]): void {
-    for (const human of room.humans()) {
-      const socketId = this.sessions.byPlayerId(human.playerId)?.socketId;
-      this.emitTo(socketId, 'game:state', { game: toView(room, human.playerId) });
+    // also players a computer took over from after timeouts: they get the notice to leave
+    const watchers = new Set(room.humans().map((h) => h.playerId));
+    for (const s of room.seats)
+      if (s.state === 'computer' && s.former) {
+        const id = s.former.playerId;
+        if (this.sessions.byPlayerId(id)?.gameId === room.id) watchers.add(id);
+      }
+    for (const playerId of watchers) {
+      const socketId = this.sessions.byPlayerId(playerId)?.socketId;
+      this.emitTo(socketId, 'game:state', { game: toView(room, playerId) });
       if (entries.length) this.emitTo(socketId, 'game:log', { entries });
     }
     const summary = JSON.stringify(room.summary());
