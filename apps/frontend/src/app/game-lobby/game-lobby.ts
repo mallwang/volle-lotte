@@ -1,6 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import type { Ack, Difficulty } from 'game-rules';
+import { CARD_TYPES, type Ack, type Difficulty } from 'game-rules';
 import { AvatarModule } from 'primeng/avatar';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
@@ -31,6 +31,7 @@ const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard', 'random'];
                 }
         }}
       </p>
+      <p>{{ 'gameLobby.cards' | t: { list: cardList() } }}</p>
       <ul class="vl-cards">
         @for (s of game.seats; track $index) {
           <li class="vl-seat" [class.vl-seat-locked]="s.state === 'locked'">
@@ -162,6 +163,12 @@ export class GameLobby {
       g?.seats.find((s) => s.playerId === g.hostId),
       this.i18n,
     );
+  });
+  protected readonly cardList = computed(() => {
+    const counts = this.socket.game()?.rules.cardCounts;
+    return CARD_TYPES.filter((c) => counts?.[c])
+      .map((c) => counts?.[c] + '× ' + this.i18n.t(`card.${c}`))
+      .join(', ');
   });
   protected readonly canStart = computed(() => {
     const seats = this.socket.game()?.seats ?? [];

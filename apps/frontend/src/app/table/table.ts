@@ -1,6 +1,5 @@
-import { NgTemplateOutlet } from '@angular/common';
-import { Component, computed, effect, inject, signal } from '@angular/core';
-import type { Action, GameView, LogEntry } from 'game-rules';
+import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
+import type { Action, Event as GameEvent, GameView, LogEntry } from 'game-rules';
 import { ButtonModule } from 'primeng/button';
 import { MessageService } from 'primeng/api';
 import { DialogModule } from 'primeng/dialog';
@@ -12,12 +11,15 @@ import { logText, playerSeats, seatName } from '../core/game-view';
 import { I18nService } from '../core/i18n.service';
 import { SocketService } from '../core/socket.service';
 import { TranslatePipe } from '../core/translate.pipe';
-import { CardTile } from '../shared/card-tile';
-import { DiceTile } from '../shared/dice-tile';
-import { DieFace } from '../shared/die-face';
-import { PlayerTile } from '../shared/player-tile';
+import { GameCard } from '../shared/game-card';
+import { playedCards, seatRows, seatViews, totalCards } from '../core/table-view';
+import { CardDeck } from './card-deck';
+import { DiceArea } from './dice-area';
+import { GameLog } from './game-log';
+import { DiscardPile } from './discard-pile';
+import { PlayerSeat } from './player-seat';
+import { TableLayout } from './table-layout';
 import { SettingsDialog } from './settings-dialog';
-import { TurnTimer } from './turn-timer';
 
 /** Log events shown as a toast to every player, by severity (FR-010, FR-014). */
 const ANNOUNCED: Record<string, 'info' | 'warn' | 'success'> = {
@@ -36,208 +38,134 @@ const ANNOUNCED: Record<string, 'info' | 'warn' | 'success'> = {
   rejoined: 'info',
 };
 
-/** How long a bust stays on the table before the next player's turn starts. */
-const BUST_MS = 5000;
+/** How long a turn's result (bust or bank) stays on the table before the next turn starts. */
+const NOTICE_MS = 6000;
 
 @Component({
   selector: 'app-table',
   imports: [
     ButtonModule,
-    CardTile,
-    DiceTile,
+    GameCard,
+    CardDeck,
+    DiscardPile,
+    DiceArea,
     DialogModule,
-    DieFace,
+    GameLog,
     MessageModule,
-    NgTemplateOutlet,
-    PlayerTile,
+    PlayerSeat,
+    TableLayout,
     SettingsDialog,
     TranslatePipe,
-    TurnTimer,
   ],
   template: `
     @if (socket.game(); as view) {
       <div class="vl-title-row">
         <h2>{{ view.name }}</h2>
-        <p-button
-          icon="pi pi-cog"
-          [rounded]="true"
-          [text]="true"
-          severity="secondary"
-          [ariaLabel]="'settings.open' | t"
-          [disabled]="removed()"
-          (onClick)="settingsOpen.set(true)"
-        />
+        @if (view.game; as state) {
+          <span class="vl-game-clock" role="timer">
+            {{ 'table.round' | t: { round: round() } }} · {{ elapsed() }}
+          </span>
+          <span class="vl-game-clock">
+            {{
+              'table.rules'
+                | t: { target: state.rules.targetScore, minimum: state.rules.minimumPoints }
+            }}
+          </span>
+          <span class="vl-game-clock">
+            {{ 'table.volleLottes' | t: { count: volleLottes() } }}
+          </span>
+        }
+        <span class="vl-title-btns">
+          <p-button
+            icon="pi pi-sign-out"
+            [rounded]="true"
+            [text]="true"
+            severity="secondary"
+            [ariaLabel]="'game.leave' | t"
+            [disabled]="removed()"
+            (onClick)="leaveOpen.set(true)"
+          />
+          <p-button
+            icon="pi pi-cog"
+            [rounded]="true"
+            [text]="true"
+            severity="secondary"
+            [ariaLabel]="'settings.open' | t"
+            [disabled]="removed()"
+            (onClick)="settingsOpen.set(true)"
+          />
+        </span>
       </div>
       @if (view.game; as state) {
         <div class="vl-table">
           <section [attr.aria-label]="'table.table' | t">
-            <p>
-              {{ 'table.deck' | t: { size: state.deckSize, target: state.rules.targetScore } }}
-            </p>
-            @if (state.turn; as turn) {
-              <p>
-                {{
-                  'table.active'
-                    | t
-                      : {
-                          name: state.players[state.current].name,
-                          phase: 'table.phase.' + turn.phase | t,
-                          carried: turn.carried,
-                          run: turn.run,
-                        }
-                }}
-              </p>
-              @if (view.turnDeadline; as d) {
-                @if (!roll.rolling() && !bust()) {
-                  <app-turn-timer [at]="d.at" />
-                }
-              }
-              @if (computerTurn()) {
-                <p role="status">
-                  <i class="pi pi-hourglass pi-spin"></i> {{ 'table.thinking' | t }}
-                </p>
-              }
-              @if (view.you.timeoutWarning) {
-                <p-message severity="warn" role="alert">{{ 'turn.warning' | t }}</p-message>
-              }
-              <ng-template #act let-a>
-                <div class="vl-action">
-                  <button
-                    pButton
-                    type="button"
-                    [disabled]="a.reason !== null"
-                    [attr.aria-describedby]="a.reason ? 'reason-' + a.id : null"
-                    (click)="a.run()"
-                  >
-                    {{ a.label }}
-                  </button>
-                  <small [id]="'reason-' + a.id">{{ a.reason }}</small>
-                </div>
-              </ng-template>
-              <div class="vl-card-row">
-                <ng-container *ngTemplateOutlet="act; context: { $implicit: action('draw') }" />
-                <app-card-tile [card]="turn.card ?? null" />
-              </div>
-              <div class="vl-play">
-                <div>
-                  <div class="vl-dice" role="group" [attr.aria-label]="'table.dice' | t">
-                    @for (value of diceShown(); track $index; let i = $index) {
-                      <app-dice-tile
-                        [value]="roll.faceFor(i, value)"
-                        [rolling]="roll.isRolling(i)"
-                        [selected]="shown().includes(i)"
-                        [computerPick]="computerTurn() && shown().includes(i)"
-                        [disabled]="!mine() || turn.phase !== 'select' || roll.rolling()"
-                        (toggled)="toggle(i)"
-                      />
-                    }
-                  </div>
-                  @if (bust(); as b) {
-                    <p class="vl-bust" role="status">{{ b.text }}</p>
-                    <div class="vl-bust-timer" [style.animation-duration.ms]="BUST_MS"></div>
-                  }
-                  <p class="vl-roll-status" role="status">
-                    @if (roll.rolling()) {
-                      {{ 'dice.rolling' | t }}
-                    }
-                  </p>
-                  <div class="vl-turn-actions">
-                    <ng-container
-                      *ngTemplateOutlet="act; context: { $implicit: action('throw') }"
-                    />
-                    <ng-container
-                      *ngTemplateOutlet="act; context: { $implicit: action('select') }"
-                    />
-                  </div>
-                </div>
-                <div class="vl-safe" role="group" [attr.aria-label]="'table.safe' | t">
-                  @if (street(); as picked) {
-                    <strong>{{ 'table.safe' | t }}</strong>
-                    <div class="vl-aside vl-street">
-                      @for (v of streetValues; track v) {
-                        <span [class.vl-missing]="!picked.includes(v)"
-                          ><app-die-face [value]="v" /><span class="vl-sr-only">{{ v }}</span></span
-                        >
-                      }
-                    </div>
-                  } @else {
-                    <strong
-                      >{{ 'table.safe' | t }}: {{ bust() ? 0 : turn.carried + turn.run }}</strong
-                    >
-                  }
-                  @if (!street()) {
-                    <div class="vl-aside">
-                      @for (g of aside(); track $index) {
-                        <span class="vl-aside-group">
-                          <span class="vl-aside-dice">
-                            @for (v of g.dice; track $index) {
-                              <span
-                                ><app-die-face [value]="v" /><span class="vl-sr-only">{{
-                                  v
-                                }}</span></span
-                              >
-                            }
-                          </span>
-                          @if (g.points > 0) {
-                            <small>+{{ g.points }}</small>
-                          }
-                        </span>
-                      }
-                    </div>
-                  }
-                  <ng-container *ngTemplateOutlet="act; context: { $implicit: action('bank') }" />
-                  @if (belowMinimum()) {
-                    <small>{{
-                      'table.belowMinimum' | t: { min: state.rules.minimumPoints }
-                    }}</small>
-                  }
-                </div>
-              </div>
-            }
-          </section>
-          <section [attr.aria-label]="'table.players' | t">
-            <h3>{{ 'table.players' | t }}</h3>
-            <ul class="vl-players">
-              @for (p of state.players; track $index) {
-                <li>
-                  <app-player-tile
+            <app-table-layout [label]="'table.players' | t" [style.--vl-rows]="rows()">
+              @for (p of tableSeats(); track $index) {
+                <li seat [class]="'vl-area-' + p.area">
+                  <app-player-seat
                     [name]="p.name"
                     [score]="p.score"
-                    [active]="$index === state.current"
-                    [online]="view.seats[seats()[$index]]?.connected !== false"
-                    [computer]="view.seats[seats()[$index]]?.state === 'computer'"
+                    [computer]="p.computer"
+                    [online]="p.online"
+                    [active]="p.active"
+                    [action]="p.active && computerTurn() ? phaseLabel() : null"
+                    [you]="p.you"
+                    [deadlineAt]="p.active ? deadlineAt() : null"
                   />
                 </li>
               }
-            </ul>
-            <h3>{{ 'table.log' | t }}</h3>
-            <ol class="vl-log" role="log" aria-live="polite">
-              @for (e of newestFirst(); track e) {
-                <li>
-                  @for (part of parts(e); track $index) {
-                    @if (part.die) {
-                      <span class="vl-log-die"
-                        ><app-die-face [value]="+part.text" /><span class="vl-sr-only">{{
-                          part.text
-                        }}</span></span
-                      >
-                    } @else {
-                      {{ part.text }}
+              @if (state.turn; as turn) {
+                <div class="vl-centre-row">
+                  <app-card-deck [size]="state.deckSize" [total]="totalCards(state.rules)" />
+                  <app-game-card [card]="activeCard()">
+                    @if (mine() && actions()[0].reason === null) {
+                      <button pButton type="button" size="small" (click)="actions()[0].run()">
+                        {{ actions()[0].label }}
+                      </button>
                     }
-                  }
-                </li>
+                  </app-game-card>
+                  <app-discard-pile
+                    [played]="playedCards(totalCards(state.rules), state.deckSize, !!activeCard())"
+                    [previous]="previousCard()"
+                  />
+                </div>
+                <app-dice-area
+                  [dice]="diceShown()"
+                  [selected]="shown()"
+                  [notice]="notice()"
+                  [noticeMs]="NOTICE_MS"
+                  [canSelect]="mine() && turn.phase === 'select'"
+                  [mine]="mine()"
+                  [computerPick]="computerTurn()"
+                  [actions]="actions()"
+                  [next]="next()"
+                  [street]="street()"
+                  [aside]="aside()"
+                  [safe]="notice() ? notice()!.safe : turn.carried + turn.run"
+                  [minimum]="belowMinimum() ? state.rules.minimumPoints : null"
+                  (toggled)="toggle($event)"
+                />
               }
-            </ol>
+            </app-table-layout>
+            @if (view.you.timeoutWarning) {
+              <p-message severity="warn" role="alert">{{ 'turn.warning' | t }}</p-message>
+            }
+          </section>
+          <section [attr.aria-label]="'table.log' | t">
+            <p-button
+              [label]="'table.log' | t"
+              severity="secondary"
+              size="small"
+              [attr.aria-expanded]="logOpen()"
+              (onClick)="logOpen.set(!logOpen())"
+            />
+            @if (logOpen()) {
+              <app-game-log [entries]="newestFirst()" [parts]="parts" />
+            }
           </section>
         </div>
       }
       <app-settings-dialog [(visible)]="settingsOpen" />
-      <p-button
-        [label]="'game.leave' | t"
-        severity="secondary"
-        [disabled]="removed()"
-        (onClick)="leaveOpen.set(true)"
-      />
       <p-dialog
         [header]="'removed.title' | t"
         [style]="{ width: '28rem', maxWidth: '95vw' }"
@@ -285,17 +213,21 @@ export class Table {
   private readonly prefs = inject(DicePrefs);
   protected readonly settingsOpen = signal(false);
   protected readonly leaveOpen = signal(false);
+  protected readonly logOpen = signal(false);
   /** A computer took over my seat (timeouts); nothing here is playable anymore. */
   protected readonly removed = computed(() => (this.socket.game()?.you.seat ?? 0) < 0);
-  protected readonly BUST_MS = BUST_MS;
-  protected readonly streetValues = [1, 2, 3, 4, 5, 6];
-  /** Bust notice: keeps the busting throw visible until the next player takes over. */
-  protected readonly bust = signal<{ dice: readonly number[]; text: string } | null>(null);
+  protected readonly NOTICE_MS = NOTICE_MS;
+  /** Result of a turn: keeps the last throw and secured dice visible until the next player takes over. */
+  protected readonly notice = signal<{
+    dice: readonly number[];
+    text: string;
+    safe: number;
+  } | null>(null);
   private readonly lastThrow = signal<readonly number[]>([]);
   /** Dice on the table: the busting throw, the rolling throw, else the latest throw. */
   protected readonly diceShown = computed((): readonly (number | null)[] => {
-    const bust = this.bust();
-    if (bust) return bust.dice;
+    const notice = this.notice();
+    if (notice) return notice.dice;
     if (this.roll.rolling()) return this.lastThrow();
     const turn = this.socket.game()?.game?.turn;
     if (!turn) return [];
@@ -337,7 +269,59 @@ export class Table {
     }
     return null;
   });
-  protected readonly action = (id: string) => this.actions().find((a) => a.id === id);
+  /** Volle Lotte scored in this game, from the revealed log. */
+  protected readonly volleLottes = computed(
+    () =>
+      (this.socket.game()?.log ?? [])
+        .slice(0, this.revealed())
+        .filter(
+          (e) => e.kind === 'turn' && typeof e.data === 'object' && e.data.type === 'volleLotte',
+        ).length,
+  );
+  /**
+   * The card on the table. While dice roll, the state may already be past a bust, so the revealed
+   * log decides: the card stays until its turn has ended and the dice have stopped.
+   */
+  protected readonly activeCard = computed(() => {
+    const turnCard = this.socket.game()?.game?.turn?.card ?? null;
+    if (!this.roll.rolling()) return turnCard;
+    const log = (this.socket.game()?.log ?? []).slice(0, this.revealed());
+    for (let i = log.length - 1; i >= 0; i--) {
+      const e = log[i];
+      const d = e.kind === 'turn' && typeof e.data === 'object' ? e.data : null;
+      if (d?.type === 'cardDrawn') return d.card;
+      if (d && ['bust', 'banked', 'turnLost', 'turnEnded'].includes(d.type)) return null;
+    }
+    return null;
+  });
+  /** The card played before the current one (the last one while no card is active). */
+  protected readonly previousCard = computed(() => {
+    const drawn = (this.socket.game()?.log ?? []).slice(0, this.revealed()).flatMap((e) => {
+      const d = e.kind === 'turn' && typeof e.data === 'object' ? e.data : null;
+      return d?.type === 'cardDrawn' ? [d.card] : [];
+    });
+    return drawn.at(this.activeCard() ? -2 : -1) ?? null;
+  });
+  protected readonly totalCards = totalCards;
+  protected readonly playedCards = playedCards;
+  protected readonly rows = computed(() => seatRows(this.tableSeats().length));
+  protected readonly tableSeats = computed(() => {
+    const g = this.socket.game();
+    if (!g) return [];
+    const views = seatViews(g);
+    if (!this.roll.rolling()) return views;
+    // while dice roll the state is already past the throw: keep the roller active until they stop
+    const seat = (g.log ?? [])
+      .slice(0, this.revealed())
+      .filter((e) => e.kind === 'turn')
+      .at(-1)?.seat;
+    const roller = this.seats().indexOf(seat ?? -1);
+    return roller < 0 ? views : views.map((v, i) => ({ ...v, active: i === roller }));
+  });
+  /** Turn timer of the active seat; hidden while dice roll or a bust is shown. */
+  protected readonly deadlineAt = computed(() =>
+    this.roll.rolling() || this.notice() ? null : (this.socket.game()?.turnDeadline?.at ?? null),
+  );
   /** Log entries already processed; the server log keeps growing, so the length is a stable cursor. */
   private seen = this.socket.game()?.log.length ?? 0;
   /** Entries shown: a throw's entry stays hidden until its dice have stopped (FR-010). */
@@ -357,7 +341,7 @@ export class Table {
   /** It is my turn. */
   protected readonly mine = computed(() => {
     const g = this.socket.game();
-    if (!g?.game || this.bust() || this.removed()) return false;
+    if (!g?.game || this.notice() || this.removed()) return false;
     return this.seats()[g.game.current] === g.you.seat;
   });
 
@@ -366,7 +350,7 @@ export class Table {
     const mine = this.mine();
     const t = (key: string) => this.i18n.t(key);
     const wait = (ok: boolean, why: string) => {
-      if (!mine) return t('table.notYourTurn');
+      if (!mine) return '';
       if (this.roll.rolling()) return '';
       return ok ? null : why; // null = enabled, '' = disabled without a visible reason
     };
@@ -404,10 +388,62 @@ export class Table {
     ];
   });
 
+  /** Phase of the current turn as a word ("Select", "Decide", ...), for the computer's seat. */
+  protected readonly phaseLabel = computed(() => {
+    const phase = this.socket.game()?.game?.turn?.phase;
+    return phase ? this.i18n.t(`table.phase.${phase}`) : '';
+  });
+
+  /** Hint under the buttons: what the player on turn does next (for me only while a selection is missing). */
+  protected readonly next = computed(() => {
+    const turn = this.socket.game()?.game?.turn;
+    if (!turn || this.notice() || this.roll.rolling()) return '';
+    const t = this.i18n.t.bind(this.i18n);
+    // my own buttons say what to do; only a pending selection needs a hint
+    if (this.mine())
+      return turn.phase === 'select' && this.shown().length === 0
+        ? '👆 ' + t('table.selectOne')
+        : '';
+    let todo = [
+      this.can('draw') && '🃏 ' + t('table.draw'),
+      this.canThrow() && '🎲 ' + t('table.throw'),
+      this.canBank() && '💰 ' + t('table.bank'),
+    ]
+      .filter(Boolean)
+      .join(t('table.or'));
+    if (turn.phase === 'select')
+      todo = '👆 ' + t(this.shown().length > 0 ? 'table.select' : 'table.selectOne');
+    return todo;
+  });
+
+  /** Completed turns, one per player and round (a bust or bank ends a turn). */
+  protected readonly round = computed(() => {
+    const g = this.socket.game();
+    const turns = (g?.log ?? []).filter(
+      (e) => e.kind === 'turn' && typeof e.data === 'object' && e.data.type === 'turnEnded',
+    ).length;
+    return Math.floor(turns / Math.max(1, g?.game?.players.length ?? 1)) + 1;
+  });
+  private readonly now = signal(Date.now());
+  /** Time since the game started (frozen at the end), as m:ss or h:mm:ss. */
+  protected readonly elapsed = computed(() => {
+    const g = this.socket.game();
+    const start = g?.log.find((e) => e.kind === 'started')?.at;
+    if (!start) return '0:00';
+    const end = g?.game?.result ? (g.log.at(-1)?.at ?? this.now()) : this.now();
+    const s = Math.max(0, Math.floor((end - start) / 1000));
+    const [h, m, sec] = [Math.floor(s / 3600), Math.floor(s / 60) % 60, s % 60];
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const mmss = `${m}:${pad(sec)}`;
+    return h > 0 ? `${h}:${pad(m)}:${pad(sec)}` : mmss;
+  });
+
   constructor() {
+    const tick = setInterval(() => this.now.set(Date.now()), 1000);
+    inject(DestroyRef).onDestroy(() => clearInterval(tick));
     effect(() => {
       const g = this.socket.game();
-      if (!g || this.roll.rolling() || this.bust()) return;
+      if (!g || this.roll.rolling() || this.notice()) return;
       // roll over: reveal what was held back, then continue with the rest
       this.revealed.set(this.seen);
       while (this.seen < g.log.length) {
@@ -424,22 +460,40 @@ export class Table {
       this.startRoll(g, data.dice);
       if (this.roll.rolling()) return true;
     }
+    const notice =
+      (data?.type === 'bust' || data?.type === 'banked') && this.showNotice(g, e, data);
     const severity = ANNOUNCED[data ? data.type : e.kind];
-    if (severity) this.messages.add({ severity, detail: logText(g, e, this.i18n), life: 4000 });
-    return data?.type === 'bust' && this.showBust(g, e.seat);
+    if (severity && !notice)
+      this.messages.add({ severity, detail: logText(g, e, this.i18n), life: 4000 });
+    return notice;
   }
 
-  /** Show the busting throw and who is next; returns false when there is nothing to show. */
-  private showBust(g: GameView, seat: number | undefined): boolean {
-    if (!g.game || this.lastThrow().length === 0) return false;
-    const next = seatName(g.seats[this.seats()[g.game.current]], this.i18n);
-    const you = seat === g.you.seat;
-    const text = this.i18n.t(you ? 'table.bustYou' : 'table.bustOther', {
-      who: seatName(g.seats[seat ?? -1], this.i18n),
-      next,
+  /** Show a bust or bank and who is next; returns false when there is nothing to show. */
+  private showNotice(
+    g: GameView,
+    e: LogEntry,
+    data: Extract<GameEvent, { type: 'bust' | 'banked' }>,
+  ): boolean {
+    const bust = data.type === 'bust';
+    if (!g.game || g.game.result || (bust && this.lastThrow().length === 0)) return false;
+    // Star cannot bust: its final throw is followed by a bank entry, which gets the notice
+    const after = g.log[g.log.indexOf(e) + 1]?.data;
+    if (bust && data.lost === 0 && typeof after === 'object' && after.type === 'banked')
+      return false;
+    const text = this.i18n.t(
+      `table.${data.type === 'bust' ? 'bust' : 'banked'}${e.seat === g.you.seat ? 'You' : 'Other'}`,
+      {
+        who: seatName(g.seats[e.seat ?? -1], this.i18n),
+        next: seatName(g.seats[this.seats()[g.game.current]], this.i18n),
+        points: data.type === 'banked' ? data.points : 0,
+      },
+    );
+    this.notice.set({
+      dice: this.lastThrow(),
+      text,
+      safe: data.type === 'banked' ? data.points : 0,
     });
-    this.bust.set({ dice: this.lastThrow(), text });
-    setTimeout(() => this.bust.set(null), BUST_MS);
+    setTimeout(() => this.notice.set(null), NOTICE_MS);
     return true;
   }
 
@@ -455,7 +509,7 @@ export class Table {
 
   protected can(phase: string): boolean {
     const turn = this.socket.game()?.game?.turn;
-    if (!this.mine() || !turn) return false;
+    if (!turn || this.notice()) return false;
     // after a Volle Lotte on a Bonus card the next card may be drawn instead of banking
     if (phase === 'draw' && turn.phase === 'decide')
       return turn.free === 0 && turn.card?.startsWith('bonus') === true;

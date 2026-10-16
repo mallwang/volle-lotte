@@ -74,6 +74,13 @@ select,
   min-width: 44px;
 }
 
+/* compact action buttons on the table (the touch-target minimum would make them tall) */
+.vl-board .p-button {
+  min-height: 0;
+  min-width: 0;
+  padding: 0.3rem 0.75rem;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -251,14 +258,6 @@ select,
   gap: 1rem;
   grid-template-columns: 1fr;
 }
-.vl-players {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 12rem), 1fr));
-  gap: 0.5rem;
-  padding: 0;
-  margin: 0;
-  list-style: none;
-}
 .vl-dice {
   min-height: 3.5rem;
   display: flex;
@@ -299,19 +298,22 @@ select,
   min-height: 2.25rem;
   font-size: 2rem;
 }
+.vl-aside-group small {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
 .vl-aside-group {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
   padding: 0.25rem 0.5rem;
-  border: 1px solid var(--p-content-border-color);
-  border-radius: 0.5rem;
-  animation: vl-aside-in 0.6s ease-out;
+  position: relative;
+  z-index: 2;
+  animation: vl-aside-in 0.7s ease-out;
 }
 @keyframes vl-aside-in {
   from {
-    opacity: 0;
-    transform: translateX(-12rem);
+    transform: translateY(-13rem) scale(1.3);
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -329,17 +331,19 @@ select,
   min-height: 1.25rem;
 }
 .vl-log {
-  max-height: 14rem;
-  font-size: 0.8125rem;
+  max-height: 32rem;
+  font-size: 0.75rem;
   line-height: 1.3;
   overflow-y: auto;
+  /* containing block for the absolutely positioned .vl-sr-only, otherwise they escape the clip and stretch the page */
+  position: relative;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--p-content-background), black 30%) transparent;
   margin: 0;
   padding-left: 1.5rem;
 }
-@media (min-width: 900px) {
-  .vl-table {
-    grid-template-columns: 1fr 18rem;
-  }
+.app-dark .vl-log {
+  scrollbar-color: color-mix(in srgb, var(--p-content-background), white 30%) transparent;
 }
 .vl-lang .p-select-label {
   display: flex;
@@ -432,7 +436,17 @@ select,
 .vl-title-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 0.5rem;
+}
+.vl-title-row h2 {
+  margin-right: auto;
+}
+.vl-title-btns {
+  display: flex;
+}
+.vl-game-clock {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
 }
 .vl-bust {
   margin: 0;
@@ -473,11 +487,14 @@ select,
 
 .vl-aside-dice {
   display: flex;
+  justify-content: center;
   gap: 0.25rem;
 }
 .vl-roll-status {
-  min-height: 1.5rem;
   margin: 0;
+}
+.vl-roll-status:empty {
+  display: none;
 }
 .vl-missing {
   opacity: 0.25;
@@ -486,4 +503,345 @@ select,
   flex-wrap: nowrap;
   gap: 0.25rem;
   font-size: 1.5rem;
+}
+
+/* Table board: seats down both sides of an oval felt, centre spans all rows */
+.vl-board {
+  position: relative;
+  display: grid;
+  grid-template-columns: 9.5rem 1fr 9.5rem;
+  /* fixed size: nothing inside may grow or shrink the board */
+  grid-template-rows: repeat(var(--vl-rows, 1), minmax(0, 1fr));
+  gap: 0.5rem;
+  padding: 0.5rem;
+  height: 44rem;
+  min-width: 52rem;
+}
+.vl-felt {
+  position: absolute;
+  inset: 1rem 2rem;
+  border-radius: 50%;
+  background: var(--p-content-hover-background, var(--p-surface-100));
+  border: 2px solid var(--p-content-border-color);
+}
+.vl-seats {
+  display: contents;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.vl-seats > li {
+  display: grid;
+  position: relative;
+  z-index: 1;
+}
+.vl-area-l1 {
+  grid-area: 1 / 1;
+}
+.vl-area-r1 {
+  grid-area: 1 / 3;
+}
+.vl-area-l2 {
+  grid-area: 2 / 1;
+}
+.vl-area-r2 {
+  grid-area: 2 / 3;
+}
+.vl-area-l3 {
+  grid-area: 3 / 1;
+}
+.vl-area-r3 {
+  grid-area: 3 / 3;
+}
+.vl-area-l4 {
+  grid-area: 4 / 1;
+}
+.vl-area-r4 {
+  grid-area: 4 / 3;
+}
+.vl-centre {
+  grid-area: 1 / 2 / -1 / 3;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 0.4rem;
+  /* bottom: room for the pinned secured area */
+  padding: 1rem 1rem 13.75rem;
+  min-height: 0;
+}
+.vl-centre .vl-play,
+.vl-centre .vl-play > div:first-child {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+}
+.vl-centre .vl-dice {
+  flex-wrap: nowrap;
+  justify-content: center;
+  gap: 0.25rem;
+  margin: 1.5rem 0 0.75rem;
+  min-height: 6rem;
+}
+.vl-centre .vl-dice .vl-die {
+  font-size: 3.75rem;
+}
+.vl-centre .vl-turn-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  /* keep the height when the buttons are hidden, so nothing above the secured area shifts */
+  min-height: 2.5rem;
+}
+.vl-next {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--p-primary-color);
+  text-align: center;
+}
+/* secured area: pinned to the bottom of the centre column, independent of the content above */
+.vl-centre .vl-safe {
+  position: absolute;
+  inset: auto 1rem 0.5rem;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  column-gap: 0.75rem;
+  align-items: start;
+  height: 13rem;
+  padding: 0.4rem 0.6rem;
+  border: 0;
+}
+.vl-centre .vl-safe > :nth-child(1) {
+  font-size: 1.25rem;
+  grid-area: 1 / 1 / 2 / 3;
+  justify-self: center;
+}
+.vl-centre .vl-safe > .vl-aside {
+  grid-area: 2 / 1 / 3 / 3;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: visible;
+  align-content: flex-start;
+  justify-content: center;
+  gap: 0.25rem 0.4rem;
+  font-size: 1.25rem;
+}
+.vl-centre .vl-safe > .vl-aside.vl-street {
+  font-size: 2.25rem;
+}
+.vl-centre .vl-safe > .vl-action {
+  grid-area: 1 / 2;
+  justify-self: end;
+}
+.vl-centre .vl-safe > small {
+  grid-area: 3 / 1 / 4 / 3;
+}
+.vl-pseat-think {
+  font-size: 0.75rem;
+}
+.vl-pseat {
+  position: relative;
+  align-self: center;
+  justify-self: center;
+  width: 9.5rem;
+  max-height: 100%;
+  line-height: 1.2;
+  padding: 0.3rem 0.5rem 0.4rem;
+  border: 2px solid var(--p-content-border-color);
+  border-radius: 0.6rem;
+  background: var(--p-content-background);
+  color: var(--p-text-color);
+  display: grid;
+  gap: 0.15rem;
+  overflow: hidden;
+}
+.vl-pseat-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+.vl-pseat strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.vl-pseat-score {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+.vl-pseat-line {
+  min-height: 1.2em;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.vl-pseat-line.mid {
+  text-align: center;
+}
+.vl-pseat.me {
+  background: var(--vl-lavender);
+  color: var(--vl-on-lavender);
+  border-color: var(--vl-on-lavender);
+}
+.vl-pseat.cur {
+  border-color: var(--p-primary-color);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--p-primary-color) 25%, transparent);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .vl-pseat.cur {
+    animation: vl-pulse 1.4s ease-in-out infinite;
+  }
+}
+@keyframes vl-pulse {
+  50% {
+    box-shadow: 0 0 0 8px color-mix(in srgb, var(--p-primary-color) 10%, transparent);
+  }
+}
+.vl-pseat.off {
+  opacity: 0.75;
+  border-style: dashed;
+}
+.vl-pseat-timer {
+  position: absolute;
+  inset: auto 0 0;
+}
+.vl-pseat-timer .vl-bust-timer {
+  margin: 0;
+  height: 5px;
+}
+
+/* Centre: cards and piles */
+.vl-gcard {
+  width: 8rem;
+  aspect-ratio: 2 / 3;
+  border-radius: 0.7rem;
+  border: 2px solid var(--p-primary-color);
+  background: var(--p-content-background);
+  color: var(--p-text-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 0.3rem;
+  text-align: center;
+}
+.vl-pile .vl-gcard {
+  width: 100%;
+  height: 100%;
+}
+.vl-prev {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  animation: vl-discard 0.7s ease-in;
+}
+/* the finished card falls from the card slot (to the left) onto the pile */
+@keyframes vl-discard {
+  from {
+    transform: translateX(-8rem) scale(1.5) rotate(-8deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vl-prev {
+    animation: none;
+  }
+}
+.vl-prev img {
+  filter: grayscale(0.5);
+}
+.vl-gcard.empty {
+  border-color: var(--p-red-400);
+  background: repeating-linear-gradient(
+    45deg,
+    color-mix(in srgb, var(--p-red-400) 35%, transparent) 0 6px,
+    var(--p-content-background) 6px 12px
+  );
+  justify-content: center;
+}
+.vl-gcard.pic {
+  padding: 0;
+  overflow: hidden;
+  background: var(--p-content-background);
+}
+.vl-pile .vl-gcard.pic {
+  border-width: 1px;
+  border-radius: 0.45rem;
+}
+.vl-gcard img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.vl-pile {
+  position: relative;
+  width: 5.3rem;
+  height: 8rem;
+}
+.vl-pile .lay {
+  position: absolute;
+  inset: 0;
+  border-radius: 0.45rem;
+  background: var(--vl-lavender);
+  border: 1px solid var(--vl-on-lavender);
+}
+.vl-pile.draw .lay {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--vl-lavender) 0 6px,
+    var(--p-content-background) 6px 12px
+  );
+}
+.vl-pile.discard .lay {
+  background: var(--p-content-background);
+  border-color: var(--p-content-border-color);
+}
+.vl-pile.empty {
+  border: 2px dashed var(--p-content-border-color);
+  border-radius: 0.45rem;
+}
+.vl-pile-label {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 0.75rem;
+  color: var(--p-text-muted-color);
+}
+.vl-pile-label b {
+  color: var(--p-text-color);
+}
+.vl-centre-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  padding-bottom: 1.55rem;
+}
+
+.vl-hourglass {
+  display: inline-block;
+  animation: vl-flip 2s ease-in-out infinite;
+}
+@keyframes vl-flip {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vl-hourglass {
+    animation: none;
+  }
 }
