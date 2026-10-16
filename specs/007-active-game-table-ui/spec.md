@@ -8,6 +8,8 @@
 
 **Input**: User description: "Redesign the active game UI (phase 'running', after the lobby start), desktop first (mobile layout follows in a later spec). Layout like an online poker table with players around an oval table, seat cards, central card, draw pile and discard pile, regrouped into standalone components. Keep existing behaviour."
 
+**Design**: [design.md](design.md) (approved mockup: [mockup.html](mockup.html))
+
 ## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Players around the table (Priority: P1)

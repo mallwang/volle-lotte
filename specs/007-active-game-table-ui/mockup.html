@@ -1,0 +1,902 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Active game table (Variante A, desktop) – review mockup</title>
+    <style>
+      :root {
+        color-scheme: light;
+        /* App tokens: Warm Terracotta (apps/frontend/src/app/theme/terracotta-preset.ts + styles.css) */
+        --bg: #fbf1ea;
+        --surface: #fffaf6;
+        --surface-2: #f3dccd;
+        --line: #e6c3ad;
+        --text: #3a241b;
+        --muted: #7b5a4c;
+        --primary: #a8431f;
+        --on-primary: #fff;
+        --mint: #d3e8d6;
+        --on-mint: #1f4a2c;
+        --lavender: #e6dcef;
+        --on-lavender: #44305f;
+        --butter: #f6e3a8;
+        --on-butter: #5a4300;
+        --rose: #f6d0cb;
+        --on-rose: #7a2118;
+        --review-bg: #f3f2ee;
+        --review-ink: #2c2a25;
+        --review-muted: #7a7669;
+        --review-line: #ddd9d0;
+        --review-accent: #b45f2c;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--review-bg);
+        color: var(--review-ink);
+        font-family:
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* ============ review chrome (from review-shell.html) ============ */
+      .review-header {
+        padding: 1.5rem 2rem 1rem;
+        border-bottom: 1px solid var(--review-line);
+      }
+      .review-eyebrow {
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--review-accent);
+        font-weight: 700;
+        margin: 0 0 0.25rem;
+      }
+      .review-header h1 {
+        margin: 0 0 0.35rem;
+        font-size: 1.35rem;
+        font-weight: 800;
+      }
+      .review-header p {
+        margin: 0;
+        color: var(--review-muted);
+        font-size: 0.9rem;
+        max-width: 80ch;
+        line-height: 1.5;
+      }
+      .review-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.25rem;
+        align-items: center;
+        padding: 0.85rem 2rem;
+        background: #fff;
+        border-bottom: 1px solid var(--review-line);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+      .control-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .control-group span.label {
+        font-size: 0.72rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--review-muted);
+        font-weight: 700;
+      }
+      .segmented {
+        display: inline-flex;
+        border: 1px solid var(--review-line);
+        border-radius: 8px;
+        overflow: hidden;
+        flex-wrap: wrap;
+      }
+      .segmented button {
+        appearance: none;
+        border: none;
+        background: #fff;
+        color: var(--review-ink);
+        font: inherit;
+        font-size: 0.83rem;
+        font-weight: 600;
+        padding: 0.4rem 0.75rem;
+        cursor: pointer;
+        border-right: 1px solid var(--review-line);
+      }
+      .segmented button:last-child {
+        border-right: none;
+      }
+      .segmented button:hover {
+        background: #f1efe9;
+      }
+      .segmented button:focus-visible {
+        outline: 2px solid var(--review-accent);
+        outline-offset: -2px;
+      }
+      .segmented button[aria-pressed='true'] {
+        background: var(--review-accent);
+        color: #fff;
+      }
+      .review-stage {
+        padding: 2rem;
+        display: flex;
+        justify-content: center;
+      }
+      .stage-frame {
+        width: 100%;
+        max-width: 1280px;
+        background: #d9d4c8;
+        border-radius: 14px;
+        padding: 1.25rem;
+      }
+      .stage-frame-label {
+        font-size: 0.72rem;
+        color: var(--review-muted);
+        text-align: center;
+        margin: 0 0 0.5rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .canvas {
+        background: var(--bg);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+        color: var(--text);
+        font-size: 16px;
+        position: relative;
+        min-height: 640px;
+      }
+      .review-footer {
+        padding: 0 2rem 2rem;
+        max-width: 1280px;
+        margin: 0 auto;
+        font-size: 0.85rem;
+        color: var(--review-muted);
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+      }
+      .review-footer h3 {
+        margin: 0.5rem 0 0;
+        font-size: 0.8rem;
+        color: var(--review-ink);
+      }
+      .review-footer ul {
+        margin: 0.25rem 0 0.5rem;
+        padding-left: 1.1rem;
+      }
+      [hidden] {
+        display: none !important;
+      }
+
+      /* ============ app shell (mirrors .vl-header/.vl-main/.vl-status/.vl-log) ============ */
+      .canvas.dark {
+        --bg: #1c1411;
+        --surface: #2a1d18;
+        --surface-2: #3b2a22;
+        --line: #52382c;
+        --text: #f5e6dc;
+        --muted: #cbaa98;
+        --primary: #f08a5d;
+        --on-primary: #2a1008;
+        --mint: #244a38;
+        --on-mint: #c9f1db;
+        --lavender: #3a3159;
+        --on-lavender: #e0d8fa;
+        --butter: #4d4018;
+        --on-butter: #ffefb0;
+        --rose: #5a2626;
+        --on-rose: #ffd9d9;
+      }
+      .vl-header {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.75rem 1rem;
+      }
+      .vl-header h1 {
+        margin: 0;
+        font-size: 1.5rem;
+      }
+      .vl-hdr-r {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        margin-left: auto;
+      }
+      .ibtn {
+        min-width: 44px;
+        min-height: 44px;
+        border: 1px solid transparent;
+        background: transparent;
+        color: var(--text);
+        border-radius: 8px;
+        font: inherit;
+        font-size: 1.2rem;
+        cursor: pointer;
+      }
+      .ibtn:hover {
+        background: var(--surface-2);
+      }
+      .vl-main {
+        max-width: 78rem;
+        margin: 0 auto;
+        padding: 0 1rem 1rem;
+      }
+      .vl-title-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+      }
+      .vl-title-row h2 {
+        margin: 0.5rem 0;
+        font-size: 1.4rem;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .vl-status {
+        display: inline-block;
+        border-radius: 999px;
+        padding: 0.05rem 0.55rem;
+        font-size: 0.78rem;
+        white-space: nowrap;
+      }
+      .mint {
+        background: var(--mint);
+        color: var(--on-mint);
+      }
+      .lav {
+        background: var(--lavender);
+        color: var(--on-lavender);
+      }
+      .butter {
+        background: var(--butter);
+        color: var(--on-butter);
+      }
+      .rose {
+        background: var(--rose);
+        color: var(--on-rose);
+      }
+      .btn {
+        border: 0;
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        font: inherit;
+        font-weight: 700;
+        min-height: 44px;
+        background: var(--primary);
+        color: var(--on-primary);
+      }
+      .btn[disabled] {
+        opacity: 0.45;
+      }
+      .btn.sec {
+        background: transparent;
+        color: var(--primary);
+        border: 1px solid var(--primary);
+      }
+
+      /* ============ feature: layout (Table = thin container) ============ */
+      .vl-game {
+        display: grid;
+        grid-template-columns: 1fr 16rem;
+        gap: 1rem;
+        align-items: start;
+      }
+      .vl-side h3 {
+        margin: 0 0 0.35rem;
+        font-size: 1rem;
+      }
+      .vl-log {
+        max-height: 26rem;
+        font-size: 0.8125rem;
+        line-height: 1.3;
+        overflow-y: auto;
+        margin: 0;
+        padding-left: 1.5rem;
+        border: 1px solid var(--line);
+        border-radius: 0.5rem;
+        background: var(--surface);
+        padding-block: 0.5rem;
+      }
+      .vl-log li {
+        padding: 0.2rem 0;
+      }
+
+      /* TableLayout: 3x3 grid, seats around an oval */
+      .vl-board {
+        position: relative;
+        display: grid;
+        grid-template-columns: 9.5rem 1fr 9.5rem;
+        grid-template-rows: auto minmax(15rem, 1fr) auto;
+        grid-template-areas: 'tl t tr' 'l c r' 'bl b br';
+        gap: 0.5rem;
+        padding: 0.5rem;
+      }
+      .vl-felt {
+        position: absolute;
+        inset: 2.4rem 5.5rem;
+        border-radius: 50%;
+        background: var(--surface-2);
+        border: 2px solid var(--line);
+        box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.08);
+      }
+      .vl-seats {
+        display: contents;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .vl-centre {
+        grid-area: c;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1.25rem;
+        z-index: 1;
+      }
+
+      /* PlayerSeat */
+      .vl-pseat {
+        position: relative;
+        z-index: 1;
+        align-self: center;
+        justify-self: center;
+        width: 9.5rem;
+        padding: 0.45rem 0.6rem 0.55rem;
+        border: 1px solid var(--line);
+        border-radius: 0.6rem;
+        background: var(--surface);
+        display: grid;
+        gap: 0.15rem;
+        overflow: hidden;
+      }
+      .vl-pseat .row {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        min-width: 0;
+      }
+      .vl-pseat strong {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .vl-pseat .ic {
+        width: 1.1rem;
+        height: 1.1rem;
+        flex: none;
+      }
+      .vl-pseat .score {
+        font-variant-numeric: tabular-nums;
+        font-weight: 700;
+      }
+      .vl-pseat .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+        min-height: 1.3rem;
+      }
+      .vl-pseat.me {
+        background: var(--lavender);
+        color: var(--on-lavender);
+        border-color: var(--on-lavender);
+      }
+      .vl-pseat.cur {
+        border: 2px solid var(--primary);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent);
+      }
+      .vl-pseat.off {
+        opacity: 0.75;
+        border-style: dashed;
+      }
+      .vl-timer {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 5px;
+        background: var(--primary);
+        transform-origin: left;
+        transform: scaleX(0.6);
+      }
+      .vl-timer.bust {
+        animation: none;
+        transform: scaleX(0.35);
+      }
+
+      /* CardDeck / DiscardPile: layered stacks */
+      .vl-pile {
+        position: relative;
+        width: 6rem;
+        height: 8.6rem;
+        flex: none;
+      }
+      .vl-pile .lay {
+        position: absolute;
+        inset: 0;
+        border-radius: 0.45rem;
+        border: 1px solid var(--on-lavender);
+        background: var(--lavender);
+      }
+      .vl-pile.draw .lay {
+        background: repeating-linear-gradient(
+          45deg,
+          var(--lavender) 0 6px,
+          var(--surface) 6px 12px
+        );
+      }
+      .vl-pile.draw .lay:last-of-type {
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+      }
+      .vl-pile.empty {
+        border: 2px dashed var(--line);
+        border-radius: 0.45rem;
+      }
+      .vl-pile.discard .lay {
+        background: var(--surface);
+        border-color: var(--line);
+      }
+      .vl-pile-label {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 100%;
+        margin-top: 0.3rem;
+        text-align: center;
+        font-size: 0.8rem;
+        color: var(--muted);
+        white-space: nowrap;
+      }
+      .vl-pile-label b {
+        color: var(--text);
+      }
+
+      /* Active card: CSS-rendered 2:3 */
+      .vl-gcard {
+        width: 8rem;
+        aspect-ratio: 2/3;
+        border-radius: 0.7rem;
+        border: 2px solid var(--primary);
+        background: var(--surface);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.7rem 0.5rem;
+        text-align: center;
+      }
+      .vl-gcard .val {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--primary);
+      }
+      .vl-gcard .icn {
+        font-size: 2.4rem;
+        line-height: 1;
+      }
+      .vl-gcard .nm {
+        font-weight: 700;
+        font-size: 0.95rem;
+      }
+
+      /* DiceArea: dice, safe, actions */
+      .vl-dicearea {
+        margin-top: 0.75rem;
+        display: grid;
+        grid-template-columns: 1fr minmax(13rem, 16rem);
+        gap: 1rem;
+      }
+      .vl-panel {
+        border: 1px solid var(--line);
+        border-radius: 0.6rem;
+        background: var(--surface);
+        padding: 0.75rem;
+      }
+      .vl-dice {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        min-height: 3.5rem;
+        margin: 0.5rem 0 1rem;
+      }
+      .die {
+        width: 44px;
+        height: 44px;
+        padding: 0.25rem;
+        border: 0;
+        background: none;
+        border-radius: 0.5rem;
+        font-size: 2rem;
+      }
+      .die .face {
+        display: grid;
+        grid-template: repeat(3, 1fr) / repeat(3, 1fr);
+        width: 100%;
+        height: 100%;
+        padding: 0.12em;
+        border-radius: 0.2em;
+        border: 1px solid var(--muted);
+        background: var(--surface);
+      }
+      .die .cell {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .die .pip {
+        width: 80%;
+        height: 80%;
+        border-radius: 50%;
+        background: var(--text);
+      }
+      .die.sel {
+        transform: translateY(-5px);
+        outline: 3px solid var(--primary);
+        filter: drop-shadow(0 4px 3px rgb(0 0 0/0.35));
+      }
+      .vl-turn-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+        gap: 0.6rem;
+      }
+      .vl-turn-actions small {
+        display: block;
+        min-height: 1.25rem;
+        color: var(--muted);
+      }
+      .vl-safe {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.4rem;
+      }
+      .vl-street {
+        display: flex;
+        gap: 0.25rem;
+        font-size: 1.5rem;
+      }
+      .vl-street .miss {
+        opacity: 0.25;
+      }
+      .vl-aside {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        min-height: 2.2rem;
+      }
+      .vl-aside .grp {
+        border: 1px solid var(--line);
+        border-radius: 0.5rem;
+        padding: 0.15rem 0.4rem;
+        font-size: 1.3rem;
+      }
+      .vl-bust {
+        margin: 0;
+        font-weight: 700;
+        color: var(--on-rose);
+        background: var(--rose);
+        border-radius: 0.5rem;
+        padding: 0.4rem 0.6rem;
+      }
+      .vl-hint {
+        margin: 0.25rem 0;
+      }
+      .note {
+        position: absolute;
+        right: 0.5rem;
+        top: 0.25rem;
+        font-size: 0.7rem;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <header class="review-header">
+      <p class="review-eyebrow">Non-functional review mockup</p>
+      <h1>Active game table – Variante A (desktop)</h1>
+      <p>
+        Online-poker-style oval table. Use the controls to switch the player count (2 / 4 / 8), the
+        situation (my turn, computer turn, bust, offline player), the draw-pile level and light/dark
+        (◐ in the app header). Mobile Variante B is a later spec and not shown here.
+      </p>
+    </header>
+
+    <div class="review-controls">
+      <div class="control-group">
+        <span class="label">Players</span>
+        <div class="segmented" id="n-toggle">
+          <button type="button" data-n="2" aria-pressed="false">2</button>
+          <button type="button" data-n="4" aria-pressed="false">4</button>
+          <button type="button" data-n="8" aria-pressed="true">8</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <span class="label">Situation</span>
+        <div class="segmented" id="screen-toggle">
+          <button type="button" data-screen="mine" aria-pressed="true">My turn</button>
+          <button type="button" data-screen="computer" aria-pressed="false">Computer turn</button>
+          <button type="button" data-screen="bust" aria-pressed="false">Bust</button>
+          <button type="button" data-screen="offline" aria-pressed="false">Player offline</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <span class="label">Draw pile</span>
+        <div class="segmented" id="deck-toggle">
+          <button type="button" data-deck="many" aria-pressed="true">Many</button>
+          <button type="button" data-deck="medium" aria-pressed="false">Medium</button>
+          <button type="button" data-deck="few" aria-pressed="false">Few</button>
+          <button type="button" data-deck="empty" aria-pressed="false">Empty</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="review-stage">
+      <div class="stage-frame">
+        <p class="stage-frame-label">Desktop (≥ 1100 px)</p>
+        <div class="canvas" id="canvas" data-screen="mine">
+          <header class="vl-header">
+            <h1>Volle Lotte</h1>
+            <div class="vl-hdr-r">
+              <button class="ibtn" type="button" aria-label="Toggle theme" id="theme">◐</button>
+            </div>
+          </header>
+          <main class="vl-main">
+            <div class="vl-title-row">
+              <h2>Game <span class="muted" style="font-size: 1rem">· Round 3</span></h2>
+              <span
+                ><button class="ibtn" type="button" aria-label="Settings">⚙</button
+                ><button class="btn sec" type="button">Leave game</button></span
+              >
+            </div>
+
+            <div class="vl-game">
+              <section aria-label="Table">
+                <!-- TableLayout -->
+                <div class="vl-board" id="board">
+                  <div class="vl-felt" aria-hidden="true"></div>
+                  <ul class="vl-seats" id="seats"></ul>
+                  <div class="vl-centre">
+                    <!-- CardDeck -->
+                    <div class="vl-pile draw" id="draw"></div>
+                    <!-- active card -->
+                    <div class="vl-gcard" role="img" aria-label="Active card: Bonus 400">
+                      <span class="val">+400</span>
+                      <span class="icn">★</span>
+                      <span class="nm">Bonus</span>
+                    </div>
+                    <!-- DiscardPile -->
+                    <div class="vl-pile discard" id="discard"></div>
+                  </div>
+                </div>
+
+                <!-- DiceArea -->
+                <div class="vl-dicearea">
+                  <div class="vl-panel">
+                    <p class="vl-hint muted" data-show="computer">Bot Max is thinking…</p>
+                    <p class="vl-hint muted" data-show="offline">
+                      Anna is offline. Auto-play starts if they do not return.
+                    </p>
+                    <p class="vl-bust" data-show="bust">
+                      Bust! No scoring dice – the turn passes on.
+                    </p>
+                    <div class="vl-dice" id="dice"></div>
+                    <div class="vl-turn-actions" data-show="mine offline computer">
+                      <div>
+                        <button class="btn" style="width: 100%" data-dis="computer">Throw</button
+                        ><small>Select at least one scoring die.</small>
+                      </div>
+                      <div>
+                        <button class="btn" style="width: 100%" data-dis="computer">Bank 350</button
+                        ><small>Minimum reached.</small>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="vl-panel vl-safe" aria-label="Secured">
+                    <strong>Secured</strong>
+                    <div class="vl-street" aria-label="Street 3 of 6">
+                      <span>⚀</span><span>⚁</span><span>⚂</span><span class="miss">⚃</span
+                      ><span class="miss">⚄</span><span class="miss">⚅</span>
+                    </div>
+                    <div class="vl-aside">
+                      <span class="grp">⚀⚀</span><span class="grp">⚄</span>
+                    </div>
+                    <span>Bank: <b>350</b></span>
+                  </div>
+                </div>
+              </section>
+
+              <aside class="vl-side">
+                <h3>Log</h3>
+                <!-- GameLog -->
+                <ol class="vl-log" role="log">
+                  <li>Round 3 started.</li>
+                  <li>Anna banked 250.</li>
+                  <li>Bot Max drew Lucky.</li>
+                  <li>Bot Max threw ⚀⚂⚄⚄⚅⚁.</li>
+                  <li>Bot Max set aside ⚀ and banked 100.</li>
+                  <li>Markus drew Bonus 400.</li>
+                </ol>
+              </aside>
+            </div>
+          </main>
+        </div>
+      </div>
+    </div>
+
+    <footer class="review-footer">
+      <h3>Fidelity notes</h3>
+      <ul>
+        <li>
+          Colours, chips (<code>.vl-status</code>), spacing and the 44 px touch targets reuse the
+          real Terracotta tokens from <code>styles.css</code> / <code>terracotta-preset.ts</code>.
+        </li>
+        <li>
+          The real app uses PrimeNG (<code>p-button</code>, dialogs, theme-icon) and PrimeIcons;
+          here buttons and icons are plain HTML/emoji stand-ins. Look and feel of those will differ
+          slightly.
+        </li>
+        <li>
+          Seat, pile and card sizes are rem-based and meant to carry over; the oval is a styled
+          element behind a 3×3 grid, no canvas.
+        </li>
+        <li>
+          Timer bar is frozen at 60 %; in the app it shrinks in real time (existing turn-timer).
+        </li>
+        <li>
+          Not mocked: settings/leave/removed dialogs (unchanged), dice rolling animation
+          (unchanged), mobile Variante B.
+        </li>
+      </ul>
+    </footer>
+
+    <script>
+      const canvas = document.getElementById('canvas');
+      const state = { n: 8, screen: 'mine', deck: 'many' };
+
+      // seats clockwise from the local player (bottom centre): areas per player count
+      const AREAS = {
+        2: ['b', 't'],
+        4: ['b', 'l', 't', 'r'],
+        8: ['b', 'bl', 'l', 'tl', 't', 'tr', 'r', 'br'],
+      };
+      const P = [
+        ['Markus', 1250, 0],
+        ['Anna', 900, 0],
+        ['Bot Max', 1100, 1],
+        ['Lena', 600, 0],
+        ['Tom', 1500, 0],
+        ['Bot Ida', 450, 1],
+        ['Jonas', 800, 0],
+        ['Bot Eva', 950, 1],
+      ];
+      const human =
+        '<svg class="ic" viewBox="0 0 24 24" fill="currentColor" role="img" aria-label="Human"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7z"/></svg>';
+      const robot =
+        '<svg class="ic" viewBox="0 0 24 24" fill="currentColor" role="img" aria-label="Computer"><path d="M3 4h18v12H3zM8 20h8v-2H8z"/></svg>';
+
+      function seats() {
+        const areas = AREAS[state.n];
+        const cur = state.screen === 'computer' ? (state.n === 2 ? 1 : 2) : 0;
+        return areas
+          .map((area, i) => {
+            const [name, score, bot] = P[i];
+            const isBot = bot || (state.screen === 'computer' && i === cur);
+            const off = state.screen === 'offline' && i === 1;
+            const chips = [
+              i === 0 ? '<span class="vl-status lav">You</span>' : '',
+              i === cur ? '<span class="vl-status mint">On turn</span>' : '',
+              off ? '<span class="vl-status rose">Reconnecting 0:42</span>' : '',
+            ].join('');
+            return `<li class="vl-pseat ${i === 0 ? 'me' : ''} ${i === cur ? 'cur' : ''} ${off ? 'off' : ''}" style="grid-area:${area}" ${i === cur ? 'aria-current="true"' : ''}>
+              <div class="row">${isBot ? robot : human}<strong>${name}</strong></div>
+              <div class="row"><span class="score">${score}</span><span class="muted" style="font-size:.78rem">pts</span></div>
+              <div class="chips">${chips}</div>
+              ${i === cur ? `<div class="vl-timer ${state.screen === 'bust' ? 'bust' : ''}"></div>` : ''}
+            </li>`;
+          })
+          .join('');
+      }
+
+      // discard layers: deterministic rotation from index (does not jump on re-render)
+      const rot = (i) => (((i * 47) % 23) - 11) * 1.1;
+      const off = (i) => [((i * 31) % 9) - 4, ((i * 17) % 7) - 3];
+      function piles() {
+        const levels = { many: [6, 40], medium: [4, 24], few: [2, 7], empty: [0, 0] };
+        const [layers, count] = levels[state.deck];
+        const played = 56 - count - 1;
+        const draw = document.getElementById('draw');
+        draw.className = 'vl-pile draw' + (layers ? '' : ' empty');
+        draw.innerHTML =
+          Array.from(
+            { length: layers },
+            (_, i) =>
+              `<span class="lay" style="transform:translate(${i * -1.5}px,${i * -1.5}px)"></span>`,
+          ).join('') +
+          `<span class="vl-pile-label"><b>${count}</b> cards${layers ? '' : ' · empty'}</span>`;
+        const dl = Math.min(8, Math.ceil(played / 6));
+        document.getElementById('discard').innerHTML =
+          Array.from({ length: dl }, (_, i) => {
+            const [x, y] = off(i);
+            return `<span class="lay" style="transform:translate(${x}px,${y}px) rotate(${rot(i)}deg)"></span>`;
+          }).join('') + `<span class="vl-pile-label"><b>${played}</b> played</span>`;
+      }
+
+      // dice: 6 thrown, two selected
+      const PIPS = {
+        1: [4],
+        2: [0, 8],
+        3: [0, 4, 8],
+        4: [0, 2, 6, 8],
+        5: [0, 2, 4, 6, 8],
+        6: [0, 2, 3, 5, 6, 8],
+      };
+      function dice() {
+        const vals = state.screen === 'bust' ? [2, 3, 4, 6, 6, 3] : [1, 5, 2, 3, 4, 6];
+        const sel = state.screen === 'bust' ? [] : [0, 1];
+        document.getElementById('dice').innerHTML = vals
+          .map(
+            (v, i) =>
+              `<button class="die ${sel.includes(i) ? 'sel' : ''}" aria-pressed="${sel.includes(i)}" aria-label="Die ${v}"><span class="face">${Array.from({ length: 9 }, (_, c) => `<span class="cell">${PIPS[v].includes(c) ? '<span class="pip"></span>' : ''}</span>`).join('')}</span></button>`,
+          )
+          .join('');
+      }
+
+      function render() {
+        canvas.dataset.screen = state.screen;
+        document.getElementById('seats').innerHTML = seats();
+        piles();
+        dice();
+        canvas
+          .querySelectorAll('[data-show]')
+          .forEach((e) => (e.hidden = !e.dataset.show.split(' ').includes(state.screen)));
+        canvas
+          .querySelectorAll('[data-dis]')
+          .forEach((e) => (e.disabled = e.dataset.dis.split(' ').includes(state.screen)));
+        for (const [id, key, attr] of [
+          ['n-toggle', 'n', 'n'],
+          ['screen-toggle', 'screen', 'screen'],
+          ['deck-toggle', 'deck', 'deck'],
+        ])
+          document
+            .querySelectorAll(`#${id} button`)
+            .forEach((b) =>
+              b.setAttribute('aria-pressed', String(b.dataset[attr] === String(state[key]))),
+            );
+      }
+      for (const [id, key] of [
+        ['n-toggle', 'n'],
+        ['screen-toggle', 'screen'],
+        ['deck-toggle', 'deck'],
+      ])
+        document.getElementById(id).addEventListener('click', (e) => {
+          const b = e.target.closest('button');
+          if (!b) return;
+          state[key] = key === 'n' ? +b.dataset.n : b.dataset[key];
+          render();
+        });
+      document
+        .getElementById('theme')
+        .addEventListener('click', () => canvas.classList.toggle('dark'));
+      render();
+    </script>
+  </body>
+</html>
