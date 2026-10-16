@@ -44,7 +44,7 @@ When a player (human or computer) throws the dice, every thrown die visibly roll
 4. **Given** a computer or another player throws, **When** the result arrives, **Then** all viewers see the same rolling animation ending on the same values.
 5. **Given** some dice were set aside earlier in the turn, **When** the remaining dice are thrown again, **Then** only the newly thrown dice roll; set-aside dice stay still.
 6. **Given** dice are rolling, **When** I try to select a die, throw, or end the turn, **Then** these actions are unavailable until all dice have stopped.
-7. **Given** the player prefers reduced motion, **When** dice are thrown, **Then** the cycling-faces effect is replaced by a non-animated wait of the same random duration (or a minimal indicator), and the final value is shown when each die stops.
+7. **Given** the player prefers reduced motion, **When** dice are thrown, **Then** no cycling faces or spinner are shown; the thrown dice appear blank with a static text "Dice are rolling…" in the dice area, announced to screen readers, and each die shows its final pips when it stops (after its own random 2–5 second duration).
 
 ---
 
@@ -85,7 +85,7 @@ Information about the throw (log entry, toast, points, bust/Volle-Lotte notice, 
 - **FR-009**: While any die is rolling, the system MUST prevent dice selection and game actions that depend on the throw result.
 - **FR-010**: The log entry for a throw, and notifications derived from it (e.g. bust, Volle Lotte), MUST be shown only after the last die has stopped.
 - **FR-011**: The rolling MUST be shown to all players watching the same game, ending on identical values.
-- **FR-012**: The system MUST respect the user's reduced-motion preference by not showing fast flickering/cycling faces.
+- **FR-012**: The system MUST respect the user's reduced-motion preference: no cycling faces and no spinning/moving indicator; instead a static, translated "dice are rolling" text is shown in the dice area (without covering dice) and exposed to assistive technology, and it disappears when the last die has stopped.
 - **FR-013**: Computer players' subsequent actions MUST wait until their dice have stopped.
 - **FR-014**: After reload or reconnect during a roll, the system MUST show the correct current values without requiring the animation.
 
@@ -112,5 +112,5 @@ Information about the throw (log entry, toast, points, bust/Volle-Lotte notice, 
 - The 2–5 second range is fixed (not user-configurable); players cannot skip the animation in this version.
 - The random face cycling and stop times are generated on the client and may differ between viewers; only final values are guaranteed identical.
 - The wait slows the game pace on purpose; computer turns remain automatic but wait for the roll.
-- Existing languages (English, German) keep working; only accessible labels need to stay translated.
+- Existing languages (English, German) keep working; the accessible labels and the "dice are rolling" text must be translated.
 - Sound effects and 3D dice are out of scope.
