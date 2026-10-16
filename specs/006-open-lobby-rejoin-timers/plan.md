@@ -6,7 +6,7 @@
 
 ## Summary
 
-Four server-side behaviour changes plus their UI: (1) games may be created without a password and are then joinable in one tap in the lobby phase; (2) the host can close an occupied human seat, which bans that identity for the game; (3) leaving a running game (after a confirm modal) or losing the connection for 30 s hands the seat to a random-difficulty bot immediately, with no host decision; the bot remembers the former player, who can reclaim the seat via a Rejoin button; (4) the server enforces per-phase turn timers (draw/throw 10 s, select 15 s, decide 15 s) that start after the dice animation, auto-act on expiry, and replace a player by a bot after 3 consecutive timeouts. The only engine addition is a pure `skipTurn`. Protocol goes to v3. See [research.md](research.md).
+Four server-side behaviour changes plus their UI: (1) games may be created without a password and are then joinable in one tap in the lobby phase; (2) the host can remove a human, which bans that identity for the game while the seat stays open; (3) leaving a running game (after a confirm modal) or losing the connection for 30 s hands the seat to a random-difficulty bot immediately, with no host decision; the bot remembers the former player, who can reclaim the seat via a Rejoin button; (4) the server enforces per-phase turn timers (draw/throw 10 s, select 15 s, decide 20 s) that start after the dice animation, auto-act on expiry, and replace a player by a bot after 3 consecutive timeouts. The only engine addition is a pure `skipTurn`. Protocol goes to v3, then v4 (`GameSummary.banned`). See [research.md](research.md).
 
 ## Technical Context
 
@@ -73,7 +73,7 @@ apps/backend/src/app/lobby/
 apps/frontend/src/app/
 ├── lobby/lobby.ts                         # open/protected/running badges, Join/Rejoin buttons
 ├── create-game/create-game.ts             # password optional
-├── game-lobby/game-lobby.ts               # Close seat, removal modal
+├── game-lobby/game-lobby.ts               # Remove player, withdraw game
 ├── table/
 │   ├── table.ts                           # leave confirm modal, countdown, timeout warning, back toast
 │   ├── turn-timer.ts                      # countdown bar from deadlineAt (new)

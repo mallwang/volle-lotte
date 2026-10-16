@@ -1,6 +1,6 @@
 # Contract: protocol v3 changes
 
-`PROTOCOL_VERSION` 2 → 3. Clients on v2 get `versionMismatch` (existing behaviour).
+`PROTOCOL_VERSION` 2 → 3 → 4 (`GameSummary.banned`). Clients on an older version get `versionMismatch` (existing behaviour).
 
 ## Types (`libs/game-rules/src/lib/protocol.ts`)
 
@@ -41,7 +41,7 @@ export interface GameView {
 
 ## Pushes
 
-- `lobby:games` / `lobby:list` are per player (carry `rejoinable`).
+- `lobby:games` / `lobby:list` are per player (carry `rejoinable` and `banned`).
 - `game:closed` reason gains `'banned'` (sent to the removed player; client shows the removal modal). `'removed'` is dropped from the union once `host:decide` is gone.
 
 ## LogKind

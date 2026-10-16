@@ -10,7 +10,7 @@ Open games                                   [Create game]
  🔓 Open 2/4      🔑 Password    🔓 Open 4/4     🔒 Running
  [Join]           [Join]         [Full]          [Rejoin] (only the former player, card highlighted)
 
-Game lobby: seat rows  [n] name [Host|Ready]  [Close seat]   closed: dashed "removed by host" [Reopen]
+Game lobby: seat rows  [n] name [Host|Ready]  [Remove this player]
 
 Table:  turn card
         ⏱ Your turn  ▓▓▓▓░░░░  7 s        countdown bar for the active human, visible to all
@@ -21,7 +21,7 @@ Table:  turn card
 
 - **Game list** (FR-001..004): cards show open vs. password, seats used, full state; started games show 🔒 Running with no Join.
 - **Rejoin** (FR-011): Rejoin button only on the former player's own running game, card highlighted.
-- **Game lobby** (FR-005): host-only "Close seat" on human seats; closed seats are dashed and tagged. A "Reopen" button is shown but not required by the spec.
+- **Game lobby** (FR-005): host-only "Remove this player" on human seats; the seat becomes open. The host's leave button reads "Withdraw game".
 - **Removed modal** (FR-006): title, message, single "Back to lobby" button.
 - **Timers** (FR-015..018, 018a): bar plus seconds, turns red when low; hint under the action says what happens at 0; no countdown on computer turns. Warning banner (not a modal) after 2 timeouts.
 - **Leave modal** (FR-009): three consequences listed, Cancel and "Leave game".

@@ -20,9 +20,9 @@ Volle Lotte ist ein Online-Würfelspiel (Tutto) für 2-8 Spielende. Computergegn
 
 ## 2. Spiel beitreten und erstellen
 
-- **Beitreten**: Die Spieleliste zeigt jedes offene Spiel mit Gastgeber, Zielpunktzahl und freien Plätzen. Drücke **Beitreten**. Passwortgeschützte Spiele fragen nach dem Passwort; nach mehreren falschen Versuchen wird das Spiel kurz gesperrt.
+- **Beitreten**: Die Spieleliste zeigt jedes offene Spiel mit Gastgeber, Zielpunktzahl und freien Plätzen. Drücke **Beitreten**. Spiele ohne Passwort betrittst du mit einem Tipp; passwortgeschützte Spiele fragen nach dem Passwort, nach mehreren falschen Versuchen wird das Spiel kurz gesperrt. Ein gestartetes Spiel kann nicht betreten werden. Hast du ein laufendes Spiel verlassen, holt dich **Wieder beitreten** zurück auf deinen Platz.
 - **Erstellen**: Drücke **Spiel erstellen** und wähle Name, optionales Passwort, Anzahl der Plätze (2-8) und die Regeln (Zielpunktzahl, Mindestpunkte zum Sichern, ob Viererpasch verdoppelt, Karten pro Typ). Die Regeln lassen sich nach dem Erstellen nicht mehr ändern.
-- **Spiellobby**: Die Gastgebenden können Computerspieler (mit Schwierigkeit) hinzufügen oder entfernen, Plätze sperren und das Spiel starten. Alle anderen warten auf den Start.
+- **Spiellobby**: Die Gastgebenden können Computerspieler (mit Schwierigkeit) hinzufügen oder entfernen, Plätze sperren, Menschen entfernen (sie können dem Spiel nicht mehr beitreten und sehen einen Hinweis in der Spieleliste) und das Spiel starten. Alle anderen warten auf den Start.
 
 ## 3. Spielen
 
@@ -40,7 +40,7 @@ Unter **Einstellungen** am Tisch änderst du:
 - **Würfelanimation überspringen** - nur auf deinem Gerät; Würfel und Protokoll erscheinen sofort.
 - **Schnelle Computerwürfel** - nur die Gastgebenden, andere sehen es schreibgeschützt. Computerwürfe dauern 1-2,5 Sekunden.
 
-Nicht verfügbare Schaltflächen nennen den Grund (zum Beispiel „Du bist nicht dran“). Das Protokoll listet, was passiert ist; wer die Verbindung verliert, hat 60 Sekunden zur Rückkehr, danach entscheiden die Gastgebenden über den Platz.
+Nicht verfügbare Schaltflächen nennen den Grund (zum Beispiel „Du bist nicht dran“). Das Protokoll listet, was passiert ist; wer ein laufendes Spiel verlässt (nach Rückfrage), 30 Sekunden offline ist oder dreimal in Folge nicht reagiert, wird durch einen Computer ersetzt. Ein Timer zeigt die Restzeit: 10 Sekunden zum Ziehen oder Würfeln, 15 zum Auswählen, 20 zum Sichern oder Weiterwürfeln. Läuft die Zeit ab, wird für dich gehandelt (übersprungenes Ziehen oder Auswählen beendet deinen Zug). Nach dem dritten Ablauf siehst du einen Hinweis und kannst nur in die Lobby zurück. Computer pausieren, solange kein Mensch am Tisch sitzt.
 
 Erreicht jemand die Zielpunktzahl, zeigt der Ergebnisbildschirm die Rangliste. **Zurück zur Lobby** führt zur Spieleliste.
 

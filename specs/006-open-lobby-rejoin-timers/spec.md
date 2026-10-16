@@ -39,17 +39,17 @@ A host creates a game and may leave the password empty. Such a game is open: any
 
 ---
 
-### User Story 2 - Host closes a seat and removes a player (Priority: P2)
+### User Story 2 - Host removes a player (Priority: P2)
 
-In the game lobby, the host can close a seat that is occupied by a human player. That player immediately sees a modal telling them they were removed by the host, with a "Back to lobby" button. They cannot rejoin that game afterwards. A player who left the game lobby voluntarily frees their seat and may join again.
+In the game lobby, the host can remove a human player; the seat stays open for others. That player immediately sees a modal telling them they were removed by the host, with a "Back to lobby" button. They cannot rejoin that game afterwards. A player who left the game lobby voluntarily frees their seat and may join again.
 
 **Why this priority**: Gives hosts control over open games, which is needed once passwords are optional.
 
-**Independent Test**: With two sessions in a game lobby, host closes the other player's seat; the other session shows the modal and its Join action for that game is no longer available.
+**Independent Test**: With two sessions in a game lobby, host removes the other player; the other session shows the modal and the game card shows a red removal notice instead of Join.
 
 **Acceptance Scenarios**:
 
-1. **Given** a human player on a seat in the game lobby, **When** the host closes that seat, **Then** the seat shows as closed for everyone and the player sees a modal "You were removed by the host" with a "Back to lobby" button.
+1. **Given** a human player on a seat in the game lobby, **When** the host removes that player, **Then** the seat shows as open for everyone and the player sees a modal "You were removed by the host" with a "Back to lobby" button.
 2. **Given** the removal modal, **When** the player taps "Back to lobby", **Then** they land on the game list and the modal is dismissed.
 3. **Given** a player removed by the host, **When** they try to join that game again, **Then** joining is refused with a clear message.
 4. **Given** a player who left the game lobby voluntarily, **When** they join the same open game again, **Then** they are placed on a free seat.
@@ -98,7 +98,7 @@ Every human action has a time limit shown as a countdown to the active player an
 
 - Draw a card / roll the dice: after 10 seconds the action is performed automatically.
 - Set-aside selection: after 15 seconds without a confirmed choice the player skips the turn and the next player is up.
-- Secure points / continue rolling: after 15 seconds the points are secured automatically.
+- Secure points / continue rolling: after 20 seconds the points are secured automatically.
 
 Timers start only after the dice roll animation has finished, so animation time never counts against the player.
 
@@ -110,7 +110,7 @@ Timers start only after the dice roll animation has finished, so animation time 
 
 1. **Given** a human's turn to draw or roll, **When** 10 seconds pass without action, **Then** the draw or roll happens automatically and is logged as automatic.
 2. **Given** the set-aside selection phase, **When** 15 seconds pass without a confirmed choice, **Then** the player skips and the next player's turn begins.
-3. **Given** the secure/continue decision, **When** 15 seconds pass, **Then** the points are secured automatically.
+3. **Given** the secure/continue decision, **When** 20 seconds pass, **Then** the points are secured automatically.
 4. **Given** dice are still animating, **When** a roll has just happened, **Then** the countdown does not start until the animation ends.
 5. **Given** any active timer, **When** the player acts in time, **Then** the timer stops and restarts for the next phase.
 6. **Given** a computer player's turn, **When** it plays, **Then** no countdown is shown.
@@ -122,7 +122,7 @@ Timers start only after the dice roll animation has finished, so animation time 
 
 ### Edge Cases
 
-- The host closes a seat while that player is disconnected: the removal modal is shown when they return; they remain blocked from rejoining.
+- The host removes a player while that player is disconnected: the removal modal is shown when they return; they remain blocked from rejoining.
 - A player is replaced by a bot while it is that seat's turn: the bot takes the pending action without losing the turn.
 - Two rejoin attempts (two tabs) for the same player: only one session holds the seat; the other is informed it was replaced.
 - Several players leave; all can rejoin their own seats independently.
@@ -141,7 +141,7 @@ Timers start only after the dice roll animation has finished, so animation time 
 - **FR-002**: The game list MUST distinguish password-protected games from open games, and show started games as closed with a lock icon and "running".
 - **FR-003**: Players MUST be able to join an open game in lobby phase without a password and are assigned to a free human seat; full games MUST be shown as full.
 - **FR-004**: Joining a started game MUST NOT be possible for anyone except rejoining as the same former player (FR-011).
-- **FR-005**: Hosts MUST be able to close an occupied human seat in the game lobby.
+- **FR-005**: Hosts MUST be able to remove a human player in the game lobby; the seat stays open and only that player is banned.
 - **FR-006**: A player removed by the host MUST see a modal stating the removal with a "Back to lobby" button that returns them to the game list.
 - **FR-007**: A player removed by the host MUST be refused when trying to join that game again.
 - **FR-008**: A player who left the game lobby voluntarily MUST be able to join the game again.
@@ -153,7 +153,7 @@ Timers start only after the dice roll animation has finished, so animation time 
 - **FR-014**: All players MUST be able to clearly see that a rejoined player is back and no longer computer-controlled (seat indicator and a transient notification).
 - **FR-015**: The server MUST enforce a 10 s limit for drawing and rolling, performing the action automatically on expiry.
 - **FR-016**: The server MUST enforce a 15 s limit for set-aside selection; on expiry the player skips and the next player is up.
-- **FR-017**: The server MUST enforce a 15 s limit for secure points / continue rolling; on expiry the points are secured automatically.
+- **FR-017**: The server MUST enforce a 20 s limit for secure points / continue rolling; on expiry the points are secured automatically.
 - **FR-018**: Timers MUST start after the dice roll animation has finished and MUST be visible to all players as a countdown for the active human player.
 - **FR-018a**: After 3 consecutive timeouts of the same player (no own action in between) the system MUST replace them by a computer player as on leave, warn them visibly before the third, and keep rejoin possible.
 - **FR-018b**: Turn timers MUST keep running while the active player is disconnected; resulting automatic actions count as timeouts for FR-018a.
@@ -163,7 +163,7 @@ Timers start only after the dice roll animation has finished, so animation time 
 ### Key Entities
 
 - **Game**: lobby phase or running; open or password-protected; seats; host.
-- **Seat**: free, closed, human, or computer; a computer seat remembers the human it replaced.
+- **Seat**: free, locked, human, or computer; a computer seat remembers the human it replaced.
 - **Former player**: the identity allowed to reclaim a bot-held seat.
 - **Banned player**: identity refused from joining a specific game after host removal.
 - **Turn timer**: deadline for the active human's current action, with a fixed length per action type.
@@ -175,19 +175,25 @@ Timers start only after the dice roll animation has finished, so animation time 
 - **SC-001**: A player can join an open game in one tap, with no text input.
 - **SC-002**: A removed player sees the removal modal within 2 seconds of the host's action.
 - **SC-003**: A replaced player can return to their seat within 2 taps from the game list, and others see the return within 2 seconds.
-- **SC-004**: No game is blocked for longer than 15 seconds by an inactive human player in any single action.
+- **SC-004**: No game is blocked for longer than 20 seconds by an inactive human player in any single action.
 - **SC-005**: 100% of timer expiries result in exactly one automatic outcome per action type as specified.
 - **SC-006**: Leaving a running game by accident can be undone in full (score and seat kept) in 100% of cases while the game still runs.
 
 ## Assumptions
 
 - The constitution (principle V) states that a game is created with a password; it must be amended (MINOR) to make passwords optional before implementation.
-- Closing a seat by the host is only possible in the lobby phase; closing a human seat in a running game is out of scope.
+- Removing a player by the host is only possible in the lobby phase; removing a human in a running game in a running game is out of scope.
 - A voluntary leave in the lobby phase frees the seat as today; ban applies only to host removal.
 - The ban is held for the lifetime of the game and is tied to the player identity, not the nickname.
 - The random bot difficulty is chosen from the existing computer levels.
 - Timers apply to human players only; the animation durations in use today (up to about 3 s per roll) are the basis for starting the countdown.
-- Timer lengths (10 s / 15 s / 15 s) are fixed, not host-configurable.
+- Timer lengths (10 s / 15 s / 20 s) are fixed, not host-configurable.
 - A rejoin is possible while the game is running and the seat is still held by the bot that replaced the player.
 - A roll that ends in a bust ends the turn without a decision, so no secure/continue timer starts; the next player's timer starts after the bust is shown.
 - Countdowns are shown to all players at the table (there are no separate spectators).
+
+## Amendments after review
+
+- Timeout removal: a player replaced after 3 timeouts sees a non-closable modal with "Back to the lobby"; all controls stay disabled. Bots pause while no human is seated.
+- The idle draw timeout skips the turn (log "ran out of time" only); a computer's turn shows a thinking hourglass.
+- Protocol v4: `GameSummary.banned`.

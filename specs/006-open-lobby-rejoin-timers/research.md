@@ -8,10 +8,10 @@ No NEEDS CLARIFICATION remained after `/speckit-clarify`. Decisions below.
 - **Rationale**: smallest change to the existing flow; no second creation path.
 - **Alternatives**: separate `visibility` field (redundant with the empty hash).
 
-## Close seat and ban
+## Remove player and ban
 
-- **Decision**: new intent `seat:remove {seat}` (host, lobby phase only): the human seat becomes `locked`, the player id goes into `room.banned` (a `Set<string>`), the removed player gets `game:closed {reason: 'removed'}` (existing push) and the client shows the modal. `join` and `rejoin` reject banned ids with `banned`. Voluntary leave in the lobby does not ban (FR-008).
-- **Rationale**: reuses the existing `removed()` gateway helper and locked seat state; "Reopen" is already possible through `seat:set` open.
+- **Decision**: new intent `seat:remove {seat}` (host, lobby phase only): the human seat becomes `open` again, the player id goes into `room.banned` (a `Set<string>`), the removed player gets `game:closed {reason: 'removed'}` (existing push) and the client shows the modal. `join` and `rejoin` reject banned ids with `banned`. Voluntary leave in the lobby does not ban (FR-008).
+- **Rationale**: reuses the existing `removed()` gateway helper; others may take the seat, only the banned id is rejected (the lobby list carries `banned` per requester).
 - **Alternatives**: ban by nickname (spoofable, breaks if renamed).
 
 ## Bot replacement and former player
@@ -33,7 +33,7 @@ No NEEDS CLARIFICATION remained after `/speckit-clarify`. Decisions below.
 
 ## Turn timers
 
-- **Decision**: one timer per room (`turnTimer`), (re)armed from `emit()` when the state after an action implies a human is to act. Limits by `game.turn.phase`: `draw`, `throw` 10 s; `select` 15 s; `decide` 15 s. Start delay equals the animation wait already used for the computer (`ROLL_MAX_MS + AFTER_ROLL_MS` after a `thrown` event, otherwise 0), so `deadlineAt = now + startDelay + limit` and is sent in the view; the client shows the countdown only for `now >= animationEnd` using the same value. Expiry actions: draw → `draw`; throw → `throw`; select → `skipTurn` (new pure engine function: next player, no points, log `turnSkipped`); decide → `bank`. Each expiry increments `timeouts` on the seat; any own `act` resets it to 0. At 2 the view carries `timeoutWarning` (shown before the third); at 3 `replaceByBot`. The timer is cleared in `apply`, so a racing action and expiry apply exactly once. Not armed for computer seats; not paused while disconnected (FR-018b).
+- **Decision**: one timer per room (`turnTimer`), (re)armed from `emit()` when the state after an action implies a human is to act. Limits by `game.turn.phase`: `draw`, `throw` 10 s; `select` 15 s; `decide` 20 s. Start delay equals the animation wait already used for the computer (`ROLL_MAX_MS + AFTER_ROLL_MS` after a `thrown` event, otherwise 0), so `deadlineAt = now + startDelay + limit` and is sent in the view; the client shows the countdown only for `now >= animationEnd` using the same value. Expiry actions: draw → `skipTurn` (no card is drawn, so no Stop is logged); throw → `throw`; select → `skipTurn` (new pure engine function: next player, no points, log `turnSkipped`); decide → `bank`. Each expiry increments `timeouts` on the seat; any own `act` resets it to 0. At 2 the view carries `timeoutWarning` (shown before the third); at 3 `replaceByBot`. The timer is cleared in `apply`, so a racing action and expiry apply exactly once. Not armed for computer seats; not paused while disconnected (FR-018b).
 - **Rationale**: matches the existing computer pacing code; the server never needs to observe the client animation, same approach as 005 (fixed margin).
 - **Alternatives**: client-reported "animation done" ack (untrusted, needs a timeout fallback anyway).
 
