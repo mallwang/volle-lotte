@@ -33,6 +33,7 @@ const ANNOUNCED: Record<string, 'info' | 'warn' | 'success'> = {
   reconnected: 'info',
   timedOut: 'warn',
   replaced: 'warn',
+  rejoined: 'info',
 };
 
 /** How long a bust stays on the table before the next player's turn starts. */

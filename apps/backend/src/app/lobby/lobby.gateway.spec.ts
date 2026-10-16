@@ -257,3 +257,27 @@ describe('seat:remove', () => {
     });
   });
 });
+
+describe('game:rejoin', () => {
+  it('returns a leaver to their seat and flags the game as rejoinable in the lobby', async () => {
+    const host = await Client.start('Rejhost');
+    const { game } = await create(host, 2);
+    const p = await Client.start('Rejguest');
+    await p.send('game:join', { gameId: game.id, password: 'secret' });
+    await host.send('seat:ready', { ready: true });
+    await p.send('seat:ready', { ready: true });
+    await host.send('game:start');
+    await p.send('game:leave');
+
+    const list = await p.send('lobby:list');
+    expect(list.games.find((g: Any) => g.id === game.id)).toMatchObject({ rejoinable: true });
+    expect(await p.send('game:rejoin', { gameId: 'nope' })).toMatchObject({
+      reason: 'gameNotFound',
+    });
+    const res = await p.send('game:rejoin', { gameId: game.id });
+    expect(res).toMatchObject({ ok: true, game: { id: game.id } });
+    expect(await p.send('game:rejoin', { gameId: game.id })).toMatchObject({
+      reason: 'alreadyInGame',
+    });
+  });
+});

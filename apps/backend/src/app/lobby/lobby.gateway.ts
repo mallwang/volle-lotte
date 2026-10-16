@@ -114,7 +114,8 @@ export class LobbyGateway implements OnGatewayDisconnect {
 
   @SubscribeMessage('lobby:list')
   list(@ConnectedSocket() client: Socket): Ack<Intents['lobby:list'][1]> {
-    return this.session(client) ? { ok: true, games: this.registry.list() } : bad('noSession');
+    const session = this.session(client);
+    return session ? { ok: true, games: this.registry.list(session.playerId) } : bad('noSession');
   }
 
   @SubscribeMessage('game:create')
@@ -169,6 +170,24 @@ export class LobbyGateway implements OnGatewayDisconnect {
     }
     const joined = room.join(session.playerId, session.nickname, b['seat'] as number | undefined);
     if (!joined.ok) return done(joined) as Ack<never>;
+    this.enter(client, session, room);
+    this.pushLobby();
+    return { ok: true, game: toView(room, session.playerId) };
+  }
+
+  @SubscribeMessage('game:rejoin')
+  rejoin(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() b: unknown,
+  ): Ack<Intents['game:rejoin'][1]> {
+    const session = this.session(client);
+    if (!session) return bad('noSession');
+    if (this.roomOf(session)) return bad('alreadyInGame');
+    if (!isObj(b) || typeof b['gameId'] !== 'string') return bad('invalidRequest');
+    const room = this.registry.get(b['gameId']);
+    if (!room) return bad('gameNotFound');
+    const res = room.rejoin(session.playerId);
+    if (!res.ok) return res;
     this.enter(client, session, room);
     this.pushLobby();
     return { ok: true, game: toView(room, session.playerId) };
@@ -293,7 +312,9 @@ export class LobbyGateway implements OnGatewayDisconnect {
     session.gameId = undefined;
     if (session.socketId) {
       void this.server.sockets.sockets.get(session.socketId)?.join(LOBBY);
-      this.emitTo(session.socketId, 'lobby:games', { games: this.registry.list() });
+      this.emitTo(session.socketId, 'lobby:games', {
+        games: this.registry.list(session.playerId),
+      });
     }
   }
 
@@ -325,7 +346,11 @@ export class LobbyGateway implements OnGatewayDisconnect {
   }
 
   private pushLobby(): void {
-    this.server.to(LOBBY).emit('lobby:games', { games: this.registry.list() });
+    // rejoinable differs per player, so every lobby socket gets its own list
+    for (const id of this.server.sockets.adapter.rooms.get(LOBBY) ?? []) {
+      const playerId = this.sessions.bySocketId(id)?.playerId;
+      this.emitTo(id, 'lobby:games', { games: this.registry.list(playerId) });
+    }
   }
 
   private closed(room: GameRoom, reason: 'cleanup' | 'empty'): void {

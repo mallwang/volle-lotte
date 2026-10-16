@@ -14,6 +14,7 @@ export function stubSocket(game: GameView | null = null) {
     start: vi.fn(),
     create: vi.fn(),
     join: vi.fn(),
+    rejoin: vi.fn(),
     leave: vi.fn(),
     settings: vi.fn(),
   };

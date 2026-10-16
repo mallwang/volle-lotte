@@ -125,6 +125,12 @@ export class SocketService {
     return ack;
   }
 
+  async rejoin(gameId: string): Promise<Ack<Intents['game:rejoin'][1]>> {
+    const ack = await this.send('game:rejoin', { gameId });
+    if (ack.ok) this.game.set(ack.game);
+    return ack;
+  }
+
   settings(fastComputerDice: boolean) {
     return this.send('game:settings', { fastComputerDice });
   }

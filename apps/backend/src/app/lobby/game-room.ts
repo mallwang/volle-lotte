@@ -150,7 +150,8 @@ export class GameRoom {
     return this.humans().find((h) => h.playerId === this.hostId);
   }
 
-  summary(): GameSummary {
+  /** `forPlayer` marks the game rejoinable when a computer holds their former seat. */
+  summary(forPlayer?: string): GameSummary {
     return {
       id: this.id,
       name: this.name,
@@ -159,9 +160,14 @@ export class GameRoom {
       seatsUsed: this.seats.filter((s) => s.state === 'human' || s.state === 'computer').length,
       seatsTotal: this.seats.filter((s) => s.state !== 'locked').length,
       protected: this.passwordHash !== '',
-      rejoinable: false,
+      rejoinable: this.formerSeat(forPlayer) >= 0,
       phase: this.phase,
     };
+  }
+
+  private formerSeat(playerId?: string): number {
+    if (this.phase !== 'running' || !playerId) return -1;
+    return this.seats.findIndex((s) => s.state === 'computer' && s.former?.playerId === playerId);
   }
 
   // ---- lobby
@@ -183,6 +189,22 @@ export class GameRoom {
     this.add('joined', index);
     this.emit();
     return { ok: true, seat: index };
+  }
+
+  /** A player who left or timed out takes their seat back from the computer. */
+  rejoin(playerId: string): Res<{ seat: number }> {
+    if (this.banned.has(playerId)) return fail('banned');
+    if (this.seatOf(playerId) >= 0) return fail('alreadyInGame');
+    const seat = this.formerSeat(playerId);
+    if (seat < 0) return fail('notRejoinable');
+    const computer = this.seats[seat] as Extract<Seat, { state: 'computer' }>;
+    this.seats[seat] = this.humanSeat(playerId, computer.former!.nickname);
+    clearTimeout(this.computerTimer);
+    this.computerTimer = undefined;
+    this.preview = [];
+    this.add('rejoined', seat);
+    this.emit();
+    return { ok: true, seat };
   }
 
   /** Deliberate leave. Returns whether the room has no human left. */

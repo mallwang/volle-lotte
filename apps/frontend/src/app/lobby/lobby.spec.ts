@@ -72,6 +72,16 @@ describe('Lobby', () => {
     expect(el.querySelector('[role=dialog]')).toBeNull();
   });
 
+  it('offers a rejoin button for a running game the player left', async () => {
+    const { socket, el, settle } = await setup();
+    socket.games.set([{ ...summary, phase: 'running', rejoinable: true }] as never);
+    socket.rejoin.mockResolvedValue({ ok: true, game: { id: 'g1' } });
+    await settle();
+    el.querySelector('button')!.click();
+    await settle();
+    expect(socket.rejoin).toHaveBeenCalledWith('g1');
+  });
+
   it('offers no join for running or full games', async () => {
     const { socket, el, settle } = await setup();
     socket.games.set([

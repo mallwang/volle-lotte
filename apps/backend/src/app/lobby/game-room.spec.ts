@@ -122,6 +122,34 @@ describe('GameRoom leaving', () => {
   });
 });
 
+describe('GameRoom rejoin', () => {
+  it('lets only the former player take their seat back, keeping the score', () => {
+    const room = started();
+    room.leave('p');
+    expect(room.summary('p').rejoinable).toBe(true);
+    expect(room.summary('h').rejoinable).toBe(false);
+    expect(room.rejoin('x')).toMatchObject({ reason: 'notRejoinable' });
+    expect(room.rejoin('h')).toMatchObject({ reason: 'alreadyInGame' });
+    const before = room.game?.players[1].score;
+    expect(room.rejoin('p')).toEqual({ ok: true, seat: 1 });
+    expect(room.seats[1]).toMatchObject({ state: 'human', playerId: 'p', nickname: 'Pia' });
+    expect(room.game?.players[1].score).toBe(before);
+    expect(room.log.at(-1)).toMatchObject({ kind: 'rejoined', seat: 1 });
+    expect(room.summary('p').rejoinable).toBe(false);
+    room.dispose();
+  });
+
+  it('rejects banned players and lobby games', () => {
+    const { room } = make();
+    room.join('p', 'Pia');
+    expect(room.rejoin('p')).toMatchObject({ reason: 'alreadyInGame' });
+    room.banned.add('b');
+    expect(room.rejoin('b')).toMatchObject({ reason: 'banned' });
+    room.leave('p');
+    expect(room.rejoin('p')).toMatchObject({ reason: 'notRejoinable' });
+  });
+});
+
 describe('GameRoom connection', () => {
   beforeEach(() => jest.useFakeTimers());
   afterEach(() => jest.useRealTimers());

@@ -107,10 +107,10 @@
 
 **Independent Test**: Leave a running game, see Rejoin in the list, rejoin, check log/toast in another session; other players see no Rejoin.
 
-- [ ] T025 [US4] `B/game-room.ts`: `rejoin(playerId)` finds the computer seat with `former.playerId`, rejects banned/other ids (`notRejoinable`, `banned`, `alreadyInGame`), restores human seat (nickname from `former`, `connected: true`, `timeouts = 0`, score untouched), clears computer timer, logs `rejoined`
-- [ ] T026 [US4] `B/lobby.gateway.ts` + `B/game-registry.service.ts`: `game:rejoin {gameId}` using `session.playerId` (`gameNotFound` when missing); per-socket `lobby:list`/`lobby:games` summaries with `rejoinable`; `pushLobby()` iterates lobby sockets; tests in `B/lobby.gateway.spec.ts`, `B/game-registry.service.spec.ts`, `B/game-room.spec.ts` (other player not rejoinable, finished game not rejoinable)
-- [ ] T027 [US4] `F/core/socket.service.ts` rejoin intent; `F/lobby/lobby.ts` "Rejoin" button when `rejoinable`; `F/table/table.ts` toast on `rejoined` log entry for all players and seat no longer shown as computer (`former` cleared); update `F/lobby/lobby.spec.ts`, `F/table/table.spec.ts`
-- [ ] T028 [P] [US4] Add EN + DE texts for Rejoin, `rejoined` log/toast and `notRejoinable` error in `F/i18n/en.ts`, `F/i18n/de.ts`, `F/core/error-message.ts`
+- [x] T025 [US4] `B/game-room.ts`: `rejoin(playerId)` finds the computer seat with `former.playerId`, rejects banned/other ids (`notRejoinable`, `banned`, `alreadyInGame`), restores human seat (nickname from `former`, `connected: true`, `timeouts = 0`, score untouched), clears computer timer, logs `rejoined`
+- [x] T026 [US4] `B/lobby.gateway.ts` + `B/game-registry.service.ts`: `game:rejoin {gameId}` using `session.playerId` (`gameNotFound` when missing); per-socket `lobby:list`/`lobby:games` summaries with `rejoinable`; `pushLobby()` iterates lobby sockets; tests in `B/lobby.gateway.spec.ts`, `B/game-registry.service.spec.ts`, `B/game-room.spec.ts` (other player not rejoinable, finished game not rejoinable)
+- [x] T027 [US4] `F/core/socket.service.ts` rejoin intent; `F/lobby/lobby.ts` "Rejoin" button when `rejoinable`; `F/table/table.ts` toast on `rejoined` log entry for all players and seat no longer shown as computer (`former` cleared); update `F/lobby/lobby.spec.ts`, `F/table/table.spec.ts`
+- [x] T028 [P] [US4] Add EN + DE texts for Rejoin, `rejoined` log/toast and `notRejoinable` error in `F/i18n/en.ts`, `F/i18n/de.ts`, `F/core/error-message.ts`
 
 **Checkpoint**: All stories functional.
 

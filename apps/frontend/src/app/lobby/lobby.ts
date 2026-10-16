@@ -70,6 +70,8 @@ import { TranslatePipe } from '../core/translate.pipe';
               @if (g.seatsUsed < g.seatsTotal) {
                 <p-button [label]="'lobby.join' | t" (onClick)="open(g, $event)" />
               }
+            } @else if (g.rejoinable) {
+              <p-button [label]="'lobby.rejoin' | t" (onClick)="rejoin(g)" />
             } @else {
               <p-tag [value]="'lobby.running' | t" icon="pi pi-play" severity="info" />
             }
@@ -152,6 +154,12 @@ export class Lobby {
       this.error.set(() => errorMessage(ack, this.i18n));
       if (ack.reason === 'locked') this.lock(Math.ceil((ack.retryAfterMs ?? 0) / 1000));
     }
+  }
+
+  protected async rejoin(g: GameSummary): Promise<void> {
+    const ack = await this.socket.rejoin(g.id);
+    if (ack.ok) await this.router.navigate(['/game', g.id]);
+    else this.error.set(() => errorMessage(ack, this.i18n));
   }
 
   private lock(seconds: number): void {
