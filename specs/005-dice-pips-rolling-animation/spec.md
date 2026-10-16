@@ -6,6 +6,8 @@
 
 **Status**: Draft
 
+**Design**: [design.md](design.md) (mockup: [mockup.html](mockup.html))
+
 **Input**: User description: "Improve the dice: (1) Render real dice faces with pips (dots) instead of numbers on the game table and in the game logs. (2) Add a rolling-dice animation when the user or the computer throws the dice. The backend calculates the dice values; the UI dice roll randomly and then stop on the backend-calculated value. (3) Each die rolls for its own random duration (e.g. between 2 and 5 seconds) so the game feels more exciting, instead of showing the numbers immediately after pressing the throw button."
 
 ## Clarifications
@@ -56,6 +58,7 @@ When a player (human or computer) throws the dice, every thrown die visibly roll
 7. **Given** the player prefers reduced motion, **When** dice are thrown, **Then** no cycling faces or spinner are shown; the thrown dice appear blank with a static text "Dice are rolling…" in the dice area, announced to screen readers, and each die shows its final pips when it stops (after its own random 2–5 second duration).
 8. **Given** a player opened the settings during an active game and enabled "skip dice animation", **When** any throw happens, **Then** that player's dice and throw log show the final values immediately (no rolling, no "rolling" text, no locked actions), while other players' clients still show the full animation.
 9. **Given** the skip setting is active, **When** the player disables it, **Then** the next throw is animated again.
+10. **Given** the skip setting is active, **When** other clients are still rolling, **Then** the player's dice already show the final values while the game flow (e.g. the computer's next move) still waits for the full animation and pauses.
 
 ---
 
