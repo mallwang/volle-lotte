@@ -9,8 +9,8 @@ export function rollDurations(
   return Array.from({ length: n }, () => min + Math.floor(rand() * (max - min + 1)));
 }
 
-const NORMAL: [number, number] = [2000, 5000];
-const FAST: [number, number] = [1000, 2500];
+const NORMAL: [number, number] = [1000, 3000];
+const FAST: [number, number] = [500, 1500];
 const SWAP_MS = 120;
 
 /**

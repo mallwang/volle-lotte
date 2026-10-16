@@ -18,7 +18,7 @@ import { DieFace } from './die-face';
     >
       <app-die-face [value]="value()" [rolling]="rolling()" />
       @if (computerPick()) {
-        <span class="vl-pick-badge" aria-hidden="true">🖥</span>
+        <i class="pi pi-desktop vl-pick-badge" aria-hidden="true"></i>
       }
     </button>
   `,
@@ -34,16 +34,24 @@ import { DieFace } from './die-face';
       background: none;
       border-radius: 0.5rem;
       transition: transform 0.1s;
+      cursor: pointer;
     }
     .vl-die {
       position: relative;
     }
     .vl-pick-badge {
       position: absolute;
-      top: -0.4rem;
-      right: -0.4rem;
-      font-size: 0.9rem;
+      top: -0.5rem;
+      right: -0.5rem;
+      padding: 0.3rem;
+      font-size: 1rem;
       line-height: 1;
+      color: var(--p-primary-contrast-color);
+      background: var(--p-primary-color);
+      border-radius: 50%;
+    }
+    .vl-die:disabled {
+      cursor: default;
     }
     .vl-die-selected {
       transform: translateY(-5px);

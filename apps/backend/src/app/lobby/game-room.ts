@@ -21,8 +21,8 @@ export const SEATS = 8;
 export const GRACE_MS = 60_000;
 export const LOG_CAP = 500;
 /** Computer pacing: after a throw wait out the client roll (max) plus 3 s; otherwise 2 s (FR-013, FR-019). */
-const ROLL_MAX_MS = 5000;
-const ROLL_MAX_FAST_MS = 2500;
+const ROLL_MAX_MS = 3000;
+const ROLL_MAX_FAST_MS = 1500;
 const AFTER_ROLL_MS = 3000 + 250; // ponytail: fixed latency margin, the server cannot observe client animations
 const COMPUTER_PAUSE_MS = 2000;
 

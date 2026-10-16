@@ -13,27 +13,33 @@ import { TranslatePipe } from '../core/translate.pipe';
   template: `
     <p-dialog
       [header]="'settings.title' | t"
+      [style]="{ width: '28rem', maxWidth: '95vw' }"
       [(visible)]="visible"
       [modal]="true"
       [draggable]="false"
     >
+      <p class="vl-setting-subtitle">{{ 'settings.subtitle' | t }}</p>
       <div class="vl-setting">
-        <label for="skip-dice">{{ 'settings.skipDice' | t }}</label>
-        <p-toggleswitch
-          inputId="skip-dice"
-          [ngModel]="prefs.skip()"
-          (ngModelChange)="prefs.setSkip($event)"
-        />
+        <div class="vl-setting-row">
+          <label for="skip-dice">{{ 'settings.skipDice' | t }}</label>
+          <p-toggleswitch
+            inputId="skip-dice"
+            [ngModel]="prefs.skip()"
+            (ngModelChange)="prefs.setSkip($event)"
+          />
+        </div>
         <small>{{ 'settings.skipDiceHint' | t }}</small>
       </div>
       <div class="vl-setting">
-        <label for="fast-computer-dice">{{ 'settings.fastComputerDice' | t }}</label>
-        <p-toggleswitch
-          inputId="fast-computer-dice"
-          [ngModel]="socket.game()?.fastComputerDice ?? false"
-          [disabled]="!isHost()"
-          (ngModelChange)="socket.settings($event)"
-        />
+        <div class="vl-setting-row">
+          <label for="fast-computer-dice">{{ 'settings.fastComputerDice' | t }}</label>
+          <p-toggleswitch
+            inputId="fast-computer-dice"
+            [ngModel]="socket.game()?.fastComputerDice ?? false"
+            [disabled]="!isHost()"
+            (ngModelChange)="socket.settings($event)"
+          />
+        </div>
         <small>{{ (isHost() ? 'settings.fastComputerDiceHint' : 'settings.hostOnly') | t }}</small>
       </div>
     </p-dialog>
