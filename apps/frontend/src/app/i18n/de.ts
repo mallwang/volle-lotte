@@ -30,6 +30,7 @@ export const de: Record<keyof typeof en, string> = {
   'lobby.free': '{n} frei',
   'lobby.full': 'Voll',
   'lobby.passwordProtected': 'passwortgeschützt',
+  'lobby.open': 'Offen',
   'lobby.join': 'Beitreten',
   'lobby.running': 'Läuft',
   'lobby.joinTitle': '{name} beitreten',
@@ -39,6 +40,7 @@ export const de: Record<keyof typeof en, string> = {
 
   'create.title': 'Spiel erstellen',
   'create.name': 'Name',
+  'create.passwordHint': 'Optional. Leer lassen für ein offenes Spiel.',
   'create.password': 'Passwort',
   'create.seats': 'Plätze',
   'create.rules': 'Regeln',
@@ -51,7 +53,7 @@ export const de: Record<keyof typeof en, string> = {
   'create.cancel': 'Abbrechen',
   'create.defaultName': 'Spiel von {nickname}',
   'create.nameError': 'Der Name muss 1-40 Zeichen haben.',
-  'create.passwordError': 'Das Passwort muss 4-64 Zeichen haben.',
+  'create.passwordError': 'Das Passwort muss leer sein oder 4-64 Zeichen haben.',
 
   'card.bonus200': 'Bonus 200',
   'card.bonus300': 'Bonus 300',

@@ -141,6 +141,19 @@ describe('create and join', () => {
   });
 });
 
+describe('open games', () => {
+  it('joins without a password, rejects 1-3 char passwords', async () => {
+    const host = await Client.start('Hosty');
+    expect(await create(host, 2, 'abc')).toMatchObject({ reason: 'invalidPassword' });
+    const { game } = await create(host, 2, '');
+    expect((await host.send('lobby:list')).games).toContainEqual(
+      expect.objectContaining({ id: game.id, protected: false }),
+    );
+    const p = await Client.start('Pia');
+    expect(await p.send('game:join', { gameId: game.id })).toMatchObject({ ok: true });
+  });
+});
+
 describe('game lobby and play', () => {
   it('seats, readiness, start, turn guards and leaving', async () => {
     const host = await Client.start('Lobbyhost');

@@ -54,10 +54,12 @@ import { TranslatePipe } from '../core/translate.pipe';
             type="password"
             [(ngModel)]="password"
             autocomplete="new-password"
+            aria-describedby="game-password-hint"
             data-bwignore
             data-lpignore="true"
             data-1p-ignore
           />
+          <small id="game-password-hint">{{ 'create.passwordHint' | t }}</small>
           @if (errors().password; as e) {
             <p-message severity="error" size="small" role="alert">{{ e }}</p-message>
           }
@@ -197,7 +199,9 @@ export class CreateGame {
     return {
       name: name.length < 1 || name.length > 40 ? this.i18n.t('create.nameError') : null,
       password:
-        password.length < 4 || password.length > 64 ? this.i18n.t('create.passwordError') : null,
+        password.length > 0 && (password.length < 4 || password.length > 64)
+          ? this.i18n.t('create.passwordError')
+          : null,
       rules: this.rulesProblem(),
     };
   });

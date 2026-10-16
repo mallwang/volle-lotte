@@ -33,6 +33,8 @@ const isInt = (x: unknown, min: number, max: number): x is number =>
   Number.isInteger(x) && (x as number) >= min && (x as number) <= max;
 const isPassword = (x: unknown): x is string =>
   typeof x === 'string' && x.length >= 4 && x.length <= 64;
+/** An empty password means an open game. */
+const isOptionalPassword = (x: unknown): x is string => x === '' || isPassword(x);
 const isDifficulty = (x: unknown): x is Difficulty | undefined =>
   x === undefined || DIFFICULTIES.has(x as string);
 const isAction = (x: unknown): x is Action =>
@@ -125,11 +127,11 @@ export class LobbyGateway implements OnGatewayDisconnect {
     if (name.length < 1 || name.length > 40 || !isInt(b['seats'], 2, 8) || !isObj(b['rules'])) {
       return bad('invalidRequest');
     }
-    if (!isPassword(b['password'])) return bad('invalidPassword');
+    if (!isOptionalPassword(b['password'])) return bad('invalidPassword');
     if (rulesError(b['rules']) !== null) return bad('invalidRequest');
     const room = this.registry.create({
       name,
-      passwordHash: hashPassword(b['password']),
+      passwordHash: b['password'] === '' ? '' : hashPassword(b['password']),
       rules: b['rules'] as unknown as Rules,
       seatCount: b['seats'],
       host: { playerId: session.playerId, nickname: session.nickname },
@@ -146,16 +148,22 @@ export class LobbyGateway implements OnGatewayDisconnect {
     if (this.roomOf(session)) return bad('alreadyInGame');
     if (!isObj(b) || typeof b['gameId'] !== 'string') return bad('invalidRequest');
     if (b['seat'] !== undefined && !isInt(b['seat'], 0, 7)) return bad('invalidRequest');
-    if (!isPassword(b['password'])) return bad('invalidPassword');
     const room = this.registry.get(b['gameId']);
     if (!room) return bad('gameNotFound');
-    const key = this.clientKey(client);
-    const wait = this.limiter.retryAfterMs(key, room.id);
-    if (wait > 0) return { ok: false, reason: 'locked', retryAfterMs: wait };
-    if (!verifyPassword(b['password'], room.passwordHash)) {
-      return { ok: false, reason: 'wrongPassword', attemptsLeft: this.limiter.fail(key, room.id) };
+    if (room.passwordHash !== '') {
+      if (!isPassword(b['password'])) return bad('invalidPassword');
+      const key = this.clientKey(client);
+      const wait = this.limiter.retryAfterMs(key, room.id);
+      if (wait > 0) return { ok: false, reason: 'locked', retryAfterMs: wait };
+      if (!verifyPassword(b['password'], room.passwordHash)) {
+        return {
+          ok: false,
+          reason: 'wrongPassword',
+          attemptsLeft: this.limiter.fail(key, room.id),
+        };
+      }
+      this.limiter.succeed(key, room.id);
     }
-    this.limiter.succeed(key, room.id);
     const joined = room.join(session.playerId, session.nickname, b['seat'] as number | undefined);
     if (!joined.ok) return done(joined) as Ack<never>;
     this.enter(client, session, room);

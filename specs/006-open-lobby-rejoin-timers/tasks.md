@@ -46,10 +46,10 @@
 
 **Independent Test**: Create game with empty password, join from a second session without prompt, start, a third session cannot join.
 
-- [ ] T008 [P] [US1] `B/lobby.gateway.ts` + `B/game-registry.service.ts`: `game:create` accepts `password: ''` (empty hash = open; `invalidPassword` only for 1–3 or > 64 chars); `game:join` skips password check and attempt limiter when hash is empty; summaries emit `protected` instead of `locked`; add tests in `B/lobby.gateway.spec.ts` and `B/game-registry.service.spec.ts`
-- [ ] T009 [P] [US1] `F/create-game/create-game.ts`: password optional (hint text, validation allows empty or 4–64 chars); add test
-- [ ] T010 [US1] `F/lobby/lobby.ts`: open / protected / running (lock icon + "running") / full badges per mockup; open game joins with one tap without prompt; no Join action for started games; update `F/lobby/lobby.spec.ts`
-- [ ] T011 [P] [US1] Add EN + DE texts for open/protected/running/full/optional password in `F/i18n/en.ts` and `F/i18n/de.ts`
+- [x] T008 [P] [US1] `B/lobby.gateway.ts` + `B/game-registry.service.ts`: `game:create` accepts `password: ''` (empty hash = open; `invalidPassword` only for 1–3 or > 64 chars); `game:join` skips password check and attempt limiter when hash is empty; summaries emit `protected` instead of `locked`; add tests in `B/lobby.gateway.spec.ts` and `B/game-registry.service.spec.ts`
+- [x] T009 [P] [US1] `F/create-game/create-game.ts`: password optional (hint text, validation allows empty or 4–64 chars); add test
+- [x] T010 [US1] `F/lobby/lobby.ts`: open / protected / running (lock icon + "running") / full badges per mockup; open game joins with one tap without prompt; no Join action for started games; update `F/lobby/lobby.spec.ts`
+- [x] T011 [P] [US1] Add EN + DE texts for open/protected/running/full/optional password in `F/i18n/en.ts` and `F/i18n/de.ts`
 
 **Checkpoint**: US1 fully functional (MVP together with US5).
 

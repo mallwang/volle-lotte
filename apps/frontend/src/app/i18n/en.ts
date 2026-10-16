@@ -28,6 +28,7 @@ export const en = {
   'lobby.free': '{n} free',
   'lobby.full': 'Full',
   'lobby.passwordProtected': 'password protected',
+  'lobby.open': 'Open',
   'lobby.join': 'Join',
   'lobby.running': 'Running',
   'lobby.joinTitle': 'Join {name}',
@@ -37,6 +38,7 @@ export const en = {
 
   'create.title': 'Create game',
   'create.name': 'Name',
+  'create.passwordHint': 'Optional. Leave empty for an open game.',
   'create.password': 'Password',
   'create.seats': 'Seats',
   'create.rules': 'Rules',
@@ -49,7 +51,7 @@ export const en = {
   'create.cancel': 'Cancel',
   'create.defaultName': "{nickname}'s Game",
   'create.nameError': 'Name must have 1-40 characters.',
-  'create.passwordError': 'Password must have 4-64 characters.',
+  'create.passwordError': 'Password must be empty or have 4-64 characters.',
 
   'card.bonus200': 'Bonus 200',
   'card.bonus300': 'Bonus 300',
