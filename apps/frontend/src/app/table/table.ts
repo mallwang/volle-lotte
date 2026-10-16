@@ -151,27 +151,40 @@ const BUST_MS = 5000;
                   </div>
                 </div>
                 <div class="vl-safe" role="group" [attr.aria-label]="'table.safe' | t">
-                  <strong
-                    >{{ 'table.safe' | t }}: {{ bust() ? 0 : turn.carried + turn.run }}</strong
-                  >
-                  <div class="vl-aside">
-                    @for (g of aside(); track $index) {
-                      <span class="vl-aside-group">
-                        <span class="vl-aside-dice">
-                          @for (v of g.dice; track $index) {
-                            <span
-                              ><app-die-face [value]="v" /><span class="vl-sr-only">{{
-                                v
-                              }}</span></span
-                            >
+                  @if (street(); as picked) {
+                    <strong>{{ 'table.safe' | t }}</strong>
+                    <div class="vl-aside vl-street">
+                      @for (v of streetValues; track v) {
+                        <span [class.vl-missing]="!picked.includes(v)"
+                          ><app-die-face [value]="v" /><span class="vl-sr-only">{{ v }}</span></span
+                        >
+                      }
+                    </div>
+                  } @else {
+                    <strong
+                      >{{ 'table.safe' | t }}: {{ bust() ? 0 : turn.carried + turn.run }}</strong
+                    >
+                  }
+                  @if (!street()) {
+                    <div class="vl-aside">
+                      @for (g of aside(); track $index) {
+                        <span class="vl-aside-group">
+                          <span class="vl-aside-dice">
+                            @for (v of g.dice; track $index) {
+                              <span
+                                ><app-die-face [value]="v" /><span class="vl-sr-only">{{
+                                  v
+                                }}</span></span
+                              >
+                            }
+                          </span>
+                          @if (g.points > 0) {
+                            <small>+{{ g.points }}</small>
                           }
                         </span>
-                        @if (g.points > 0) {
-                          <small>+{{ g.points }}</small>
-                        }
-                      </span>
-                    }
-                  </div>
+                      }
+                    </div>
+                  }
                   <ng-container *ngTemplateOutlet="act; context: { $implicit: action('bank') }" />
                   @if (belowMinimum()) {
                     <small>{{
@@ -275,6 +288,7 @@ export class Table {
   /** A computer took over my seat (timeouts); nothing here is playable anymore. */
   protected readonly removed = computed(() => (this.socket.game()?.you.seat ?? 0) < 0);
   protected readonly BUST_MS = BUST_MS;
+  protected readonly streetValues = [1, 2, 3, 4, 5, 6];
   /** Bust notice: keeps the busting throw visible until the next player takes over. */
   protected readonly bust = signal<{ dice: readonly number[]; text: string } | null>(null);
   private readonly lastThrow = signal<readonly number[]>([]);
@@ -306,6 +320,22 @@ export class Table {
       else if (d && d.type !== 'thrown') break;
     }
     return out;
+  });
+  /**
+   * Values collected on a Street, from the revealed log (null = not a Street). The log keeps them
+   * on the table while a bust is shown, when the turn state already belongs to the next player.
+   */
+  protected readonly street = computed((): number[] | null => {
+    const log = (this.socket.game()?.log ?? []).slice(0, this.revealed());
+    const picked: number[] = [];
+    for (let i = log.length - 1; i >= 0; i--) {
+      const e = log[i];
+      const d = e.kind === 'turn' && typeof e.data === 'object' ? e.data : null;
+      if (d?.type === 'selected') picked.push(...d.dice);
+      else if (d?.type === 'cardDrawn') return d.card === 'street' ? picked : null;
+      else if (d?.type !== 'thrown') return null;
+    }
+    return null;
   });
   protected readonly action = (id: string) => this.actions().find((a) => a.id === id);
   /** Log entries already processed; the server log keeps growing, so the length is a stable cursor. */
@@ -424,7 +454,12 @@ export class Table {
   }
 
   protected can(phase: string): boolean {
-    return this.mine() && this.socket.game()?.game?.turn?.phase === phase;
+    const turn = this.socket.game()?.game?.turn;
+    if (!this.mine() || !turn) return false;
+    // after a Volle Lotte on a Bonus card the next card may be drawn instead of banking
+    if (phase === 'draw' && turn.phase === 'decide')
+      return turn.free === 0 && turn.card?.startsWith('bonus') === true;
+    return turn.phase === phase;
   }
 
   /** After a partial selection (phase decide) the remaining free dice can be thrown again. */
