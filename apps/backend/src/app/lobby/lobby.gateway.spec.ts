@@ -221,3 +221,34 @@ describe('game settings', () => {
     expect(state.game.fastComputerDice).toBe(true);
   });
 });
+
+describe('seat:remove', () => {
+  it('is host only, locks and bans the player, who cannot rejoin', async () => {
+    const host = await Client.start('Banhost');
+    const { game } = await create(host, 4);
+    const p = await Client.start('Banguest');
+    await p.send('game:join', { gameId: game.id, password: 'secret' });
+
+    expect(await p.send('seat:remove', { seat: 0 })).toMatchObject({ reason: 'notHost' });
+    expect(await host.send('seat:remove', { seat: 0 })).toMatchObject({ reason: 'seatNotFree' });
+    expect(await host.send('seat:remove', { seat: 9 })).toMatchObject({ reason: 'invalidRequest' });
+    expect(await host.send('seat:remove', { seat: 1 })).toMatchObject({ ok: true });
+    expect(await p.until('game:closed')).toEqual({ reason: 'banned' });
+    expect(await p.send('game:join', { gameId: game.id, password: 'secret' })).toMatchObject({
+      reason: 'banned',
+    });
+    const state = await host.until('game:state', (s) => s.game.seats[1].state === 'locked');
+    expect(state.game.seats[1]).toEqual({ state: 'locked' });
+  });
+
+  it('does not ban a player who leaves voluntarily', async () => {
+    const host = await Client.start('Leavehost');
+    const { game } = await create(host, 3);
+    const p = await Client.start('Leaveguest');
+    await p.send('game:join', { gameId: game.id, password: 'secret' });
+    await p.send('game:leave');
+    expect(await p.send('game:join', { gameId: game.id, password: 'secret' })).toMatchObject({
+      ok: true,
+    });
+  });
+});

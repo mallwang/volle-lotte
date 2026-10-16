@@ -63,9 +63,10 @@ export class SocketService {
       this.game.set(null);
       this.notify('warn', this.i18n.t('server.replaced'));
     }) as never);
-    this.socket.on('game:closed', (() => {
+    this.socket.on('game:closed', ((p: Pushes['game:closed']) => {
       this.game.set(null);
-      this.notify('info', this.i18n.t('server.closed'));
+      if (p?.reason === 'banned') this.notify('warn', this.i18n.t('server.banned'));
+      else this.notify('info', this.i18n.t('server.closed'));
     }) as never);
   }
 

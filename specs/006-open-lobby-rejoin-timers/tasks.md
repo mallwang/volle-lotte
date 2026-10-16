@@ -79,9 +79,9 @@
 
 **Independent Test**: Two sessions in a game lobby; host closes the other's seat; modal shows; re-join refused.
 
-- [ ] T019 [US2] `B/game-room.ts` + `B/lobby.gateway.ts`: `seat:remove {seat}` (host, lobby phase only; errors `notHost`, `gameStarted`, `invalidRequest`, `seatNotFree`): seat becomes `locked`, playerId added to `banned`, push `game:closed {reason:'banned'}` to the removed player (also on return if disconnected); `join` rejects banned ids with `banned`; voluntary lobby leave does not ban; add tests in `B/game-room.spec.ts` and `B/lobby.gateway.spec.ts`
-- [ ] T020 [US2] `F/game-lobby/game-lobby.ts`: host "Close seat" action on human seats; removed player modal "You were removed by the host" with "Back to lobby"; `F/core/socket.service.ts` close reason `banned`; `F/core/error-message.ts` message for `banned`; update `F/game-lobby/game-lobby.spec.ts`
-- [ ] T021 [P] [US2] Add EN + DE texts for close seat, removal modal and `banned` error in `F/i18n/en.ts` and `F/i18n/de.ts`
+- [x] T019 [US2] `B/game-room.ts` + `B/lobby.gateway.ts`: `seat:remove {seat}` (host, lobby phase only; errors `notHost`, `gameStarted`, `invalidRequest`, `seatNotFree`): seat becomes `locked`, playerId added to `banned`, push `game:closed {reason:'banned'}` to the removed player (also on return if disconnected); `join` rejects banned ids with `banned`; voluntary lobby leave does not ban; add tests in `B/game-room.spec.ts` and `B/lobby.gateway.spec.ts`
+- [x] T020 [US2] `F/game-lobby/game-lobby.ts`: host "Close seat" action on human seats; removed player modal "You were removed by the host" with "Back to lobby"; `F/core/socket.service.ts` close reason `banned`; `F/core/error-message.ts` message for `banned`; update `F/game-lobby/game-lobby.spec.ts`
+- [x] T021 [P] [US2] Add EN + DE texts for close seat, removal modal and `banned` error in `F/i18n/en.ts` and `F/i18n/de.ts`
 
 **Checkpoint**: US2 works independently.
 

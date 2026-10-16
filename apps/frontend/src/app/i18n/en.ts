@@ -14,6 +14,7 @@ export const en = {
   'connection.connected': 'connected',
   'server.restarted': 'The server was restarted and your game is gone.',
   'server.replaced': 'Your session was opened in another window or tab.',
+  'server.banned': 'The host removed you from this game.',
   'server.closed': 'The game was closed.',
 
   'nickname.title': 'Nickname',
@@ -86,6 +87,7 @@ export const en = {
   'gameLobby.locked': 'Locked',
   'gameLobby.unlock': 'Unlock',
   'gameLobby.free': 'Free',
+  'gameLobby.removePlayer': 'Close seat {n}',
   'gameLobby.lock': 'Lock',
   'gameLobby.addComputer': 'Add computer',
   'gameLobby.start': 'Start game',
@@ -184,6 +186,7 @@ export const en = {
   'error.gameNotFound': 'The game no longer exists.',
   'error.gameStarted': 'The game has already started.',
   'error.gameFull': 'The game is full.',
+  'error.banned': 'The host removed you from this game.',
   'error.seatNotFree': 'This seat is not free.',
   'error.seatOccupied': 'An occupied seat cannot be locked.',
   'error.alreadyInGame': 'You are already in a game.',

@@ -14,6 +14,7 @@ export const de: Record<keyof typeof en, string> = {
   'connection.disconnected': 'getrennt',
   'connection.connected': 'verbunden',
   'server.replaced': 'Deine Sitzung wurde in einem anderen Fenster oder Tab geöffnet.',
+  'server.banned': 'Der Gastgeber hat dich aus diesem Spiel entfernt.',
   'server.closed': 'Das Spiel wurde geschlossen.',
   'server.restarted': 'Der Server wurde neu gestartet und dein Spiel ist weg.',
 
@@ -88,6 +89,7 @@ export const de: Record<keyof typeof en, string> = {
   'gameLobby.locked': 'Gesperrt',
   'gameLobby.unlock': 'Entsperren',
   'gameLobby.free': 'Frei',
+  'gameLobby.removePlayer': 'Platz {n} schließen',
   'gameLobby.lock': 'Sperren',
   'gameLobby.addComputer': 'Computer hinzufügen',
   'gameLobby.start': 'Spiel starten',
@@ -185,6 +187,7 @@ export const de: Record<keyof typeof en, string> = {
   'error.locked': 'Zu viele Versuche.',
   'error.lockedRetry': 'Zu viele Versuche. Versuche es in {seconds} s erneut.',
   'error.gameNotFound': 'Das Spiel existiert nicht mehr.',
+  'error.banned': 'Der Gastgeber hat dich aus diesem Spiel entfernt.',
   'error.gameStarted': 'Das Spiel hat bereits begonnen.',
   'error.gameFull': 'Das Spiel ist voll.',
   'error.seatNotFree': 'Dieser Platz ist nicht frei.',

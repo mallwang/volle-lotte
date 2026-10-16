@@ -50,6 +50,13 @@ const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard', 'random'];
                   [icon]="s.ready ? 'pi pi-check' : 'pi pi-clock'"
                   [severity]="s.ready ? 'success' : 'warn'"
                 />
+                @if (host() && s.playerId !== game.hostId) {
+                  <p-button
+                    [label]="'gameLobby.removePlayer' | t: { n: $index + 1 }"
+                    severity="secondary"
+                    (onClick)="removeSeat($index)"
+                  />
+                }
                 @if ($index === game.you.seat) {
                   <label class="vl-check">
                     <input
@@ -169,6 +176,10 @@ export class GameLobby {
 
   protected setSeat(seat: number, mode: 'open' | 'locked' | 'computer', difficulty?: Difficulty) {
     return this.run(this.socket.send('seat:set', { seat, mode, difficulty }));
+  }
+
+  protected removeSeat(seat: number) {
+    return this.run(this.socket.send('seat:remove', { seat }));
   }
 
   protected start(): Promise<void> {

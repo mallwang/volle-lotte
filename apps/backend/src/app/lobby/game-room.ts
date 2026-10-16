@@ -167,6 +167,7 @@ export class GameRoom {
   // ---- lobby
 
   join(playerId: string, nickname: string, seat?: number): Res<{ seat: number }> {
+    if (this.banned.has(playerId)) return fail('banned');
     if (this.phase !== 'lobby') return fail('gameStarted');
     const lower = nickname.toLowerCase();
     if (this.humans().some((h) => h.nickname.toLowerCase() === lower)) return fail('nicknameTaken');
@@ -233,6 +234,20 @@ export class GameRoom {
     this.add('seatChanged', seat, mode === 'computer' ? difficulty : mode);
     this.emit();
     return { ok: true, removed };
+  }
+
+  /** Host closes a human's seat and bans them from this game. */
+  removeSeat(playerId: string, seat: number): Res<{ removed: string }> {
+    if (playerId !== this.hostId) return fail('notHost');
+    if (this.phase !== 'lobby') return fail('gameStarted');
+    const current = this.seats[seat];
+    if (current?.state !== 'human' || current.playerId === this.hostId) return fail('seatNotFree');
+    this.banned.add(current.playerId);
+    this.seats[seat] = { state: 'locked' };
+    this.resetReady();
+    this.add('seatChanged', seat, 'locked');
+    this.emit();
+    return { ok: true, removed: current.playerId };
   }
 
   setReady(playerId: string, ready: boolean): Res {

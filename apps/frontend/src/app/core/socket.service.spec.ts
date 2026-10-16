@@ -105,6 +105,10 @@ describe('SocketService', () => {
       detail: 'The game was closed.',
       life: 4000,
     });
+    socket.fire('game:closed', { reason: 'banned' });
+    expect(add).toHaveBeenCalledWith(
+      expect.objectContaining({ severity: 'warn', detail: expect.stringContaining('removed you') }),
+    );
     socket.fire('session:replaced');
     expect(service.session()).toBeNull();
     expect(add).toHaveBeenCalledWith(

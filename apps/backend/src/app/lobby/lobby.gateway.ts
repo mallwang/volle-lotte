@@ -96,6 +96,9 @@ export class LobbyGateway implements OnGatewayDisconnect {
       room.setConnected(session.playerId, true);
       game = toView(room, session.playerId);
     } else {
+      // removed by the host while offline: tell them now
+      if (room?.banned.has(session.playerId))
+        this.emitTo(client.id, 'game:closed', { reason: 'banned' });
       session.gameId = undefined;
       void client.join(LOBBY);
     }
@@ -202,6 +205,16 @@ export class LobbyGateway implements OnGatewayDisconnect {
     );
   }
 
+  @SubscribeMessage('seat:remove')
+  removeSeat(@ConnectedSocket() client: Socket, @MessageBody() b: unknown): Ack {
+    if (!isObj(b) || !isInt(b['seat'], 0, 7))
+      return this.session(client) ? bad('invalidRequest') : bad('noSession');
+    const seat = b['seat'];
+    return this.inRoom(client, (room, session) =>
+      this.removed(room.removeSeat(session.playerId, seat)),
+    );
+  }
+
   @SubscribeMessage('seat:ready')
   ready(@ConnectedSocket() client: Socket, @MessageBody() b: unknown): Ack {
     if (!isObj(b) || typeof b['ready'] !== 'boolean')
@@ -262,7 +275,8 @@ export class LobbyGateway implements OnGatewayDisconnect {
   private removed(res: Res<{ removed?: string }>): Res<object> {
     if (res.ok && res.removed) {
       const gone = this.sessions.byPlayerId(res.removed);
-      if (gone) {
+      // an offline player keeps the game id so the ban is reported on return
+      if (gone?.socketId) {
         this.exit(gone);
         this.emitTo(gone.socketId, 'game:closed', { reason: 'banned' });
       }
