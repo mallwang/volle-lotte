@@ -102,7 +102,7 @@ describe('create and join', () => {
     expect(JSON.stringify(created)).not.toContain('topsecret');
     const list = await host.send('lobby:list');
     expect(list.games).toContainEqual(
-      expect.objectContaining({ id: game.id, seatsUsed: 1, seatsTotal: 2, locked: true }),
+      expect.objectContaining({ id: game.id, seatsUsed: 1, seatsTotal: 2, protected: true }),
     );
 
     const p = await Client.start('Pia');
@@ -138,6 +138,19 @@ describe('create and join', () => {
     expect(await x.send('game:join', { gameId: game.id, password: 'topsecret' })).toMatchObject({
       reason: 'locked',
     });
+  });
+});
+
+describe('open games', () => {
+  it('joins without a password, rejects 1-3 char passwords', async () => {
+    const host = await Client.start('Hosty');
+    expect(await create(host, 2, 'abc')).toMatchObject({ reason: 'invalidPassword' });
+    const { game } = await create(host, 2, '');
+    expect((await host.send('lobby:list')).games).toContainEqual(
+      expect.objectContaining({ id: game.id, protected: false }),
+    );
+    const p = await Client.start('Pia');
+    expect(await p.send('game:join', { gameId: game.id })).toMatchObject({ ok: true });
   });
 });
 
@@ -188,6 +201,11 @@ describe('game lobby and play', () => {
 
     expect(await p.send('game:leave')).toMatchObject({ ok: true });
     expect(await p.send('game:start')).toMatchObject({ reason: 'notInGame' });
+    // the leaver's seat is now a computer that remembers who it replaced
+    const after = await host.until('game:state', (s) =>
+      s.game.seats.some((x: Any) => x.former?.nickname === 'Lobbyguest'),
+    );
+    expect(after.game.seats.filter((x: Any) => x.state === 'human')).toHaveLength(1);
   });
 });
 
@@ -206,5 +224,60 @@ describe('game settings', () => {
     expect(await host.send('game:settings', { fastComputerDice: true })).toEqual({ ok: true });
     const state = await p.until('game:state', (s) => s.game.fastComputerDice === true);
     expect(state.game.fastComputerDice).toBe(true);
+  });
+});
+
+describe('seat:remove', () => {
+  it('is host only, bans the player and frees the seat, who cannot rejoin', async () => {
+    const host = await Client.start('Banhost');
+    const { game } = await create(host, 4);
+    const p = await Client.start('Banguest');
+    await p.send('game:join', { gameId: game.id, password: 'secret' });
+
+    expect(await p.send('seat:remove', { seat: 0 })).toMatchObject({ reason: 'notHost' });
+    expect(await host.send('seat:remove', { seat: 0 })).toMatchObject({ reason: 'seatNotFree' });
+    expect(await host.send('seat:remove', { seat: 9 })).toMatchObject({ reason: 'invalidRequest' });
+    expect(await host.send('seat:remove', { seat: 1 })).toMatchObject({ ok: true });
+    expect(await p.until('game:closed')).toEqual({ reason: 'banned' });
+    expect(await p.send('game:join', { gameId: game.id, password: 'secret' })).toMatchObject({
+      reason: 'banned',
+    });
+    const state = await host.until('game:state', (s) => s.game.seats[1].state === 'open');
+    expect(state.game.seats[1]).toEqual({ state: 'open' });
+  });
+
+  it('does not ban a player who leaves voluntarily', async () => {
+    const host = await Client.start('Leavehost');
+    const { game } = await create(host, 3);
+    const p = await Client.start('Leaveguest');
+    await p.send('game:join', { gameId: game.id, password: 'secret' });
+    await p.send('game:leave');
+    expect(await p.send('game:join', { gameId: game.id, password: 'secret' })).toMatchObject({
+      ok: true,
+    });
+  });
+});
+
+describe('game:rejoin', () => {
+  it('returns a leaver to their seat and flags the game as rejoinable in the lobby', async () => {
+    const host = await Client.start('Rejhost');
+    const { game } = await create(host, 2);
+    const p = await Client.start('Rejguest');
+    await p.send('game:join', { gameId: game.id, password: 'secret' });
+    await host.send('seat:ready', { ready: true });
+    await p.send('seat:ready', { ready: true });
+    await host.send('game:start');
+    await p.send('game:leave');
+
+    const list = await p.send('lobby:list');
+    expect(list.games.find((g: Any) => g.id === game.id)).toMatchObject({ rejoinable: true });
+    expect(await p.send('game:rejoin', { gameId: 'nope' })).toMatchObject({
+      reason: 'gameNotFound',
+    });
+    const res = await p.send('game:rejoin', { gameId: game.id });
+    expect(res).toMatchObject({ ok: true, game: { id: game.id } });
+    expect(await p.send('game:rejoin', { gameId: game.id })).toMatchObject({
+      reason: 'alreadyInGame',
+    });
   });
 });

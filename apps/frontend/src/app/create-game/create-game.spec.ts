@@ -64,6 +64,14 @@ describe('CreateGame', () => {
     });
   });
 
+  it('allows an empty password (open game)', async () => {
+    const { socket, submit, type } = await setup();
+    socket.create.mockResolvedValue({ ok: true, game: { id: 'g1' } });
+    type('gameName', 'Table');
+    await submit();
+    expect(socket.create).toHaveBeenCalledWith(expect.objectContaining({ password: '' }));
+  });
+
   it('renders a server error', async () => {
     const { socket, el, submit, type } = await setup();
     socket.create.mockResolvedValue({ ok: false, reason: 'alreadyInGame' });
@@ -76,13 +84,15 @@ describe('CreateGame', () => {
   it('shows per-field errors next to each invalid field', async () => {
     const { el, submit, type } = await setup();
     type('gameName', '');
+    type('gamePassword', 'abc');
     type('target', '0');
     await submit();
     expect(el.querySelectorAll('p-message[role=alert]')).toHaveLength(3);
   });
 
   it('has no axe violations in light and dark', async () => {
-    const { fixture, submit } = await setup();
+    const { fixture, submit, type } = await setup();
+    type('gameName', '');
     await submit();
     await inBothModes(fixture, () => expectNoA11yViolations(fixture));
   });

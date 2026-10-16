@@ -26,13 +26,13 @@ The sources agree on scoring and card effects. Differences are marked as **House
 
 ## Configurable rules (set at game creation, defaults)
 
-| Rule                                                   | Default                                          | Source                |
-| ------------------------------------------------------ | ------------------------------------------------ | --------------------- |
-| Target score                                           | 6,000 (free choice, e.g. 10,000)                 | sources               |
-| Minimum points to bank                                 | 350 (0 = off)                                    | **House rule** (Java) |
-| Four or more of a kind: each further equal die doubles | on                                               | **House rule** (Java) |
-| Number of cards per type                               | default set below                                | sources               |
-| A player leaves                                        | host decides: put in a computer or free the seat | new                   |
+| Rule                                                   | Default                                             | Source                |
+| ------------------------------------------------------ | --------------------------------------------------- | --------------------- |
+| Target score                                           | 6,000 (free choice, e.g. 10,000)                    | sources               |
+| Minimum points to bank                                 | 350 (0 = off)                                       | **House rule** (Java) |
+| Four or more of a kind: each further equal die doubles | on                                                  | **House rule** (Java) |
+| Number of cards per type                               | default set below                                   | sources               |
+| A player leaves                                        | a random computer takes over; the player may rejoin | new                   |
 
 ### Default set (56 cards)
 

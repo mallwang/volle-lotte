@@ -219,6 +219,31 @@ describe('Table', () => {
     });
   });
 
+  it('shows the turn timer and the timeout warning', async () => {
+    const { socket, el, fixture } = await setup(0);
+    expect(el.querySelector('app-turn-timer')).toBeNull();
+    const view = socket.game()!;
+    socket.game.set({
+      ...view,
+      turnDeadline: { at: Date.now() + 10_000, phase: 'throw' },
+      you: { ...view.you, timeoutWarning: true },
+    } as never);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(el.querySelector('app-turn-timer')).not.toBeNull();
+    expect(el.textContent).toContain('One more and a computer takes over');
+  });
+
+  it('asks for confirmation before leaving', async () => {
+    const { socket, button, fixture } = await setup(0);
+    button('Leave game')!.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(socket.leave).not.toHaveBeenCalled();
+    (document.body.querySelector('p-dialog button.p-button-danger') as HTMLButtonElement).click();
+    expect(socket.leave).toHaveBeenCalled();
+  });
+
   it('toasts a new turn-end event', async () => {
     const { socket, toasts, fixture } = await setup(0);
     const view = socket.game()!;

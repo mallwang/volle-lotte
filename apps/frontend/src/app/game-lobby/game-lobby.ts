@@ -10,20 +10,13 @@ import { isHost, seatName } from '../core/game-view';
 import { I18nService } from '../core/i18n.service';
 import { SocketService } from '../core/socket.service';
 import { TranslatePipe } from '../core/translate.pipe';
-import { DIFFICULTIES, DisconnectBanner } from '../table/disconnect-banner';
+
+const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard', 'random'];
 
 @Component({
   selector: 'app-game-lobby',
   host: { class: 'vl-narrow' },
-  imports: [
-    FormsModule,
-    DisconnectBanner,
-    AvatarModule,
-    ButtonModule,
-    MessageModule,
-    TagModule,
-    TranslatePipe,
-  ],
+  imports: [FormsModule, AvatarModule, ButtonModule, MessageModule, TagModule, TranslatePipe],
   template: `
     @if (socket.game(); as game) {
       <h2>{{ game.name }}</h2>
@@ -38,7 +31,6 @@ import { DIFFICULTIES, DisconnectBanner } from '../table/disconnect-banner';
                 }
         }}
       </p>
-      <app-disconnect-banner [game]="game" />
       <ul class="vl-cards">
         @for (s of game.seats; track $index) {
           <li class="vl-seat" [class.vl-seat-locked]="s.state === 'locked'">
@@ -58,6 +50,13 @@ import { DIFFICULTIES, DisconnectBanner } from '../table/disconnect-banner';
                   [icon]="s.ready ? 'pi pi-check' : 'pi pi-clock'"
                   [severity]="s.ready ? 'success' : 'warn'"
                 />
+                @if (host() && s.playerId !== game.hostId) {
+                  <p-button
+                    [label]="'gameLobby.removePlayer' | t"
+                    severity="secondary"
+                    (onClick)="removeSeat($index)"
+                  />
+                }
                 @if ($index === game.you.seat) {
                   <label class="vl-check">
                     <input
@@ -133,7 +132,11 @@ import { DIFFICULTIES, DisconnectBanner } from '../table/disconnect-banner';
         <p>{{ 'gameLobby.waiting' | t: { name: hostName() } }}</p>
       }
       <div class="vl-actions">
-        <p-button [label]="'game.leave' | t" severity="secondary" (onClick)="socket.leave()" />
+        <p-button
+          [label]="(host() ? 'gameLobby.withdraw' : 'game.leave') | t"
+          severity="secondary"
+          (onClick)="socket.leave()"
+        />
         @if (host()) {
           <p-button [label]="'gameLobby.start' | t" [disabled]="!canStart()" (onClick)="start()" />
         }
@@ -177,6 +180,10 @@ export class GameLobby {
 
   protected setSeat(seat: number, mode: 'open' | 'locked' | 'computer', difficulty?: Difficulty) {
     return this.run(this.socket.send('seat:set', { seat, mode, difficulty }));
+  }
+
+  protected removeSeat(seat: number) {
+    return this.run(this.socket.send('seat:remove', { seat }));
   }
 
   protected start(): Promise<void> {

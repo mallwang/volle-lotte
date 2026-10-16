@@ -1,0 +1,1082 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Open lobbies, rejoin, leave warning and turn timers</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <style>
+      :root {
+        color-scheme: light;
+
+        /* App tokens: terracotta theme (specs/003-ui-foundation-primeng/design.md), light + dark below */
+        --bg: #fbf1ea;
+        --surface: #fffaf6;
+        --surface-2: #f3dccd;
+        --line: #e6c3ad;
+        --text: #3a241b;
+        --muted: #7b5a4c;
+        --primary: #a8431f;
+        --on-primary: #fff;
+        --mint: #d3e8d6;
+        --on-mint: #1f4a2c;
+        --lavender: #e6dcef;
+        --on-lavender: #44305f;
+        --butter: #f6e3a8;
+        --on-butter: #5a4300;
+
+        /* Review-tool-only tokens */
+        --review-bg: #f3f2ee;
+        --review-ink: #2c2a25;
+        --review-muted: #7a7669;
+        --review-line: #ddd9d0;
+        --review-accent: #b45f2c;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--review-bg);
+        color: var(--review-ink);
+        font-family:
+          'Inter',
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        text-wrap: balance;
+      }
+
+      /* ============ Review-tool chrome (reusable as-is) ============ */
+
+      .review-header {
+        padding: 1.5rem 2rem 1rem;
+        border-bottom: 1px solid var(--review-line);
+      }
+      .review-eyebrow {
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--review-accent);
+        font-weight: 700;
+        margin: 0 0 0.25rem;
+      }
+      .review-header h1 {
+        margin: 0 0 0.35rem;
+        font-size: 1.35rem;
+        font-weight: 800;
+      }
+      .review-header p {
+        margin: 0;
+        color: var(--review-muted);
+        font-size: 0.9rem;
+        max-width: 68ch;
+        line-height: 1.5;
+      }
+
+      .review-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.25rem;
+        align-items: center;
+        padding: 0.85rem 2rem;
+        background: #fff;
+        border-bottom: 1px solid var(--review-line);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+      .control-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .control-group span.label {
+        font-size: 0.72rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--review-muted);
+        font-weight: 700;
+      }
+
+      .segmented {
+        display: inline-flex;
+        border: 1px solid var(--review-line);
+        border-radius: 8px;
+        overflow: hidden;
+        flex-wrap: wrap;
+      }
+      .segmented button {
+        appearance: none;
+        border: none;
+        background: #fff;
+        color: var(--review-ink);
+        font: inherit;
+        font-size: 0.83rem;
+        font-weight: 600;
+        padding: 0.4rem 0.75rem;
+        cursor: pointer;
+        border-right: 1px solid var(--review-line);
+      }
+      .segmented button:last-child {
+        border-right: none;
+      }
+      .segmented button:hover {
+        background: #f1efe9;
+      }
+      .segmented button:focus-visible {
+        outline: 2px solid var(--review-accent);
+        outline-offset: -2px;
+      }
+      .segmented button[aria-pressed='true'] {
+        background: var(--review-accent);
+        color: #fff;
+      }
+
+      .review-stage {
+        padding: 2rem;
+        display: flex;
+        justify-content: center;
+      }
+
+      .stage-frame {
+        width: 100%;
+        max-width: 1180px;
+        background: #d9d4c8;
+        border-radius: 14px;
+        padding: 1.25rem;
+        transition: max-width 0.2s ease;
+      }
+      .stage-frame[data-viewport='mobile'] {
+        max-width: 400px;
+      }
+
+      .stage-frame-label {
+        font-size: 0.72rem;
+        color: var(--review-muted);
+        text-align: center;
+        margin: 0 0 0.5rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .canvas {
+        background: var(--bg, #fff);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+        color: var(--text, #1a1a1a);
+      }
+
+      .review-footer {
+        padding: 0 2rem 2rem;
+        max-width: 1180px;
+        margin: 0 auto;
+        font-size: 0.85rem;
+        color: var(--review-muted);
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+      }
+      .review-footer code {
+        background: #fff;
+        border: 1px solid var(--review-line);
+        border-radius: 4px;
+        padding: 0.1em 0.4em;
+        font-size: 0.8em;
+      }
+      .review-footer h3 {
+        margin: 0.5rem 0 0;
+        font-size: 0.8rem;
+        color: var(--review-ink);
+      }
+      .review-footer ul {
+        margin: 0.25rem 0 0.5rem;
+        padding-left: 1.1rem;
+      }
+
+      /* ============ generic state-visibility mechanism (reusable as-is) ============ */
+
+      /* state visibility: JS toggles [hidden] from data-show tokens, e.g. data-show="select rolling" ("all" = always) */
+      [hidden] {
+        display: none !important;
+      }
+
+      /* ============ app shell: mirrors apps/frontend (.vl-header, .vl-main, .vl-table, .vl-players, .vl-log, ...) ============ */
+      .canvas.dark {
+        --bg: #1c1411;
+        --surface: #2a1d18;
+        --surface-2: #3b2a22;
+        --line: #52382c;
+        --text: #f5e6dc;
+        --muted: #cbaa98;
+        --primary: #f08a5d;
+        --on-primary: #2a1008;
+        --mint: #244a38;
+        --on-mint: #c9f1db;
+        --lavender: #3a3159;
+        --on-lavender: #e0d8fa;
+        --butter: #4d4018;
+        --on-butter: #ffefb0;
+      }
+      .canvas {
+        font-size: 16px;
+        position: relative;
+        min-height: 640px;
+      }
+      .canvas h1,
+      .canvas h2,
+      .canvas h3 {
+        text-wrap: wrap;
+      }
+      .vl-header {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.75rem 1rem;
+      }
+      .vl-header h1 {
+        margin: 0;
+        font-size: 1.5rem;
+      }
+      .vl-hdr-r {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        margin-left: auto;
+      }
+      .ibtn {
+        min-width: 44px;
+        min-height: 44px;
+        border: 1px solid transparent;
+        background: transparent;
+        color: var(--text);
+        border-radius: 8px;
+        font: inherit;
+        font-size: 1.2rem;
+        cursor: pointer;
+      }
+      .ibtn:hover {
+        background: var(--surface-2);
+      }
+      .lang {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        min-height: 44px;
+        padding: 0 0.5rem;
+        color: var(--text);
+      }
+      .flag {
+        width: 1.75rem;
+        height: 1.17rem;
+        border-radius: 2px;
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
+        background: linear-gradient(#000 33%, #d00 33% 66%, #fc0 66%);
+      }
+      .vl-main {
+        max-width: 64rem;
+        margin: 0 auto;
+        padding: 0 1rem 1rem;
+      }
+      .vl-title-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+      }
+      .vl-main h2 {
+        margin: 0.5rem 0;
+        font-size: 1.4rem;
+      }
+      .vl-main p {
+        margin: 0.35rem 0;
+      }
+      .vl-table {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: 1fr;
+      }
+      @media (min-width: 900px) {
+        .canvas[data-vp='desktop'][data-screen='draw'] .vl-table,
+        .canvas[data-vp='desktop'][data-screen='select'] .vl-table,
+        .canvas[data-vp='desktop'][data-screen='back'] .vl-table,
+        .canvas[data-vp='desktop'][data-screen='leave'] .vl-table {
+          grid-template-columns: 1fr 18rem;
+        }
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .vl-status {
+        display: inline-block;
+        border-radius: 999px;
+        padding: 0.1rem 0.6rem;
+        font-size: 0.82rem;
+      }
+      .mint {
+        background: var(--mint);
+        color: var(--on-mint);
+      }
+      .lav {
+        background: var(--lavender);
+        color: var(--on-lavender);
+      }
+      .butter {
+        background: var(--butter);
+        color: var(--on-butter);
+      }
+      .vl-card {
+        display: inline-block;
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.5rem;
+        border: 1px solid var(--line);
+        background: var(--surface);
+      }
+      .vl-dice {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin: 1.25rem 0;
+        position: relative;
+      }
+      .vl-turn-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+        gap: 0.75rem;
+      }
+      .vl-turn-actions small {
+        display: block;
+        min-height: 1.25rem;
+        color: var(--muted);
+      }
+      .btn {
+        width: 100%;
+        border: 0;
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        font: inherit;
+        font-weight: 700;
+        min-height: 44px;
+        background: var(--primary);
+        color: var(--on-primary);
+      }
+      .btn[disabled] {
+        opacity: 0.45;
+      }
+      .btn.sec {
+        background: transparent;
+        color: var(--primary);
+        border: 1px solid var(--primary);
+        width: auto;
+      }
+      .vl-players {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+        padding: 0;
+        margin: 0;
+        list-style: none;
+      }
+      .vl-player {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--line);
+        border-radius: 0.5rem;
+        background: var(--surface);
+      }
+      .vl-player.cur {
+        border: 2px solid var(--primary);
+      }
+      .vl-log {
+        max-height: 14rem;
+        font-size: 0.8125rem;
+        line-height: 1.3;
+        overflow-y: auto;
+        margin: 0;
+        padding-left: 1.5rem;
+      }
+      .vl-log li {
+        padding: 0.2rem 0;
+      }
+      /* dialog (overlays the canvas) */
+      .scrim {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 4rem 1rem;
+        z-index: 5;
+      }
+      .dlg {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        width: 100%;
+        max-width: 26rem;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+      }
+      .dlg h3 {
+        margin: 0 0 0.5rem;
+        font-size: 1.1rem;
+      }
+      .set {
+        display: flex;
+        gap: 0.8rem;
+        align-items: flex-start;
+        padding: 0.7rem 0;
+        border-top: 1px solid var(--line);
+      }
+      .set small {
+        display: block;
+        color: var(--muted);
+        margin-top: 0.15rem;
+      }
+      .set.ro {
+        opacity: 0.6;
+      }
+      .sw {
+        width: 44px;
+        height: 26px;
+        border-radius: 99px;
+        background: var(--line);
+        position: relative;
+        flex: none;
+        margin-top: 2px;
+      }
+      .sw::after {
+        content: '';
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #fff;
+      }
+      .sw.on {
+        background: var(--primary);
+      }
+      .sw.on::after {
+        left: 21px;
+      }
+
+      /* ============ feature styles (authored fresh per feature) ============ */
+
+      .die {
+        display: inline-grid;
+        grid-template: repeat(3, 1fr) / repeat(3, 1fr);
+        width: 34px;
+        height: 34px;
+        padding: 5px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        background: #fff;
+        position: relative;
+      }
+      .die i {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #3a241b;
+        place-self: center;
+      }
+      .die i.p0 {
+        grid-area: 1/1;
+      }
+      .die i.p1 {
+        grid-area: 1/2;
+      }
+      .die i.p2 {
+        grid-area: 1/3;
+      }
+      .die i.p3 {
+        grid-area: 2/1;
+      }
+      .die i.p4 {
+        grid-area: 2/2;
+      }
+      .die i.p5 {
+        grid-area: 2/3;
+      }
+      .die i.p6 {
+        grid-area: 3/1;
+      }
+      .die i.p7 {
+        grid-area: 3/2;
+      }
+      .die i.p8 {
+        grid-area: 3/3;
+      }
+      .vl-dice {
+        margin: 0.75rem 0;
+      }
+      .canvas[data-vp='mobile'] .die {
+        width: 30px;
+        height: 30px;
+      }
+      .vl-cards {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 0.75rem;
+        grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+      }
+      .gcard {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--surface);
+        padding: 0.75rem 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+      }
+      .gcard.you {
+        border: 2px solid var(--primary);
+      }
+      .gcard h3 {
+        margin: 0;
+        font-size: 1.05rem;
+      }
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        align-items: center;
+      }
+      .rose {
+        background: #f6d0cb;
+        color: #7a2118;
+      }
+      .canvas.dark .rose {
+        background: #5a2626;
+        color: #ffd9d9;
+      }
+      .seat {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+        padding: 0.6rem 0.75rem;
+        border: 1px solid var(--line);
+        border-radius: 0.5rem;
+        background: var(--surface);
+      }
+      .seat.closed {
+        opacity: 0.6;
+        border-style: dashed;
+      }
+      .seat .n {
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        background: var(--surface-2);
+        display: grid;
+        place-items: center;
+        font-weight: 700;
+      }
+      .seat .grow {
+        flex: 1;
+        min-width: 8rem;
+      }
+      .btn.inline {
+        width: auto;
+        padding: 0.35rem 0.9rem;
+      }
+      .btn.danger {
+        background: #b3261e;
+        color: #fff;
+      }
+      .timer {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        margin: 0.5rem 0;
+      }
+      .timer .bar {
+        flex: 1;
+        height: 10px;
+        border-radius: 99px;
+        background: var(--surface-2);
+        overflow: hidden;
+      }
+      .timer .bar b {
+        display: block;
+        height: 100%;
+        background: var(--primary);
+      }
+      .timer.low .bar b {
+        background: #b3261e;
+      }
+      .timer.low .num {
+        color: #b3261e;
+      }
+      .timer .num {
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+        min-width: 3.2rem;
+        text-align: right;
+      }
+      .warn {
+        border-left: 4px solid #b3261e;
+        background: var(--butter);
+        color: var(--on-butter);
+        padding: 0.5rem 0.75rem;
+        border-radius: 6px;
+        margin: 0.5rem 0;
+      }
+      .toast {
+        position: absolute;
+        top: 0.75rem;
+        right: 0.75rem;
+        background: var(--mint);
+        color: var(--on-mint);
+        border-radius: 8px;
+        padding: 0.5rem 0.8rem;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+        z-index: 4;
+        max-width: 16rem;
+      }
+      .dlg .acts {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-end;
+        margin-top: 1rem;
+        flex-wrap: wrap;
+      }
+      .dlg ul {
+        padding-left: 1.2rem;
+        margin: 0.4rem 0;
+      }
+      .pw {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+      }
+      .vl-player .mini {
+        font-size: 0.75rem;
+        color: var(--muted);
+      }
+      .vl-player.pulse {
+        box-shadow: 0 0 0 3px var(--mint);
+      }
+    </style>
+  </head>
+  <body>
+    <header class="review-header">
+      <p class="review-eyebrow">Non-functional review mockup</p>
+      <h1>Open lobbies, rejoin, leave warning and turn timers</h1>
+      <p>
+        Spec 006: open games in the list, host closing seats, leave warning, rejoin of replaced
+        players, per-action turn timers. Static mockup, not the real UI. Switch states, viewport and
+        theme (◐).
+      </p>
+    </header>
+
+    <div class="review-controls">
+      <div class="control-group">
+        <span class="label">Viewport</span>
+        <div class="segmented" id="viewport-toggle">
+          <button type="button" data-viewport="desktop" aria-pressed="true">Desktop</button>
+          <button type="button" data-viewport="mobile" aria-pressed="false">Mobile</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <span class="label">Screen</span>
+        <div class="segmented" id="screen-toggle">
+          <button type="button" data-screen="list" aria-pressed="true">Game list</button
+          ><button type="button" data-screen="rejoin" aria-pressed="false">List: rejoin</button
+          ><button type="button" data-screen="lobby" aria-pressed="false">Game lobby (host)</button
+          ><button type="button" data-screen="removed" aria-pressed="false">Removed modal</button
+          ><button type="button" data-screen="draw" aria-pressed="false">Timer: roll 10 s</button
+          ><button type="button" data-screen="select" aria-pressed="false">
+            Timer: select + warning</button
+          ><button type="button" data-screen="leave" aria-pressed="false">Leave modal</button
+          ><button type="button" data-screen="back" aria-pressed="false">Rejoined</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="review-stage">
+      <div class="stage-frame" id="stage-frame" data-viewport="desktop">
+        <p class="stage-frame-label" id="stage-frame-label">Desktop</p>
+        <div class="canvas" data-screen="list" data-vp="desktop" id="canvas">
+          <header class="vl-header">
+            <h1>Volle Lotte</h1>
+            <div class="vl-hdr-r">
+              <span class="lang"><span class="flag"></span> ▾</span>
+              <button class="ibtn" type="button" aria-label="Toggle theme" id="theme">◐</button>
+            </div>
+          </header>
+          <main class="vl-main">
+            <div class="vl-title-row">
+              <h2 id="ttl">Game</h2>
+              <a class="btn inline" data-show="list rejoin">Create game</a>
+            </div>
+            <p class="muted"></p>
+            <div class="vl-table">
+              <section data-show="all">
+                <section data-show="list rejoin">
+                  <div data-show="list">
+                    <ul class="vl-cards">
+                      <li>
+                        <div class="gcard">
+                          <h3>Friday round</h3>
+                          <span class="muted">Host: Anna</span>
+                          <div class="row">
+                            <span class="vl-status mint">🔓 Open</span
+                            ><span class="vl-status mint">2 / 4 seats</span>
+                          </div>
+                          <div class="row" style="margin-top: 0.25rem">
+                            <button class="btn inline" type="button">Join</button>
+                          </div>
+                        </div>
+                      </li>
+                      <li>
+                        <div class="gcard">
+                          <h3>Pub night</h3>
+                          <span class="muted">Host: Ben</span>
+                          <div class="row">
+                            <span class="vl-status lav">🔑 Password</span
+                            ><span class="vl-status mint">1 / 4 seats</span>
+                          </div>
+                          <div class="row" style="margin-top: 0.25rem">
+                            <button class="btn inline" type="button">Join</button>
+                          </div>
+                        </div>
+                      </li>
+                      <li>
+                        <div class="gcard">
+                          <h3>Full house</h3>
+                          <span class="muted">Host: Chris</span>
+                          <div class="row">
+                            <span class="vl-status mint">🔓 Open</span
+                            ><span class="vl-status butter">4 / 4 · full</span>
+                          </div>
+                          <div class="row" style="margin-top: 0.25rem">
+                            <button class="btn inline sec" disabled="disabled" type="button">
+                              Full
+                            </button>
+                          </div>
+                        </div>
+                      </li>
+                      <li>
+                        <div class="gcard">
+                          <h3>Lunch break</h3>
+                          <span class="muted">Host: Dana</span>
+                          <div class="row"><span class="vl-status lav">🔒 Running</span></div>
+                          <div class="row" style="margin-top: 0.25rem">
+                            <span class="muted">Game has started</span>
+                          </div>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+                  <div data-show="rejoin">
+                    <p class="muted">
+                      You left <strong>Lunch break</strong>. A computer player holds your seat until
+                      you rejoin.
+                    </p>
+                    <ul class="vl-cards">
+                      <li>
+                        <div class="gcard">
+                          <h3>Friday round</h3>
+                          <span class="muted">Host: Anna</span>
+                          <div class="row">
+                            <span class="vl-status mint">🔓 Open</span
+                            ><span class="vl-status mint">2 / 4 seats</span>
+                          </div>
+                          <div class="row" style="margin-top: 0.25rem">
+                            <button class="btn inline" type="button">Join</button>
+                          </div>
+                        </div>
+                      </li>
+                      <li>
+                        <div class="gcard">
+                          <h3>Pub night</h3>
+                          <span class="muted">Host: Ben</span>
+                          <div class="row">
+                            <span class="vl-status lav">🔑 Password</span
+                            ><span class="vl-status mint">1 / 4 seats</span>
+                          </div>
+                          <div class="row" style="margin-top: 0.25rem">
+                            <button class="btn inline" type="button">Join</button>
+                          </div>
+                        </div>
+                      </li>
+                      <li>
+                        <div class="gcard">
+                          <h3>Full house</h3>
+                          <span class="muted">Host: Chris</span>
+                          <div class="row">
+                            <span class="vl-status mint">🔓 Open</span
+                            ><span class="vl-status butter">4 / 4 · full</span>
+                          </div>
+                          <div class="row" style="margin-top: 0.25rem">
+                            <button class="btn inline sec" disabled="disabled" type="button">
+                              Full
+                            </button>
+                          </div>
+                        </div>
+                      </li>
+                      <li>
+                        <div class="gcard you">
+                          <h3>Lunch break</h3>
+                          <span class="muted">Host: Dana</span>
+                          <div class="row"><span class="vl-status lav">🔒 Running</span></div>
+                          <div class="row" style="margin-top: 0.25rem">
+                            <button class="btn inline" type="button">Rejoin</button>
+                          </div>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+                </section>
+                <section data-show="lobby removed">
+                  <div style="display: grid; gap: 0.5rem">
+                    <div class="seat">
+                      <span class="n">1</span
+                      ><span class="grow"
+                        ><strong>Anna</strong> <span class="vl-status butter">★ Host</span></span
+                      >
+                    </div>
+                    <div class="seat">
+                      <span class="n">2</span
+                      ><span class="grow"
+                        ><strong>Ben</strong> <span class="vl-status mint">Ready</span></span
+                      ><button class="btn inline sec" type="button">Close seat</button>
+                    </div>
+                    <div class="seat closed">
+                      <span class="n">3</span
+                      ><span class="grow"
+                        >Closed <span class="vl-status rose">removed by host</span></span
+                      ><button class="btn inline sec" type="button">Reopen</button>
+                    </div>
+                    <div class="seat">
+                      <span class="n">4</span
+                      ><span class="grow muted">Free · open game, anyone can take it</span>
+                    </div>
+                  </div>
+                  <p style="margin-top: 1rem">
+                    <button class="btn inline" type="button">Start game</button>
+                    <button class="btn inline sec" type="button">Leave</button>
+                  </p>
+                </section>
+                <section data-show="draw leave">
+                  <div class="vl-card"><strong>Your turn</strong> · 250 points</div>
+                  <div class="timer" role="timer">
+                    <span>⏱ Your turn</span><span class="bar"><b style="width: 70%"></b></span
+                    ><span class="num">7 s</span>
+                  </div>
+                  <div class="vl-dice"></div>
+                  <div class="vl-turn-actions">
+                    <div>
+                      <button class="btn">Roll</button><small>Rolls automatically at 0</small>
+                    </div>
+                  </div>
+                </section>
+                <section data-show="select">
+                  <div class="vl-card"><strong>Your turn</strong> · 250 points</div>
+                  <div class="timer low" role="timer">
+                    <span>⏱ Your turn</span><span class="bar"><b style="width: 26%"></b></span
+                    ><span class="num">4 s</span>
+                  </div>
+                  <div class="warn" role="alert">
+                    ⚠ 2 timeouts in a row. Another one replaces you with a computer player.
+                  </div>
+                  <div class="vl-dice">
+                    <span class="die"><i class="p4"></i></span
+                    ><span class="die"
+                      ><i class="p0"></i><i class="p2"></i><i class="p4"></i><i class="p6"></i
+                      ><i class="p8"></i></span
+                    ><span class="die"><i class="p0"></i><i class="p4"></i><i class="p8"></i></span
+                    ><span class="die"><i class="p0"></i><i class="p8"></i></span
+                    ><span class="die"
+                      ><i class="p0"></i><i class="p2"></i><i class="p3"></i><i class="p5"></i
+                      ><i class="p6"></i><i class="p8"></i></span
+                    ><span class="die"
+                      ><i class="p0"></i><i class="p2"></i><i class="p6"></i><i class="p8"></i
+                    ></span>
+                  </div>
+                  <div class="vl-turn-actions">
+                    <div>
+                      <button class="btn">Set aside</button
+                      ><small>No choice at 0: you skip, no points</small>
+                    </div>
+                  </div>
+                </section>
+                <section data-show="back">
+                  <div class="vl-card"><strong>Ben's turn</strong> · 350 points</div>
+                  <div class="timer" role="timer">
+                    <span>⏱ Your turn</span><span class="bar"><b style="width: 90%"></b></span
+                    ><span class="num">9 s</span>
+                  </div>
+                  <div class="vl-dice"></div>
+                  <p class="muted">Countdown shown to everyone for the active human.</p>
+                </section>
+                <p style="margin-top: 1rem" data-show="draw select back leave">
+                  <button class="btn sec" type="button">Leave game</button>
+                </p>
+              </section>
+              <aside data-show="draw select back leave">
+                <div data-show="draw select back leave">
+                  <h3>Players</h3>
+                  <ul class="vl-players">
+                    <div data-show="draw select leave">
+                      <li class="vl-player cur">
+                        <strong>Anna (you)</strong><span class="mini">450</span>
+                      </li>
+                      <li class="vl-player"><strong>Ben</strong><span class="mini">350</span></li>
+                      <li class="vl-player">
+                        <strong>Computer (Hard)</strong><span class="mini">200</span
+                        ><span class="vl-status lav">🖥 replaced Chris</span>
+                      </li>
+                    </div>
+                    <div data-show="back">
+                      <li class="vl-player"><strong>Anna</strong><span class="mini">450</span></li>
+                      <li class="vl-player cur">
+                        <strong>Ben</strong><span class="mini">350</span>
+                      </li>
+                      <li class="vl-player">
+                        <strong>Chris</strong><span class="mini">200</span
+                        ><span class="vl-status mint">✓ Back, human again</span>
+                      </li>
+                    </div>
+                  </ul>
+                </div>
+                <div data-show="draw select back leave">
+                  <h3>Log</h3>
+                  <ol class="vl-log">
+                    <li data-show="draw select leave">Ben rolled automatically (timeout 1 of 3)</li>
+                    <li data-show="draw select leave">
+                      Chris left and was replaced by Computer (Hard)
+                    </li>
+                    <li data-show="back">Chris is back and plays again</li>
+                    <li data-show="back">Computer (Hard) stops playing for Chris</li>
+                    <li data-show="back">Chris was replaced by Computer (Easy) after 3 timeouts</li>
+                    <li data-show="all">Game started</li>
+                  </ol>
+                </div>
+              </aside>
+            </div>
+          </main>
+
+          <div class="scrim" data-show="removed" role="dialog" aria-modal="true">
+            <div class="dlg">
+              <h3>You were removed</h3>
+              <p>The host removed you from "Friday round". You cannot join this game again.</p>
+              <div class="acts">
+                <button class="btn inline" type="button">Back to lobby</button>
+              </div>
+            </div>
+          </div>
+          <div class="scrim" data-show="leave" role="dialog" aria-modal="true">
+            <div class="dlg">
+              <h3>Leave this game?</h3>
+              <p>If you leave:</p>
+              <ul>
+                <li>A computer player of random difficulty takes your seat right away.</li>
+                <li>You return to the lobby.</li>
+                <li>You can rejoin from the game list while the game runs. Your score is kept.</li>
+              </ul>
+              <div class="acts">
+                <button class="btn inline sec" type="button">Cancel</button
+                ><button class="btn inline danger" type="button">Leave game</button>
+              </div>
+            </div>
+          </div>
+          <div class="toast" data-show="back" role="status">✓ Chris is back</div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="review-footer">
+      <h3>Notes</h3>
+      <ul>
+        <li>
+          Timers: roll 10 s, select 15 s, secure/continue 15 s; start after dice animation; shown to
+          everyone; hidden on computer turns.
+        </li>
+        <li>Warning appears from the 3rd timed action after 2 consecutive timeouts.</li>
+        <li>
+          No theme beyond the terracotta tokens of spec 003; PrimeNG look will differ in detail.
+        </li>
+      </ul>
+    </footer>
+
+    <script>
+      const canvas = document.getElementById('canvas');
+      const stageFrame = document.getElementById('stage-frame');
+      const stageLabel = document.getElementById('stage-frame-label');
+      const show = () => {
+        const v = canvas.dataset.screen;
+        canvas.querySelectorAll('[data-show]').forEach((e) => {
+          const t = e.dataset.show.split(' ');
+          e.hidden = !(t.includes('all') || t.includes(v));
+        });
+      };
+      const names = {
+        list: 'Open games',
+        rejoin: 'Open games',
+        lobby: 'Friday round',
+        removed: 'Friday round',
+        draw: 'Friday round',
+        select: 'Friday round',
+        leave: 'Friday round',
+        back: 'Friday round',
+      };
+      const setScreen = (v) => {
+        canvas.dataset.screen = v;
+        document.getElementById('ttl').textContent = names[v];
+        show();
+        document
+          .querySelectorAll('#screen-toggle button[data-screen]')
+          .forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.screen === v)));
+      };
+      document.getElementById('screen-toggle').addEventListener('click', (e) => {
+        const b = e.target.closest('button[data-screen]');
+        if (b) setScreen(b.dataset.screen);
+      });
+      document
+        .querySelectorAll('[data-open]')
+        .forEach((b) => b.addEventListener('click', () => setScreen(b.dataset.open)));
+      document.getElementById('viewport-toggle').addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-viewport]');
+        if (!btn) return;
+        const value = btn.dataset.viewport;
+        stageFrame.dataset.viewport = value;
+        canvas.dataset.vp = value;
+        stageLabel.textContent = value === 'mobile' ? 'Mobile' : 'Desktop';
+        document
+          .querySelectorAll('#viewport-toggle button')
+          .forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+      });
+      document
+        .getElementById('theme')
+        .addEventListener('click', () => canvas.classList.toggle('dark'));
+
+      setScreen('list');
+    </script>
+  </body>
+</html>

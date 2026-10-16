@@ -63,9 +63,10 @@ export class SocketService {
       this.game.set(null);
       this.notify('warn', this.i18n.t('server.replaced'));
     }) as never);
-    this.socket.on('game:closed', (() => {
+    this.socket.on('game:closed', ((p: Pushes['game:closed']) => {
       this.game.set(null);
-      this.notify('info', this.i18n.t('server.closed'));
+      if (p?.reason === 'banned') this.notify('warn', this.i18n.t('server.banned'));
+      else this.notify('info', this.i18n.t('server.closed'));
     }) as never);
   }
 
@@ -120,6 +121,12 @@ export class SocketService {
 
   async join(payload: Intents['game:join'][0]): Promise<Ack<Intents['game:join'][1]>> {
     const ack = await this.send('game:join', payload);
+    if (ack.ok) this.game.set(ack.game);
+    return ack;
+  }
+
+  async rejoin(gameId: string): Promise<Ack<Intents['game:rejoin'][1]>> {
+    const ack = await this.send('game:rejoin', { gameId });
     if (ack.ok) this.game.set(ack.game);
     return ack;
   }

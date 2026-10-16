@@ -5,7 +5,7 @@ import { gameView, stubSocket } from '../core/testing';
 import { SettingsDialog } from './settings-dialog';
 
 async function setup(playerId: string) {
-  const socket = stubSocket(gameView({ you: { playerId, seat: 0 } }));
+  const socket = stubSocket(gameView({ you: { playerId, seat: 0, timeoutWarning: false } }));
   TestBed.configureTestingModule({
     imports: [SettingsDialog],
     providers: [providePrimeNG(), { provide: SocketService, useValue: socket }],

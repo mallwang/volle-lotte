@@ -14,7 +14,9 @@ const summary: GameSummary = {
   targetScore: 6000,
   seatsUsed: 1,
   seatsTotal: 4,
-  locked: true,
+  protected: true,
+  rejoinable: false,
+  banned: false,
   phase: 'lobby',
 };
 
@@ -58,6 +60,37 @@ describe('Lobby', () => {
     el.querySelector('button')!.click();
     await settle();
     expect(el.querySelector('[role=dialog]')?.textContent).toContain('Password for Table One');
+  });
+
+  it('joins an open game with one tap', async () => {
+    const { socket, el, settle } = await setup();
+    socket.games.set([{ ...summary, protected: false }] as never);
+    socket.join.mockResolvedValue({ ok: true, game: { id: 'g1' } });
+    await settle();
+    el.querySelector('button')!.click();
+    await settle();
+    expect(socket.join).toHaveBeenCalledWith({ gameId: 'g1', password: '' });
+    expect(el.querySelector('[role=dialog]')).toBeNull();
+  });
+
+  it('offers a rejoin button for a running game the player left', async () => {
+    const { socket, el, settle } = await setup();
+    socket.games.set([{ ...summary, phase: 'running', rejoinable: true }] as never);
+    socket.rejoin.mockResolvedValue({ ok: true, game: { id: 'g1' } });
+    await settle();
+    el.querySelector('button')!.click();
+    await settle();
+    expect(socket.rejoin).toHaveBeenCalledWith('g1');
+  });
+
+  it('offers no join for running or full games', async () => {
+    const { socket, el, settle } = await setup();
+    socket.games.set([
+      { ...summary, phase: 'running' },
+      { ...summary, id: 'g2', seatsUsed: 4 },
+    ] as never);
+    await settle();
+    expect(el.querySelector('button')).toBeNull();
   });
 
   it('shows an empty state', async () => {

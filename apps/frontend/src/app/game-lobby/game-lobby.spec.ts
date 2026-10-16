@@ -51,6 +51,13 @@ describe('GameLobby', () => {
     expect(socket.send).toHaveBeenCalledWith('game:start');
   });
 
+  it('lets the host remove another player', async () => {
+    const { socket, button } = await setup(gameView({}, [me(true), other(true)]));
+    socket.send.mockResolvedValue({ ok: true });
+    button('Remove this player')!.click();
+    expect(socket.send).toHaveBeenCalledWith('seat:remove', { seat: 1 });
+  });
+
   it('counts computers as ready', async () => {
     const { button } = await setup(
       gameView({}, [me(true), { state: 'computer', difficulty: 'easy' }]),
@@ -60,7 +67,10 @@ describe('GameLobby', () => {
 
   it('hides host controls from non-hosts', async () => {
     const { el, button } = await setup(
-      gameView({ hostId: 'p1', you: { playerId: 'p0', seat: 1 } }, [other(true), me(false)]),
+      gameView({ hostId: 'p1', you: { playerId: 'p0', seat: 1, timeoutWarning: false } }, [
+        other(true),
+        me(false),
+      ]),
     );
     expect(button('Start game')).toBeUndefined();
     expect(button('Lock')).toBeUndefined();

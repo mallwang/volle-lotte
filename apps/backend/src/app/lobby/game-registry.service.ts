@@ -35,8 +35,8 @@ export class GameRegistryService implements OnModuleDestroy {
     return this.rooms.get(id);
   }
 
-  list(): GameSummary[] {
-    return [...this.rooms.values()].map((r) => r.summary());
+  list(forPlayer?: string): GameSummary[] {
+    return [...this.rooms.values()].map((r) => r.summary(forPlayer));
   }
 
   onModuleDestroy(): void {

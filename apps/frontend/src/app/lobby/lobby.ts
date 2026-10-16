@@ -35,6 +35,9 @@ import { TranslatePipe } from '../core/translate.pipe';
     @if (socket.games().length === 0) {
       <p class="vl-empty"><i class="pi pi-inbox" aria-hidden="true"></i> {{ 'lobby.empty' | t }}</p>
     }
+    @if (error() && !selectedGame()) {
+      <p-message severity="error" role="alert">{{ error()?.() }}</p-message>
+    }
     <ul class="vl-cards">
       @for (g of socket.games(); track g.id) {
         <li>
@@ -53,14 +56,24 @@ import { TranslatePipe } from '../core/translate.pipe';
                 [icon]="g.seatsUsed < g.seatsTotal ? 'pi pi-user-plus' : 'pi pi-ban'"
                 [severity]="g.seatsUsed < g.seatsTotal ? 'success' : 'secondary'"
               />
-              <i
-                class="pi pi-lock"
-                role="img"
-                [attr.aria-label]="'lobby.passwordProtected' | t"
-              ></i>
+              @if (g.protected) {
+                <i
+                  class="pi pi-lock"
+                  role="img"
+                  [attr.aria-label]="'lobby.passwordProtected' | t"
+                ></i>
+              } @else {
+                <p-tag [value]="'lobby.open' | t" icon="pi pi-lock-open" severity="success" />
+              }
             </p>
-            @if (g.phase === 'lobby') {
-              <p-button [label]="'lobby.join' | t" (onClick)="open(g.id, $event)" />
+            @if (g.banned) {
+              <p-message severity="error" role="alert">{{ 'error.banned' | t }}</p-message>
+            } @else if (g.phase === 'lobby') {
+              @if (g.seatsUsed < g.seatsTotal) {
+                <p-button [label]="'lobby.join' | t" (onClick)="open(g, $event)" />
+              }
+            } @else if (g.rejoinable) {
+              <p-button [label]="'lobby.rejoin' | t" (onClick)="rejoin(g)" />
             } @else {
               <p-tag [value]="'lobby.running' | t" icon="pi pi-play" severity="info" />
             }
@@ -120,10 +133,12 @@ export class Lobby {
     inject(DestroyRef).onDestroy(() => clearInterval(this.timer));
   }
 
-  protected open(id: string, event: Event): void {
+  /** Open games are joined with one tap, protected ones ask for the password first. */
+  protected open(g: GameSummary, event: Event): void {
     this.trigger = (event.target as HTMLElement).closest('button') ?? undefined;
     this.error.set(null);
-    this.selected.set(id);
+    if (g.protected) this.selected.set(g.id);
+    else void this.join(g);
   }
 
   protected close(): void {
@@ -141,6 +156,12 @@ export class Lobby {
       this.error.set(() => errorMessage(ack, this.i18n));
       if (ack.reason === 'locked') this.lock(Math.ceil((ack.retryAfterMs ?? 0) / 1000));
     }
+  }
+
+  protected async rejoin(g: GameSummary): Promise<void> {
+    const ack = await this.socket.rejoin(g.id);
+    if (ack.ok) await this.router.navigate(['/game', g.id]);
+    else this.error.set(() => errorMessage(ack, this.i18n));
   }
 
   private lock(seconds: number): void {

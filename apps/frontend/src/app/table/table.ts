@@ -3,6 +3,8 @@ import { Component, computed, effect, inject, signal } from '@angular/core';
 import type { Action, GameView, LogEntry } from 'game-rules';
 import { ButtonModule } from 'primeng/button';
 import { MessageService } from 'primeng/api';
+import { DialogModule } from 'primeng/dialog';
+import { MessageModule } from 'primeng/message';
 import { DicePrefs } from '../core/dice-prefs';
 import { DiceRollService } from '../core/dice-roll';
 import { errorMessage } from '../core/error-message';
@@ -14,8 +16,8 @@ import { CardTile } from '../shared/card-tile';
 import { DiceTile } from '../shared/dice-tile';
 import { DieFace } from '../shared/die-face';
 import { PlayerTile } from '../shared/player-tile';
-import { DisconnectBanner } from './disconnect-banner';
 import { SettingsDialog } from './settings-dialog';
+import { TurnTimer } from './turn-timer';
 
 /** Log events shown as a toast to every player, by severity (FR-010, FR-014). */
 const ANNOUNCED: Record<string, 'info' | 'warn' | 'success'> = {
@@ -29,6 +31,9 @@ const ANNOUNCED: Record<string, 'info' | 'warn' | 'success'> = {
   left: 'info',
   disconnected: 'warn',
   reconnected: 'info',
+  timedOut: 'warn',
+  replaced: 'warn',
+  rejoined: 'info',
 };
 
 /** How long a bust stays on the table before the next player's turn starts. */
@@ -40,12 +45,14 @@ const BUST_MS = 5000;
     ButtonModule,
     CardTile,
     DiceTile,
+    DialogModule,
     DieFace,
-    DisconnectBanner,
+    MessageModule,
     NgTemplateOutlet,
     PlayerTile,
     SettingsDialog,
     TranslatePipe,
+    TurnTimer,
   ],
   template: `
     @if (socket.game(); as view) {
@@ -57,11 +64,11 @@ const BUST_MS = 5000;
           [text]="true"
           severity="secondary"
           [ariaLabel]="'settings.open' | t"
+          [disabled]="removed()"
           (onClick)="settingsOpen.set(true)"
         />
       </div>
       @if (view.game; as state) {
-        <app-disconnect-banner [game]="view" />
         <div class="vl-table">
           <section [attr.aria-label]="'table.table' | t">
             <p>
@@ -80,6 +87,19 @@ const BUST_MS = 5000;
                         }
                 }}
               </p>
+              @if (view.turnDeadline; as d) {
+                @if (!roll.rolling() && !bust()) {
+                  <app-turn-timer [at]="d.at" />
+                }
+              }
+              @if (computerTurn()) {
+                <p role="status">
+                  <i class="pi pi-hourglass pi-spin"></i> {{ 'table.thinking' | t }}
+                </p>
+              }
+              @if (view.you.timeoutWarning) {
+                <p-message severity="warn" role="alert">{{ 'turn.warning' | t }}</p-message>
+              }
               <ng-template #act let-a>
                 <div class="vl-action">
                   <button
@@ -199,7 +219,43 @@ const BUST_MS = 5000;
         </div>
       }
       <app-settings-dialog [(visible)]="settingsOpen" />
-      <p-button [label]="'game.leave' | t" severity="secondary" (onClick)="socket.leave()" />
+      <p-button
+        [label]="'game.leave' | t"
+        severity="secondary"
+        [disabled]="removed()"
+        (onClick)="leaveOpen.set(true)"
+      />
+      <p-dialog
+        [header]="'removed.title' | t"
+        [style]="{ width: '28rem', maxWidth: '95vw' }"
+        [visible]="removed()"
+        [modal]="true"
+        [closable]="false"
+        [closeOnEscape]="false"
+        [draggable]="false"
+      >
+        <p>{{ 'removed.body' | t }}</p>
+        <div class="vl-actions">
+          <p-button [label]="'removed.confirm' | t" (onClick)="socket.leave()" />
+        </div>
+      </p-dialog>
+      <p-dialog
+        [header]="'leave.title' | t"
+        [style]="{ width: '28rem', maxWidth: '95vw' }"
+        [(visible)]="leaveOpen"
+        [modal]="true"
+        [draggable]="false"
+      >
+        <p>{{ 'leave.body' | t }}</p>
+        <div class="vl-actions">
+          <p-button
+            [label]="'leave.cancel' | t"
+            severity="secondary"
+            (onClick)="leaveOpen.set(false)"
+          />
+          <p-button [label]="'leave.confirm' | t" severity="danger" (onClick)="socket.leave()" />
+        </div>
+      </p-dialog>
     }
   `,
 })
@@ -215,6 +271,9 @@ export class Table {
   protected readonly roll = inject(DiceRollService);
   private readonly prefs = inject(DicePrefs);
   protected readonly settingsOpen = signal(false);
+  protected readonly leaveOpen = signal(false);
+  /** A computer took over my seat (timeouts); nothing here is playable anymore. */
+  protected readonly removed = computed(() => (this.socket.game()?.you.seat ?? 0) < 0);
   protected readonly BUST_MS = BUST_MS;
   /** Bust notice: keeps the busting throw visible until the next player takes over. */
   protected readonly bust = signal<{ dice: readonly number[]; text: string } | null>(null);
@@ -265,10 +324,10 @@ export class Table {
     const g = this.socket.game();
     return !!g?.game && g.seats[this.seats()[g.game.current]]?.state === 'computer';
   });
-  /** It is my turn and the game is not paused. */
+  /** It is my turn. */
   protected readonly mine = computed(() => {
     const g = this.socket.game();
-    if (!g?.game || g.pending.length > 0 || this.bust()) return false;
+    if (!g?.game || this.bust() || this.removed()) return false;
     return this.seats()[g.game.current] === g.you.seat;
   });
 

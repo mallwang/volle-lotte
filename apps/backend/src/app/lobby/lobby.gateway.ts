@@ -33,6 +33,8 @@ const isInt = (x: unknown, min: number, max: number): x is number =>
   Number.isInteger(x) && (x as number) >= min && (x as number) <= max;
 const isPassword = (x: unknown): x is string =>
   typeof x === 'string' && x.length >= 4 && x.length <= 64;
+/** An empty password means an open game. */
+const isOptionalPassword = (x: unknown): x is string => x === '' || isPassword(x);
 const isDifficulty = (x: unknown): x is Difficulty | undefined =>
   x === undefined || DIFFICULTIES.has(x as string);
 const isAction = (x: unknown): x is Action =>
@@ -94,6 +96,9 @@ export class LobbyGateway implements OnGatewayDisconnect {
       room.setConnected(session.playerId, true);
       game = toView(room, session.playerId);
     } else {
+      // removed by the host while offline: tell them now
+      if (room?.banned.has(session.playerId))
+        this.emitTo(client.id, 'game:closed', { reason: 'banned' });
       session.gameId = undefined;
       void client.join(LOBBY);
     }
@@ -109,7 +114,8 @@ export class LobbyGateway implements OnGatewayDisconnect {
 
   @SubscribeMessage('lobby:list')
   list(@ConnectedSocket() client: Socket): Ack<Intents['lobby:list'][1]> {
-    return this.session(client) ? { ok: true, games: this.registry.list() } : bad('noSession');
+    const session = this.session(client);
+    return session ? { ok: true, games: this.registry.list(session.playerId) } : bad('noSession');
   }
 
   @SubscribeMessage('game:create')
@@ -125,11 +131,11 @@ export class LobbyGateway implements OnGatewayDisconnect {
     if (name.length < 1 || name.length > 40 || !isInt(b['seats'], 2, 8) || !isObj(b['rules'])) {
       return bad('invalidRequest');
     }
-    if (!isPassword(b['password'])) return bad('invalidPassword');
+    if (!isOptionalPassword(b['password'])) return bad('invalidPassword');
     if (rulesError(b['rules']) !== null) return bad('invalidRequest');
     const room = this.registry.create({
       name,
-      passwordHash: hashPassword(b['password']),
+      passwordHash: b['password'] === '' ? '' : hashPassword(b['password']),
       rules: b['rules'] as unknown as Rules,
       seatCount: b['seats'],
       host: { playerId: session.playerId, nickname: session.nickname },
@@ -146,18 +152,42 @@ export class LobbyGateway implements OnGatewayDisconnect {
     if (this.roomOf(session)) return bad('alreadyInGame');
     if (!isObj(b) || typeof b['gameId'] !== 'string') return bad('invalidRequest');
     if (b['seat'] !== undefined && !isInt(b['seat'], 0, 7)) return bad('invalidRequest');
-    if (!isPassword(b['password'])) return bad('invalidPassword');
     const room = this.registry.get(b['gameId']);
     if (!room) return bad('gameNotFound');
-    const key = this.clientKey(client);
-    const wait = this.limiter.retryAfterMs(key, room.id);
-    if (wait > 0) return { ok: false, reason: 'locked', retryAfterMs: wait };
-    if (!verifyPassword(b['password'], room.passwordHash)) {
-      return { ok: false, reason: 'wrongPassword', attemptsLeft: this.limiter.fail(key, room.id) };
+    if (room.passwordHash !== '') {
+      if (!isPassword(b['password'])) return bad('invalidPassword');
+      const key = this.clientKey(client);
+      const wait = this.limiter.retryAfterMs(key, room.id);
+      if (wait > 0) return { ok: false, reason: 'locked', retryAfterMs: wait };
+      if (!verifyPassword(b['password'], room.passwordHash)) {
+        return {
+          ok: false,
+          reason: 'wrongPassword',
+          attemptsLeft: this.limiter.fail(key, room.id),
+        };
+      }
+      this.limiter.succeed(key, room.id);
     }
-    this.limiter.succeed(key, room.id);
     const joined = room.join(session.playerId, session.nickname, b['seat'] as number | undefined);
     if (!joined.ok) return done(joined) as Ack<never>;
+    this.enter(client, session, room);
+    this.pushLobby();
+    return { ok: true, game: toView(room, session.playerId) };
+  }
+
+  @SubscribeMessage('game:rejoin')
+  rejoin(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() b: unknown,
+  ): Ack<Intents['game:rejoin'][1]> {
+    const session = this.session(client);
+    if (!session) return bad('noSession');
+    if (this.roomOf(session)) return bad('alreadyInGame');
+    if (!isObj(b) || typeof b['gameId'] !== 'string') return bad('invalidRequest');
+    const room = this.registry.get(b['gameId']);
+    if (!room) return bad('gameNotFound');
+    const res = room.rejoin(session.playerId);
+    if (!res.ok) return res;
     this.enter(client, session, room);
     this.pushLobby();
     return { ok: true, game: toView(room, session.playerId) };
@@ -194,6 +224,16 @@ export class LobbyGateway implements OnGatewayDisconnect {
     );
   }
 
+  @SubscribeMessage('seat:remove')
+  removeSeat(@ConnectedSocket() client: Socket, @MessageBody() b: unknown): Ack {
+    if (!isObj(b) || !isInt(b['seat'], 0, 7))
+      return this.session(client) ? bad('invalidRequest') : bad('noSession');
+    const seat = b['seat'];
+    return this.inRoom(client, (room, session) =>
+      this.removed(room.removeSeat(session.playerId, seat)),
+    );
+  }
+
   @SubscribeMessage('seat:ready')
   ready(@ConnectedSocket() client: Socket, @MessageBody() b: unknown): Ack {
     if (!isObj(b) || typeof b['ready'] !== 'boolean')
@@ -205,26 +245,6 @@ export class LobbyGateway implements OnGatewayDisconnect {
   @SubscribeMessage('game:start')
   startGame(@ConnectedSocket() client: Socket): Ack {
     return this.inRoom(client, (room, session) => room.start(session.playerId));
-  }
-
-  @SubscribeMessage('host:decide')
-  decide(@ConnectedSocket() client: Socket, @MessageBody() b: unknown): Ack {
-    if (
-      !isObj(b) ||
-      !isInt(b['seat'], 0, 7) ||
-      !['computer', 'free'].includes(b['decision'] as string) ||
-      !isDifficulty(b['difficulty'])
-    ) {
-      return this.session(client) ? bad('invalidRequest') : bad('noSession');
-    }
-    const { seat, decision, difficulty } = b as {
-      seat: number;
-      decision: 'computer' | 'free';
-      difficulty?: Difficulty;
-    };
-    return this.inRoom(client, (room, session) =>
-      this.removed(room.decide(session.playerId, seat, decision, difficulty)),
-    );
   }
 
   @SubscribeMessage('turn:action')
@@ -274,9 +294,10 @@ export class LobbyGateway implements OnGatewayDisconnect {
   private removed(res: Res<{ removed?: string }>): Res<object> {
     if (res.ok && res.removed) {
       const gone = this.sessions.byPlayerId(res.removed);
-      if (gone) {
+      // an offline player keeps the game id so the ban is reported on return
+      if (gone?.socketId) {
         this.exit(gone);
-        this.emitTo(gone.socketId, 'game:closed', { reason: 'removed' });
+        this.emitTo(gone.socketId, 'game:closed', { reason: 'banned' });
       }
     }
     return res;
@@ -291,7 +312,9 @@ export class LobbyGateway implements OnGatewayDisconnect {
     session.gameId = undefined;
     if (session.socketId) {
       void this.server.sockets.sockets.get(session.socketId)?.join(LOBBY);
-      this.emitTo(session.socketId, 'lobby:games', { games: this.registry.list() });
+      this.emitTo(session.socketId, 'lobby:games', {
+        games: this.registry.list(session.playerId),
+      });
     }
   }
 
@@ -310,9 +333,16 @@ export class LobbyGateway implements OnGatewayDisconnect {
   }
 
   private push(room: GameRoom, entries: LogEntry[]): void {
-    for (const human of room.humans()) {
-      const socketId = this.sessions.byPlayerId(human.playerId)?.socketId;
-      this.emitTo(socketId, 'game:state', { game: toView(room, human.playerId) });
+    // also players a computer took over from after timeouts: they get the notice to leave
+    const watchers = new Set(room.humans().map((h) => h.playerId));
+    for (const s of room.seats)
+      if (s.state === 'computer' && s.former) {
+        const id = s.former.playerId;
+        if (this.sessions.byPlayerId(id)?.gameId === room.id) watchers.add(id);
+      }
+    for (const playerId of watchers) {
+      const socketId = this.sessions.byPlayerId(playerId)?.socketId;
+      this.emitTo(socketId, 'game:state', { game: toView(room, playerId) });
       if (entries.length) this.emitTo(socketId, 'game:log', { entries });
     }
     const summary = JSON.stringify(room.summary());
@@ -323,7 +353,11 @@ export class LobbyGateway implements OnGatewayDisconnect {
   }
 
   private pushLobby(): void {
-    this.server.to(LOBBY).emit('lobby:games', { games: this.registry.list() });
+    // rejoinable differs per player, so every lobby socket gets its own list
+    for (const id of this.server.sockets.adapter.rooms.get(LOBBY) ?? []) {
+      const playerId = this.sessions.bySocketId(id)?.playerId;
+      this.emitTo(id, 'lobby:games', { games: this.registry.list(playerId) });
+    }
   }
 
   private closed(room: GameRoom, reason: 'cleanup' | 'empty'): void {

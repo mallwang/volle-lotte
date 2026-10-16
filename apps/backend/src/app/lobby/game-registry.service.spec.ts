@@ -1,5 +1,5 @@
 import { defaultRules } from 'game-rules';
-import { GameRegistryService, LOBBY_CLEANUP_MS, RUNNING_CLEANUP_MS } from './game-registry.service';
+import { GameRegistryService, LOBBY_CLEANUP_MS } from './game-registry.service';
 
 const make = (reg: GameRegistryService) =>
   reg.create({
@@ -42,7 +42,8 @@ describe('GameRegistryService', () => {
     expect(reg.get(room.id)).toBeUndefined();
   });
 
-  it('keeps a running game for 24 h', () => {
+  // ponytail: turn timers now play idle games out via computers, so the 24 h cleanup is only a safety net
+  it('keeps a running game while nobody is connected', () => {
     const reg = new GameRegistryService();
     const room = make(reg);
     room.join('p', 'Pia');
@@ -51,10 +52,8 @@ describe('GameRegistryService', () => {
     room.start('h');
     room.setConnected('h', false);
     room.setConnected('p', false);
-    jest.advanceTimersByTime(RUNNING_CLEANUP_MS - 1000);
+    jest.advanceTimersByTime(60_000);
     expect(reg.get(room.id)).toBe(room);
-    jest.advanceTimersByTime(1000);
-    expect(reg.get(room.id)).toBeUndefined();
   });
 
   it('closes an empty lobby', () => {
