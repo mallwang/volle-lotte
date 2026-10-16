@@ -30,17 +30,17 @@ Four server-side behaviour changes plus their UI: (1) games may be created witho
 
 ## Constitution Check
 
-| Principle                | Result               | Notes                                                                                                                                                                                                                                                                                                                                                             |
-| ------------------------ | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| I Server-authoritative   | Pass                 | Timers, auto-actions, ban, and rejoin identity are all decided on the server; the client only renders `turn.deadlineAt`.                                                                                                                                                                                                                                          |
-| II Pure rules engine     | Pass                 | Engine gets one pure function `skipTurn(state)`; no timers or I/O in `libs/game-rules`. Timer logic lives in `GameRoom`.                                                                                                                                                                                                                                          |
-| III Test coverage        | Pass                 | Tests listed under Testing; ≥ 80 % kept.                                                                                                                                                                                                                                                                                                                          |
-| IV One container, SQLite | Pass                 | No new service. `PROTOCOL_VERSION` 2 → 3 per the `protocolVersion` rule. Persistence not built yet; banned set / former player are plain room fields and will be persisted with the room when that lands.                                                                                                                                                         |
-| V Anonymous play         | **Amendment needed** | The constitution says games are created with a password. Optional password is a MINOR change (v1.1.0): "a game MAY be password-protected; open games are joinable by anyone in the lobby phase". Rejoin uses the existing anonymous session only (no account, no code), so the principle's spirit holds. Amend via `/speckit-constitution` before implementation. |
-| VI UX first              | Pass                 | `/speckit-ux-review` done; confirm modal for destructive leave, visible countdown, warning before the third timeout, announced rejoin.                                                                                                                                                                                                                            |
-| VII Simplicity           | Pass                 | Timeouts reuse existing actions (`draw`/`throw`/`bank`); bot takeover reuses the existing computer seat; the host-decision flow (`host:decide`, `pending`, disconnect banner) is deleted, a net removal.                                                                                                                                                          |
+| Principle                | Result | Notes                                                                                                                                                                                                     |
+| ------------------------ | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| I Server-authoritative   | Pass   | Timers, auto-actions, ban, and rejoin identity are all decided on the server; the client only renders `turn.deadlineAt`.                                                                                  |
+| II Pure rules engine     | Pass   | Engine gets one pure function `skipTurn(state)`; no timers or I/O in `libs/game-rules`. Timer logic lives in `GameRoom`.                                                                                  |
+| III Test coverage        | Pass   | Tests listed under Testing; ≥ 80 % kept.                                                                                                                                                                  |
+| IV One container, SQLite | Pass   | No new service. `PROTOCOL_VERSION` 2 → 3 per the `protocolVersion` rule. Persistence not built yet; banned set / former player are plain room fields and will be persisted with the room when that lands. |
+| V Anonymous play         | Pass   | Constitution amended to v1.1.0: a game MAY be password-protected, open games are joinable by anyone in the lobby phase. Rejoin uses the existing anonymous session only.                                  |
+| VI UX first              | Pass   | `/speckit-ux-review` done; confirm modal for destructive leave, visible countdown, warning before the third timeout, announced rejoin.                                                                    |
+| VII Simplicity           | Pass   | Timeouts reuse existing actions (`draw`/`throw`/`bank`); bot takeover reuses the existing computer seat; the host-decision flow (`host:decide`, `pending`, disconnect banner) is deleted, a net removal.  |
 
-Re-check after design: unchanged; only the Principle V amendment remains open.
+Re-check after design: all pass (Principle V amended in v1.1.0).
 
 ## Project Structure
 
@@ -60,7 +60,7 @@ specs/006-open-lobby-rejoin-timers/
 ### Source Code (repository root)
 
 ```text
-.specify/memory/constitution.md            # Principle V amendment (v1.1.0)
+.specify/memory/constitution.md            # Principle V amendment (v1.1.0, done)
 libs/game-rules/src/lib/
 ├── game.ts                                # skipTurn(state): pure, next player, no points
 └── protocol.ts                            # PROTOCOL_VERSION 3, seat/view/summary/intent changes, LogKinds
@@ -86,4 +86,4 @@ apps/frontend/src/app/
 
 ## Complexity Tracking
 
-No violations beyond the Principle V amendment (a documented MINOR change, not a complexity trade-off).
+No violations (the Principle V amendment is done, v1.1.0).

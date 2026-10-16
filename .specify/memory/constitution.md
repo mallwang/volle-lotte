@@ -41,10 +41,12 @@ persisted game returns to the game lobby, and all humans confirm "Ready" again. 
 reports a `protocolVersion`; the PWA activates an update only in the lobby or after a game,
 never mid-game.
 
-### V. Anonymous Play, Protected Lobbies
+### V. Anonymous Play, Optional Lobby Passwords
 
 Release 1 has no accounts. Players are identified by a nickname plus a server-issued token. A game
-is created with a password (stored hashed, join attempts rate-limited). Secrets and tokens MUST
+MAY be created with a password (stored hashed, join attempts rate-limited); a game without a
+password is open and joinable by anyone in the lobby phase. Rejoining a seat uses the anonymous
+session only (no account, no code). Secrets and tokens MUST
 NOT be logged or committed (secretlint runs on commit and in CI). Accounts and e-mail features are
 out of scope until a dedicated spec adds them.
 
@@ -96,4 +98,4 @@ All plans MUST include a Constitution Check against the Core Principles; unresol
 MUST be justified in Complexity Tracking or the plan MUST be revised. Reviewers treat this
 constitution as authoritative. Runtime guidance for agents lives in [CLAUDE.md](../../CLAUDE.md).
 
-**Version**: 1.0.0 | **Ratified**: 2026-10-15 | **Last Amended**: 2026-10-15
+**Version**: 1.1.0 | **Ratified**: 2026-10-15 | **Last Amended**: 2026-10-16

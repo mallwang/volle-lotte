@@ -30,7 +30,7 @@ Java quirks that stay: 350 minimum points (configurable), four-of-a-kind doublin
 ## Decisions
 
 - New repo next to Vaultfolio, **not** connected to GitHub yet, no commits so far.
-- No accounts in the first release: anonymous sessions. Nickname plus a server-issued token in `localStorage` (reconnect, host role). Lobby protected by a game password (hashed, rate-limited).
+- No accounts in the first release: anonymous sessions. Nickname plus a server-issued token in `localStorage` (reconnect, host role). Game password optional (hashed, rate-limited); open games are joinable by anyone in the lobby phase.
 - The server is authoritative (dice, deck, points, `crypto.randomInt`). The dice animation on the client is show only.
 - Realtime: Socket.IO via `@nestjs/websockets`.
 - One container: NestJS serves the Angular build via `@nestjs/serve-static` (API under `/api`, WebSocket under `/socket.io`, SPA fallback). One multi-stage Dockerfile, one port, volume `/data` for SQLite, healthcheck. Do not cache `index.html` and `ngsw.json`, cache hashed assets for long. The reverse proxy must allow WebSocket upgrades.
