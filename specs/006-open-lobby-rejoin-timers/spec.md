@@ -8,6 +8,15 @@
 
 **Input**: User description: "Open lobbies without password, rejoin of left games, leave warning modal and per-action turn timers."
 
+## Clarifications
+
+### Session 2026-10-16
+
+- Q: What happens after repeated timeouts of the same player? → A: After 3 consecutive timeouts (no own action in between) the player is replaced by a bot like on leave, with a visible warning beforehand; rejoin remains possible.
+- Q: Do turn timers keep running while a player is disconnected? → A: Yes. Timers keep running, automatic actions happen and count toward the 3 consecutive timeouts; the bot takes over at the latest when the 30 s grace period ends.
+- Q: How is "only that exact player" enforced for rejoin? → A: Only via the stored session in the same browser; without it there is no rejoin and the bot plays to the end.
+- Q: How long may a replaced player rejoin? → A: Any time while the game is running; the bot keeps playing until the rejoin, and score and state are kept.
+
 ## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Open games without a password (Priority: P1)
@@ -103,6 +112,9 @@ Timers start only after the dice roll animation has finished, so animation time 
 4. **Given** dice are still animating, **When** a roll has just happened, **Then** the countdown does not start until the animation ends.
 5. **Given** any active timer, **When** the player acts in time, **Then** the timer stops and restarts for the next phase.
 6. **Given** a computer player's turn, **When** it plays, **Then** no countdown is shown.
+7. **Given** a player has had 2 consecutive timeouts, **When** their next turn starts, **Then** a visible warning tells them that another timeout replaces them by a computer player.
+8. **Given** a player has had 3 consecutive timeouts, **When** the third expires, **Then** they are replaced by a computer player of random difficulty, a log entry explains why, and they can rejoin.
+9. **Given** a player with timeouts counted, **When** they perform any action themselves, **Then** the consecutive-timeout count resets to 0.
 
 ---
 
@@ -112,6 +124,8 @@ Timers start only after the dice roll animation has finished, so animation time 
 - A player is replaced by a bot while it is that seat's turn: the bot takes the pending action without losing the turn.
 - Two rejoin attempts (two tabs) for the same player: only one session holds the seat; the other is informed it was replaced.
 - Several players leave; all can rejoin their own seats independently.
+- A player is disconnected during their turn: the timer keeps running, automatic actions are applied and counted as timeouts; whichever comes first (third timeout or end of the 30 s grace period) hands the seat to a computer player.
+- The player's stored session is lost (cleared browser data, other device): no Rejoin is offered and the bot plays to the end of the game.
 - Timer expires at the same moment the player acts: exactly one action is applied.
 - The skipped player in a set-aside timeout scores nothing for the current turn.
 - Every human left and only bots remain: the game continues; existing cleanup of abandoned games still applies.
@@ -131,7 +145,7 @@ Timers start only after the dice roll animation has finished, so animation time 
 - **FR-008**: A player who left the game lobby voluntarily MUST be able to join the game again.
 - **FR-009**: Pressing "Leave game" in a running game MUST show a confirmation modal describing: replacement by a computer player of random difficulty, return to the lobby, and the possibility to rejoin.
 - **FR-010**: Confirming leave MUST replace the player by a computer player of random difficulty immediately, without a host decision.
-- **FR-011**: A player who left a running game or was replaced after connection loss MUST be able to rejoin their own seat via a button in the game list, and only that exact player.
+- **FR-011**: A player who left a running game or was replaced after connection loss MUST be able to rejoin their own seat via a button in the game list, and only that exact player, identified by their stored session in the same browser (no account, no rejoin code).
 - **FR-012**: On connection loss, the player MUST have 30 seconds to return before a bot takes over automatically; the host decision dialog for disconnected players is removed.
 - **FR-013**: On rejoin the computer player MUST stop acting for that seat, the player keeps their score and state, and the game log MUST contain a message about the return.
 - **FR-014**: All players MUST be able to clearly see that a rejoined player is back and no longer computer-controlled (seat indicator and a transient notification).
@@ -139,6 +153,8 @@ Timers start only after the dice roll animation has finished, so animation time 
 - **FR-016**: The server MUST enforce a 15 s limit for set-aside selection; on expiry the player skips and the next player is up.
 - **FR-017**: The server MUST enforce a 15 s limit for secure points / continue rolling; on expiry the points are secured automatically.
 - **FR-018**: Timers MUST start after the dice roll animation has finished and MUST be visible to all players as a countdown for the active human player.
+- **FR-018a**: After 3 consecutive timeouts of the same player (no own action in between) the system MUST replace them by a computer player as on leave, warn them visibly before the third, and keep rejoin possible.
+- **FR-018b**: Turn timers MUST keep running while the active player is disconnected; resulting automatic actions count as timeouts for FR-018a.
 - **FR-019**: Automatic actions and skips MUST appear in the game log as such.
 - **FR-020**: All new texts MUST be available in every supported language.
 
@@ -171,4 +187,5 @@ Timers start only after the dice roll animation has finished, so animation time 
 - Timers apply to human players only; the animation durations in use today (up to about 3 s per roll) are the basis for starting the countdown.
 - Timer lengths (10 s / 15 s / 15 s) are fixed, not host-configurable.
 - A rejoin is possible while the game is running and the seat is still held by the bot that replaced the player.
-- Open points to confirm in clarification: behavior when a roll results in a bust during the timer, whether a countdown is shown to spectators, and whether timer-skips repeated several times should convert a player to a bot.
+- A roll that ends in a bust ends the turn without a decision, so no secure/continue timer starts; the next player's timer starts after the bust is shown.
+- Countdowns are shown to all players at the table (there are no separate spectators).
