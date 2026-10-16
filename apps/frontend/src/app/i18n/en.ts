@@ -107,7 +107,7 @@ export const en = {
   'player.computer': 'Computer',
 
   'table.table': 'Table',
-  'table.deck': 'Deck: {size} cards. Target {target}.',
+  'table.target': 'Target {target}.',
   'table.active': 'Active: {name}. Phase: {phase}. Carried {carried}, run {run}.',
   'table.phase.draw': 'draw',
   'table.phase.throw': 'throw',
@@ -153,6 +153,13 @@ export const en = {
   'player.active': 'Active',
   'player.offline': 'Offline',
   'player.score': 'Score: {score}',
+  'player.you': 'You',
+  'pile.level.many': 'many',
+  'pile.level.medium': 'medium',
+  'pile.level.few': 'few',
+  'pile.level.empty': 'empty',
+  'pile.draw': 'Draw pile: {size} cards ({level})',
+  'pile.discard': 'Discard pile: {count} cards',
 
   'result.title': 'Result',
   'result.rank': 'Rank {rank}',

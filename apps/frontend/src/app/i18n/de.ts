@@ -110,7 +110,7 @@ export const de: Record<keyof typeof en, string> = {
   'player.computer': 'Computer',
 
   'table.table': 'Tisch',
-  'table.deck': 'Stapel: {size} Karten. Ziel {target}.',
+  'table.target': 'Ziel {target}.',
   'table.active': 'Am Zug: {name}. Phase: {phase}. Mitgenommen {carried}, Serie {run}.',
   'table.phase.draw': 'Ziehen',
   'table.phase.throw': 'Würfeln',
@@ -156,6 +156,13 @@ export const de: Record<keyof typeof en, string> = {
   'player.active': 'Am Zug',
   'player.offline': 'Offline',
   'player.score': 'Punkte: {score}',
+  'player.you': 'Du',
+  'pile.level.many': 'viele',
+  'pile.level.medium': 'mittel',
+  'pile.level.few': 'wenige',
+  'pile.level.empty': 'leer',
+  'pile.draw': 'Nachziehstapel: {size} Karten ({level})',
+  'pile.discard': 'Ablagestapel: {count} Karten',
 
   'result.title': 'Ergebnis',
   'result.rank': 'Platz {rank}',

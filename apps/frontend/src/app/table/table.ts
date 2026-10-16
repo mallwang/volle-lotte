@@ -12,12 +12,15 @@ import { logText, playerSeats, seatName } from '../core/game-view';
 import { I18nService } from '../core/i18n.service';
 import { SocketService } from '../core/socket.service';
 import { TranslatePipe } from '../core/translate.pipe';
-import { CardTile } from '../shared/card-tile';
+import { GameCard } from '../shared/game-card';
 import { DiceTile } from '../shared/dice-tile';
 import { DieFace } from '../shared/die-face';
-import { PlayerTile } from '../shared/player-tile';
+import { playedCards, seatViews, totalCards } from '../core/table-view';
+import { CardDeck } from './card-deck';
+import { DiscardPile } from './discard-pile';
+import { PlayerSeat } from './player-seat';
+import { TableLayout } from './table-layout';
 import { SettingsDialog } from './settings-dialog';
-import { TurnTimer } from './turn-timer';
 
 /** Log events shown as a toast to every player, by severity (FR-010, FR-014). */
 const ANNOUNCED: Record<string, 'info' | 'warn' | 'success'> = {
@@ -43,16 +46,18 @@ const BUST_MS = 5000;
   selector: 'app-table',
   imports: [
     ButtonModule,
-    CardTile,
+    GameCard,
+    CardDeck,
+    DiscardPile,
     DiceTile,
     DialogModule,
     DieFace,
     MessageModule,
     NgTemplateOutlet,
-    PlayerTile,
+    PlayerSeat,
+    TableLayout,
     SettingsDialog,
     TranslatePipe,
-    TurnTimer,
   ],
   template: `
     @if (socket.game(); as view) {
@@ -71,9 +76,31 @@ const BUST_MS = 5000;
       @if (view.game; as state) {
         <div class="vl-table">
           <section [attr.aria-label]="'table.table' | t">
-            <p>
-              {{ 'table.deck' | t: { size: state.deckSize, target: state.rules.targetScore } }}
-            </p>
+            <app-table-layout [label]="'table.players' | t">
+              @for (p of tableSeats(); track $index) {
+                <li seat [class]="'vl-area-' + p.area">
+                  <app-player-seat
+                    [name]="p.name"
+                    [score]="p.score"
+                    [computer]="p.computer"
+                    [online]="p.online"
+                    [active]="p.active"
+                    [you]="p.you"
+                    [deadlineAt]="p.active ? deadlineAt() : null"
+                  />
+                </li>
+              }
+              @if (state.turn; as turn) {
+                <div class="vl-centre-row">
+                  <app-card-deck [size]="state.deckSize" [total]="totalCards(state.rules)" />
+                  <app-game-card [card]="turn.card ?? null" />
+                  <app-discard-pile
+                    [played]="playedCards(totalCards(state.rules), state.deckSize, !!turn.card)"
+                  />
+                </div>
+              }
+            </app-table-layout>
+            <p>{{ 'table.target' | t: { target: state.rules.targetScore } }}</p>
             @if (state.turn; as turn) {
               <p>
                 {{
@@ -87,11 +114,6 @@ const BUST_MS = 5000;
                         }
                 }}
               </p>
-              @if (view.turnDeadline; as d) {
-                @if (!roll.rolling() && !bust()) {
-                  <app-turn-timer [at]="d.at" />
-                }
-              }
               @if (computerTurn()) {
                 <p role="status">
                   <i class="pi pi-hourglass pi-spin"></i> {{ 'table.thinking' | t }}
@@ -114,10 +136,7 @@ const BUST_MS = 5000;
                   <small [id]="'reason-' + a.id">{{ a.reason }}</small>
                 </div>
               </ng-template>
-              <div class="vl-card-row">
-                <ng-container *ngTemplateOutlet="act; context: { $implicit: action('draw') }" />
-                <app-card-tile [card]="turn.card ?? null" />
-              </div>
+              <ng-container *ngTemplateOutlet="act; context: { $implicit: action('draw') }" />
               <div class="vl-play">
                 <div>
                   <div class="vl-dice" role="group" [attr.aria-label]="'table.dice' | t">
@@ -195,21 +214,7 @@ const BUST_MS = 5000;
               </div>
             }
           </section>
-          <section [attr.aria-label]="'table.players' | t">
-            <h3>{{ 'table.players' | t }}</h3>
-            <ul class="vl-players">
-              @for (p of state.players; track $index) {
-                <li>
-                  <app-player-tile
-                    [name]="p.name"
-                    [score]="p.score"
-                    [active]="$index === state.current"
-                    [online]="view.seats[seats()[$index]]?.connected !== false"
-                    [computer]="view.seats[seats()[$index]]?.state === 'computer'"
-                  />
-                </li>
-              }
-            </ul>
+          <section [attr.aria-label]="'table.log' | t">
             <h3>{{ 'table.log' | t }}</h3>
             <ol class="vl-log" role="log" aria-live="polite">
               @for (e of newestFirst(); track e) {
@@ -337,6 +342,16 @@ export class Table {
     }
     return null;
   });
+  protected readonly totalCards = totalCards;
+  protected readonly playedCards = playedCards;
+  protected readonly tableSeats = computed(() => {
+    const g = this.socket.game();
+    return g ? seatViews(g) : [];
+  });
+  /** Turn timer of the active seat; hidden while dice roll or a bust is shown. */
+  protected readonly deadlineAt = computed(() =>
+    this.roll.rolling() || this.bust() ? null : (this.socket.game()?.turnDeadline?.at ?? null),
+  );
   protected readonly action = (id: string) => this.actions().find((a) => a.id === id);
   /** Log entries already processed; the server log keeps growing, so the length is a stable cursor. */
   private seen = this.socket.game()?.log.length ?? 0;

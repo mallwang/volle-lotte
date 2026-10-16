@@ -251,14 +251,6 @@ select,
   gap: 1rem;
   grid-template-columns: 1fr;
 }
-.vl-players {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 12rem), 1fr));
-  gap: 0.5rem;
-  padding: 0;
-  margin: 0;
-  list-style: none;
-}
 .vl-dice {
   min-height: 3.5rem;
   display: flex;
@@ -486,4 +478,204 @@ select,
   flex-wrap: nowrap;
   gap: 0.25rem;
   font-size: 1.5rem;
+}
+
+/* Table board: seats around an oval felt (3x3 grid) */
+.vl-board {
+  position: relative;
+  display: grid;
+  grid-template-columns: 9.5rem 1fr 9.5rem;
+  grid-template-rows: auto minmax(15rem, 1fr) auto;
+  grid-template-areas: 'tl t tr' 'l c r' 'bl b br';
+  gap: 0.5rem;
+  padding: 0.5rem;
+}
+.vl-felt {
+  position: absolute;
+  inset: 2.4rem 5.5rem;
+  border-radius: 50%;
+  background: var(--p-content-hover-background, var(--p-surface-100));
+  border: 2px solid var(--p-content-border-color);
+}
+.vl-seats {
+  display: contents;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.vl-seats > li {
+  display: grid;
+  position: relative;
+  z-index: 1;
+}
+.vl-area-tl {
+  grid-area: tl;
+}
+.vl-area-t {
+  grid-area: t;
+}
+.vl-area-tr {
+  grid-area: tr;
+}
+.vl-area-l {
+  grid-area: l;
+}
+.vl-area-r {
+  grid-area: r;
+}
+.vl-area-bl {
+  grid-area: bl;
+}
+.vl-area-b {
+  grid-area: b;
+}
+.vl-area-br {
+  grid-area: br;
+}
+.vl-centre {
+  grid-area: c;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+}
+.vl-pseat {
+  position: relative;
+  align-self: center;
+  justify-self: center;
+  width: 9.5rem;
+  padding: 0.45rem 0.6rem 0.55rem;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 0.6rem;
+  background: var(--p-content-background);
+  color: var(--p-text-color);
+  display: grid;
+  gap: 0.15rem;
+  overflow: hidden;
+}
+.vl-pseat-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+.vl-pseat strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.vl-pseat-score {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+.vl-pseat-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  min-height: 1.3rem;
+}
+.vl-pseat.me {
+  background: var(--vl-lavender);
+  color: var(--vl-on-lavender);
+  border-color: var(--vl-on-lavender);
+}
+.vl-pseat.cur {
+  border: 2px solid var(--p-primary-color);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--p-primary-color) 25%, transparent);
+}
+.vl-pseat.off {
+  opacity: 0.75;
+  border-style: dashed;
+}
+.vl-pseat-timer {
+  position: absolute;
+  inset: auto 0 0;
+}
+.vl-pseat-timer .vl-bust-timer {
+  margin: 0;
+  height: 5px;
+}
+
+/* Centre: cards and piles */
+.vl-gcard {
+  width: 8rem;
+  aspect-ratio: 2 / 3;
+  border-radius: 0.7rem;
+  border: 2px solid var(--p-primary-color);
+  background: var(--p-content-background);
+  color: var(--p-text-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.7rem 0.5rem;
+  text-align: center;
+}
+.vl-gcard.empty {
+  border-style: dashed;
+  border-color: var(--p-content-border-color);
+  color: var(--p-text-muted-color);
+  justify-content: center;
+}
+.vl-gcard .val {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--p-primary-color);
+  min-height: 2.4rem;
+}
+.vl-gcard .icn {
+  font-size: 2.4rem;
+}
+.vl-gcard .nm {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+.vl-pile {
+  position: relative;
+  width: 6rem;
+  height: 8.6rem;
+}
+.vl-pile .lay {
+  position: absolute;
+  inset: 0;
+  border-radius: 0.45rem;
+  background: var(--vl-lavender);
+  border: 1px solid var(--vl-on-lavender);
+}
+.vl-pile.draw .lay {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--vl-lavender) 0 6px,
+    var(--p-content-background) 6px 12px
+  );
+}
+.vl-pile.discard .lay {
+  background: var(--p-content-background);
+  border-color: var(--p-content-border-color);
+}
+.vl-pile.empty {
+  border: 2px dashed var(--p-content-border-color);
+  border-radius: 0.45rem;
+}
+.vl-pile-label {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 0.8rem;
+  color: var(--p-text-muted-color);
+}
+.vl-pile-label b {
+  color: var(--p-text-color);
+}
+.vl-centre-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding-bottom: 1.2rem;
 }

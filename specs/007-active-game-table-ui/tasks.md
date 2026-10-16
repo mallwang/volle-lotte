@@ -15,7 +15,7 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Read `specs/007-active-game-table-ui/design.md` and `mockup.html` and note the CSS (felt, grid areas, seat, pile, card) to port into `apps/frontend/src/styles.css`; read `app/table/table.ts`, `app/table/table.spec.ts`, `app/shared/player-tile.ts`, `app/shared/card-tile.ts`, `app/shared/tiles.spec.ts` to know the current template, state and tests (no file changes)
+- [x] T001 Read `specs/007-active-game-table-ui/design.md` and `mockup.html` and note the CSS (felt, grid areas, seat, pile, card) to port into `apps/frontend/src/styles.css`; read `app/table/table.ts`, `app/table/table.spec.ts`, `app/shared/player-tile.ts`, `app/shared/card-tile.ts`, `app/shared/tiles.spec.ts` to know the current template, state and tests (no file changes)
 
 ---
 
@@ -23,9 +23,9 @@
 
 **Purpose**: pure view-model helpers and shared i18n keys used by every story.
 
-- [ ] T002 [P] Create pure helpers in `app/core/table-view.ts` per data-model.md: `SeatArea`, `seatAreas(count)` (2 → b,t; 4 → b,l,t,r; 8 → b,bl,l,tl,t,tr,r,br; other counts = symmetric clockwise subsets, 1–8), `totalCards(rules)`, `playedCards(total, deckSize, hasActive)`, `PileLevel`, `pileLevel(deckSize, total)` (empty = 0; few ≤ 1/6; medium ≤ 1/2; else many), `discardLayers(played)` (`min(8, ceil(played/6))`), `layerTransform(i)`, plus `seatViews` that rotates players clockwise from `you.seat`
-- [ ] T003 [P] Create `app/core/table-view.spec.ts` (no TestBed): seat areas for every count 1–8 (no duplicates, starts at `b`, 8 = 3 top/3 bottom/1 left/1 right), rotation from any `you.seat`, pile level thresholds incl. 0 and after reshuffle, played clamp at 0, layers 0/1/8 cap, `layerTransform` determinism
-- [ ] T004 [P] Add new i18n keys to `app/i18n/en.ts` and `app/i18n/de.ts` (seat accessible name parts: you/active/offline/human/computer, "players" list label, pile levels many/medium/few/empty, draw/discard pile labels with counts, empty card slot); run the existing i18n parity spec
+- [x] T002 [P] Create pure helpers in `app/core/table-view.ts` per data-model.md: `SeatArea`, `seatAreas(count)` (2 → b,t; 4 → b,l,t,r; 8 → b,bl,l,tl,t,tr,r,br; other counts = symmetric clockwise subsets, 1–8), `totalCards(rules)`, `playedCards(total, deckSize, hasActive)`, `PileLevel`, `pileLevel(deckSize, total)` (empty = 0; few ≤ 1/6; medium ≤ 1/2; else many), `discardLayers(played)` (`min(8, ceil(played/6))`), `layerTransform(i)`, plus `seatViews` that rotates players clockwise from `you.seat`
+- [x] T003 [P] Create `app/core/table-view.spec.ts` (no TestBed): seat areas for every count 1–8 (no duplicates, starts at `b`, 8 = 3 top/3 bottom/1 left/1 right), rotation from any `you.seat`, pile level thresholds incl. 0 and after reshuffle, played clamp at 0, layers 0/1/8 cap, `layerTransform` determinism
+- [x] T004 [P] Add new i18n keys to `app/i18n/en.ts` and `app/i18n/de.ts` (seat accessible name parts: you/active/offline/human/computer, "players" list label, pile levels many/medium/few/empty, draw/discard pile labels with counts, empty card slot); run the existing i18n parity spec
 
 **Checkpoint**: helpers tested, keys present.
 
@@ -37,14 +37,14 @@
 
 **Independent Test**: games with 2, 4, 8 players: positions, own/active highlight, timer only in the active seat, offline marker.
 
-- [ ] T005 [P] [US1] Add board/felt/grid-area/seat styles (tokens only, no hard-coded colours, focus ring, not-colour-alone markers) to `apps/frontend/src/styles.css`
-- [ ] T006 [P] [US1] Create `app/table/player-seat.ts` (`PlayerSeat`: inputs `name`, `score`, `computer`, `online`, `active`, `you`, `deadlineAt?`; human/computer icon, truncated name with full name as title/accessible name, "you" and "active" labels/icons, offline state; embeds existing `TurnTimer` only when `deadlineAt` set; `aria-label` with name, score, kind, states)
-- [ ] T007 [P] [US1] Create `app/table/table-layout.ts` (`TableLayout`: input `areas`; content slots for seats (ordered list, DOM order = clockwise) and centre; oval felt; grid areas `tl t tr / l c r / bl b br`)
-- [ ] T008 [P] [US1] Create `app/table/player-seat.spec.ts` (renders name/score/icon, you+active distinguishable, offline, timer only when `deadlineAt`, accessible name)
-- [ ] T009 [P] [US1] Create `app/table/table-layout.spec.ts` (area class per seat for 2/4/8, projected centre content)
-- [ ] T010 [US1] Update `app/table/table.ts`: replace the player list and the textual active-player/target lines with `TableLayout` + `PlayerSeat` (use `seatViews`; keep target score visible; keep timer condition: hidden while rolling or showing a bust; announce active player via existing live region); remove the separate turn-timer placement
-- [ ] T011 [US1] Update `app/table/table.spec.ts` for the new seat markup (own seat first/bottom, active seat contains the timer, offline marker); keep all other cases green
-- [ ] T012 [US1] Delete `app/shared/player-tile.ts` and its cases in `app/shared/tiles.spec.ts` if nothing else uses it (grep first)
+- [x] T005 [P] [US1] Add board/felt/grid-area/seat styles (tokens only, no hard-coded colours, focus ring, not-colour-alone markers) to `apps/frontend/src/styles.css`
+- [x] T006 [P] [US1] Create `app/table/player-seat.ts` (`PlayerSeat`: inputs `name`, `score`, `computer`, `online`, `active`, `you`, `deadlineAt?`; human/computer icon, truncated name with full name as title/accessible name, "you" and "active" labels/icons, offline state; embeds existing `TurnTimer` only when `deadlineAt` set; `aria-label` with name, score, kind, states)
+- [x] T007 [P] [US1] Create `app/table/table-layout.ts` (`TableLayout`: input `areas`; content slots for seats (ordered list, DOM order = clockwise) and centre; oval felt; grid areas `tl t tr / l c r / bl b br`)
+- [x] T008 [P] [US1] Create `app/table/player-seat.spec.ts` (renders name/score/icon, you+active distinguishable, offline, timer only when `deadlineAt`, accessible name)
+- [x] T009 [P] [US1] Create `app/table/table-layout.spec.ts` (area class per seat for 2/4/8, projected centre content)
+- [x] T010 [US1] Update `app/table/table.ts`: replace the player list and the textual active-player/target lines with `TableLayout` + `PlayerSeat` (use `seatViews`; keep target score visible; keep timer condition: hidden while rolling or showing a bust; announce active player via existing live region); remove the separate turn-timer placement
+- [x] T011 [US1] Update `app/table/table.spec.ts` for the new seat markup (own seat first/bottom, active seat contains the timer, offline marker); keep all other cases green
+- [x] T012 [US1] Delete `app/shared/player-tile.ts` and its cases in `app/shared/tiles.spec.ts` if nothing else uses it (grep first)
 
 **Checkpoint**: US1 works alone with the old dice/log/card markup in the centre.
 
@@ -56,16 +56,16 @@
 
 **Independent Test**: play turns; draw pile count/level change, discard grows without jumping; theme/language switch updates the card.
 
-- [ ] T013 [P] [US2] Add card/pile/discard-layer styles to `apps/frontend/src/styles.css` (2:3 via `aspect-ratio`, tokens only, contrast pairs pass the existing contrast test, no new animation)
-- [ ] T014 [P] [US2] Create `app/shared/game-card.ts` (`GameCard`: input `card: CardType | null`; type icon (PrimeIcons), value text, localized name from `card.<type>`; empty slot when null; accessible name)
-- [ ] T015 [P] [US2] Create `app/table/card-deck.ts` (`CardDeck`: inputs `size`, `total`; layers by `pileLevel` (0/2/4/6), count always as text, accessible label with level)
-- [ ] T016 [P] [US2] Create `app/table/discard-pile.ts` (`DiscardPile`: input `played`; `discardLayers` + `layerTransform` for stable jitter; nothing when 0; accessible label with count)
-- [ ] T017 [P] [US2] Create `app/shared/game-card.spec.ts` (value, name per language, null → empty slot)
-- [ ] T018 [P] [US2] Create `app/table/card-deck.spec.ts` (count text, each level incl. empty)
-- [ ] T019 [P] [US2] Create `app/table/discard-pile.spec.ts` (0 → none, layer count grows and caps at 8, same transforms on re-render)
-- [ ] T020 [US2] Update `app/table/table.ts`: put `GameCard`, `CardDeck`, `DiscardPile` into the `TableLayout` centre slot; compute `total = totalCards(rules)` and `played = playedCards(...)` via `computed`; drop the textual deck line (count now in `CardDeck`)
-- [ ] T021 [US2] Update `app/table/table.spec.ts` (card shown after draw, deck count, discard grows, reshuffle refills deck / shrinks discard)
-- [ ] T022 [US2] Remove `app/shared/card-tile.ts` and its cases in `app/shared/tiles.spec.ts` if nothing else uses it (grep first)
+- [x] T013 [P] [US2] Add card/pile/discard-layer styles to `apps/frontend/src/styles.css` (2:3 via `aspect-ratio`, tokens only, contrast pairs pass the existing contrast test, no new animation)
+- [x] T014 [P] [US2] Create `app/shared/game-card.ts` (`GameCard`: input `card: CardType | null`; type icon (PrimeIcons), value text, localized name from `card.<type>`; empty slot when null; accessible name)
+- [x] T015 [P] [US2] Create `app/table/card-deck.ts` (`CardDeck`: inputs `size`, `total`; layers by `pileLevel` (0/2/4/6), count always as text, accessible label with level)
+- [x] T016 [P] [US2] Create `app/table/discard-pile.ts` (`DiscardPile`: input `played`; `discardLayers` + `layerTransform` for stable jitter; nothing when 0; accessible label with count)
+- [x] T017 [P] [US2] Create `app/shared/game-card.spec.ts` (value, name per language, null → empty slot)
+- [x] T018 [P] [US2] Create `app/table/card-deck.spec.ts` (count text, each level incl. empty)
+- [x] T019 [P] [US2] Create `app/table/discard-pile.spec.ts` (0 → none, layer count grows and caps at 8, same transforms on re-render)
+- [x] T020 [US2] Update `app/table/table.ts`: put `GameCard`, `CardDeck`, `DiscardPile` into the `TableLayout` centre slot; compute `total = totalCards(rules)` and `played = playedCards(...)` via `computed`; drop the textual deck line (count now in `CardDeck`)
+- [x] T021 [US2] Update `app/table/table.spec.ts` (card shown after draw, deck count, discard grows, reshuffle refills deck / shrinks discard)
+- [x] T022 [US2] Remove `app/shared/card-tile.ts` and its cases in `app/shared/tiles.spec.ts` if nothing else uses it (grep first)
 
 **Checkpoint**: US1 + US2 work; dice area and log still old markup.
 

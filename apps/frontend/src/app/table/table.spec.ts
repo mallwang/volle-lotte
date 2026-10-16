@@ -61,7 +61,9 @@ async function setup(current: number, over = {}) {
 describe('Table', () => {
   it('shows scores, deck size and offline tag', async () => {
     const { el } = await setup(0);
-    expect(el.textContent).toContain('Deck: 42');
+    expect(el.textContent).toContain('Target');
+    expect(el.querySelector('app-card-deck [aria-label^="Draw pile: 42 cards"]')).not.toBeNull();
+    expect(el.querySelector('app-discard-pile [aria-label^="Discard pile"]')).not.toBeNull();
     expect(el.textContent).toContain('Bob');
     expect(el.textContent).toContain('Offline');
     expect(el.querySelector('[aria-current=true]')?.textContent).toContain('Ann');
@@ -119,7 +121,16 @@ describe('Table', () => {
   it.each([2, 5, 8])('renders %i players', async (n) => {
     const players = Array.from({ length: n }, (_, i) => ({ name: `P${i}`, score: i }));
     const { el } = await setup(0, { game: { ...state(0), players } });
-    expect(el.querySelectorAll('app-player-tile')).toHaveLength(n);
+    expect(el.querySelectorAll('app-player-seat')).toHaveLength(n);
+  });
+
+  it('seats me first at the bottom and marks the offline seat', async () => {
+    const { el } = await setup(0);
+    const seats = [...el.querySelectorAll('ul.vl-seats > li')];
+    expect(seats.map((li) => li.className)).toEqual(['vl-area-b', 'vl-area-t']);
+    expect(seats[0].textContent).toContain('Ann');
+    expect(seats[0].textContent).toContain('You');
+    expect(seats[1].textContent).toContain('Offline');
   });
 
   it('has a polite, unfocusable log newest first', async () => {
@@ -301,7 +312,8 @@ describe('Table', () => {
     } as never);
     fixture.detectChanges();
     await fixture.whenStable();
-    expect(el.querySelector('app-turn-timer')).not.toBeNull();
+    expect(el.querySelector('[aria-current=true] app-turn-timer')).not.toBeNull();
+    expect(el.querySelectorAll('app-turn-timer')).toHaveLength(1);
     expect(el.textContent).toContain('One more and a computer takes over');
   });
 
