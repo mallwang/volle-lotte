@@ -234,6 +234,16 @@ describe('Table', () => {
     expect(el.textContent).toContain('One more and a computer takes over');
   });
 
+  it('asks for confirmation before leaving', async () => {
+    const { socket, button, fixture } = await setup(0);
+    button('Leave game')!.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(socket.leave).not.toHaveBeenCalled();
+    (document.body.querySelector('p-dialog button.p-button-danger') as HTMLButtonElement).click();
+    expect(socket.leave).toHaveBeenCalled();
+  });
+
   it('toasts a new turn-end event', async () => {
     const { socket, toasts, fixture } = await setup(0);
     const view = socket.game()!;

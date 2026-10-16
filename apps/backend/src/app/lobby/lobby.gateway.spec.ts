@@ -201,6 +201,11 @@ describe('game lobby and play', () => {
 
     expect(await p.send('game:leave')).toMatchObject({ ok: true });
     expect(await p.send('game:start')).toMatchObject({ reason: 'notInGame' });
+    // the leaver's seat is now a computer that remembers who it replaced
+    const after = await host.until('game:state', (s) =>
+      s.game.seats.some((x: Any) => x.former?.nickname === 'Lobbyguest'),
+    );
+    expect(after.game.seats.filter((x: Any) => x.state === 'human')).toHaveLength(1);
   });
 });
 

@@ -94,6 +94,11 @@ export const de: Record<keyof typeof en, string> = {
   'gameLobby.addComputer': 'Computer hinzufügen',
   'gameLobby.start': 'Spiel starten',
   'gameLobby.waiting': 'Warte darauf, dass {name} das Spiel startet.',
+  'leave.title': 'Spiel verlassen?',
+  'leave.body':
+    'Ein Computerspieler übernimmt deinen Platz. Du kannst aus der Lobby wieder beitreten, solange das Spiel läuft.',
+  'leave.cancel': 'Bleiben',
+  'leave.confirm': 'Verlassen',
   'game.leave': 'Spiel verlassen',
   'player.computer': 'Computer',
 

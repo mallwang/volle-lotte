@@ -92,6 +92,11 @@ export const en = {
   'gameLobby.addComputer': 'Add computer',
   'gameLobby.start': 'Start game',
   'gameLobby.waiting': 'Waiting for {name} to start the game.',
+  'leave.title': 'Leave the game?',
+  'leave.body':
+    'A computer player takes over your seat. You can rejoin from the lobby while the game is running.',
+  'leave.cancel': 'Stay',
+  'leave.confirm': 'Leave',
   'game.leave': 'Leave game',
   'player.computer': 'Computer',
 

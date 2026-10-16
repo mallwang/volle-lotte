@@ -3,6 +3,7 @@ import { Component, computed, effect, inject, signal } from '@angular/core';
 import type { Action, GameView, LogEntry } from 'game-rules';
 import { ButtonModule } from 'primeng/button';
 import { MessageService } from 'primeng/api';
+import { DialogModule } from 'primeng/dialog';
 import { MessageModule } from 'primeng/message';
 import { DicePrefs } from '../core/dice-prefs';
 import { DiceRollService } from '../core/dice-roll';
@@ -43,6 +44,7 @@ const BUST_MS = 5000;
     ButtonModule,
     CardTile,
     DiceTile,
+    DialogModule,
     DieFace,
     MessageModule,
     NgTemplateOutlet,
@@ -210,7 +212,24 @@ const BUST_MS = 5000;
         </div>
       }
       <app-settings-dialog [(visible)]="settingsOpen" />
-      <p-button [label]="'game.leave' | t" severity="secondary" (onClick)="socket.leave()" />
+      <p-button [label]="'game.leave' | t" severity="secondary" (onClick)="leaveOpen.set(true)" />
+      <p-dialog
+        [header]="'leave.title' | t"
+        [style]="{ width: '28rem', maxWidth: '95vw' }"
+        [(visible)]="leaveOpen"
+        [modal]="true"
+        [draggable]="false"
+      >
+        <p>{{ 'leave.body' | t }}</p>
+        <div class="vl-actions">
+          <p-button
+            [label]="'leave.cancel' | t"
+            severity="secondary"
+            (onClick)="leaveOpen.set(false)"
+          />
+          <p-button [label]="'leave.confirm' | t" severity="danger" (onClick)="socket.leave()" />
+        </div>
+      </p-dialog>
     }
   `,
 })
@@ -226,6 +245,7 @@ export class Table {
   protected readonly roll = inject(DiceRollService);
   private readonly prefs = inject(DicePrefs);
   protected readonly settingsOpen = signal(false);
+  protected readonly leaveOpen = signal(false);
   protected readonly BUST_MS = BUST_MS;
   /** Bust notice: keeps the busting throw visible until the next player takes over. */
   protected readonly bust = signal<{ dice: readonly number[]; text: string } | null>(null);

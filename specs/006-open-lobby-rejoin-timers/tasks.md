@@ -93,9 +93,9 @@
 
 **Independent Test**: Leave → modal → cancel (no change) → leave → confirm (bot plays next).
 
-- [ ] T022 [US3] `B/game-room.ts` + `B/lobby.gateway.ts`: `game:leave` in a running game calls `replaceByBot(seat, 'left')` and returns the player to the lobby (lobby phase behaviour unchanged); tests in `B/game-room.spec.ts` / `B/lobby.gateway.spec.ts` including bot taking the pending action on that seat's turn and log entry
-- [ ] T023 [US3] `F/table/table.ts`: Leave opens PrimeNG confirm Dialog (bot of random difficulty, back to lobby, can rejoin; Cancel / Confirm, ≥ 44 px targets); only confirm sends `game:leave`; update `F/table/table.spec.ts`
-- [ ] T024 [P] [US3] Add EN + DE texts for the leave modal and `replaced` log entries in `F/i18n/en.ts` and `F/i18n/de.ts`
+- [x] T022 [US3] `B/game-room.ts` + `B/lobby.gateway.ts`: `game:leave` in a running game calls `replaceByBot(seat, 'left')` and returns the player to the lobby (lobby phase behaviour unchanged); tests in `B/game-room.spec.ts` / `B/lobby.gateway.spec.ts` including bot taking the pending action on that seat's turn and log entry
+- [x] T023 [US3] `F/table/table.ts`: Leave opens PrimeNG confirm Dialog (bot of random difficulty, back to lobby, can rejoin; Cancel / Confirm, ≥ 44 px targets); only confirm sends `game:leave`; update `F/table/table.spec.ts`
+- [x] T024 [P] [US3] Add EN + DE texts for the leave modal and `replaced` log entries in `F/i18n/en.ts` and `F/i18n/de.ts`
 
 **Checkpoint**: US3 works independently.
 
