@@ -118,8 +118,8 @@
 
 ## Phase 8: Polish & Cross-Cutting
 
-- [ ] T029 [P] Update docs: `docs/rules.md` (timers, bot replacement), `docs/migration.md` (protocol v3, removed host decision), README if it mentions password or disconnect handling
-- [ ] T030 Run `npm run lint`, `npm run typecheck`, `npm run test`; confirm coverage ≥ 80 % for touched projects
+- [x] T029 [P] Update docs: `docs/rules.md` (timers, bot replacement), `docs/migration.md` (protocol v3, removed host decision), README if it mentions password or disconnect handling
+- [x] T030 Run `npm run lint`, `npm run typecheck`, `npm run test`; confirm coverage ≥ 80 % for touched projects
 - [ ] T031 Run the 9 scenarios of `specs/006-open-lobby-rejoin-timers/quickstart.md` manually (EN + DE, light/dark, phone width)
 
 ---
