@@ -8,6 +8,8 @@
 
 **Input**: User description: "Open lobbies without password, rejoin of left games, leave warning modal and per-action turn timers."
 
+**Design**: [design.md](design.md) (UX mockup: [mockup.html](mockup.html))
+
 ## Clarifications
 
 ### Session 2026-10-16
