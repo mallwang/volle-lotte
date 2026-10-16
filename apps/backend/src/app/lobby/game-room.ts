@@ -20,7 +20,11 @@ import {
 export const SEATS = 8;
 export const GRACE_MS = 60_000;
 export const LOG_CAP = 500;
-const COMPUTER_DELAY_MS: [number, number] = [700, 1400];
+/** Computer pacing: after a throw wait out the client roll (max) plus 3 s; otherwise 2 s (FR-013, FR-019). */
+const ROLL_MAX_MS = 5000;
+const ROLL_MAX_FAST_MS = 2500;
+const AFTER_ROLL_MS = 3000 + 250; // ponytail: fixed latency margin, the server cannot observe client animations
+const COMPUTER_PAUSE_MS = 2000;
 
 type Level = 'easy' | 'medium' | 'hard';
 
@@ -79,6 +83,9 @@ export class GameRoom {
   private readonly rng: RandomInt;
   /** Dice indices the active player has ticked but not yet confirmed; shown to the others. */
   preview: number[] = [];
+  /** Host setting: computer throws roll for 1–2.5 s instead of 2–5 s on every client. */
+  fastComputerDice = false;
+  private computerDelay = COMPUTER_PAUSE_MS;
   private fresh: LogEntry[] = [];
   private seatOfEngine: number[] = [];
   private readonly graceTimers = new Map<number, NodeJS.Timeout>();
@@ -265,6 +272,15 @@ export class GameRoom {
     return { ok: true };
   }
 
+  /** Host only, running game; changes how long clients show computer dice rolling. */
+  setSettings(playerId: string, fastComputerDice: boolean): Res {
+    if (playerId !== this.hostId) return fail('notHost');
+    if (this.phase === 'finished') return fail('notInGame');
+    this.fastComputerDice = fastComputerDice;
+    this.emit();
+    return { ok: true };
+  }
+
   private apply(action: Action): Res {
     const game = this.game as GameState;
     const seat = this.currentSeat();
@@ -272,6 +288,13 @@ export class GameRoom {
     if (!outcome.ok) return { ok: false, reason: 'rejected', engine: outcome.reason };
     this.game = outcome.state;
     this.preview = [];
+    const rollMax =
+      this.seats[seat]?.state === 'computer' && this.fastComputerDice
+        ? ROLL_MAX_FAST_MS
+        : ROLL_MAX_MS;
+    this.computerDelay = outcome.events.some((e) => e.type === 'thrown')
+      ? rollMax + AFTER_ROLL_MS
+      : COMPUTER_PAUSE_MS;
     for (const event of outcome.events) this.add('turn', seat, event);
     if (outcome.state.result) {
       this.phase = 'finished';
@@ -289,16 +312,26 @@ export class GameRoom {
   private scheduleComputer() {
     if (this.computerTimer || this.phase !== 'running' || !this.game) return;
     if (this.seats[this.currentSeat()]?.state !== 'computer') return;
-    const [min, max] = COMPUTER_DELAY_MS;
-    this.computerTimer = setTimeout(
-      () => {
-        this.computerTimer = undefined;
-        const seat = this.seats[this.currentSeat()];
-        if (this.phase !== 'running' || !this.game || seat?.state !== 'computer') return;
-        this.apply(chooseAction(this.game, seat.effective, this.rng));
-      },
-      randomInt(min, max + 1),
-    );
+    const stillMine = () => {
+      this.computerTimer = undefined;
+      const seat = this.seats[this.currentSeat()];
+      return this.phase === 'running' && this.game && seat?.state === 'computer' ? seat : undefined;
+    };
+    this.computerTimer = setTimeout(() => {
+      const seat = stillMine();
+      if (!seat || !this.game) return;
+      const action = chooseAction(this.game, seat.effective, this.rng);
+      if (action.type !== 'select') {
+        this.apply(action);
+        return;
+      }
+      // show the pick as a highlight for 2 s before it is applied; the timer is set first so emit() does not reschedule
+      this.preview = [...action.dice];
+      this.computerTimer = setTimeout(() => {
+        if (stillMine()) this.apply(action);
+      }, COMPUTER_PAUSE_MS);
+      this.emit();
+    }, this.computerDelay);
   }
 
   // ---- connection, leave, host decisions

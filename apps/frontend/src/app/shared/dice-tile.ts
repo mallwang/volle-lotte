@@ -1,9 +1,11 @@
 import { Component, computed, inject, input, output } from '@angular/core';
 import { I18nService } from '../core/i18n.service';
+import { DieFace } from './die-face';
 
-/** Replaceable placeholder for a die (FR-017): the later dice UI swaps only this component. */
+/** A die on the table: pip face inside a button. Selection is shown by lift, border and shadow, not colour alone. */
 @Component({
   selector: 'app-dice-tile',
+  imports: [DieFace],
   template: `
     <button
       type="button"
@@ -14,26 +16,48 @@ import { I18nService } from '../core/i18n.service';
       [disabled]="disabled()"
       (click)="toggled.emit()"
     >
-      {{ value() ?? '?' }}
-      @if (selected()) {
-        <span aria-hidden="true">&#10003;</span>
+      <app-die-face [value]="value()" [rolling]="rolling()" />
+      @if (computerPick()) {
+        <span class="vl-pick-badge" aria-hidden="true">🖥</span>
       }
     </button>
   `,
   styles: `
     .vl-die {
+      /* padding around the face gives a hit area of at least 44px */
       min-width: 44px;
       min-height: 44px;
-      font-size: 1.25rem;
-      font-weight: 600;
+      padding: 0.25rem;
+      font-size: 2rem;
+      line-height: 0;
+      border: 0;
+      background: none;
       border-radius: 0.5rem;
-      border: 2px solid var(--p-form-field-border-color);
-      background: var(--p-content-background);
-      color: var(--p-text-color);
+      transition: transform 0.1s;
+    }
+    .vl-die {
+      position: relative;
+    }
+    .vl-pick-badge {
+      position: absolute;
+      top: -0.4rem;
+      right: -0.4rem;
+      font-size: 0.9rem;
+      line-height: 1;
     }
     .vl-die-selected {
-      border-color: var(--p-primary-color);
-      background: var(--p-highlight-background);
+      transform: translateY(-5px);
+      filter: drop-shadow(0 4px 3px rgb(0 0 0 / 0.35));
+      outline: 3px solid var(--p-primary-color);
+    }
+    .vl-die:focus-visible {
+      outline: 3px solid var(--p-primary-color);
+      outline-offset: 2px;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .vl-die {
+        transition: none;
+      }
     }
   `,
 })
@@ -42,12 +66,16 @@ export class DiceTile {
   readonly value = input.required<number | null>();
   readonly selected = input(false);
   readonly disabled = input(false);
+  readonly rolling = input(false);
+  /** Selected by a computer player: adds a small badge. */
+  readonly computerPick = input(false);
   readonly toggled = output();
   private readonly i18n = inject(I18nService);
   protected readonly label = computed(() => {
     const value = this.value();
     if (value === null) return this.i18n.t('dice.notThrown');
     const state = this.i18n.t(this.selected() ? 'dice.selected' : 'dice.notSelected');
-    return this.i18n.t('dice.state', { value, state });
+    const text = this.i18n.t('dice.state', { value, state });
+    return this.computerPick() ? `${text}, ${this.i18n.t('dice.computerPick')}` : text;
   });
 }

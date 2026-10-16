@@ -1,6 +1,6 @@
 import type { Action, Event, GameState, RejectionReason, Rules } from './types.js';
 
-export const PROTOCOL_VERSION = 1;
+export const PROTOCOL_VERSION = 2;
 
 export type Difficulty = 'easy' | 'medium' | 'hard' | 'random';
 export type RoomPhase = 'lobby' | 'running' | 'finished';
@@ -87,6 +87,8 @@ export interface GameView {
   preview?: number[];
   pending: number[];
   graceEndsAt: Record<number, number>;
+  /** Host setting: computer dice roll for a shorter time. */
+  fastComputerDice: boolean;
   log: LogEntry[];
 }
 
@@ -123,6 +125,7 @@ export interface Intents {
   'host:decide': [{ seat: number; decision: 'computer' | 'free'; difficulty?: Difficulty }, object];
   'turn:action': [{ action: Action }, object];
   'turn:preview': [{ dice: number[] }, object];
+  'game:settings': [{ fastComputerDice: boolean }, object];
 }
 
 /** Server to client pushes: event name -> payload. */

@@ -1,7 +1,9 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
-import type { Action } from 'game-rules';
+import type { Action, GameView } from 'game-rules';
 import { ButtonModule } from 'primeng/button';
 import { MessageService } from 'primeng/api';
+import { DicePrefs } from '../core/dice-prefs';
+import { DiceRollService } from '../core/dice-roll';
 import { errorMessage } from '../core/error-message';
 import { logText, playerSeats } from '../core/game-view';
 import { I18nService } from '../core/i18n.service';
@@ -9,8 +11,10 @@ import { SocketService } from '../core/socket.service';
 import { TranslatePipe } from '../core/translate.pipe';
 import { CardTile } from '../shared/card-tile';
 import { DiceTile } from '../shared/dice-tile';
+import { DieFace } from '../shared/die-face';
 import { PlayerTile } from '../shared/player-tile';
 import { DisconnectBanner } from './disconnect-banner';
+import { SettingsDialog } from './settings-dialog';
 
 /** Log events shown as a toast to every player, by severity (FR-010, FR-014). */
 const ANNOUNCED: Record<string, 'info' | 'warn' | 'success'> = {
@@ -28,7 +32,16 @@ const ANNOUNCED: Record<string, 'info' | 'warn' | 'success'> = {
 
 @Component({
   selector: 'app-table',
-  imports: [ButtonModule, CardTile, DiceTile, DisconnectBanner, PlayerTile, TranslatePipe],
+  imports: [
+    ButtonModule,
+    CardTile,
+    DiceTile,
+    DieFace,
+    DisconnectBanner,
+    PlayerTile,
+    SettingsDialog,
+    TranslatePipe,
+  ],
   template: `
     @if (socket.game(); as view) {
       @if (view.game; as state) {
@@ -56,13 +69,22 @@ const ANNOUNCED: Record<string, 'info' | 'warn' | 'success'> = {
               <div class="vl-dice" role="group" [attr.aria-label]="'table.dice' | t">
                 @for (i of slots; track i) {
                   <app-dice-tile
-                    [value]="turn.dice[i] ?? null"
+                    [value]="roll.faceFor(i, turn.dice[i] ?? null)"
+                    [rolling]="roll.isRolling(i)"
                     [selected]="shown().includes(i)"
-                    [disabled]="i >= turn.dice.length || !mine() || turn.phase !== 'select'"
+                    [computerPick]="computerTurn() && shown().includes(i)"
+                    [disabled]="
+                      i >= turn.dice.length || !mine() || turn.phase !== 'select' || roll.rolling()
+                    "
                     (toggled)="toggle(i)"
                   />
                 }
               </div>
+              <p class="vl-sr-only vl-roll-status" role="status">
+                @if (roll.rolling()) {
+                  {{ 'dice.rolling' | t }}
+                }
+              </p>
               <div class="vl-turn-actions">
                 @for (a of actions(); track a.id) {
                   <div>
@@ -102,7 +124,11 @@ const ANNOUNCED: Record<string, 'info' | 'warn' | 'success'> = {
                 <li>
                   @for (part of parts(e); track $index) {
                     @if (part.die) {
-                      <span class="vl-log-die">{{ part.text }}</span>
+                      <span class="vl-log-die"
+                        ><app-die-face [value]="+part.text" /><span class="vl-sr-only">{{
+                          part.text
+                        }}</span></span
+                      >
                     } @else {
                       {{ part.text }}
                     }
@@ -113,6 +139,12 @@ const ANNOUNCED: Record<string, 'info' | 'warn' | 'success'> = {
           </section>
         </div>
       }
+      <p-button
+        [label]="'settings.open' | t"
+        severity="secondary"
+        (onClick)="settingsOpen.set(true)"
+      />
+      <app-settings-dialog [(visible)]="settingsOpen" />
       <p-button [label]="'game.leave' | t" severity="secondary" (onClick)="socket.leave()" />
     }
   `,
@@ -128,13 +160,24 @@ export class Table {
     this.mine() ? this.chosen() : (this.socket.game()?.preview ?? []),
   );
   private readonly messages = inject(MessageService);
-  /** Log entries already announced; the server log keeps growing, so the length is a stable cursor. */
+  protected readonly roll = inject(DiceRollService);
+  private readonly prefs = inject(DicePrefs);
+  protected readonly settingsOpen = signal(false);
+  /** Log entries already processed; the server log keeps growing, so the length is a stable cursor. */
   private seen = this.socket.game()?.log.length ?? 0;
+  /** Entries shown: a throw's entry stays hidden until its dice have stopped (FR-010). */
+  private readonly revealed = signal(this.seen);
   /** Newest entry on top, so nobody has to scroll to see what just happened. */
-  protected readonly newestFirst = computed(() => [...(this.socket.game()?.log ?? [])].reverse());
+  protected readonly newestFirst = computed(() =>
+    [...(this.socket.game()?.log ?? []).slice(0, this.revealed())].reverse(),
+  );
   protected readonly seats = computed(() => {
     const g = this.socket.game();
     return g ? playerSeats(g) : [];
+  });
+  protected readonly computerTurn = computed(() => {
+    const g = this.socket.game();
+    return !!g?.game && g.seats[this.seats()[g.game.current]]?.state === 'computer';
   });
   /** It is my turn and the game is not paused. */
   protected readonly mine = computed(() => {
@@ -149,6 +192,7 @@ export class Table {
     const t = (key: string) => this.i18n.t(key);
     const wait = (ok: boolean, why: string) => {
       if (!mine) return t('table.notYourTurn');
+      if (this.roll.rolling()) return t('dice.rolling');
       return ok ? '' : why;
     };
     return [
@@ -188,13 +232,29 @@ export class Table {
   constructor() {
     effect(() => {
       const g = this.socket.game();
-      if (!g) return;
-      for (const e of g.log.slice(this.seen)) {
-        const severity =
-          ANNOUNCED[e.kind === 'turn' && typeof e.data === 'object' ? e.data.type : e.kind];
+      if (!g || this.roll.rolling()) return;
+      // roll over: reveal what was held back, then continue with the rest
+      this.revealed.set(this.seen);
+      while (this.seen < g.log.length) {
+        const e = g.log[this.seen++];
+        const data = e.kind === 'turn' && typeof e.data === 'object' ? e.data : null;
+        if (data?.type === 'thrown') {
+          this.startRoll(g, data.dice.length);
+          if (this.roll.rolling()) return;
+        }
+        const severity = ANNOUNCED[data ? data.type : e.kind];
         if (severity) this.messages.add({ severity, detail: logText(g, e, this.i18n), life: 4000 });
       }
-      this.seen = g.log.length;
+      this.revealed.set(this.seen);
+    });
+  }
+
+  private startRoll(g: GameView, dice: number): void {
+    // ponytail: after a bust the current player is already the next one, so computerFast may be off
+    const seat = g.game ? this.seats()[g.game.current] : undefined;
+    this.roll.start(dice, {
+      computerFast: g.seats[seat ?? -1]?.state === 'computer' && g.fastComputerDice,
+      skip: this.prefs.skip(),
     });
   }
 

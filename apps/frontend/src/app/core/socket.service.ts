@@ -124,6 +124,10 @@ export class SocketService {
     return ack;
   }
 
+  settings(fastComputerDice: boolean) {
+    return this.send('game:settings', { fastComputerDice });
+  }
+
   async leave(): Promise<void> {
     const ack = await this.send('game:leave');
     if (ack.ok) {

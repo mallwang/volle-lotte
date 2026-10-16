@@ -23,7 +23,7 @@ class FakeSocket implements SocketLike {
   }
 }
 
-const started = { ok: true, token: 't1', playerId: 'p1', nickname: 'Ann', protocolVersion: 1 };
+const started = { ok: true, token: 't1', playerId: 'p1', nickname: 'Ann', protocolVersion: 2 };
 const game = { id: 'g1' };
 
 function setup(stored?: object) {
@@ -46,6 +46,15 @@ describe('SocketService', () => {
     expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!)).toEqual({
       token: 't1',
       nickname: 'Ann',
+    });
+  });
+
+  it('sends the host setting as game:settings', () => {
+    const { socket, service } = setup();
+    void service.settings(true);
+    expect(socket.sent).toContainEqual({
+      event: 'game:settings',
+      payload: { fastComputerDice: true },
     });
   });
 

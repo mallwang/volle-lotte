@@ -33,6 +33,13 @@ On your turn:
 3. **Select dice** - pick at least one scoring die (a 1, a 5 or three of a kind) and press **Set aside selected**.
 4. **Bank points** or throw again. A throw without a scoring die is a bust and the points of the turn are lost.
 
+Dice are drawn with pips. Every thrown die tumbles for 2-5 seconds and stops on the value the server threw; the log entry and notices for the throw appear once the last die has stopped, and actions stay locked until then. The computer's pick is highlighted (with a computer badge) for two seconds before it is applied. With reduced motion enabled in your system, dice do not tumble; they stay blank until they stop and "Dice are rolling…" is announced.
+
+Open **Settings** on the table to change:
+
+- **Skip dice animation** - only on your device; dice and log show immediately.
+- **Fast computer dice** - the host only, others see it read-only. Computer throws take 1-2.5 seconds.
+
 Buttons that are not available show the reason (for example "Not your turn"). The log lists what happened; players who lose their connection get 60 seconds to return before the host decides what happens to their seat.
 
 When a player reaches the target score, the result screen ranks everyone. **Back to lobby** returns to the games list.

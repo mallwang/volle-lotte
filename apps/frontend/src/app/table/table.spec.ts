@@ -13,6 +13,8 @@ const human = (id: string, name: string, connected = true): SeatView => ({
   connected,
 });
 
+const thrownLog = { kind: 'turn', seat: 1, data: { type: 'thrown', dice: [6, 4] } };
+
 const state = (current: number): GameStateView => ({
   version: 1,
   rules: defaultRules(),
@@ -144,6 +146,77 @@ describe('Table', () => {
       '3',
       '4',
     ]);
+  });
+
+  describe('rolling', () => {
+    const thrown = { kind: 'turn', seat: 0, data: { type: 'thrown', dice: [6, 4] } };
+    const logLen = (el: HTMLElement) => el.querySelectorAll('.vl-log li').length;
+    async function throwOne(skip = false) {
+      localStorage.setItem('vl-skip-dice', String(skip));
+      const t = await setup(0);
+      vi.useFakeTimers();
+      t.socket.game.set({ ...t.socket.game()!, log: [thrown] } as never);
+      t.fixture.detectChanges();
+      return t;
+    }
+    afterEach(() => {
+      vi.useRealTimers();
+      localStorage.removeItem('vl-skip-dice');
+    });
+
+    it('holds back the log and locks actions until the last die stops (FR-010)', async () => {
+      const { el, fixture, button } = await throwOne();
+      expect(logLen(el)).toBe(0);
+      expect(el.querySelector('.vl-roll-status')?.textContent).toContain('rolling');
+      expect(button('Throw')!.disabled).toBe(true);
+      vi.advanceTimersByTime(5000);
+      fixture.detectChanges();
+      expect(logLen(el)).toBe(1);
+      expect(el.querySelector('.vl-roll-status')?.textContent?.trim()).toBe('');
+    });
+
+    it('does not roll when animation is skipped', async () => {
+      const { el } = await throwOne(true);
+      expect(logLen(el)).toBe(1);
+    });
+
+    it('does not roll for history present at load (reload/reconnect)', async () => {
+      const { el } = await setup(0, { log: [thrown] });
+      expect(logLen(el)).toBe(1);
+      expect(el.querySelector('.vl-roll-status')?.textContent?.trim()).toBe('');
+    });
+  });
+
+  describe('computer turn', () => {
+    const computerTable = (over = {}) =>
+      setup(1, {
+        seats: [human('p0', 'Ann'), { state: 'computer' }, { state: 'open' }, { state: 'open' }],
+        ...over,
+      });
+
+    it('highlights the computer pick with a badge', async () => {
+      const { el } = await computerTable({ preview: [0, 2] });
+      expect(el.querySelectorAll('.vl-pick-badge')).toHaveLength(2);
+    });
+
+    it('shows no badge on a human turn', async () => {
+      const { el } = await setup(0);
+      expect(el.querySelectorAll('.vl-pick-badge')).toHaveLength(0);
+    });
+
+    it('rolls computer dice faster when the host enabled it', async () => {
+      const { socket, el, fixture } = await computerTable({ fastComputerDice: true });
+      vi.useFakeTimers();
+      localStorage.setItem('vl-skip-dice', 'false');
+      socket.game.set({ ...socket.game()!, log: [thrownLog] } as never);
+      fixture.detectChanges();
+      expect(el.querySelector('.vl-roll-status')?.textContent).toContain('rolling');
+      vi.advanceTimersByTime(2500);
+      fixture.detectChanges();
+      expect(el.querySelector('.vl-roll-status')?.textContent?.trim()).toBe('');
+      vi.useRealTimers();
+      localStorage.removeItem('vl-skip-dice');
+    });
   });
 
   it('toasts a new turn-end event', async () => {

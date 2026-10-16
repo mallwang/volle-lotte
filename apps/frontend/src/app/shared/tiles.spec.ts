@@ -20,6 +20,12 @@ describe('tiles', () => {
     expect(btn.getAttribute('aria-pressed')).toBe('true');
     expect(btn.getAttribute('aria-label')).toBe('Die 4, selected');
     expect(btn.disabled).toBe(true);
+    expect(btn.querySelectorAll('.pip')).toHaveLength(4);
+    expect(btn.classList.contains('vl-die-selected')).toBe(true);
+    expect(btn.textContent?.trim()).toBe('');
+    f.componentRef.setInput('value', null);
+    f.detectChanges();
+    expect(btn.querySelectorAll('.pip')).toHaveLength(0);
   });
 
   it('card tile shows the label or none', () => {

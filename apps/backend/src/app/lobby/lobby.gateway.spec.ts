@@ -190,3 +190,21 @@ describe('game lobby and play', () => {
     expect(await p.send('game:start')).toMatchObject({ reason: 'notInGame' });
   });
 });
+
+describe('game settings', () => {
+  it('is host only, validated, and pushed to everyone', async () => {
+    const host = await Client.start('Settingshost');
+    const { game } = await create(host, 2);
+    const p = await Client.start('Settingsguest');
+    await p.send('game:join', { gameId: game.id, password: 'secret' });
+    expect(await p.send('game:settings', { fastComputerDice: true })).toMatchObject({
+      reason: 'notHost',
+    });
+    expect(await host.send('game:settings', { fastComputerDice: 'yes' })).toMatchObject({
+      reason: 'invalidRequest',
+    });
+    expect(await host.send('game:settings', { fastComputerDice: true })).toEqual({ ok: true });
+    const state = await p.until('game:state', (s) => s.game.fastComputerDice === true);
+    expect(state.game.fastComputerDice).toBe(true);
+  });
+});
