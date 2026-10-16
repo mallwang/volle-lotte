@@ -116,3 +116,9 @@ export function legalActions(state: GameState): Action[] {
   }
   return actions.filter(probe);
 }
+
+/** Next player's fresh turn, scores unchanged (turn timeout while selecting). */
+export function skipTurn(state: GameState): GameState {
+  if (state.result || !state.turn) return state;
+  return { ...state, current: (state.current + 1) % state.players.length, turn: newTurn() };
+}

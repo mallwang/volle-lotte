@@ -18,7 +18,16 @@ import {
 } from 'game-rules';
 
 export const SEATS = 8;
-export const GRACE_MS = 60_000;
+export const GRACE_MS = 30_000;
+/** Server-side limit per human action; expiry plays the automatic action (FR-018). */
+export const TURN_LIMIT_MS = {
+  draw: 10_000,
+  throw: 10_000,
+  select: 15_000,
+  decide: 15_000,
+} as const;
+/** The 3rd timeout in a row hands the seat to a computer. */
+export const MAX_TIMEOUTS = 3;
 export const LOG_CAP = 500;
 /** Computer pacing: after a throw wait out the client roll (max) plus 3 s; otherwise 2 s (FR-013, FR-019). */
 const ROLL_MAX_MS = 3000;
@@ -38,8 +47,18 @@ export type Seat =
       connected: boolean;
       ready: boolean;
       disconnectedAt?: number;
+      timeouts: number;
     }
-  | { state: 'computer'; difficulty: Difficulty; effective: Level };
+  | {
+      state: 'computer';
+      difficulty: Difficulty;
+      effective: Level;
+      /** Set only when the computer replaced a human, who may rejoin. */
+      former?: { playerId: string; nickname: string };
+    };
+
+type Human = Extract<Seat, { state: 'human' }>;
+export type ReplaceReason = 'left' | 'disconnected' | 'timeouts';
 
 export type Fail = { ok: false; reason: ErrorReason; engine?: RejectionReason };
 export type Res<T = object> = ({ ok: true } & T) | Fail;
@@ -75,8 +94,8 @@ export class GameRoom {
   phase: RoomPhase = 'lobby';
   game: GameState | null = null;
   log: LogEntry[] = [];
-  /** Seats waiting for a host decision (running game only). */
-  pending = new Set<number>();
+  /** Players removed by the host; they may not join or rejoin. */
+  readonly banned = new Set<string>();
   onChange?: (entries: LogEntry[]) => void;
 
   private readonly now: () => number;
@@ -120,10 +139,6 @@ export class GameRoom {
     return this.humans().some((h) => h.connected);
   }
 
-  isPaused(): boolean {
-    return this.phase === 'running' && this.pending.has(this.currentSeat());
-  }
-
   host() {
     return this.humans().find((h) => h.playerId === this.hostId);
   }
@@ -136,7 +151,8 @@ export class GameRoom {
       targetScore: this.rules.targetScore,
       seatsUsed: this.seats.filter((s) => s.state === 'human' || s.state === 'computer').length,
       seatsTotal: this.seats.filter((s) => s.state !== 'locked').length,
-      locked: true,
+      protected: this.passwordHash !== '',
+      rejoinable: false,
       phase: this.phase,
     };
   }
@@ -166,13 +182,10 @@ export class GameRoom {
     const seat = this.seatOf(playerId);
     if (seat < 0) return fail('notInGame');
     this.clearGrace(seat);
-    this.add('left', seat);
     if (this.phase === 'running') {
-      // the seat stays with its engine player but counts as gone until the host decides
-      const human = this.seats[seat] as Extract<Seat, { state: 'human' }>;
-      human.connected = false;
-      this.markPending(seat);
+      this.replaceByBot(seat, 'left');
     } else {
+      this.add('left', seat);
       this.seats[seat] = { state: 'open' };
       this.resetReady();
     }
@@ -253,7 +266,6 @@ export class GameRoom {
     if (this.phase !== 'running' || !this.game) return fail('notInGame');
     const seat = this.seatOf(playerId);
     if (seat < 0) return fail('notInGame');
-    if (this.pending.has(this.currentSeat())) return fail('paused');
     if (seat !== this.currentSeat()) return fail('notYourTurn');
     return this.apply(action);
   }
@@ -262,7 +274,6 @@ export class GameRoom {
     if (this.phase !== 'running' || !this.game) return fail('notInGame');
     const seat = this.seatOf(playerId);
     if (seat < 0) return fail('notInGame');
-    if (this.pending.has(this.currentSeat())) return fail('paused');
     if (seat !== this.currentSeat()) return fail('notYourTurn');
     const n = this.game.turn?.dice.length ?? 0;
     if (new Set(dice).size !== dice.length || dice.some((d) => d < 0 || d >= n))
@@ -334,7 +345,7 @@ export class GameRoom {
     }, this.computerDelay);
   }
 
-  // ---- connection, leave, host decisions
+  // ---- connection, replacement
 
   setConnected(playerId: string, connected: boolean): void {
     const seat = this.seatOf(playerId);
@@ -345,7 +356,6 @@ export class GameRoom {
     if (connected) {
       this.clearGrace(seat);
       human.disconnectedAt = undefined;
-      this.pending.delete(seat);
       this.add('reconnected', seat);
     } else {
       human.disconnectedAt = this.now();
@@ -361,48 +371,28 @@ export class GameRoom {
   private graceOver(seat: number, playerId: string) {
     this.graceTimers.delete(seat);
     if (this.seatOf(playerId) !== seat) return;
-    if (this.phase === 'running') this.markPending(seat);
+    if (this.phase === 'running') this.replaceByBot(seat, 'disconnected');
     else this.seats[seat] = { state: 'open' };
     if (this.hostId === playerId) this.electHost(playerId);
     this.emit();
   }
 
-  decide(
-    playerId: string,
-    seat: number,
-    decision: 'computer' | 'free',
-    difficulty: Difficulty = 'medium',
-  ): Res<{ removed?: string }> {
-    if (playerId !== this.hostId) return fail('notHost');
-    if (!this.pending.has(seat)) return fail('nothingPending');
-    const old = this.seats[seat];
-    const removed = old.state === 'human' ? old.playerId : undefined;
+  /** Hands a human seat to a computer of random difficulty; the engine player and score stay. */
+  private replaceByBot(seat: number, reason: ReplaceReason) {
+    const human = this.seats[seat] as Human;
     this.clearGrace(seat);
-    if (decision === 'computer') {
-      this.seats[seat] = {
-        state: 'computer',
-        difficulty,
-        effective: levelFor(difficulty),
-      };
-      this.pending.delete(seat);
-    } else {
-      // the engine player stays; the game waits on this seat until the host puts in a computer
-      this.seats[seat] = { state: 'open' };
-    }
-    this.add('hostDecided', seat, decision);
-    this.emit();
-    return { ok: true, removed };
-  }
-
-  private markPending(seat: number) {
-    this.pending.add(seat);
-    this.add('waitingForHost', seat);
+    this.seats[seat] = {
+      state: 'computer',
+      difficulty: 'random',
+      effective: levelFor('random'),
+      former: { playerId: human.playerId, nickname: human.nickname },
+    };
+    if (seat === this.currentSeat()) this.preview = [];
+    this.add('replaced', seat, reason);
   }
 
   private electHost(leaving: string) {
-    const others = this.humans().filter(
-      (h) => h.playerId !== leaving && !this.pending.has(this.seatOf(h.playerId)),
-    );
+    const others = this.humans().filter((h) => h.playerId !== leaving);
     const next = others.find((h) => h.connected) ?? others[0];
     if (!next) return;
     this.hostId = next.playerId;
@@ -430,7 +420,7 @@ export class GameRoom {
   }
 
   private humanSeat(playerId: string, nickname: string): Seat {
-    return { state: 'human', playerId, nickname, connected: true, ready: false };
+    return { state: 'human', playerId, nickname, connected: true, ready: false, timeouts: 0 };
   }
 
   private resetReady() {

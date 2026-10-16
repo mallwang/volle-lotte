@@ -1,8 +1,11 @@
 import type { GameView, SeatView } from 'game-rules';
-import type { GameRoom } from './game-room';
+import { MAX_TIMEOUTS, type GameRoom } from './game-room';
 
 /** What one player may see: no deck, no password hash, no tokens, `random` difficulty stays `random`. */
 export function toView(room: GameRoom, playerId: string): GameView {
+  const seat = room.seatOf(playerId);
+  const mine = room.seats[seat];
+  const human = mine?.state === 'human' ? mine : undefined;
   const seats = room.seats.map((s): SeatView => {
     if (s.state === 'human') {
       return {
@@ -13,19 +16,12 @@ export function toView(room: GameRoom, playerId: string): GameView {
         ready: s.ready,
       };
     }
-    if (s.state === 'computer') return { state: 'computer', difficulty: s.difficulty };
-    return { state: s.state };
-  });
-  const graceEndsAt: Record<number, number> = {};
-  room.seats.forEach((s, i) => {
-    if (
-      s.state === 'human' &&
-      !s.connected &&
-      s.disconnectedAt !== undefined &&
-      !room.pending.has(i)
-    ) {
-      graceEndsAt[i] = s.disconnectedAt + room.graceMs;
+    if (s.state === 'computer') {
+      const view: SeatView = { state: 'computer', difficulty: s.difficulty };
+      if (s.former) view.former = { nickname: s.former.nickname };
+      return view;
     }
+    return { state: s.state };
   });
   const view: GameView = {
     id: room.id,
@@ -33,10 +29,8 @@ export function toView(room: GameRoom, playerId: string): GameView {
     phase: room.phase,
     rules: room.rules,
     hostId: room.hostId,
-    you: { playerId, seat: room.seatOf(playerId) },
+    you: { playerId, seat, timeoutWarning: human?.timeouts === MAX_TIMEOUTS - 1 },
     seats,
-    pending: [...room.pending],
-    graceEndsAt,
     fastComputerDice: room.fastComputerDice,
     log: room.log,
   };

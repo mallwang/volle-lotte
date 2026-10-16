@@ -14,7 +14,6 @@ import { CardTile } from '../shared/card-tile';
 import { DiceTile } from '../shared/dice-tile';
 import { DieFace } from '../shared/die-face';
 import { PlayerTile } from '../shared/player-tile';
-import { DisconnectBanner } from './disconnect-banner';
 import { SettingsDialog } from './settings-dialog';
 
 /** Log events shown as a toast to every player, by severity (FR-010, FR-014). */
@@ -41,7 +40,6 @@ const BUST_MS = 5000;
     CardTile,
     DiceTile,
     DieFace,
-    DisconnectBanner,
     NgTemplateOutlet,
     PlayerTile,
     SettingsDialog,
@@ -61,7 +59,6 @@ const BUST_MS = 5000;
         />
       </div>
       @if (view.game; as state) {
-        <app-disconnect-banner [game]="view" />
         <div class="vl-table">
           <section [attr.aria-label]="'table.table' | t">
             <p>
@@ -265,10 +262,10 @@ export class Table {
     const g = this.socket.game();
     return !!g?.game && g.seats[this.seats()[g.game.current]]?.state === 'computer';
   });
-  /** It is my turn and the game is not paused. */
+  /** It is my turn. */
   protected readonly mine = computed(() => {
     const g = this.socket.game();
-    if (!g?.game || g.pending.length > 0 || this.bust()) return false;
+    if (!g?.game || this.bust()) return false;
     return this.seats()[g.game.current] === g.you.seat;
   });
 

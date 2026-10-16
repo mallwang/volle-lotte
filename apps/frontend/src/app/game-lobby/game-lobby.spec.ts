@@ -60,7 +60,10 @@ describe('GameLobby', () => {
 
   it('hides host controls from non-hosts', async () => {
     const { el, button } = await setup(
-      gameView({ hostId: 'p1', you: { playerId: 'p0', seat: 1 } }, [other(true), me(false)]),
+      gameView({ hostId: 'p1', you: { playerId: 'p0', seat: 1, timeoutWarning: false } }, [
+        other(true),
+        me(false),
+      ]),
     );
     expect(button('Start game')).toBeUndefined();
     expect(button('Lock')).toBeUndefined();

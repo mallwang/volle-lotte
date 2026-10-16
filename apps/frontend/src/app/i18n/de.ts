@@ -138,17 +138,6 @@ export const de: Record<keyof typeof en, string> = {
   'player.offline': 'Offline',
   'player.score': 'Punkte: {score}',
 
-  'banner.disconnected': '{name} hat die Verbindung verloren.',
-  'banner.window': 'Wiederverbindungsfenster: {n} s.',
-  'banner.windowFor': 'Wiederverbindungsfenster für {name}',
-  'banner.deciding': 'Der Gastgeber entscheidet.',
-  'banner.title': 'Spieler getrennt',
-  'banner.didNotReturn':
-    '{name} ist nicht zurückgekehrt. Durch einen Computer ersetzen oder den Platz freigeben?',
-  'banner.difficultyFor': 'Schwierigkeit für {name}',
-  'banner.replace': 'Durch Computer ersetzen',
-  'banner.free': 'Platz freigeben',
-
   'result.title': 'Ergebnis',
   'result.rank': 'Platz {rank}',
   'result.back': 'Zurück zur Lobby',
@@ -174,8 +163,6 @@ export const de: Record<keyof typeof en, string> = {
   'log.started': 'Das Spiel hat begonnen',
   'log.turn': '{who} hat gespielt',
   'log.finished': 'Das Spiel ist beendet',
-  'log.waitingForHost': 'Warte auf den Gastgeber',
-  'log.hostDecided': 'Der Gastgeber hat entschieden',
 
   'error.noSession': 'Deine Sitzung ist beendet. Bitte gib deinen Spitznamen erneut ein.',
   'error.versionMismatch': 'Diese App-Version passt nicht zum Server. Bitte lade die Seite neu.',
@@ -198,9 +185,7 @@ export const de: Record<keyof typeof en, string> = {
   'error.notHost': 'Das kann nur der Gastgeber tun.',
   'error.notReady': 'Nicht alle Spieler sind bereit.',
   'error.notEnoughPlayers': 'Es werden mindestens zwei Spieler benötigt.',
-  'error.nothingPending': 'Es gibt nichts zu entscheiden.',
   'error.notYourTurn': 'Du bist nicht dran.',
-  'error.paused': 'Das Spiel wartet auf den Gastgeber.',
   'error.rejected': 'Dieser Zug ist nicht erlaubt.',
   'error.rejectedEngine': 'Dieser Zug ist nicht erlaubt: {engine}.',
 

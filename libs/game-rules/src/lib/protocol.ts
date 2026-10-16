@@ -1,6 +1,6 @@
 import type { Action, Event, GameState, RejectionReason, Rules } from './types.js';
 
-export const PROTOCOL_VERSION = 2;
+export const PROTOCOL_VERSION = 3;
 
 export type Difficulty = 'easy' | 'medium' | 'hard' | 'random';
 export type RoomPhase = 'lobby' | 'running' | 'finished';
@@ -23,10 +23,10 @@ export type ErrorReason =
   | 'notInGame'
   | 'notHost'
   | 'notReady'
+  | 'banned'
+  | 'notRejoinable'
   | 'notEnoughPlayers'
-  | 'nothingPending'
   | 'notYourTurn'
-  | 'paused'
   | 'rejected';
 
 export interface ErrorAck {
@@ -52,8 +52,10 @@ export type LogKind =
   | 'started'
   | 'turn'
   | 'finished'
-  | 'waitingForHost'
-  | 'hostDecided';
+  | 'replaced'
+  | 'rejoined'
+  | 'timedOut'
+  | 'removed';
 
 export interface LogEntry {
   at: number;
@@ -69,6 +71,8 @@ export interface SeatView {
   connected?: boolean;
   ready?: boolean;
   difficulty?: Difficulty;
+  /** Computer seat that replaced a human. */
+  former?: { nickname: string };
 }
 
 /** Engine state without the deck (never sent), plus its size. */
@@ -80,13 +84,13 @@ export interface GameView {
   phase: RoomPhase;
   rules: Rules;
   hostId: string;
-  you: { playerId: string; seat: number };
+  you: { playerId: string; seat: number; timeoutWarning: boolean };
   seats: SeatView[];
   game?: GameStateView;
   /** Dice indices the active player has ticked so far (not yet confirmed). */
   preview?: number[];
-  pending: number[];
-  graceEndsAt: Record<number, number>;
+  /** Set only while a human is to act; `at` already includes the dice animation wait. */
+  turnDeadline?: { at: number; phase: 'draw' | 'throw' | 'select' | 'decide' };
   /** Host setting: computer dice roll for a shorter time. */
   fastComputerDice: boolean;
   log: LogEntry[];
@@ -99,7 +103,10 @@ export interface GameSummary {
   targetScore: number;
   seatsUsed: number;
   seatsTotal: number;
-  locked: true;
+  /** Password-protected (open games have none). */
+  protected: boolean;
+  /** The requesting player's own bot-held seat is in this game. */
+  rejoinable: boolean;
   phase: RoomPhase;
 }
 
@@ -122,7 +129,8 @@ export interface Intents {
   ];
   'seat:ready': [{ ready: boolean }, object];
   'game:start': [undefined, object];
-  'host:decide': [{ seat: number; decision: 'computer' | 'free'; difficulty?: Difficulty }, object];
+  'game:rejoin': [{ gameId: string }, { game: GameView }];
+  'seat:remove': [{ seat: number }, object];
   'turn:action': [{ action: Action }, object];
   'turn:preview': [{ dice: number[] }, object];
   'game:settings': [{ fastComputerDice: boolean }, object];
@@ -134,5 +142,5 @@ export interface Pushes {
   'game:state': { game: GameView };
   'game:log': { entries: LogEntry[] };
   'session:replaced': undefined;
-  'game:closed': { reason: 'cleanup' | 'removed' };
+  'game:closed': { reason: 'cleanup' | 'banned' };
 }

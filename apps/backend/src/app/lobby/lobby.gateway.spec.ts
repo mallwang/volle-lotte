@@ -102,7 +102,7 @@ describe('create and join', () => {
     expect(JSON.stringify(created)).not.toContain('topsecret');
     const list = await host.send('lobby:list');
     expect(list.games).toContainEqual(
-      expect.objectContaining({ id: game.id, seatsUsed: 1, seatsTotal: 2, locked: true }),
+      expect.objectContaining({ id: game.id, seatsUsed: 1, seatsTotal: 2, protected: true }),
     );
 
     const p = await Client.start('Pia');

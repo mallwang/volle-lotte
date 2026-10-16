@@ -14,7 +14,8 @@ const summary: GameSummary = {
   targetScore: 6000,
   seatsUsed: 1,
   seatsTotal: 4,
-  locked: true,
+  protected: true,
+  rejoinable: false,
   phase: 'lobby',
 };
 

@@ -1,5 +1,5 @@
 import { defaultRules, seededRandomInt } from 'game-rules';
-import { GameRoom } from './game-room';
+import { GameRoom, GRACE_MS } from './game-room';
 import { toView } from './view';
 
 const make = (seatCount = 3) => {
@@ -101,13 +101,23 @@ describe('GameRoom play', () => {
 });
 
 describe('GameRoom leaving', () => {
-  it('a leaver in a running game counts as gone and waits for the host', () => {
+  it('a leaver in a running game is replaced by a random computer that remembers them', () => {
     const room = started();
-    room.leave('p');
-    expect(room.hasConnectedHuman()).toBe(true);
-    expect(room.pending.has(room.seatOf('p'))).toBe(true);
-    room.leave('h');
-    expect(room.hasConnectedHuman()).toBe(false);
+    expect(room.leave('p')).toEqual({ ok: true, empty: false });
+    const seat = room.seats[1];
+    expect(seat).toMatchObject({
+      state: 'computer',
+      difficulty: 'random',
+      former: { playerId: 'p', nickname: 'Pia' },
+    });
+    expect(['easy', 'medium', 'hard']).toContain((seat as { effective: string }).effective);
+    expect(room.log.at(-1)).toMatchObject({ kind: 'replaced', seat: 1, data: 'left' });
+    expect(toView(room, 'h').seats[1]).toEqual({
+      state: 'computer',
+      difficulty: 'random',
+      former: { nickname: 'Pia' },
+    });
+    expect(room.leave('h')).toMatchObject({ empty: true });
     room.dispose();
   });
 });
@@ -120,7 +130,6 @@ describe('GameRoom connection', () => {
     const { room } = make();
     room.join('p', 'Pia');
     room.setConnected('h', false);
-    expect(toView(room, 'p').graceEndsAt[0]).toBeGreaterThan(0);
     jest.advanceTimersByTime(1000);
     expect(room.seats[0].state).toBe('open');
     expect(room.hostId).toBe('p');
@@ -135,21 +144,38 @@ describe('GameRoom connection', () => {
     expect(room.seats[0].state).toBe('human');
   });
 
-  it('pauses a running game, lets the host hand the seat to a computer, which then plays', () => {
+  it('uses a 30 s grace period', () => {
+    expect(GRACE_MS).toBe(30_000);
+  });
+
+  it('hands a disconnected seat in a running game to a computer after the grace period', () => {
     const room = started();
-    const cur = room.game?.current === 0 ? 'h' : 'p';
-    const waiting = cur === 'h' ? 'p' : 'h';
-    // make the non-host drop; if it is the host's turn the host can still not be paused, so end the turn first
-    const dropped = 'p';
-    room.setConnected(dropped, false);
-    jest.advanceTimersByTime(1000);
-    const seat = room.seatOf(dropped);
-    expect(room.pending.has(seat)).toBe(true);
-    expect(room.isPaused()).toBe(dropped === (room.game?.current === 0 ? 'h' : 'p'));
-    expect(room.decide('p', seat, 'computer')).toMatchObject({ reason: 'notHost' });
-    expect(room.decide('h', seat, 'computer', 'easy')).toMatchObject({ ok: true, removed: 'p' });
-    expect(room.pending.size).toBe(0);
-    expect(waiting).toBeDefined();
+    room.setConnected('p', false);
+    jest.advanceTimersByTime(999);
+    expect(room.seats[1].state).toBe('human');
+    jest.advanceTimersByTime(1);
+    expect(room.seats[1]).toMatchObject({ state: 'computer', former: { playerId: 'p' } });
+    expect(room.log.at(-1)).toMatchObject({ kind: 'replaced', seat: 1, data: 'disconnected' });
+    room.dispose();
+  });
+
+  it("the computer plays the replaced seat's pending turn", () => {
+    const room = started();
+    // hand the turn to Pia by banking/ending the host's turn is engine dependent, so drive until it is hers
+    for (let i = 0; i < 50 && room.game?.current !== 1; i++) {
+      const phase = room.game?.turn?.phase;
+      room.act(
+        'h',
+        phase === 'select'
+          ? { type: 'select', dice: [0] }
+          : { type: phase === 'decide' ? 'bank' : (phase ?? 'throw') },
+      );
+    }
+    expect(room.game?.current).toBe(1);
+    room.leave('p');
+    const n = room.log.length;
+    jest.advanceTimersByTime(10_000);
+    expect(room.log.length).toBeGreaterThan(n);
     room.dispose();
   });
 });

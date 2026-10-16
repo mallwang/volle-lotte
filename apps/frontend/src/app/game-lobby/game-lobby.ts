@@ -10,20 +10,13 @@ import { isHost, seatName } from '../core/game-view';
 import { I18nService } from '../core/i18n.service';
 import { SocketService } from '../core/socket.service';
 import { TranslatePipe } from '../core/translate.pipe';
-import { DIFFICULTIES, DisconnectBanner } from '../table/disconnect-banner';
+
+const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard', 'random'];
 
 @Component({
   selector: 'app-game-lobby',
   host: { class: 'vl-narrow' },
-  imports: [
-    FormsModule,
-    DisconnectBanner,
-    AvatarModule,
-    ButtonModule,
-    MessageModule,
-    TagModule,
-    TranslatePipe,
-  ],
+  imports: [FormsModule, AvatarModule, ButtonModule, MessageModule, TagModule, TranslatePipe],
   template: `
     @if (socket.game(); as game) {
       <h2>{{ game.name }}</h2>
@@ -38,7 +31,6 @@ import { DIFFICULTIES, DisconnectBanner } from '../table/disconnect-banner';
                 }
         }}
       </p>
-      <app-disconnect-banner [game]="game" />
       <ul class="vl-cards">
         @for (s of game.seats; track $index) {
           <li class="vl-seat" [class.vl-seat-locked]="s.state === 'locked'">

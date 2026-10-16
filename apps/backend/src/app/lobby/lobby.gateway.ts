@@ -207,26 +207,6 @@ export class LobbyGateway implements OnGatewayDisconnect {
     return this.inRoom(client, (room, session) => room.start(session.playerId));
   }
 
-  @SubscribeMessage('host:decide')
-  decide(@ConnectedSocket() client: Socket, @MessageBody() b: unknown): Ack {
-    if (
-      !isObj(b) ||
-      !isInt(b['seat'], 0, 7) ||
-      !['computer', 'free'].includes(b['decision'] as string) ||
-      !isDifficulty(b['difficulty'])
-    ) {
-      return this.session(client) ? bad('invalidRequest') : bad('noSession');
-    }
-    const { seat, decision, difficulty } = b as {
-      seat: number;
-      decision: 'computer' | 'free';
-      difficulty?: Difficulty;
-    };
-    return this.inRoom(client, (room, session) =>
-      this.removed(room.decide(session.playerId, seat, decision, difficulty)),
-    );
-  }
-
   @SubscribeMessage('turn:action')
   act(@ConnectedSocket() client: Socket, @MessageBody() b: unknown): Ack {
     if (!isObj(b) || !isAction(b['action']))
@@ -276,7 +256,7 @@ export class LobbyGateway implements OnGatewayDisconnect {
       const gone = this.sessions.byPlayerId(res.removed);
       if (gone) {
         this.exit(gone);
-        this.emitTo(gone.socketId, 'game:closed', { reason: 'removed' });
+        this.emitTo(gone.socketId, 'game:closed', { reason: 'banned' });
       }
     }
     return res;

@@ -19,8 +19,8 @@
 
 **Purpose**: Protocol v3 shared by backend and frontend (contracts/protocol.md)
 
-- [ ] T001 Update `G/protocol.ts`: `PROTOCOL_VERSION` 3; `GameSummary` `locked` → `protected: boolean` plus `rejoinable: boolean`; `SeatView.former?: { nickname }`; `GameView` drop `pending`/`graceEndsAt`, add `turnDeadline?: { at, phase }` and `you.timeoutWarning`; add intents `game:rejoin {gameId}` and `seat:remove {seat}`, remove `host:decide`; `ErrorReason` add `banned`, `notRejoinable`, remove `nothingPending`, `paused`; `game:closed` reason `'banned'` (drop `'removed'`); `LogKind` add `replaced`, `rejoined`, `timedOut`, `removed`, remove `waitingForHost`, `hostDecided`
-- [ ] T002 [P] Add pure `skipTurn(state): GameState` to `G/game.ts` (next player's fresh turn, scores unchanged, log `turnSkipped`, unchanged if `result` set) and export it from the lib index; add tests in `G/game.spec.ts`
+- [x] T001 Update `G/protocol.ts`: `PROTOCOL_VERSION` 3; `GameSummary` `locked` → `protected: boolean` plus `rejoinable: boolean`; `SeatView.former?: { nickname }`; `GameView` drop `pending`/`graceEndsAt`, add `turnDeadline?: { at, phase }` and `you.timeoutWarning`; add intents `game:rejoin {gameId}` and `seat:remove {seat}`, remove `host:decide`; `ErrorReason` add `banned`, `notRejoinable`, remove `nothingPending`, `paused`; `game:closed` reason `'banned'` (drop `'removed'`); `LogKind` add `replaced`, `rejoined`, `timedOut`, `removed`, remove `waitingForHost`, `hostDecided`
+- [x] T002 [P] Add pure `skipTurn(state): GameState` to `G/game.ts` (next player's fresh turn, scores unchanged, log `turnSkipped`, unchanged if `result` set) and export it from the lib index; add tests in `G/game.spec.ts`
 
 **Checkpoint**: Shared types compile; downstream code will show type errors to fix in the phases below.
 
@@ -30,11 +30,11 @@
 
 **Purpose**: Remove the host-decision flow and add room fields every story builds on
 
-- [ ] T003 In `B/game-room.ts` remove the `pending` set, `decide`, grace-pause logic and `graceEndsAt`; set `GRACE_MS = 30_000`; add constants `TURN_LIMIT_MS`, `MAX_TIMEOUTS = 3`; add `banned: Set<string>`, seat `timeouts: number`, computer seat `former?: { playerId, nickname }` (data-model.md)
-- [ ] T004 In `B/game-room.ts` add single `replaceByBot(seat, reason)`: random difficulty via `levelFor('random')`, set `former`, add `replaced` log entry (reason `left|disconnected|timeouts`), continue pending action through existing `emit()`/`scheduleComputer()`; wire grace expiry to it
-- [ ] T005 In `B/lobby.gateway.ts` remove the `host:decide` handler and related error paths; in `B/view.ts` drop `pending`/`graceEndsAt`, expose `SeatView.former` (nickname only)
-- [ ] T006 [P] Delete `F/table/disconnect-banner.ts` and `F/table/disconnect-banner.spec.ts`; remove its use in `F/table/table.ts`; remove host-decision UI and `waitingForHost`/`hostDecided` texts from `F/i18n/en.ts` and `F/i18n/de.ts`; update `F/core/socket.service.ts` and `F/core/testing.ts` for the removed intent
-- [ ] T007 Fix existing tests broken by the removal (`B/game-room.spec.ts`, `B/lobby.gateway.spec.ts`, `F/core/i18n.service.spec.ts`, others reported by `npm run typecheck`); add `B/game-room.spec.ts` cases for `replaceByBot` (random difficulty, `former` set, bot continues on its turn) and 30 s grace takeover with fake timers
+- [x] T003 In `B/game-room.ts` remove the `pending` set, `decide`, grace-pause logic and `graceEndsAt`; set `GRACE_MS = 30_000`; add constants `TURN_LIMIT_MS`, `MAX_TIMEOUTS = 3`; add `banned: Set<string>`, seat `timeouts: number`, computer seat `former?: { playerId, nickname }` (data-model.md)
+- [x] T004 In `B/game-room.ts` add single `replaceByBot(seat, reason)`: random difficulty via `levelFor('random')`, set `former`, add `replaced` log entry (reason `left|disconnected|timeouts`), continue pending action through existing `emit()`/`scheduleComputer()`; wire grace expiry to it
+- [x] T005 In `B/lobby.gateway.ts` remove the `host:decide` handler and related error paths; in `B/view.ts` drop `pending`/`graceEndsAt`, expose `SeatView.former` (nickname only)
+- [x] T006 [P] Delete `F/table/disconnect-banner.ts` and `F/table/disconnect-banner.spec.ts`; remove its use in `F/table/table.ts`; remove host-decision UI and `waitingForHost`/`hostDecided` texts from `F/i18n/en.ts` and `F/i18n/de.ts`; update `F/core/socket.service.ts` and `F/core/testing.ts` for the removed intent
+- [x] T007 Fix existing tests broken by the removal (`B/game-room.spec.ts`, `B/lobby.gateway.spec.ts`, `F/core/i18n.service.spec.ts`, others reported by `npm run typecheck`); add `B/game-room.spec.ts` cases for `replaceByBot` (random difficulty, `former` set, bot continues on its turn) and 30 s grace takeover with fake timers
 
 **Checkpoint**: `npm run typecheck` and `npm run test` green; disconnect now ends in a bot after 30 s (covers US3 scenario 4/5 backend).
 

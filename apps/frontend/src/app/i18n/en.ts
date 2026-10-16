@@ -136,16 +136,6 @@ export const en = {
   'player.offline': 'Offline',
   'player.score': 'Score: {score}',
 
-  'banner.disconnected': '{name} is disconnected.',
-  'banner.window': 'Reconnect window: {n} s.',
-  'banner.windowFor': 'Reconnect window for {name}',
-  'banner.deciding': 'Host is deciding.',
-  'banner.title': 'Player disconnected',
-  'banner.didNotReturn': '{name} did not come back. Replace with a computer or free the seat?',
-  'banner.difficultyFor': 'Difficulty for {name}',
-  'banner.replace': 'Replace with computer',
-  'banner.free': 'Free seat',
-
   'result.title': 'Result',
   'result.rank': 'Rank {rank}',
   'result.back': 'Back to lobby',
@@ -171,8 +161,6 @@ export const en = {
   'log.started': 'The game started',
   'log.turn': '{who} played',
   'log.finished': 'The game finished',
-  'log.waitingForHost': 'Waiting for the host',
-  'log.hostDecided': 'The host decided',
 
   'error.noSession': 'Your session has ended. Please enter your nickname again.',
   'error.versionMismatch': 'This app version does not match the server. Please reload the page.',
@@ -194,9 +182,7 @@ export const en = {
   'error.notHost': 'Only the host can do this.',
   'error.notReady': 'Not all players are ready.',
   'error.notEnoughPlayers': 'At least two players are needed.',
-  'error.nothingPending': 'There is nothing to decide.',
   'error.notYourTurn': 'It is not your turn.',
-  'error.paused': 'The game waits for the host.',
   'error.rejected': 'That move is not allowed.',
   'error.rejectedEngine': 'That move is not allowed: {engine}.',
 

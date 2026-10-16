@@ -1,4 +1,4 @@
-import { applyAction, createGame, legalActions, ranking } from './game.js';
+import { applyAction, createGame, legalActions, ranking, skipTurn } from './game.js';
 import { scriptedRandomInt, seededRandomInt } from './rng.js';
 import { defaultRules } from './types.js';
 import type { Action, CardType, GameState } from './types.js';
@@ -199,5 +199,21 @@ describe('legalActions', () => {
       result: { reason: 'clover', winner: 0, ranking: [] },
     });
     expect(legalActions(g)).toEqual([]);
+  });
+});
+
+describe('skipTurn', () => {
+  it('passes the turn without changing scores', () => {
+    const state = createGame(['a', 'b'], rules, seededRandomInt(1));
+    const next = skipTurn(state);
+    expect(next.current).toBe(1);
+    expect(next.turn?.phase).toBe('draw');
+    expect(next.players).toEqual(state.players);
+    expect(skipTurn(next).current).toBe(0);
+  });
+
+  it('leaves a finished game unchanged', () => {
+    const state = { ...createGame(['a', 'b'], rules, seededRandomInt(1)), turn: null };
+    expect(skipTurn(state)).toBe(state);
   });
 });
