@@ -322,7 +322,7 @@ describe('Table', () => {
     await fixture.whenStable();
     expect(el.querySelector('[aria-current=true] app-turn-timer')).not.toBeNull();
     expect(el.querySelectorAll('app-turn-timer')).toHaveLength(1);
-    expect(el.textContent).toContain('One more and a computer takes over');
+    expect(el.querySelector('p-message')).toBeNull();
   });
 
   it('asks for confirmation before leaving', async () => {

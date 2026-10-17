@@ -81,7 +81,9 @@ const STREET_VALUES = [1, 2, 3, 4, 5, 6];
       </div>
       <div class="vl-safe" role="group" [attr.aria-label]="'table.safe' | t">
         @if (street(); as picked) {
-          <strong>{{ 'table.safe' | t }}</strong>
+          @if (safeText()) {
+            <strong>{{ safeText() }}</strong>
+          }
           <div class="vl-aside vl-street">
             @for (v of streetValues; track v) {
               <span [class.vl-missing]="!picked.includes(v)"
@@ -90,9 +92,9 @@ const STREET_VALUES = [1, 2, 3, 4, 5, 6];
             }
           </div>
         } @else {
-          <strong>{{
-            (safe() === null ? 'table.safe' : 'table.safePoints') | t: { points: safe() ?? 0 }
-          }}</strong>
+          @if (safeText()) {
+            <strong>{{ safeText() }}</strong>
+          }
           <div class="vl-aside" [style.font-size.rem]="asideSize()">
             @for (g of aside(); track $index) {
               <span class="vl-aside-group">
@@ -110,7 +112,7 @@ const STREET_VALUES = [1, 2, 3, 4, 5, 6];
             }
           </div>
         }
-        @if (aside().length && safe() !== null) {
+        @if (aside().length) {
           <ng-container *ngTemplateOutlet="act; context: { $implicit: action('bank') }" />
         }
         @if (minimum(); as min) {
@@ -136,8 +138,8 @@ export class DiceArea {
   /** Values collected on a Street (null = not a Street). */
   readonly street = input<readonly number[] | null>(null);
   readonly aside = input<readonly AsideGroup[]>([]);
-  /** Points secured so far (carried + run); null on Clover, where nothing can be secured. */
-  readonly safe = input<number | null>(0);
+  /** Heading of the secured area: points, or progress towards the goal of the card. */
+  readonly safeText = input('');
   /** Minimum to bank, set only while the collected points are still below it. */
   readonly minimum = input<number | null>(null);
   /** Hint for what happens next. */

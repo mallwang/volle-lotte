@@ -70,6 +70,20 @@ export const de: Record<keyof typeof en, string> = {
   'card.clover': 'Kleeblatt',
   'card.tile': 'Karte: {card}',
   'card.none': 'keine',
+  'card.info.bonus':
+    'Bonus {bonus}: sichere ab {min} Punkten in diesem Durchgang oder würfle eine Volle Lotte (alle 6 Würfel zählen), um {bonus} Punkte zu addieren und weiterzuziehen.',
+  'card.info.doubleLotte':
+    'Doppel-Lotte: Eine Volle Lotte verdoppelt die Punkte dieses Durchgangs (Minimum {min}). Danach endet der Zug. Ein Fehlwurf verliert alles.',
+  'card.info.stop':
+    'Stopp: Dein Zug endet sofort. Nach einer Vollen Lotte verfallen die bisher gesammelten Punkte.',
+  'card.info.star':
+    'Stern: Wirf bis zum Fehlwurf, Sichern ist nicht möglich. Alle Zugpunkte werden am Ende gutgeschrieben, ohne Mindestpunkte.',
+  'card.info.street':
+    'Straße: Sammle über mehrere Würfe je einen Würfel pro Wert 1-6. Bei Erfolg gibt es genau 2.000 Punkte; ein Wurf ohne fehlenden Wert ist ein Fehlwurf.',
+  'card.info.plusMinus':
+    'Plus/Minus: Sichern ist nicht möglich. Mit einer Vollen Lotte gibt es +1.000 Punkte; jeder Führende verliert 1.000.',
+  'card.info.clover':
+    'Kleeblatt: Zwei neue Volle Lotten hintereinander gewinnen das Spiel sofort. Ein Fehlwurf verliert alle Zugpunkte.',
 
   'difficulty.easy': 'leicht',
   'difficulty.medium': 'mittel',
@@ -122,8 +136,11 @@ export const de: Record<keyof typeof en, string> = {
   'table.players': 'Spieler',
   'table.log': 'Protokoll',
   'turn.timer': 'Zeitlimit für diesen Zug',
-  'turn.warning':
+  'table.timedOutYou': 'Du hast die Zeit überschritten.',
+  'table.timedOutWarn':
     'Du hast zweimal in Folge die Zeit überschritten. Beim nächsten Mal übernimmt ein Computer deinen Platz.',
+  'table.timedOutOther': '{who} hat die Zeit überschritten.',
+  'table.drawOrBank': 'Nächste Karte ziehen oder Punkte sichern',
   'table.or': ' oder ',
   'table.draw': 'Ziehen',
   'table.throw': 'Würfeln',
@@ -132,7 +149,19 @@ export const de: Record<keyof typeof en, string> = {
   'table.select': 'Auswahl beiseitelegen',
   'table.selectOne': 'Mindestens einen Würfel auswählen',
   'table.safe': 'Gesichert',
-  'table.safePoints': 'Gesichert: {points} Punkte',
+  'table.safe.points': 'Gesichert: {points} Punkte',
+  'table.safe.goal': 'Würfel {done} von 6, noch {left} bis zum Erfolg',
+  'table.safe.goalStake':
+    'Würfel {done} von 6, noch {left} bis zum Erfolg · {carried} Punkte aus dem vorherigen Durchgang stehen auf dem Spiel',
+  'table.safe.street': 'Würfel {done} von 6, noch {left} bis zum Erfolg',
+  'table.safe.streetStake':
+    'Würfel {done} von 6, noch {left} bis zum Erfolg · {carried} Punkte aus dem vorherigen Durchgang stehen auf dem Spiel',
+  'table.safe.clover':
+    'Durchgang {pass} von 2: Würfel {done} von 12, noch {left} bis zum Spielgewinn',
+  'table.safe.cloverStake':
+    'Durchgang {pass} von 2: Würfel {done} von 12, noch {left} bis zum Spielgewinn · {carried} Punkte aus dem vorherigen Durchgang stehen auf dem Spiel',
+  'table.safe.carried':
+    'Gesichert: {carried} Punkte (vorheriger Durchgang), {points} (aktueller Durchgang)',
   'table.belowMinimum': 'Die Mindestpunktzahl von {min} Punkten wurde noch nicht erreicht.',
   'table.bank': 'Punkte sichern',
 

@@ -19,7 +19,7 @@ import { discardLayers, layerTransform } from '../core/table-view';
         <span class="lay" [style.transform]="t"></span>
       }
       @if (previous(); as p) {
-        @for (c of [p]; track c) {
+        @for (c of [p]; track played()) {
           <app-game-card class="vl-prev" [card]="c" />
         }
       }
