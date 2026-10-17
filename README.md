@@ -1,5 +1,9 @@
 # Volle Lotte
 
+<p align="center">
+  <img src="logo.png" alt="Volle Lotte" width="120" />
+</p>
+
 > Dieses README gibt es auch auf Deutsch: [README.de.md](README.de.md)
 
 Online multiplayer web app (PWA) for the dice game _Volle Lotte_, 2-8 players, computer opponents.
@@ -64,3 +68,7 @@ Then open http://localhost:8080. `GET /api/health` is the healthcheck.
 4. Deploy and put your reverse proxy (https://volle-lotte.allwang.family) in front of the host port. It **must allow WebSocket upgrades** for `/socket.io`.
 
 Re-deploying after a new image: **Stacks → your stack → Pull and redeploy** (or `docker compose pull && docker compose up -d`). Back up the database by copying `/opt/volle-lotte/data`.
+
+## Credits
+
+Icon created by [Magnific](https://www.flaticon.com/authors/magnific) from [Flaticon](https://www.flaticon.com/).
