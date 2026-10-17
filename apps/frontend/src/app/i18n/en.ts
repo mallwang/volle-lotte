@@ -6,7 +6,7 @@ export const en = {
   'theme.light': 'Light',
   'theme.dark': 'Dark',
   'nav.main': 'Main',
-  'nav.games': 'Games',
+  'nav.games': 'Lobby',
   'nav.create': 'Create game',
   'connection.status': 'Connection: {state}. Trying to reconnect.',
   'connection.connecting': 'connecting',
@@ -21,7 +21,8 @@ export const en = {
   'nickname.continue': 'Continue',
   'nickname.invalid': 'Nickname must have 2-20 characters: letters, digits, space, _ or -.',
 
-  'lobby.title': 'Games',
+  'lobby.title': 'Lobby',
+  'game.title': 'Game',
   'lobby.create': 'Create game',
   'lobby.empty': 'No open games.',
   'lobby.host': 'Host {name}',

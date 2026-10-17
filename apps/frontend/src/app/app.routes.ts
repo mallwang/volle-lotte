@@ -6,9 +6,14 @@ import { Lobby } from './lobby/lobby';
 import { Nickname } from './nickname/nickname';
 
 export const appRoutes: Route[] = [
-  { path: 'nickname', component: Nickname },
-  { path: 'lobby', component: Lobby, canActivate: [sessionGuard] },
-  { path: 'create-game', component: CreateGame, canActivate: [sessionGuard] },
-  { path: 'game/:id', component: Game, canActivate: [sessionGuard] },
+  { path: 'nickname', component: Nickname, title: 'nickname.title' },
+  { path: 'lobby', component: Lobby, title: 'lobby.title', canActivate: [sessionGuard] },
+  {
+    path: 'create-game',
+    component: CreateGame,
+    title: 'create.title',
+    canActivate: [sessionGuard],
+  },
+  { path: 'game/:id', component: Game, title: 'game.title', canActivate: [sessionGuard] },
   { path: '**', redirectTo: 'lobby' },
 ];

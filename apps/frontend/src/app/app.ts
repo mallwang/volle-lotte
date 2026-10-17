@@ -6,6 +6,7 @@ import { MessageModule } from 'primeng/message';
 import { SelectModule } from 'primeng/select';
 import { TooltipModule } from 'primeng/tooltip';
 import { ToastModule } from 'primeng/toast';
+import { version } from '../../package.json';
 import { I18nService } from './core/i18n.service';
 import { SocketService } from './core/socket.service';
 import { ThemeService } from './core/theme.service';
@@ -28,6 +29,7 @@ import { TranslatePipe } from './core/translate.pipe';
   templateUrl: './app.html',
 })
 export class App {
+  protected readonly version = version;
   protected readonly socket = inject(SocketService);
   protected readonly theme = inject(ThemeService);
   protected readonly i18n = inject(I18nService);

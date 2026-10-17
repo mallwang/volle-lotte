@@ -21,9 +21,9 @@ describe('I18nService', () => {
 
   it('translates after a switch', () => {
     const s = create();
-    const en = s.t('nav.games');
+    const en = s.t('nav.create');
     s.set('de');
-    expect(s.t('nav.games')).not.toBe(en);
+    expect(s.t('nav.create')).not.toBe(en);
   });
 
   it('detects the browser language (region stripped, list order, unsupported → en)', () => {

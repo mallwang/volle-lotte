@@ -7,7 +7,7 @@ export const de: Record<keyof typeof en, string> = {
   'theme.light': 'Hell',
   'theme.dark': 'Dunkel',
   'nav.main': 'Hauptmenü',
-  'nav.games': 'Spiele',
+  'nav.games': 'Lobby',
   'nav.create': 'Spiel erstellen',
   'connection.status': 'Verbindung: {state}. Verbindung wird neu aufgebaut.',
   'connection.connecting': 'verbinde',
@@ -23,7 +23,8 @@ export const de: Record<keyof typeof en, string> = {
   'nickname.invalid':
     'Der Spitzname muss 2-20 Zeichen haben: Buchstaben, Ziffern, Leerzeichen, _ oder -.',
 
-  'lobby.title': 'Spiele',
+  'lobby.title': 'Lobby',
+  'game.title': 'Spiel',
   'lobby.create': 'Spiel erstellen',
   'lobby.empty': 'Keine offenen Spiele.',
   'lobby.host': 'Gastgeber {name}',

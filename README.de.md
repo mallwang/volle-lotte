@@ -1,5 +1,9 @@
 # Volle Lotte
 
+<p align="center">
+  <img src="logo.png" alt="Volle Lotte" width="120" />
+</p>
+
 > This README is also available in English: [README.md](README.md)
 
 Online-Multiplayer-Web-App (PWA) für das Würfelspiel _Volle Lotte_, 2-8 Spielende, Computergegner.
@@ -64,3 +68,7 @@ Danach http://localhost:8080 öffnen. `GET /api/health` ist der Healthcheck.
 4. Deployen und den Reverse Proxy (https://volle-lotte.allwang.family) vor den Host-Port schalten. Er **muss WebSocket-Upgrades** für `/socket.io` erlauben.
 
 Neu deployen nach einem neuen Image: **Stacks → dein Stack → Pull and redeploy** (oder `docker compose pull && docker compose up -d`). Die Datenbank sicherst du durch Kopieren von `/opt/volle-lotte/data`.
+
+## Credits
+
+Icon erstellt von [Magnific](https://www.flaticon.com/authors/magnific) von [Flaticon](https://www.flaticon.com/).

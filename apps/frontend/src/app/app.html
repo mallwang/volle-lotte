@@ -1,5 +1,9 @@
 <header class="vl-header">
-  <h1>Volle Lotte</h1>
+  <h1 class="vl-brand">
+    <img src="/volle-lotte.png" alt="" class="vl-logo" /><span
+      >Volle Lotte <small class="vl-version">v{{ version }}</small></span
+    >
+  </h1>
   @if (socket.session() && !socket.game()) {
   <nav class="vl-nav" [attr.aria-label]="'nav.main' | t">
     <a routerLink="/lobby" routerLinkActive="active">{{ 'nav.games' | t }}</a>
