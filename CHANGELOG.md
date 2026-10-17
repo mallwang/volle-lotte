@@ -1,3 +1,13 @@
+## 0.0.5 (2026-10-17)
+
+### 🚀 Features
+
+- **frontend:** add app icon, page titles and header version ([#18](https://github.com/mallwang/volle-lotte/pull/18))
+
+### 🩹 Fixes
+
+- **game:** correct Volle Lotte card rules and improve table feedback ([#17](https://github.com/mallwang/volle-lotte/pull/17))
+
 ## 0.0.4 (2026-10-17)
 
 ### 🚀 Features
