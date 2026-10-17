@@ -2,10 +2,10 @@
 
 > This README is also available in English: [README.md](README.md)
 
-Online-Multiplayer-Web-App (PWA) für das Würfelspiel _Volle Lotte_ (Tutto), 2-8 Spielende, Computergegner.
+Online-Multiplayer-Web-App (PWA) für das Würfelspiel _Volle Lotte_, 2-8 Spielende, Computergegner.
 Hosting: https://volle-lotte.allwang.family. Ein einzelner Docker-Container (NestJS liefert API, WebSocket und den Angular-Build aus), SQLite auf einem Volume.
 
-Portiert aus der Java-Swing-Version (`java/apps/games/volle-lotte`). Spielanleitung: [docs/how-to-play.de.md](docs/how-to-play.de.md). Technische Regelreferenz: [docs/rules.md](docs/rules.md) (englisch).
+Spielanleitung: [docs/how-to-play.de.md](docs/how-to-play.de.md). Technische Regelreferenz: [docs/rules.de.md](docs/rules.de.md) ([englisch](docs/rules.md)).
 Entwickelt mit [Spec-Kit](https://github.com/github/spec-kit) (`/speckit-*`); Prinzipien in `.specify/memory/constitution.md`.
 
 Funktionen: Oberfläche auf Deutsch und Englisch (folgt der Browsersprache, in der Kopfzeile umschaltbar). Spielanleitung: [Deutsch](docs/how-to-play.de.md) | [English](docs/how-to-play.md). Benutzeranleitung: [Deutsch](docs/user-guide.de.md) | [English](docs/user-guide.md).
