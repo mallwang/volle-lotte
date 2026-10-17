@@ -40,14 +40,14 @@ Bonus 200/300/400/500/600 5 each (25), Double Lotte 5, Stop 10, Star 5, Street 5
 Only a Volle Lotte on a **Bonus** card lets the player draw on. The points of the turn so far are then _carried_.
 What the next card does with them (example: Bonus 600 Volle Lotte with 700 dice points = **1,300 carried**):
 
-| Next card | Carried points | Outcome |
-| ---------------- | -------------------------------------------------------------- |
-| **Bonus** | kept; a new run starts | Bank needs the minimum for this card's run; then 1,300 + run are credited. Bust: 1,300 + run lost. Another Volle Lotte adds the new bonus; the player may draw on again. |
-| **Stop** | **lost** | Turn ends at once, 0 points credited. The notice names the lost points ("lost 1,300 points"). |
-| **Star** | kept; banking is not possible, the player throws until the end | Bust: 1,300 + run are credited (Star cannot lose). Volle Lotte: 1,300 + run are credited. E.g. run 250 gives 1,550. |
-| **Double Lotte** | kept, **not doubled**; banking is not possible while carrying | Volle Lotte: 1,300 + 2 x run, e.g. run 700 gives 1,300 + 1,400 = 2,700 (doubled run must reach the minimum, else everything is lost). Bust: 1,300 + run lost. |
-| **Street** | **replaced** by 2,000 on success | Street done: exactly 2,000 (even if more were carried, e.g. 2,500 becomes 2,000). Bust: 1,300 + run lost. |
-| **Plus/Minus** | **discarded** on Volle Lotte; banking is not possible | Volle Lotte: +1,000 only, leaders lose 1,000 (1,300 gone). Bust: 1,300 + run lost. |
-| **Clover** | irrelevant for a win; banking is not possible | Two new Volle Lotte in a row win the game. Bust at any point (also after the first): 1,300 + run lost. |
+| Next card        | Carried points                                                 | Outcome                                                                                                                                                                  |
+| ---------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Bonus**        | kept; a new run starts                                         | Bank needs the minimum for this card's run; then 1,300 + run are credited. Bust: 1,300 + run lost. Another Volle Lotte adds the new bonus; the player may draw on again. |
+| **Stop**         | **lost**                                                       | Turn ends at once, 0 points credited. The notice names the lost points ("lost 1,300 points").                                                                            |
+| **Star**         | kept; banking is not possible, the player throws until the end | Bust: 1,300 + run are credited (Star cannot lose). Volle Lotte: 1,300 + run are credited. E.g. run 250 gives 1,550.                                                      |
+| **Double Lotte** | kept, **not doubled**; banking is not possible while carrying  | Volle Lotte: 1,300 + 2 x run, e.g. run 700 gives 1,300 + 1,400 = 2,700 (doubled run must reach the minimum, else everything is lost). Bust: 1,300 + run lost.            |
+| **Street**       | **replaced** by 2,000 on success                               | Street done: exactly 2,000 (even if more were carried, e.g. 2,500 becomes 2,000). Bust: 1,300 + run lost.                                                                |
+| **Plus/Minus**   | **discarded** on Volle Lotte; banking is not possible          | Volle Lotte: +1,000 only, leaders lose 1,000 (1,300 gone). Bust: 1,300 + run lost.                                                                                       |
+| **Clover**       | irrelevant for a win; banking is not possible                  | Two new Volle Lotte in a row win the game. Bust at any point (also after the first): 1,300 + run lost.                                                                   |
 
 The same without carried points (first card of a turn): Bonus and Double Lotte can be banked at once once the minimum is reached; Star, Street, Plus/Minus and Clover can never be banked and must end in a bust or Volle Lotte. Stop ends the turn without effect.
