@@ -17,7 +17,7 @@
     "lint:fix": "nx run-many -t lint --fix",
     "typecheck": "nx run-many -t typecheck",
     "release": "nx release",
-    "test:coverage": "nx run-many -t test --coverage --outputStyle=static && bash scripts/fix-lcov-paths.sh",
+    "test:coverage": "nx run-many -t test --coverage --outputStyle=static",
     "sonar:local": "bash scripts/sonar-local.sh",
     "sonar:local:up": "docker compose -f docker-compose.sonar.yml up -d",
     "sonar:local:down": "docker compose -f docker-compose.sonar.yml down",
