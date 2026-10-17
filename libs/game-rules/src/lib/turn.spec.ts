@@ -130,11 +130,15 @@ describe('cards', () => {
     expect(drawn).toMatchObject({ phase: 'draw', card: null, carried: 1800, run: 0 });
   });
 
-  it('Stop ends the turn; after a Volle Lotte it credits the carried points', () => {
+  it('Stop ends the turn; after a Volle Lotte the carried points are lost', () => {
     expect(applyCard(newTurn(), 'stop')).toMatchObject({ turn: null, credit: 0 });
     expect(applyCard({ ...newTurn(), carried: 700 }, 'stop')).toMatchObject({
       turn: null,
-      credit: 700,
+      credit: 0,
+      events: [
+        { type: 'cardDrawn', card: 'stop' },
+        { type: 'turnLost', lost: 700 },
+      ],
     });
   });
 
@@ -214,6 +218,21 @@ describe('cards', () => {
       });
       expect(throwAndSelect(t, [5], [0])).toMatchObject({ turn: null, credit: 2000 });
     });
+  });
+
+  it('Plus/Minus, Clover: banking is never allowed', () => {
+    for (const card of ['plusMinus', 'clover'] as const)
+      expect(reason(turnOf(card, { phase: 'decide', free: 3, run: 600 }), { type: 'bank' })).toBe(
+        'wrongPhase',
+      );
+  });
+
+  it('Bonus after a Volle Lotte: bank credits carried + run, a bust loses both', () => {
+    const t = turnOf('bonus200', { phase: 'decide', free: 3, run: 400, carried: 1300 });
+    expect(run(t, { type: 'bank' })).toMatchObject({ turn: null, credit: 1700 });
+    const bust = run(t, { type: 'throw' }, rolls(2, 3, 4));
+    expect(bust).toMatchObject({ turn: null, credit: 0 });
+    expect(bust.events).toContainEqual({ type: 'bust', lost: 1700 });
   });
 
   it('Plus/Minus: Volle Lotte asks the game for the effect, bust gives nothing', () => {

@@ -1,10 +1,11 @@
-import type { GameView } from 'game-rules';
+import type { GameView, Turn } from 'game-rules';
 import { defaultRules } from 'game-rules';
 import {
   discardLayers,
   layerTransform,
   pileLevel,
   playedCards,
+  safeLabel,
   seatAreas,
   seatRows,
   seatViews,
@@ -74,5 +75,27 @@ describe('table-view', () => {
     expect(layerTransform(3)).toEqual(layerTransform(3));
     expect(layerTransform(0).rot).toBeCloseTo(-12.1);
     expect(layerTransform(0)).toMatchObject({ x: -4, y: -3 });
+  });
+});
+
+describe('safeLabel', () => {
+  const turn = (t: Partial<Turn>): Turn =>
+    ({ card: 'bonus200', free: 6, carried: 0, run: 0, street: [], volleLottes: 0, ...t }) as Turn;
+
+  it('names points on point cards and the previous run when carried', () => {
+    expect(safeLabel(turn({ run: 250 }))).toMatchObject({ key: 'table.safe.points' });
+    expect(safeLabel(turn({ carried: 350 })).key).toBe('table.safe.carried');
+  });
+
+  it('shows dice progress on goal cards', () => {
+    expect(safeLabel(turn({ card: 'plusMinus', free: 5 }))).toMatchObject({
+      key: 'table.safe.goal',
+      params: { done: 1, left: 5 },
+    });
+    expect(safeLabel(turn({ card: 'street', street: [1, 2] })).params).toMatchObject({ left: 4 });
+    expect(safeLabel(turn({ card: 'clover', volleLottes: 1, free: 4, carried: 5 }))).toMatchObject({
+      key: 'table.safe.cloverStake',
+      params: { pass: 2, done: 8, left: 4 },
+    });
   });
 });

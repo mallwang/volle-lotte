@@ -68,6 +68,20 @@ export const en = {
   'card.clover': 'Clover',
   'card.tile': 'Card: {card}',
   'card.none': 'none',
+  'card.info.bonus':
+    'Bonus {bonus}: bank at {min}+ points in this run, or throw a Volle Lotte (all 6 dice score) to add {bonus} points and draw on.',
+  'card.info.doubleLotte':
+    'Double Lotte: throw a Volle Lotte to double the points of this run (minimum {min}). The turn then ends. A bust loses everything.',
+  'card.info.stop':
+    'Stop: your turn ends at once. After a Volle Lotte the points collected so far are lost.',
+  'card.info.star':
+    'Star: throw until you bust, you cannot bank. All points of the turn are credited at the end, with no minimum.',
+  'card.info.street':
+    'Street: collect one die of each value 1-6 across throws. Success gives exactly 2,000 points; a throw without a missing value is a bust.',
+  'card.info.plusMinus':
+    'Plus/Minus: banking is not possible. Throw a Volle Lotte for +1,000 points; every leader loses 1,000.',
+  'card.info.clover':
+    'Clover: throw two new Volle Lotte in a row to win the game at once. A bust loses all turn points.',
 
   'difficulty.easy': 'easy',
   'difficulty.medium': 'medium',
@@ -119,8 +133,11 @@ export const en = {
   'table.players': 'Players',
   'table.log': 'Log',
   'turn.timer': 'Time limit for this move',
-  'turn.warning':
+  'table.timedOutYou': 'You ran out of time.',
+  'table.timedOutWarn':
     'You ran out of time twice in a row. One more and a computer takes over your seat.',
+  'table.timedOutOther': '{who} ran out of time.',
+  'table.drawOrBank': 'Draw the next card or bank your points',
   'table.or': ' or ',
   'table.draw': 'Draw',
   'table.throw': 'Throw dice',
@@ -129,7 +146,17 @@ export const en = {
   'table.select': 'Set aside selected',
   'table.selectOne': 'Select at least one die',
   'table.safe': 'Secured',
-  'table.safePoints': 'Secured: {points} points',
+  'table.safe.points': 'Secured: {points} points',
+  'table.safe.goal': 'Dice {done} of 6, {left} to go for success',
+  'table.safe.goalStake':
+    'Dice {done} of 6, {left} to go for success · {carried} points of the previous run at stake',
+  'table.safe.street': 'Dice {done} of 6, {left} to go for success',
+  'table.safe.streetStake':
+    'Dice {done} of 6, {left} to go for success · {carried} points of the previous run at stake',
+  'table.safe.clover': 'Run {pass} of 2: dice {done} of 12, {left} to go until the game is won',
+  'table.safe.cloverStake':
+    'Run {pass} of 2: dice {done} of 12, {left} to go until the game is won · {carried} points of the previous run at stake',
+  'table.safe.carried': 'Secured: {carried} points (previous run), {points} (this run)',
   'table.belowMinimum': 'The minimum of {min} points has not been reached yet.',
   'table.bank': 'Bank points',
 
@@ -139,6 +166,11 @@ export const en = {
   'dice.notSelected': 'not selected',
   'table.bustYou': 'You went bust. Next player ({next}) is up.',
   'table.bustOther': '{who} went bust. Next player ({next}) is up.',
+  'table.stopYou': 'You drew the Stop card. Next player ({next}) is up.',
+  'table.stopOther': '{who} drew the Stop card. Next player ({next}) is up.',
+  'table.stopLostYou': 'You drew the Stop card and lost {lost} points. Next player ({next}) is up.',
+  'table.stopLostOther':
+    '{who} drew the Stop card and lost {lost} points. Next player ({next}) is up.',
   'table.bankedYou': 'You banked {points} points. Next player ({next}) is up.',
   'table.bankedOther': '{who} banked {points} points. Next player ({next}) is up.',
   'dice.rolling': 'Dice are rolling…',

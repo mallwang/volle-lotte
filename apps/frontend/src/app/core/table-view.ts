@@ -1,4 +1,4 @@
-import type { GameView, Rules } from 'game-rules';
+import type { GameView, Rules, Turn } from 'game-rules';
 import { playerSeats } from './game-view';
 
 /** Grid area of a seat: side (l/r) and row from the top, e.g. `l1`, `r1`, `l2`. */
@@ -69,3 +69,38 @@ export const layerTransform = (i: number): { rot: number; x: number; y: number }
   x: ((i * 31) % 9) - 4,
   y: ((i * 17) % 7) - 3,
 });
+
+/**
+ * What the "secured" area says: points where there are points to collect, otherwise the progress
+ * towards the goal (Street, Double Lotte, Plus/Minus, Clover). Carried points of an earlier run are
+ * named, since the current card decides whether they are added or at stake.
+ */
+export function safeLabel(turn: Turn): { key: string; params: Record<string, number> } {
+  const done = 6 - turn.free;
+  const { carried } = turn;
+  switch (turn.card) {
+    case 'street':
+      return {
+        key: `table.safe.street${carried ? 'Stake' : ''}`,
+        params: { done: turn.street.length, left: 6 - turn.street.length, carried },
+      };
+    case 'plusMinus':
+    case 'doubleLotte':
+      return {
+        key: `table.safe.goal${carried ? 'Stake' : ''}`,
+        params: { done, left: turn.free, carried },
+      };
+    case 'clover': {
+      const all = turn.volleLottes * 6 + done;
+      return {
+        key: `table.safe.clover${carried ? 'Stake' : ''}`,
+        params: { pass: turn.volleLottes + 1, done: all, left: 12 - all, carried },
+      };
+    }
+    default:
+      return {
+        key: carried ? 'table.safe.carried' : 'table.safe.points',
+        params: { points: turn.run, carried },
+      };
+  }
+}

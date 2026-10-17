@@ -2,7 +2,7 @@
 
 > Diese Anleitung gibt es auch auf Englisch: [How to play](how-to-play.md)
 
-Volle Lotte (auch Tutto genannt) ist ein Würfelspiel für 2-8 Spielende. Du wirfst sechs Würfel und sammelst Punkte. Je mehr du riskierst, desto mehr kannst du gewinnen, aber ein schlechter Wurf kostet dich alle Punkte deiner Runde.
+Volle Lotte ist ein Würfelspiel für 2-8 Spielende. Du wirfst sechs Würfel und sammelst Punkte. Je mehr du riskierst, desto mehr kannst du gewinnen, aber ein schlechter Wurf kostet dich alle Punkte deiner Runde.
 
 Wer zuerst die **Zielpunktzahl** erreicht (Standard 6.000), gewinnt. Die technische Regelreferenz steht in [rules.md](rules.md) (englisch).
 
@@ -27,17 +27,17 @@ Zählen alle sechs Würfel, hast du eine **Volle Lotte**. Du wirfst alle sechs W
 
 ## Karten
 
-| Karte                   | Wirkung                                                                                                                                                                                              |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Bonus 200-600**       | Bei einer Vollen Lotte erhältst du die Bonuspunkte. Danach darfst du sichern oder die nächste Karte ziehen und mit sechs frischen Würfeln weitermachen; deine Punkte bleiben.                        |
-| **Doppel-Lotte**        | Bei einer Vollen Lotte zählen die Punkte seit dieser Karte doppelt. Die Runde endet.                                                                                                                 |
-| **Stopp**               | Deine Runde endet sofort. Hast du sie nach einer Vollen Lotte gezogen, werden deine bisherigen Punkte gutgeschrieben.                                                                                |
-| **Stern**               | Du wirfst bis zum Fehlwurf, und **alle** Punkte der Runde werden am Ende gutgeschrieben, ohne Mindestpunkte. Bei einer Vollen Lotte endet die Runde und die Punkte werden gutgeschrieben.            |
-| **Straße**              | Sammle über mehrere Würfe je einen Würfel mit den Werten 1-6. Ein Wurf ohne fehlenden Wert ist ein Fehlwurf. Bei Erfolg gibt es genau 2.000 Punkte für die Runde, und die Runde endet.               |
-| **Plus/Minus**          | Bei einer Vollen Lotte erhältst du nur 1.000 Punkte. Alle Führenden (bei Gleichstand alle) verlieren 1.000 Punkte; führst du selbst, verlierst du nichts. Kein Stand fällt unter 0. Die Runde endet. |
-| **Kleeblatt** (1 Karte) | Zwei **neue** Volle Lotten hintereinander nach dem Ziehen gewinnen das Spiel sofort, egal wie der Punktestand ist.                                                                                   |
+| Karte                   | Wirkung                                                                                                                                                                                                                                     |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Bonus 200-600**       | Bei einer Vollen Lotte erhältst du die Bonuspunkte. Danach darfst du sichern oder die nächste Karte ziehen und mit sechs frischen Würfeln weitermachen; deine Punkte bleiben.                                                               |
+| **Doppel-Lotte**        | Bei einer Vollen Lotte zählen die Punkte seit dieser Karte doppelt. Die Runde endet.                                                                                                                                                        |
+| **Stopp**               | Deine Runde endet sofort. Hast du sie nach einer Vollen Lotte gezogen, verfallen deine bisherigen Punkte.                                                                                                                                   |
+| **Stern**               | Du wirfst bis zum Fehlwurf, und **alle** Punkte der Runde werden am Ende gutgeschrieben, ohne Mindestpunkte. Bei einer Vollen Lotte endet die Runde und die Punkte werden gutgeschrieben.                                                   |
+| **Straße**              | Sammle über mehrere Würfe je einen Würfel mit den Werten 1-6. Ein Wurf ohne fehlenden Wert ist ein Fehlwurf. Bei Erfolg gibt es genau 2.000 Punkte für die Runde, und die Runde endet.                                                      |
+| **Plus/Minus**          | Sichern ist nicht möglich; du brauchst eine Volle Lotte und erhältst dann nur 1.000 Punkte. Alle Führenden (bei Gleichstand alle) verlieren 1.000 Punkte; führst du selbst, verlierst du nichts. Kein Stand fällt unter 0. Die Runde endet. |
+| **Kleeblatt** (1 Karte) | Zwei **neue** Volle Lotten hintereinander nach dem Ziehen gewinnen das Spiel sofort, egal wie der Punktestand ist.                                                                                                                          |
 
-Ist die Karte nach einer Vollen Lotte Straße, Doppel-Lotte oder Kleeblatt, gilt sie und du musst Erfolg haben, sonst verlierst du alle Punkte der Runde.
+Ist die Karte nach einer Vollen Lotte Straße, Doppel-Lotte, Plus/Minus oder Kleeblatt, gilt sie und du musst Erfolg haben, sonst verlierst du alle Punkte der Runde.
 
 ## Ende des Spiels
 

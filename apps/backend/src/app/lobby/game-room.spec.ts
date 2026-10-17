@@ -242,14 +242,18 @@ describe('GameRoom settings and computer pacing', () => {
         phase === 'select' ? { type: 'select', dice: [0] } : { type: move[phase] ?? 'throw' },
       );
     }
-    const last = room.log[room.log.length - 1];
-    return { room, thrown: JSON.stringify(last).includes('"thrown"') };
+    const last = room.log
+      .slice(-2)
+      .map((e) => JSON.stringify(e))
+      .join();
+    // a turn that ended (bust, bank) is shown as a 6 s notice before the next player moves
+    return { room, thrown: last.includes('"thrown"'), ended: last.includes('"turnEnded"') };
   };
 
   it('waits for the dice to stop before the computer acts, else 2 s', () => {
-    const { room, thrown } = untilComputer(false);
+    const { room, thrown, ended } = untilComputer(false);
     const n = room.log.length;
-    const delay = thrown ? 5000 + 3250 : 2000;
+    const delay = (thrown ? 5000 + 3250 : 2000) + (ended ? 6000 : 0);
     jest.advanceTimersByTime(delay - 1);
     expect(room.log).toHaveLength(n);
     jest.advanceTimersByTime(1);

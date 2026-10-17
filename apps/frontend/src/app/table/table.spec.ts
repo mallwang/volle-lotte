@@ -322,7 +322,7 @@ describe('Table', () => {
     await fixture.whenStable();
     expect(el.querySelector('[aria-current=true] app-turn-timer')).not.toBeNull();
     expect(el.querySelectorAll('app-turn-timer')).toHaveLength(1);
-    expect(el.textContent).toContain('One more and a computer takes over');
+    expect(el.querySelector('p-message')).toBeNull();
   });
 
   it('asks for confirmation before leaving', async () => {
@@ -346,6 +346,58 @@ describe('Table', () => {
     await fixture.whenStable();
     expect(toasts).not.toHaveBeenCalled();
     expect(fixture.nativeElement.querySelector('.vl-bust')?.textContent).toContain('banked 300');
+  });
+
+  describe('turn notices', () => {
+    const turn = (seat: number, data: object) => ({ kind: 'turn', seat, data });
+    async function noticeFor(log: object[], over = {}) {
+      const t = await setup(0, over);
+      t.socket.game.set({ ...t.socket.game()!, log } as never);
+      t.fixture.detectChanges();
+      await t.fixture.whenStable();
+      return t.el.querySelector('.vl-bust')?.textContent ?? '';
+    }
+
+    it('announces a timeout to the player', async () => {
+      expect(await noticeFor([{ kind: 'timedOut', seat: 0 }])).toContain('You ran out of time.');
+    });
+
+    it('announces a timeout of another player', async () => {
+      expect(await noticeFor([{ kind: 'timedOut', seat: 1 }])).toContain('ran out of time.');
+    });
+
+    it('warns the player who timed out again', async () => {
+      const t = await setup(0);
+      const view = t.socket.game()!;
+      t.socket.game.set({
+        ...view,
+        you: { ...view.you, timeoutWarning: true },
+        log: [{ kind: 'timedOut', seat: 0 }],
+      } as never);
+      t.fixture.detectChanges();
+      await t.fixture.whenStable();
+      expect(t.el.querySelector('.vl-bust')?.textContent).toContain('One more');
+    });
+
+    it('announces a Stop card without points at stake', async () => {
+      const log = [turn(0, { type: 'cardDrawn', card: 'stop' })];
+      expect(await noticeFor(log)).toContain('You drew the Stop card.');
+    });
+
+    it('announces the points lost to a Stop card', async () => {
+      const log = [
+        turn(0, { type: 'cardDrawn', card: 'stop' }),
+        turn(0, { type: 'turnLost', lost: 400 }),
+      ];
+      expect(await noticeFor(log)).toContain('lost 400 points');
+    });
+
+    it('announces a bust after a throw', async () => {
+      localStorage.setItem('vl-skip-dice', 'true');
+      const log = [turn(0, { type: 'thrown', dice: [2, 3] }), turn(0, { type: 'bust', lost: 0 })];
+      expect(await noticeFor(log)).toContain('went bust');
+      localStorage.removeItem('vl-skip-dice');
+    });
   });
 
   it('is keyboard operable: dice then actions are native buttons in order', async () => {

@@ -36,6 +36,8 @@ const ROLL_MAX_MS = 3000;
 const ROLL_MAX_FAST_MS = 1500;
 const AFTER_ROLL_MS = 3000 + 250; // ponytail: fixed latency margin, the server cannot observe client animations
 const COMPUTER_PAUSE_MS = 2000;
+/** Clients keep a turn's result (bust, bank, Stop, timeout) on the table this long; keep in sync with table.ts. */
+const NOTICE_MS = 6000;
 
 type Level = 'easy' | 'medium' | 'hard';
 
@@ -341,7 +343,8 @@ export class GameRoom {
     return { ok: true };
   }
 
-  private apply(action: Action): Res {
+  /** `noticeMs`: result notice shown before this action's events (a timeout). */
+  private apply(action: Action, noticeMs = 0): Res {
     const game = this.game as GameState;
     const seat = this.currentSeat();
     const outcome = applyAction(game, action, this.rng);
@@ -354,8 +357,10 @@ export class GameRoom {
         ? ROLL_MAX_FAST_MS
         : ROLL_MAX_MS;
     const thrown = outcome.events.some((e) => e.type === 'thrown');
-    this.computerDelay = thrown ? rollMax + AFTER_ROLL_MS : COMPUTER_PAUSE_MS;
-    this.turnDelay = thrown ? ROLL_MAX_MS + AFTER_ROLL_MS : 0;
+    // a finished turn ends in a notice on every client before the next player may move
+    const ended = outcome.events.some((e) => e.type === 'turnEnded') ? NOTICE_MS : 0;
+    this.computerDelay = (thrown ? rollMax + AFTER_ROLL_MS : COMPUTER_PAUSE_MS) + ended + noticeMs;
+    this.turnDelay = (thrown ? ROLL_MAX_MS + AFTER_ROLL_MS : 0) + ended + noticeMs;
     for (const event of outcome.events) this.add('turn', seat, event);
     if (outcome.state.result) {
       this.phase = 'finished';
@@ -431,13 +436,13 @@ export class GameRoom {
     human.timeouts++;
     if (human.timeouts >= MAX_TIMEOUTS) this.replaceByBot(seat, 'timeouts');
     if (action) {
-      this.apply(action);
+      this.apply(action, NOTICE_MS);
       return;
     }
     this.game = skipTurn(this.game);
     this.preview = [];
-    this.computerDelay = COMPUTER_PAUSE_MS;
-    this.turnDelay = 0;
+    this.computerDelay = COMPUTER_PAUSE_MS + NOTICE_MS;
+    this.turnDelay = NOTICE_MS;
     this.emit();
   }
 

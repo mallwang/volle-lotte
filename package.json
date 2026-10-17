@@ -1,7 +1,7 @@
 {
   "name": "volle-lotte",
   "version": "0.0.0",
-  "description": "Online multiplayer web app for the dice game Volle Lotte (Tutto). Angular + NestJS + SQLite.",
+  "description": "Online multiplayer web app for the dice game Volle Lotte. Angular + NestJS + SQLite.",
   "private": true,
   "engines": {
     "node": ">=24",

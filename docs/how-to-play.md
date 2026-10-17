@@ -2,7 +2,7 @@
 
 > This guide is also available in German: [Spielanleitung](how-to-play.de.md)
 
-Volle Lotte (also known as Tutto) is a dice game for 2-8 players. You throw six dice and collect points. The more you risk, the more you can win, but a bad throw loses everything from your turn.
+Volle Lotte is a dice game for 2-8 players. You throw six dice and collect points. The more you risk, the more you can win, but a bad throw loses everything from your turn.
 
 The first player to reach the **target score** (default 6,000) wins. For the technical rule reference see [rules.md](rules.md) (English).
 
@@ -27,17 +27,17 @@ If all six dice score, you have a **Volle Lotte**. You throw all six dice again 
 
 ## Cards
 
-| Card                | Effect                                                                                                                                                                          |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Bonus 200-600**   | With a Volle Lotte you receive the bonus points. Then you may bank or draw the next card and continue with six fresh dice; your points stay.                                    |
-| **Double Lotte**    | With a Volle Lotte the points collected since this card count double. The turn ends.                                                                                            |
-| **Stop**            | Your turn ends at once. If you drew it after a Volle Lotte, your points so far are credited.                                                                                    |
-| **Star**            | You throw until you bust, and **all** points of the turn are credited at the end, with no minimum. With a Volle Lotte the turn ends and the points are credited.                |
-| **Street**          | Collect one die of each value 1-6 across several throws. A throw without a missing value is a bust. Success gives exactly 2,000 points for the turn and ends it.                |
-| **Plus/Minus**      | With a Volle Lotte you receive only 1,000 points. Every leader (all if tied) loses 1,000 points; if you lead yourself, you lose nothing. No score drops below 0. The turn ends. |
-| **Clover** (1 card) | Two **new** Volle Lotte in a row after drawing it win the game at once, whatever the score.                                                                                     |
+| Card                | Effect                                                                                                                                                                                                    |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Bonus 200-600**   | With a Volle Lotte you receive the bonus points. Then you may bank or draw the next card and continue with six fresh dice; your points stay.                                                              |
+| **Double Lotte**    | With a Volle Lotte the points collected since this card count double. The turn ends.                                                                                                                      |
+| **Stop**            | Your turn ends at once. If you drew it after a Volle Lotte, your points so far are lost.                                                                                                                  |
+| **Star**            | You throw until you bust, and **all** points of the turn are credited at the end, with no minimum. With a Volle Lotte the turn ends and the points are credited.                                          |
+| **Street**          | Collect one die of each value 1-6 across several throws. A throw without a missing value is a bust. Success gives exactly 2,000 points for the turn and ends it.                                          |
+| **Plus/Minus**      | You cannot bank; you need a Volle Lotte, which gives you only 1,000 points. Every leader (all if tied) loses 1,000 points; if you lead yourself, you lose nothing. No score drops below 0. The turn ends. |
+| **Clover** (1 card) | Two **new** Volle Lotte in a row after drawing it win the game at once, whatever the score.                                                                                                               |
 
-If the card after a Volle Lotte is Street, Double Lotte or Clover, it applies and you have to succeed, otherwise you lose all points of the turn.
+If the card after a Volle Lotte is Street, Double Lotte, Plus/Minus or Clover, it applies and you have to succeed, otherwise you lose all points of the turn.
 
 ## End of the game
 
