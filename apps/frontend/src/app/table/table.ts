@@ -141,7 +141,13 @@ const NOTICE_MS = 6000;
                   [next]="next()"
                   [street]="street()"
                   [aside]="aside()"
-                  [safe]="notice() ? notice()!.safe : turn.carried + turn.run"
+                  [safe]="
+                    notice()
+                      ? notice()!.safe
+                      : turn.card === 'clover'
+                        ? null
+                        : turn.carried + turn.run
+                  "
                   [minimum]="belowMinimum() ? state.rules.minimumPoints : null"
                   (toggled)="toggle($event)"
                 />
@@ -461,9 +467,12 @@ export class Table {
       if (this.roll.rolling()) return true;
     }
     const notice =
-      (data?.type === 'bust' || data?.type === 'banked') && this.showNotice(g, e, data);
+      (data?.type === 'bust' || data?.type === 'banked' || data?.type === 'cardDrawn') &&
+      this.showNotice(g, e, data);
     const severity = ANNOUNCED[data ? data.type : e.kind];
-    if (severity && !notice)
+    // the loss of a Stop card is part of the Stop notice
+    const afterStop = data?.type === 'turnLost' && this.isStop(g.log[g.log.indexOf(e) - 1]);
+    if (severity && !notice && !afterStop)
       this.messages.add({ severity, detail: logText(g, e, this.i18n), life: 4000 });
     return notice;
   }
@@ -472,27 +481,58 @@ export class Table {
   private showNotice(
     g: GameView,
     e: LogEntry,
-    data: Extract<GameEvent, { type: 'bust' | 'banked' }>,
+    data: Extract<GameEvent, { type: 'bust' | 'banked' | 'cardDrawn' }>,
   ): boolean {
+    const i = g.log.indexOf(e);
+    if (data.type === 'cardDrawn') {
+      if (data.card !== 'stop' || !g.game || g.game.result) return false;
+      const next = g.log[i + 1]?.data;
+      const lost = typeof next === 'object' && next.type === 'turnLost' ? next.lost : 0;
+      return this.setNotice(
+        g,
+        e,
+        lost ? 'stopLostYou' : 'stopYou',
+        lost ? 'stopLostOther' : 'stopOther',
+        [],
+        0,
+        lost,
+      );
+    }
     const bust = data.type === 'bust';
     if (!g.game || g.game.result || (bust && this.lastThrow().length === 0)) return false;
     // Star cannot bust: its final throw is followed by a bank entry, which gets the notice
-    const after = g.log[g.log.indexOf(e) + 1]?.data;
+    const after = g.log[i + 1]?.data;
     if (bust && data.lost === 0 && typeof after === 'object' && after.type === 'banked')
       return false;
-    const text = this.i18n.t(
-      `table.${data.type === 'bust' ? 'bust' : 'banked'}${e.seat === g.you.seat ? 'You' : 'Other'}`,
-      {
-        who: seatName(g.seats[e.seat ?? -1], this.i18n),
-        next: seatName(g.seats[this.seats()[g.game.current]], this.i18n),
-        points: data.type === 'banked' ? data.points : 0,
-      },
+    const points = data.type === 'banked' ? data.points : 0;
+    return this.setNotice(g, e, `${data.type}You`, `${data.type}Other`, this.lastThrow(), points);
+  }
+
+  private isStop(e: LogEntry | undefined): boolean {
+    return (
+      e?.kind === 'turn' &&
+      typeof e.data === 'object' &&
+      e.data.type === 'cardDrawn' &&
+      e.data.card === 'stop'
     );
-    this.notice.set({
-      dice: this.lastThrow(),
-      text,
-      safe: data.type === 'banked' ? data.points : 0,
+  }
+
+  private setNotice(
+    g: GameView,
+    e: LogEntry,
+    you: string,
+    other: string,
+    dice: readonly number[],
+    points: number,
+    lost = 0,
+  ): boolean {
+    const text = this.i18n.t(`table.${e.seat === g.you.seat ? you : other}`, {
+      who: seatName(g.seats[e.seat ?? -1], this.i18n),
+      next: seatName(g.seats[this.seats()[g.game?.current ?? -1]], this.i18n),
+      points,
+      lost,
     });
+    this.notice.set({ dice, text, safe: points });
     setTimeout(() => this.notice.set(null), NOTICE_MS);
     return true;
   }
@@ -522,7 +562,7 @@ export class Table {
     return this.can('throw') || (this.can('decide') && (turn?.free ?? 0) > 0);
   }
 
-  /** Star and Street must run to a bust or Volle Lotte, so banking is never offered. */
+  /** Star, Street, Plus/Minus and Clover must run to a bust or Volle Lotte, so banking is never offered. */
   protected canBank(): boolean {
     const card = this.socket.game()?.game?.turn?.card;
     const turn = this.socket.game()?.game?.turn;
@@ -531,6 +571,8 @@ export class Table {
       this.can('decide') &&
       card !== 'star' &&
       card !== 'street' &&
+      card !== 'clover' &&
+      card !== 'plusMinus' &&
       !!turn &&
       turn.run > 0 &&
       turn.run >= min

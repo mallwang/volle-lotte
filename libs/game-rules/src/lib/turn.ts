@@ -42,12 +42,12 @@ const reject = (reason: RejectionReason): Rejection => ({ ok: false, reason });
 
 const isBonus = (card: CardType | null) => card?.startsWith('bonus') === true;
 
-/** A card is drawn: Stop credits what was carried, everything else starts a run with six dice. */
+/** A card is drawn: Stop loses what was carried, everything else starts a run with six dice. */
 export function applyCard(turn: Turn, card: CardType): Extract<StepResult, { ok: true }> {
   const events: Event[] = [{ type: 'cardDrawn', card }];
   if (card === 'stop') {
-    if (turn.carried > 0) events.push({ type: 'banked', points: turn.carried });
-    return { ok: true, turn: null, credit: turn.carried, events };
+    if (turn.carried > 0) events.push({ type: 'turnLost', lost: turn.carried });
+    return { ok: true, turn: null, credit: 0, events };
   }
   return {
     ok: true,
@@ -118,7 +118,9 @@ function bankForbidden(turn: Turn): boolean {
   return (
     card === 'star' ||
     card === 'street' ||
-    (turn.carried > 0 && (card === 'doubleLotte' || card === 'clover'))
+    card === 'clover' ||
+    card === 'plusMinus' ||
+    (turn.carried > 0 && card === 'doubleLotte')
   );
 }
 

@@ -142,6 +142,13 @@ export const de: Record<keyof typeof en, string> = {
   'dice.notSelected': 'nicht ausgewählt',
   'table.bustYou': 'Du hast überworfen. Nächster Spieler ({next}) ist an der Reihe.',
   'table.bustOther': '{who} hat überworfen. Nächster Spieler ({next}) ist an der Reihe.',
+  'table.stopYou': 'Du hast die Stoppkarte gezogen. Nächster Spieler ({next}) ist an der Reihe.',
+  'table.stopOther':
+    '{who} hat die Stoppkarte gezogen. Nächster Spieler ({next}) ist an der Reihe.',
+  'table.stopLostYou':
+    'Du hast die Stoppkarte gezogen und {lost} Punkte verloren. Nächster Spieler ({next}) ist an der Reihe.',
+  'table.stopLostOther':
+    '{who} hat die Stoppkarte gezogen und {lost} Punkte verloren. Nächster Spieler ({next}) ist an der Reihe.',
   'table.bankedYou':
     'Du hast {points} Punkte gesichert. Nächster Spieler ({next}) ist an der Reihe.',
   'table.bankedOther':

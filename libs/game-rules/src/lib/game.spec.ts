@@ -90,12 +90,12 @@ describe('turns', () => {
     expect(out.ok && out.events).toContainEqual({ type: 'turnEnded', next: 1 });
   });
 
-  it('draw after a Bonus Volle Lotte keeps the points for the next card', () => {
+  it('draw after a Bonus Volle Lotte keeps the points for the next card; Stop loses them', () => {
     let g = rigged(['A', 'B'], ['bonus300', 'stop']);
     g = volleLotte(g);
     expect(g.turn).toMatchObject({ phase: 'decide', run: 1800 });
     g = act(g, { type: 'draw' });
-    expect(g).toMatchObject({ current: 1, players: [{ score: 1800 }, { score: 0 }] });
+    expect(g).toMatchObject({ current: 1, players: [{ score: 0 }, { score: 0 }] });
   });
 
   it('reshuffles an empty deck', () => {

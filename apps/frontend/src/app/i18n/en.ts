@@ -139,6 +139,11 @@ export const en = {
   'dice.notSelected': 'not selected',
   'table.bustYou': 'You went bust. Next player ({next}) is up.',
   'table.bustOther': '{who} went bust. Next player ({next}) is up.',
+  'table.stopYou': 'You drew the Stop card. Next player ({next}) is up.',
+  'table.stopOther': '{who} drew the Stop card. Next player ({next}) is up.',
+  'table.stopLostYou': 'You drew the Stop card and lost {lost} points. Next player ({next}) is up.',
+  'table.stopLostOther':
+    '{who} drew the Stop card and lost {lost} points. Next player ({next}) is up.',
   'table.bankedYou': 'You banked {points} points. Next player ({next}) is up.',
   'table.bankedOther': '{who} banked {points} points. Next player ({next}) is up.',
   'dice.rolling': 'Dice are rolling…',

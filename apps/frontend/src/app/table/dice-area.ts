@@ -90,7 +90,9 @@ const STREET_VALUES = [1, 2, 3, 4, 5, 6];
             }
           </div>
         } @else {
-          <strong>{{ 'table.safePoints' | t: { points: safe() } }}</strong>
+          <strong>{{
+            (safe() === null ? 'table.safe' : 'table.safePoints') | t: { points: safe() ?? 0 }
+          }}</strong>
           <div class="vl-aside" [style.font-size.rem]="asideSize()">
             @for (g of aside(); track $index) {
               <span class="vl-aside-group">
@@ -108,7 +110,7 @@ const STREET_VALUES = [1, 2, 3, 4, 5, 6];
             }
           </div>
         }
-        @if (aside().length) {
+        @if (aside().length && safe() !== null) {
           <ng-container *ngTemplateOutlet="act; context: { $implicit: action('bank') }" />
         }
         @if (minimum(); as min) {
@@ -134,8 +136,8 @@ export class DiceArea {
   /** Values collected on a Street (null = not a Street). */
   readonly street = input<readonly number[] | null>(null);
   readonly aside = input<readonly AsideGroup[]>([]);
-  /** Points secured so far (carried + run). */
-  readonly safe = input(0);
+  /** Points secured so far (carried + run); null on Clover, where nothing can be secured. */
+  readonly safe = input<number | null>(0);
   /** Minimum to bank, set only while the collected points are still below it. */
   readonly minimum = input<number | null>(null);
   /** Hint for what happens next. */
