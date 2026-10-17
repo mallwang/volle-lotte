@@ -1,3 +1,15 @@
+## 0.0.4 (2026-10-17)
+
+### 🚀 Features
+
+- **frontend:** add dice pips, rolling animation and secured area ([#13](https://github.com/mallwang/volle-lotte/pull/13))
+- **frontend:** redesign active game table UI ([#16](https://github.com/mallwang/volle-lotte/pull/16))
+- **game:** add open lobbies, rejoin and per-phase turn timers ([#14](https://github.com/mallwang/volle-lotte/pull/14))
+
+### 🩹 Fixes
+
+- **frontend:** allow drawing after bonus Volle Lotte and show Street progress ([#15](https://github.com/mallwang/volle-lotte/pull/15))
+
 ## 0.0.3 (2026-10-15)
 
 ### 🚀 Features
