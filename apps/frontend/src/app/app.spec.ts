@@ -10,6 +10,13 @@ import { I18nService } from './core/i18n.service';
 import { ThemeService } from './core/theme.service';
 import { TableScale } from './core/table-scale';
 
+const openGame = (phase: string) => ({
+  id: 'g1',
+  phase,
+  hostId: 'p0',
+  you: { playerId: 'p0', seat: 0 },
+});
+
 /** The menubar listens to a media query for its collapsed layout; jsdom has no matchMedia. */
 beforeEach(() => {
   window.matchMedia = vi.fn().mockReturnValue({
@@ -98,13 +105,13 @@ describe('App', () => {
 
     it('shows the current game with its phase while a game is open, links stay', () => {
       const { fixture, socket, el } = setup();
-      socket.game.set({ id: 'g1', phase: 'lobby' });
+      socket.game.set(openGame('lobby'));
       fixture.detectChanges();
       const status = el.querySelector('.vl-menu-status')!;
       expect(status.textContent).toContain('Current game');
       expect(status.textContent).toContain('Lobby');
       expect(status.getAttribute('aria-current')).toBe('page');
-      socket.game.set({ id: 'g1', phase: 'running' });
+      socket.game.set(openGame('running'));
       fixture.detectChanges();
       expect(el.querySelector('.vl-menu-status')!.textContent).toContain('Running');
       expect(links(el)).toHaveLength(2);
@@ -113,7 +120,7 @@ describe('App', () => {
     it('has no status entry without a game or for a finished game', () => {
       const { fixture, socket, el } = setup();
       expect(el.querySelector('.vl-menu-status')).toBeNull();
-      socket.game.set({ id: 'g1', phase: 'finished' });
+      socket.game.set(openGame('finished'));
       fixture.detectChanges();
       expect(el.querySelector('.vl-menu-status')).toBeNull();
     });
@@ -148,7 +155,7 @@ describe('App', () => {
 
   it('has no axe violations with a game status entry or without a session', async () => {
     const { fixture, socket } = setup();
-    socket.game.set({ id: 'g1', phase: 'running' });
+    socket.game.set(openGame('running'));
     fixture.detectChanges();
     await inBothModes(fixture, () => expectNoA11yViolations(fixture));
     socket.session.set(null);

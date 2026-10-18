@@ -23,7 +23,7 @@ Open the app and enter a nickname (2-20 characters: letters, digits, space, `_` 
 - **Join**: the games list shows each open game with its host, target score and free seats. Press **Join**. Games without a password join in one tap; password-protected games ask for the password, and after several wrong attempts the game is locked for a short time. A game that has started cannot be joined. If you left a running game, a **Rejoin** button takes your seat back from the computer.
 - **Create**: press **Create game**, then choose name, optional password, number of seats (2-8) and the rules (target score, minimum points to bank, whether four of a kind doubles, cards per type). The rules cannot be changed once the game is created.
 - **Game lobby**: the host can add or remove computer players (with a difficulty), lock seats, remove a human player (who cannot rejoin that game and sees a notice in the games list) and start the game. Everyone else waits for the host to start.
-- **Leaving**: leaving a lobby or a running game (the table or lobby button, a link in the menu bar or the browser's back button) always asks for confirmation first; **Stay** keeps you where you are. A finished game is left without a question.
+- **Leaving**: leaving a lobby or a running game (the table or lobby button, a link in the menu bar or the browser's back button) always asks for confirmation first; **Stay** keeps you where you are. A finished game is left without a question. Closing or reloading the browser tab while in a lobby or running game shows the browser's own warning (its text cannot be changed).
 
 ## 3. Playing
 

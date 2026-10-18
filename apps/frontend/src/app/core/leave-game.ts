@@ -1,3 +1,4 @@
+import { DOCUMENT } from '@angular/common';
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { NavigationCancel, NavigationEnd, NavigationError, Router } from '@angular/router';
 import type { CanDeactivateFn } from '@angular/router';
@@ -16,6 +17,7 @@ export class LeaveGame {
   private readonly socket = inject(SocketService);
   private readonly confirmation = inject(ConfirmationService);
   private readonly i18n = inject(I18nService);
+  private readonly win = inject(DOCUMENT).defaultView;
   private pending: Promise<boolean> | null = null;
   private resolvePending: ((leave: boolean) => void) | null = null;
 
@@ -30,6 +32,17 @@ export class LeaveGame {
   readonly leaving = signal(false);
 
   constructor() {
+    // closing or reloading the tab cannot show our dialog; the browser's own prompt is the fallback
+    effect((onCleanup) => {
+      if (this.situation() === 'none' || !this.win) return;
+      const win = this.win;
+      const warn = (e: BeforeUnloadEvent) => {
+        e.preventDefault();
+        e.returnValue = '';
+      };
+      win.addEventListener('beforeunload', warn);
+      onCleanup(() => win.removeEventListener('beforeunload', warn));
+    });
     // the game ended, was cancelled or the seat was removed while the dialog is open
     effect(() => {
       if (this.situation() === 'none' && this.pending) {

@@ -134,6 +134,26 @@ describe('LeaveGame', () => {
   });
 });
 
+describe('LeaveGame tab close warning', () => {
+  const fire = () => {
+    const e = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(e);
+    return e.defaultPrevented;
+  };
+
+  it('asks the browser to warn while a lobby or game is open, not otherwise', () => {
+    const { socket } = setup(gameView({ phase: 'running' }));
+    TestBed.tick();
+    expect(fire()).toBe(true);
+    socket.game.set(gameView({ phase: 'finished' }));
+    TestBed.tick();
+    expect(fire()).toBe(false);
+    socket.game.set(null);
+    TestBed.tick();
+    expect(fire()).toBe(false);
+  });
+});
+
 describe('leaveGameGuard', () => {
   it('blocks the navigation on "Stay"', async () => {
     const { socket, opened } = setup();

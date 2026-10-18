@@ -12,6 +12,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { ToastModule } from 'primeng/toast';
 import { version } from '../../package.json';
 import { I18nService } from './core/i18n.service';
+import { LeaveGame } from './core/leave-game';
 import { SocketService } from './core/socket.service';
 import { ThemeService } from './core/theme.service';
 import { STAGE_HEIGHT, STAGE_WIDTH, TableScale } from './core/table-scale';
@@ -47,6 +48,8 @@ export class App {
   protected readonly i18n = inject(I18nService);
   protected readonly tableScale = inject(TableScale);
   private readonly router = inject(Router);
+  /** Instantiated here so its tab-close warning is active on every screen. */
+  protected readonly leaveGame = inject(LeaveGame);
   private signedIn = false;
 
   /** Page links (disabled without a session) and, while a game is open, its status entry. */
