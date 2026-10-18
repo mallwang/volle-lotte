@@ -1,3 +1,17 @@
+## 0.0.6 (2026-10-18)
+
+### 🚀 Features
+
+- **frontend:** scale game table to fit the window ([#23](https://github.com/mallwang/volle-lotte/pull/23))
+- **frontend:** add app menubar and leave confirmation ([#25](https://github.com/mallwang/volle-lotte/pull/25))
+- **frontend:** show turn results as top-right toasts ([#26](https://github.com/mallwang/volle-lotte/pull/26))
+- **game-rules:** add host-set computer speed with faster default ([#27](https://github.com/mallwang/volle-lotte/pull/27))
+- **game-rules:** rework computer AI with skill and risk ([#28](https://github.com/mallwang/volle-lotte/pull/28))
+
+### 🩹 Fixes
+
+- **frontend:** show bank button after bonus Volle Lotte ([#24](https://github.com/mallwang/volle-lotte/pull/24))
+
 ## 0.0.5 (2026-10-17)
 
 ### 🚀 Features
