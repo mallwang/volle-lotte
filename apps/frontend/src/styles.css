@@ -552,10 +552,6 @@ a.vl-menu-link:hover {
   font-variant-numeric: tabular-nums;
   font-weight: 600;
 }
-.vl-bust {
-  margin: 0;
-  font-weight: 600;
-}
 .vl-bust-timer {
   height: 4px;
   margin-bottom: 0.75rem;

@@ -29,13 +29,13 @@ import { TurnTimer } from './turn-timer';
       <span class="vl-pseat-score">{{ 'player.score' | t: { score: score() } }}</span>
       <span class="vl-pseat-line">{{ marks() }}</span>
       <span class="vl-pseat-line" [class.mid]="active() && !you()">
-        @if (active() && computer() && action()) {
+        @if (active() && computer() && action() && !you()) {
           <span class="vl-hourglass" aria-hidden="true">⏳</span>
           <span class="vl-sr-only">{{ 'table.thinking' | t }}</span>
         }
         {{
           active()
-            ? computer() && action()
+            ? action() && !you()
               ? action()
               : you()
                 ? ('player.active' | t)
@@ -57,7 +57,7 @@ export class PlayerSeat {
   readonly online = input(true);
   readonly active = input(false);
   readonly you = input(false);
-  /** Current phase shown instead of "on turn" while a computer plays. */
+  /** Current phase shown instead of "on turn" while another player is on turn. */
   readonly action = input<string | null>(null);
   /** Epoch ms of the server deadline; the timer shows only while set. */
   readonly deadlineAt = input<number | null>(null);

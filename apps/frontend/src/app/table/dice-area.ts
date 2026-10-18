@@ -69,12 +69,7 @@ const STREET_VALUES = [1, 2, 3, 4, 5, 6];
           </p>
           <ng-container *ngTemplateOutlet="act; context: { $implicit: action('throw') }" />
           <ng-container *ngTemplateOutlet="act; context: { $implicit: action('select') }" />
-          @if (notice(); as n) {
-            <div class="vl-next" role="status">
-              <p class="vl-bust">{{ n.text }}</p>
-              <div class="vl-bust-timer" [style.animation-duration.ms]="noticeMs()"></div>
-            </div>
-          } @else if (next()) {
+          @if (next()) {
             <p class="vl-next" role="status">{{ next() }}</p>
           }
         </div>
@@ -127,9 +122,6 @@ export class DiceArea {
   protected readonly streetValues = STREET_VALUES;
   readonly dice = input.required<readonly (number | null)[]>();
   readonly selected = input<readonly number[]>([]);
-  /** Result of the last turn (bust or bank), shown with a countdown in place of the hint. */
-  readonly notice = input<{ text: string } | null>(null);
-  readonly noticeMs = input(0);
   readonly canSelect = input(false);
   /** Action buttons are only shown to the player on turn. */
   readonly mine = input(false);
