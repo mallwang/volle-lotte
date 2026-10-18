@@ -6,6 +6,8 @@
 
 **Status**: Draft
 
+**Design**: [design.md](design.md) (approved mockup: [mockup.html](mockup.html))
+
 **Input**: User description: "Computer player speed setting. The host sets how fast computer players act (the waits between their actions) with a slider, in the game lobby and during a running game. Every player is told with a toast when the host changes a setting. The current computer pacing is too slow and needs a faster default."
 
 ## Scope
@@ -34,7 +36,7 @@ A human player at a table with computer players waits much less between their ow
 
 ### User Story 2 - Host chooses the computer speed with a slider (Priority: P1)
 
-The host sees a speed slider in the game lobby, from fast (step 1) to slow (step 5), with the default preselected. The chosen value is taken over when the game starts. The host can also move the slider in the running game (table settings). Other players see the current value but cannot change it. Every new game starts at the default; nothing is remembered from earlier games.
+The host sees a speed slider in the game lobby, from slow (step 1) to fast (step 5), so a higher value is faster, with the default preselected. The chosen value is taken over when the game starts. The host can also move the slider in the running game (table settings). Other players see the current value but cannot change it. Every new game starts at the default; nothing is remembered from earlier games.
 
 **Why this priority**: It gives the table control over the pace; humans who want to move on quickly can have it.
 
@@ -47,7 +49,7 @@ The host sees a speed slider in the game lobby, from fast (step 1) to slow (step
 3. **Given** a running game, **When** the host moves the slider, **Then** all following computer steps use the new pace for every player at the table.
 4. **Given** a guest in the lobby or at the table, **When** they look at the setting, **Then** they see the current value and a note that only the host can change it; the control is disabled.
 5. **Given** the host created a game earlier with a non-default speed, **When** they create another game, **Then** the slider is at the default again.
-6. **Given** the slider at step 1 (fastest), **When** computers play, **Then** the steps are still shown in the right order (throw, result, selection, end of turn), only with minimal waits.
+6. **Given** the slider at step 5 (fastest), **When** computers play, **Then** the steps are still shown in the right order (throw, result, selection, end of turn), only with minimal waits.
 
 ---
 
@@ -84,7 +86,7 @@ When the host changes a game setting, every player in the game (host and guests)
 ### Functional Requirements
 
 - **FR-001**: The default pace of computer players MUST be clearly faster than today's pace (waiting before an action, waiting before and while taking dice, and the time a turn result stays shown), while each step stays readable.
-- **FR-002**: The host MUST be able to set the computer speed with a slider with five discrete steps, from 1 (fast) to 5 (slow), in the game lobby.
+- **FR-002**: The host MUST be able to set the computer speed with a slider with five discrete steps, from 1 (slow) to 5 (fast), in the game lobby.
 - **FR-003**: The speed chosen in the lobby MUST apply from the first computer turn of the started game.
 - **FR-004**: The host MUST be able to change the speed in a running game; the change MUST apply to all following computer steps for every player.
 - **FR-005**: Only the host MUST be able to change the speed; other players MUST see the current value but not change it, with a note why. The server MUST reject changes from non-hosts.
@@ -101,7 +103,7 @@ When the host changes a game setting, every player in the game (host and guests)
 
 ### Key Entities
 
-- **Computer speed**: A per-game setting owned by the host, one of five discrete steps from 1 (fast) to 5 (slow), with a default (step 3); shared with all players; not persisted beyond the game.
+- **Computer speed**: A per-game setting owned by the host, one of five discrete steps from 1 (slow) to 5 (fast), with a default (step 3); shared with all players; not persisted beyond the game.
 - **Setting change notice**: A short message to every player naming the changed setting and its new value.
 
 ## Success Criteria _(mandatory)_
@@ -109,7 +111,7 @@ When the host changes a game setting, every player in the game (host and guests)
 ### Measurable Outcomes
 
 - **SC-001**: At the default step, the average time a human waits between the end of their own turn and the start of their next one, with three computers at the table, is clearly shorter than before this change (target: at least 25% shorter; final value set in planning).
-- **SC-002**: The waits of a computer's turn shrink monotonically from step 5 to step 1; at step 1 they are less than a third of those at step 5.
+- **SC-002**: The waits of a computer's turn shrink monotonically from step 1 to step 5; at step 5 they are less than a third of those at step 1.
 - **SC-003**: The host can find and change the speed in the lobby and in a running game in under 10 seconds without help.
 - **SC-004**: In a test with two humans, 100% of host setting changes produce exactly one toast per human, with the correct setting and value.
 - **SC-005**: Over 20 consecutive games with computers at every speed step, no computer step is skipped, repeated or shown out of order.
@@ -117,7 +119,7 @@ When the host changes a game setting, every player in the game (host and guests)
 
 ## Assumptions
 
-- The slider has five steps, 1 = fast to 5 = slow. The owner rates today's pace as about step 4, so today's waits are the reference for step 4 and step 5 is slower than today. The default is step 3 (middle), clearly faster than today. Exact timings per step are decided in planning.
+- The slider has five steps, 1 = slow to 5 = fast, so a higher value is faster. The owner rates today's pace as about step 2 of 5 in this direction, so today's waits are the reference for step 2 and step 1 is slower than today. The default is step 3 (middle), clearly faster than today. Exact timings per step are decided in planning.
 - The result notice of a finished turn is shortened at faster steps but never removed, so players can read what happened.
 - The lobby shows the setting in the game lobby view the host already uses; the running-game control lives in the existing table settings dialog.
 - A protocol change is acceptable; clients and server are deployed together and an older client is rejected by the existing version check.
