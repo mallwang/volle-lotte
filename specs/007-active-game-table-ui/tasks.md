@@ -23,8 +23,8 @@
 
 **Purpose**: pure view-model helpers and shared i18n keys used by every story.
 
-- [x] T002 [P] Create pure helpers in `app/core/table-view.ts` per data-model.md: `SeatArea`, `seatAreas(count)` (2 → b,t; 4 → b,l,t,r; 8 → b,bl,l,tl,t,tr,r,br; other counts = symmetric clockwise subsets, 1–8), `totalCards(rules)`, `playedCards(total, deckSize, hasActive)`, `PileLevel`, `pileLevel(deckSize, total)` (empty = 0; few ≤ 1/6; medium ≤ 1/2; else many), `discardLayers(played)` (`min(8, ceil(played/6))`), `layerTransform(i)`, plus `seatViews` that rotates players clockwise from `you.seat`
-- [x] T003 [P] Create `app/core/table-view.spec.ts` (no TestBed): seat areas for every count 1–8 (no duplicates, starts at `b`, 8 = 3 top/3 bottom/1 left/1 right), rotation from any `you.seat`, pile level thresholds incl. 0 and after reshuffle, played clamp at 0, layers 0/1/8 cap, `layerTransform` determinism
+- [x] T002 [P] Create pure helpers in `app/core/table-view.ts` per data-model.md: `SeatArea`, `seatAreas(count)` (own seat first: l1, r1, l2, r2, ... for 1–8 players), `totalCards(rules)`, `playedCards(total, deckSize, hasActive)`, `PileLevel`, `pileLevel(deckSize, total)` (empty = 0; few ≤ 1/6; medium ≤ 1/2; else many), `discardLayers(played)` (`min(8, ceil(played/6))`), `layerTransform(i)`, plus `seatViews` that rotates players in turn order starting at `you.seat`
+- [x] T003 [P] Create `app/core/table-view.spec.ts` (no TestBed): seat areas for every count 1–8 (no duplicates, starts at `l1`, 8 = 4 per column), rotation from any `you.seat`, pile level thresholds incl. 0 and after reshuffle, played clamp at 0, layers 0/1/8 cap, `layerTransform` determinism
 - [x] T004 [P] Add new i18n keys to `app/i18n/en.ts` and `app/i18n/de.ts` (seat accessible name parts: you/active/offline/human/computer, "players" list label, pile levels many/medium/few/empty, draw/discard pile labels with counts, empty card slot); run the existing i18n parity spec
 
 **Checkpoint**: helpers tested, keys present.
@@ -33,17 +33,17 @@
 
 ## Phase 3: User Story 1 - Players around the table (P1) 🎯 MVP
 
-**Goal**: seat cards on an oval table, own seat bottom centre, clockwise, active seat with timer.
+**Goal**: seat cards on an oval table, own seat top left, turn order alternating right and left, active seat with timer.
 
 **Independent Test**: games with 2, 4, 8 players: positions, own/active highlight, timer only in the active seat, offline marker.
 
 - [x] T005 [P] [US1] Add board/felt/grid-area/seat styles (tokens only, no hard-coded colours, focus ring, not-colour-alone markers) to `apps/frontend/src/styles.css`
 - [x] T006 [P] [US1] Create `app/table/player-seat.ts` (`PlayerSeat`: inputs `name`, `score`, `computer`, `online`, `active`, `you`, `deadlineAt?`; human/computer icon, truncated name with full name as title/accessible name, "you" and "active" labels/icons, offline state; embeds existing `TurnTimer` only when `deadlineAt` set; `aria-label` with name, score, kind, states)
-- [x] T007 [P] [US1] Create `app/table/table-layout.ts` (`TableLayout`: input `areas`; content slots for seats (ordered list, DOM order = clockwise) and centre; oval felt; grid areas `tl t tr / l c r / bl b br`)
+- [x] T007 [P] [US1] Create `app/table/table-layout.ts` (`TableLayout`: input `areas`; content slots for seats (ordered list, DOM order = turn order) and centre; oval felt; side columns with grid areas `l1..l4` / `r1..r4` around the centre)
 - [x] T008 [P] [US1] Create `app/table/player-seat.spec.ts` (renders name/score/icon, you+active distinguishable, offline, timer only when `deadlineAt`, accessible name)
 - [x] T009 [P] [US1] Create `app/table/table-layout.spec.ts` (area class per seat for 2/4/8, projected centre content)
 - [x] T010 [US1] Update `app/table/table.ts`: replace the player list and the textual active-player/target lines with `TableLayout` + `PlayerSeat` (use `seatViews`; keep target score visible; keep timer condition: hidden while rolling or showing a bust; announce active player via existing live region); remove the separate turn-timer placement
-- [x] T011 [US1] Update `app/table/table.spec.ts` for the new seat markup (own seat first/bottom, active seat contains the timer, offline marker); keep all other cases green
+- [x] T011 [US1] Update `app/table/table.spec.ts` for the new seat markup (own seat first/top left, active seat contains the timer, offline marker); keep all other cases green
 - [x] T012 [US1] Delete `app/shared/player-tile.ts` and its cases in `app/shared/tiles.spec.ts` if nothing else uses it (grep first)
 
 **Checkpoint**: US1 works alone with the old dice/log/card markup in the centre.
@@ -92,7 +92,7 @@
 ## Phase 6: Polish
 
 - [x] T030 Check component style budgets (4kb warn / 8kb error) with `npm run build`; move shared rules into `styles.css` if exceeded
-- [ ] T031 [P] Verify keyboard order (clockwise seats), visible focus, contrast in light/dark and EN/DE per quickstart.md; fix gaps
+- [ ] T031 [P] Verify keyboard order (turn order), visible focus, contrast in light/dark and EN/DE per quickstart.md; fix gaps
 - [x] T032 [P] Update `docs/migration.md` (frontend table structure) if it describes the old `Table`/tiles
 - [ ] T033 Run `npm run typecheck && npm run lint && npm run test` (coverage ≥ 80%), then the quickstart.md manual walk-through at 1024 px and wider for 2, 4, 8 players
 

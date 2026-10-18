@@ -14,20 +14,20 @@
 
 ### User Story 1 - Players around the table (Priority: P1)
 
-Once the game has started, the players are shown as small seat cards arranged around an oval table in clockwise order, like at an online poker table. The local player always sits at the bottom centre and is visibly highlighted ("you"), regardless of their seat number; the other players are rotated accordingly, so the turn order runs clockwise starting from the local player. Each seat card shows a human or computer icon, the name and the current score. The player whose turn it is has a clearly highlighted card that also contains the turn timer, so it is obvious whom the timer belongs to. Offline players are marked on their card.
+Once the game has started, the players are shown as small seat cards arranged in two columns, left and right of an oval table, like at an online poker table. The local player always sits in the top-left position and is visibly highlighted ("you"), regardless of their seat number; the other players are rotated accordingly. Following the turn order starting from the local player, seats alternate between the right and the left column and fill each column from top to bottom. Each seat card shows a human or computer icon, the name and the current score. The player whose turn it is has a clearly highlighted card that also contains the turn timer, so it is obvious whom the timer belongs to. Offline players are marked on their card.
 
 **Why this priority**: This is the core of the redesign and replaces the separate player list; it is the biggest gain in orientation.
 
-**Independent Test**: Start a game with 2, 4 and 8 players (humans and computers) and check seat positions, highlighting of the own seat, highlighting of the active seat with the timer inside it, and clockwise order.
+**Independent Test**: Start a game with 2, 4 and 8 players (humans and computers) and check seat positions, highlighting of the own seat, highlighting of the active seat with the timer inside it, and turn order.
 
 **Acceptance Scenarios**:
 
-1. **Given** a running game, **When** the table is shown, **Then** every player appears once as a seat card with icon (human/computer), name and score, and the local player's card is at the bottom centre with a "you" marker.
-2. **Given** players seated 1..N, **When** the local player has seat k, **Then** the next player in turn order appears to the left of the local player and the order continues clockwise around the table.
+1. **Given** a running game, **When** the table is shown, **Then** every player appears once as a seat card with icon (human/computer), name and score, and the local player's card is at the top left with a "you" marker.
+2. **Given** players seated 1..N, **When** the local player has seat k, **Then** the next player in turn order appears top right, the one after that second left, then second right, and so on, alternating between the columns from top to bottom.
 3. **Given** it is a player's turn, **When** the turn timer runs, **Then** only that player's card is highlighted and shows the timer; no timer is shown elsewhere.
 4. **Given** the local player is the active player, **When** the table is shown, **Then** their card shows both the "you" and the "active" highlight distinguishably.
 5. **Given** a disconnected player, **When** the table is shown, **Then** their card shows an offline state.
-6. **Given** 8 players, **When** the table is shown, **Then** the seats are 3 at the top, 3 at the bottom (including the local player at the centre), 1 on the left and 1 on the right; with fewer players a symmetric subset is used and no seat overlaps another or the table centre.
+6. **Given** 8 players, **When** the table is shown, **Then** the seats are 4 in the left column (including the local player at the top) and 4 in the right column; with fewer players the columns fill top to bottom, alternating left and right (an odd count leaves the last right seat empty), and no seat overlaps another or the table centre.
 
 ---
 
@@ -69,7 +69,7 @@ Dice, the secured area (Safe) with the turn points, the action buttons (draw, th
 
 ### Edge Cases
 
-- Two players: seats are opposite each other (local player bottom, the other at the top centre).
+- Two players: the local player is top left and the other player top right.
 - A player is replaced by a computer or rejoins: the seat card icon updates, position stays.
 - Very long nicknames: truncated with the full name available (tooltip or accessible name); layout does not break.
 - Narrow desktop windows (e.g. 1024 px): seats stay inside the table without overlapping; the mobile layout is out of scope.
@@ -80,11 +80,11 @@ Dice, the secured area (Safe) with the turn points, the action buttons (draw, th
 
 ### Functional Requirements
 
-- **FR-001**: The system MUST show all players of a running game as seat cards around an oval table in clockwise turn order.
-- **FR-002**: The local player MUST always be at the bottom centre and carry a distinct "you" highlight.
+- **FR-001**: The system MUST show all players of a running game as seat cards in two columns beside an oval table in turn order (alternating right and left, rotated so that the local player comes first).
+- **FR-002**: The local player MUST always be in the top-left seat and carry a distinct "you" highlight.
 - **FR-003**: Each seat card MUST show a human/computer icon, the player's name and current score, and an offline state when disconnected.
 - **FR-004**: The active player's card MUST be highlighted and MUST contain the turn timer; no other turn timer may be shown.
-- **FR-005**: The seat layout MUST support 2 to 8 players, with 8 players arranged as 3 top, 3 bottom, 1 left and 1 right.
+- **FR-005**: The seat layout MUST support 2 to 8 players, with seats in a left and a right column (8 players = 4 per column), filled top to bottom, alternating left and right in turn order starting with the local player.
 - **FR-006**: The active card MUST be shown in the table centre as a portrait card with type icon, value and localized name.
 - **FR-007**: Card appearance MUST adapt to the light and dark theme with sufficient contrast, and text MUST follow the selected language (EN/DE).
 - **FR-008**: The draw pile MUST show the remaining card count and one of four fill levels (plenty, medium, few, empty).
@@ -120,5 +120,5 @@ Dice, the secured area (Safe) with the turn points, the action buttons (draw, th
 - The fill levels derive from the remaining cards relative to the starting deck size; exact thresholds (about 2/3 plenty, 1/3 medium, otherwise few, 0 empty) are a design detail.
 - The total number of cards is known from the game rules already sent to the client, so no protocol change is needed.
 - The legacy card images in `docs/assets/legacy-cards` serve only as visual reference for colours and motifs; cards are rendered by the UI itself.
-- Turn order is clockwise; the seat numbering in the game lobby is unchanged.
+- Turn order runs right-left alternating from the top of the columns (own seat first); the seat numbering in the game lobby is unchanged.
 - Settings and leave dialogs, result view and rules engine are not changed.
