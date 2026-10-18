@@ -26,6 +26,15 @@ describe('PlayerSeat', () => {
     expect(el.querySelector('[aria-current=true]')).not.toBeNull();
   });
 
+  it('shows the hourglass only while the computer has a phase to show', () => {
+    const idle = make({ active: true, computer: true });
+    expect(idle.querySelector('.vl-hourglass')).toBeNull();
+    expect(idle.textContent).not.toContain('⛔');
+    const busy = make({ active: true, computer: true, action: 'Select' });
+    expect(busy.querySelector('.vl-hourglass')).not.toBeNull();
+    expect(busy.textContent).not.toContain('⛔');
+  });
+
   it('shows plain human seats without markers', () => {
     const el = make({});
     expect(el.querySelector('.pi-user')).not.toBeNull();
