@@ -8,6 +8,8 @@
 
 **Input**: User description: "Desktop minimum size and table polish (roadmap R1). Find one minimum window size that works for desktop browser users and optimise the active game table for it. Includes the open accessibility items moved from spec 007 (T031, T033)."
 
+**Design**: [design.md](design.md) (approved mockup: [mockup.html](mockup.html))
+
 **Layout reference**: [specs/007-active-game-table-ui/design.md](../007-active-game-table-ui/design.md) (seats in two columns, own seat top left, turn order alternating right and left)
 
 ## Measurement Baseline
@@ -112,7 +114,7 @@ Text, icons and state markers on the table meet the contrast requirements in lig
 - At the minimum scale, buttons are about 30% smaller than today; they must stay clickable with a mouse without mis-clicks.
 - The bust notice, the "not allowed" toast and the dice-rolling animation appear at any scale and must not push the Secured area or the buttons out of view.
 - The Street, Star, Clover and "Double Lotte" cards change the text of the Secured area (longer status lines, carried points at stake); the longest variants in German must still fit at every scale.
-- A landscape tablet in portrait orientation is below the minimum width and shows the blocking hint; rotating it back restores the table.
+- A tablet in portrait orientation is judged by the same scale rule: 768x1024 gives a scale of 0.77, so the table is shown small with empty space below it, and it is still played with the same controls. Whether a separate minimum width (for example 1024 px) should keep portrait tablets out is an open decision, see Assumptions.
 - A very large window (for example 2560x1440) shows the table at scale 1.0, centred, not stretched.
 - The scale must not change the position of dropdowns, dialogs and toasts so that they end up outside the window.
 
@@ -121,7 +123,7 @@ Text, icons and state markers on the table meet the contrast requirements in lig
 ### Functional Requirements
 
 - **FR-001**: The game table MUST be designed for one reference size (the current board of about 992x832 px plus header, about 900 px high, shown completely on a 1920x1080 screen) and MUST be scaled uniformly to the usable viewport: scale = the smaller of (viewport width / reference width) and (viewport height / reference height), at most 1.0. All elements (seats, oval table, cards and piles, dice, actions, Secured area, notices) scale with the same factor and keep their positions relative to each other.
-- **FR-002**: The minimum scale is 0.7, which corresponds to a viewport of about 1024x640 (landscape tablets and 1366x768 laptops with 620-650 px of browser height). Below it the table is not shown (FR-006). The value is recorded here and in the roadmap.
+- **FR-002**: The minimum scale is 0.7, which corresponds to a viewport of about 1024x640 (landscape tablets and 1366x768 laptops with 620-650 px of browser height). The cut-off itself follows from the reference size: 992 x 0.7 = 695 px wide and 900 x 0.7 = 630 px high. Below it the table is not shown (FR-006), and the hint names these two values. The value is recorded here and in the roadmap.
 - **FR-003**: At or above the minimum scale, in every phase (draw, throw, select, bust notice) and for 2 to 8 players, the whole play area MUST be visible without scrolling: all seat cards, the active card with both piles, the dice, the turn actions and the Secured area including the "Bank points" button.
 - **FR-004**: The table MUST NOT overflow horizontally at any scale, and seat columns MUST NOT be cut off at the left or right edge (re-check of the spec 007 finding with a visible scrollbar).
 - **FR-005**: Below the reference size and at or above the minimum scale, the system MUST show a small notice in the selected language that the table was scaled to fit the window. The notice MUST be dismissible, MUST NOT cover any play-area element, and MUST NOT reappear after dismissing during the same visit.
@@ -164,4 +166,5 @@ Text, icons and state markers on the table meet the contrast requirements in lig
 - The scale only reduces the table; it is not a separate compact layout. Whether the header scales with the table or keeps its size is decided in the plan.
 - Screen-reader and blind-player support is not a goal of this feature; the turn timers make it impractical. A later spec lets the host disable timers for such games.
 - The notice about scaling and the blocking hint apply to the game table only; other screens (nickname, lobby, create game, game lobby) keep their current behaviour.
+- Open decision: a separate minimum width (for example 1024 px) is not part of the rule; with the scale rule alone portrait tablets (768x1024, scale 0.77) still show the table. To be decided before planning.
 - The minimum scale of 0.7 is confirmed or adjusted after checking the readability of the smallest text at 1024x640 during implementation; a change would be recorded here.
