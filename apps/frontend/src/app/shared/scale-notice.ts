@@ -9,8 +9,13 @@ import { TableScale } from '../core/table-scale';
   template: `
     <div class="vl-scale-notice" role="status">
       <span>{{ 'scale.notice' | t: { percent: percent() } }}</span>
-      <button type="button" class="vl-scale-dismiss" (click)="scale.dismiss()">
-        {{ 'scale.dismiss' | t }}
+      <button
+        type="button"
+        class="vl-scale-dismiss"
+        [attr.aria-label]="'scale.dismiss' | t"
+        (click)="scale.dismiss()"
+      >
+        <i class="pi pi-times" aria-hidden="true"></i>
       </button>
     </div>
   `,

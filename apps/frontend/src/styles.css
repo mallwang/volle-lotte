@@ -155,7 +155,9 @@ select,
   left: 50%;
   z-index: 10;
   transform: translateX(-50%);
-  background: var(--p-content-background);
+  background: var(--p-content-hover-background, var(--p-surface-100));
+  border: 2px solid var(--p-content-border-color);
+  color: var(--p-text-color);
   border-radius: 999px;
   display: flex;
   align-items: center;
@@ -165,14 +167,20 @@ select,
   font-size: 0.75rem;
 }
 .vl-scale-dismiss {
-  min-height: 2.75rem;
-  padding: 0 0.625rem;
-  border: 1px solid currentColor;
-  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
   background: none;
   color: inherit;
-  font: inherit;
   cursor: pointer;
+}
+.vl-scale-dismiss:hover {
+  background: var(--p-content-border-color);
 }
 .vl-too-small {
   max-width: 28rem;
