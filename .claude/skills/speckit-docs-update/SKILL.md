@@ -24,7 +24,7 @@ Documentation in scope:
 - `/docs/user-guide.de.md` — German user guide (mirror of the English guide; update both together)
 - `/docs/how-to-play.md` — English player rules explanation
 - `/docs/how-to-play.de.md` — German player rules explanation (mirror; update both together)
-- `/docs/**/*.md` — other user documentation (e.g. `docs/migration.md`, `docs/rules.md`)
+- `/docs/**/*.md` — other user documentation (e.g. `docs/roadmap.md`, `docs/rules.md`)
 
 ## User Input
 

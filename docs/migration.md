@@ -1,6 +1,6 @@
-# Migration / handover: Java -> web app
+# Migration: Java -> web app (completed)
 
-Status: 2026-10-15. This file is the handover from the planning session (started in the `java` repo) into this repo.
+Status: **completed 2026-10-18.** The Java game was successfully re-implemented as a web app. This file is the record of that migration (goal, decisions, porting map, resulting state); it is no longer updated for new work. Further features and ideas live in [roadmap.md](roadmap.md).
 
 ## Goal
 
@@ -61,13 +61,13 @@ Java quirks that stay: 350 minimum points (configurable), four-of-a-kind doublin
 - Done: feature 004 (i18n: English and German UI without a library; `I18nService` and `t` pipe in `apps/frontend/src/app/core/`, flat dictionaries in `apps/frontend/src/app/i18n/`, language select in the header, browser detection with `localStorage['vl-language']` override, backend `ErrorReason` codes translated in the frontend). Bilingual docs: `README.md`/`README.de.md`, `docs/user-guide.md`/`docs/user-guide.de.md`; the docs skill updates each pair together. `rulesError` returns codes (`rules.<code>` keys), engine rejections use `engine.<reason>` keys. Player rules: `docs/how-to-play.md`/`.de.md` (`docs/rules.md` stays the English technical reference). Form errors are stored as `Msg` thunks and retranslate on a switch; toasts stay in the language they were raised in.
 - Done: Docker deployment (`Dockerfile`, `.github/workflows/release.yml` pushes `walefish/volle-lotte` on `v*.*.*` tags, `docker-compose.portainer.yml`; backend serves the build when `WEB_ROOT` is set, `GET /api/health`).
 - Done: feature 005 (pip dice faces, per-die 2-5 s rolling animation with gated log/toasts, local skip setting, host-owned `fastComputerDice`, computer pacing and pick highlight, protocol v2).
-- **Not** created: save/load, PWA.
+- Done: feature 006 (open lobbies, rejoin after a computer takeover, per-phase turn timers, host removal with bans, protocol v3/v4) and feature 007 (active game table UI, desktop layout).
+- Not part of the migration (see the roadmap): save/load, PWA, game log, mobile app.
 - Vaultfolio reference: read its constitution (`.specify/memory/constitution.md`) and `CLAUDE.md` as a template for tooling rules, do not copy blindly (Vaultfolio-specific: encryption, Turnstile, PrimeNG, domains).
 
 ## Next steps
 
-1. Walk through `specs/002-lobby-multiplayer/quickstart.md` with two browser windows.
-2. Further features in this order: dice UI, save/load, PWA and safe updates, game log, Docker deployment.
+See [roadmap.md](roadmap.md).
 
 ## Open decisions
 

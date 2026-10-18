@@ -1,6 +1,6 @@
 # Volle Lotte (web app)
 
-Read [docs/migration.md](docs/migration.md) first: project goal, decisions made, porting map and next steps.
+Read [docs/roadmap.md](docs/roadmap.md) first: what is done, what is next. The finished Java migration (goal, decisions, porting map) is recorded in [docs/migration.md](docs/migration.md).
 Game rules: [docs/rules.md](docs/rules.md). Workflow: Spec-Kit (`/speckit-*`); principles in [.specify/memory/constitution.md](.specify/memory/constitution.md).
 The Java reference lives as a copy in `tmp/java/` (git-ignored, read-only).
 
