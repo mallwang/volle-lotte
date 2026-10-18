@@ -1,7 +1,7 @@
 import type { GameView, SeatView } from 'game-rules';
 import { MAX_TIMEOUTS, type GameRoom } from './game-room';
 
-/** What one player may see: no deck, no password hash, no tokens, `random` difficulty stays `random`. */
+/** What one player may see: no deck, no password hash, no tokens, `random` skill and risk stay `random`. */
 export function toView(room: GameRoom, playerId: string): GameView {
   const seat = room.seatOf(playerId);
   const mine = room.seats[seat];
@@ -17,7 +17,7 @@ export function toView(room: GameRoom, playerId: string): GameView {
       };
     }
     if (s.state === 'computer') {
-      const view: SeatView = { state: 'computer', difficulty: s.difficulty };
+      const view: SeatView = { state: 'computer', difficulty: s.difficulty, risk: s.risk };
       if (s.former) view.former = { nickname: s.former.nickname };
       return view;
     }

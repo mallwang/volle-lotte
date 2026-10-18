@@ -8,8 +8,8 @@ import {
   pacing,
   skipTurn,
   type Action,
-  type ComputerLevel,
   type Difficulty,
+  type Risk,
   type ErrorReason,
   type GameState,
   type GameSummary,
@@ -45,8 +45,6 @@ const ROLL_MAX_FAST_MS = 1500;
 /** Human limit after a throw: fixed latency margin, the server cannot observe client animations (FR-013). */
 const HUMAN_AFTER_ROLL_MS = 3000 + 250;
 
-type Level = 'easy' | 'medium' | 'hard';
-
 export type Seat =
   | { state: 'open' }
   | { state: 'locked' }
@@ -62,7 +60,7 @@ export type Seat =
   | {
       state: 'computer';
       difficulty: Difficulty;
-      effective: Level;
+      risk: Risk;
       /** Set only when the computer replaced a human, who may rejoin. */
       former?: { playerId: string; nickname: string };
     };
@@ -88,9 +86,6 @@ export interface RoomOptions {
   /** Called after every accepted change, also from timers, with the log entries added since the last call. */
   onChange?: (entries: LogEntry[]) => void;
 }
-
-const levelFor = (d: Difficulty): ComputerLevel =>
-  d === 'random' ? (['easy', 'medium', 'hard'] as const)[randomInt(3)] : d;
 
 export class GameRoom {
   readonly id: string;
@@ -243,6 +238,7 @@ export class GameRoom {
     seat: number,
     mode: 'open' | 'locked' | 'computer',
     difficulty: Difficulty = 'medium',
+    risk: Risk = 'medium',
   ): Res<{ removed?: string }> {
     if (playerId !== this.hostId) return fail('notHost');
     if (this.phase !== 'lobby') return fail('gameStarted');
@@ -257,7 +253,7 @@ export class GameRoom {
       this.seats[seat] = {
         state: 'computer',
         difficulty,
-        effective: levelFor(difficulty),
+        risk,
       };
     } else if (current.state === 'human' || current.state === 'computer') {
       // occupied seats are freed by removing the occupant first: computers via 'open'
@@ -414,7 +410,11 @@ export class GameRoom {
     this.armComputer(this.computerDelay, () => {
       const seat = stillMine();
       if (!seat || !this.game) return;
-      const action = chooseAction(this.game, seat.effective, this.rng);
+      const action = chooseAction(
+        this.game,
+        { difficulty: seat.difficulty, risk: seat.risk },
+        this.rng,
+      );
       if (action.type !== 'select') {
         this.apply(action);
         return;
@@ -521,14 +521,14 @@ export class GameRoom {
     this.emit();
   }
 
-  /** Hands a human seat to a computer of random difficulty; the engine player and score stay. */
+  /** Hands a human seat to a computer of random skill and risk; the engine player and score stay. */
   private replaceByBot(seat: number, reason: ReplaceReason) {
     const human = this.seats[seat] as Human;
     this.clearGrace(seat);
     this.seats[seat] = {
       state: 'computer',
       difficulty: 'random',
-      effective: levelFor('random'),
+      risk: 'random',
       former: { playerId: human.playerId, nickname: human.nickname },
     };
     if (seat === this.currentSeat()) this.preview = [];

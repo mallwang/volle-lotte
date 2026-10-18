@@ -22,7 +22,7 @@ Open the app and enter a nickname (2-20 characters: letters, digits, space, `_` 
 
 - **Join**: the games list shows each open game with its host, target score and free seats. Press **Join**. Games without a password join in one tap; password-protected games ask for the password, and after several wrong attempts the game is locked for a short time. A game that has started cannot be joined. If you left a running game, a **Rejoin** button takes your seat back from the computer.
 - **Create**: press **Create game**, then choose name, optional password, number of seats (2-8) and the rules (target score, minimum points to bank, whether four of a kind doubles, cards per type). The rules cannot be changed once the game is created.
-- **Game lobby**: the host can add or remove computer players (with a difficulty), lock seats, remove a human player (who cannot rejoin that game and sees a notice in the games list) and start the game. Everyone else waits for the host to start.
+- **Game lobby**: the host can add or remove computer players (each with a skill and a risk, see below), lock seats, remove a human player (who cannot rejoin that game and sees a notice in the games list) and start the game. Everyone else waits for the host to start.
 - **Leaving**: leaving a lobby or a running game (the table or lobby button, a link in the menu bar or the browser's back button) always asks for confirmation first; **Stay** keeps you where you are. A finished game is left without a question. Closing or reloading the browser tab while in a lobby or running game shows the browser's own warning (its text cannot be changed).
 
 ## 3. Playing
@@ -41,6 +41,16 @@ Open **Settings** on the table to change:
 - **Skip dice animation** - only on your device; dice and log show immediately.
 - **Fast computer dice** - the host only, others see it read-only. Computer throws take 0.5-1.5 seconds instead of 1-3.
 - **Computer speed** - the host only, others see it read-only. A slider from 1 (slow) to 5 (fast); every game starts at 3 (Medium). It sets how long computers wait between their actions and how long a turn's result stays on the table, for everyone at the table. It is also shown in the game lobby, where the host can set it before starting. Whenever the host changes a setting, every player sees a short notice naming the host and the new value; players who join later do not.
+
+### Computer players
+
+Every computer seat has two independent settings, both chosen by the host in the game lobby (default: medium skill, medium risk):
+
+- **Skill** - _easy_ plays by a simple rule of thumb and makes visible mistakes, _medium_ usually picks a good move but sometimes a worse one, _hard_ always picks the move with the best expected result (it knows the exact dice odds and the share of each card type in the deck, but never looks at the real card order).
+- **Risk** - how willing the computer is to lose points for a chance of more. _No risk_ banks early and never draws another card after a Volle Lotte on a Bonus card. _Medium_ weighs chances and losses evenly and draws about half of the time when drawing and banking are equally good. _High_ leans strongly towards throwing on and drawing, but not blindly: with very many carried points and many Stop and Plus/Minus cards it holds back.
+- **Random** - for either setting the computer picks a new concrete value for every single decision, so it plays erratically. A computer that replaces a leaving player has random skill and random risk.
+
+Whatever the settings: a computer that can bank to reach the target score does so, and on Street, Double Lotte, Plus/Minus, Clover and Star it always sets aside all dice it can. Behind the leader it takes more risk, close to the target it plays safer.
 
 Buttons that are not available show the reason (for example "Not your turn"). The log lists what happened; players who leave a running game (after a confirmation), lose their connection for 30 seconds or miss three turns in a row are replaced by a computer. A timer shows how long you have left: 10 seconds to draw or roll, 15 to choose dice, 20 to secure or continue. If time runs out the action is taken for you (a skipped draw or selection ends your turn). After the third timeout you see a notice and can only go back to the lobby. Computers pause while no human is seated.
 

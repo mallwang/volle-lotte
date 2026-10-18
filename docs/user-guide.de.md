@@ -22,7 +22,7 @@ Volle Lotte ist ein Online-Würfelspiel für 2-8 Spielende. Computergegner könn
 
 - **Beitreten**: Die Spieleliste zeigt jedes offene Spiel mit Gastgeber, Zielpunktzahl und freien Plätzen. Drücke **Beitreten**. Spiele ohne Passwort betrittst du mit einem Tipp; passwortgeschützte Spiele fragen nach dem Passwort, nach mehreren falschen Versuchen wird das Spiel kurz gesperrt. Ein gestartetes Spiel kann nicht betreten werden. Hast du ein laufendes Spiel verlassen, holt dich **Wieder beitreten** zurück auf deinen Platz.
 - **Erstellen**: Drücke **Spiel erstellen** und wähle Name, optionales Passwort, Anzahl der Plätze (2-8) und die Regeln (Zielpunktzahl, Mindestpunkte zum Sichern, ob Viererpasch verdoppelt, Karten pro Typ). Die Regeln lassen sich nach dem Erstellen nicht mehr ändern.
-- **Spiellobby**: Die Gastgebenden können Computerspieler (mit Schwierigkeit) hinzufügen oder entfernen, Plätze sperren, Menschen entfernen (sie können dem Spiel nicht mehr beitreten und sehen einen Hinweis in der Spieleliste) und das Spiel starten. Alle anderen warten auf den Start.
+- **Spiellobby**: Die Gastgebenden können Computerspieler (jeweils mit Können und Risiko, siehe unten) hinzufügen oder entfernen, Plätze sperren, Menschen entfernen (sie können dem Spiel nicht mehr beitreten und sehen einen Hinweis in der Spieleliste) und das Spiel starten. Alle anderen warten auf den Start.
 - **Verlassen**: Das Verlassen einer Lobby oder eines laufenden Spiels (Schaltfläche am Tisch oder in der Lobby, ein Link in der Menüleiste oder die Zurück-Taste des Browsers) fragt immer vorher nach; mit **Bleiben** bleibst du, wo du bist. Ein beendetes Spiel verlässt du ohne Rückfrage. Schließt oder lädst du den Browser-Tab in einer Lobby oder einem laufenden Spiel neu, zeigt der Browser seine eigene Warnung (der Text lässt sich nicht ändern).
 
 ## 3. Spielen
@@ -41,6 +41,16 @@ Unter **Einstellungen** am Tisch änderst du:
 - **Würfelanimation überspringen** - nur auf deinem Gerät; Würfel und Protokoll erscheinen sofort.
 - **Schnelle Computerwürfel** - nur die Gastgebenden, andere sehen es schreibgeschützt. Computerwürfe dauern 0,5-1,5 statt 1-3 Sekunden.
 - **Computer-Geschwindigkeit** - nur die Gastgebenden, andere sehen es schreibgeschützt. Ein Regler von 1 (langsam) bis 5 (schnell); jedes Spiel startet bei 3 (Mittel). Er legt fest, wie lange Computer zwischen ihren Aktionen warten und wie lange das Ergebnis eines Zuges auf dem Tisch bleibt, für alle am Tisch. Er wird auch in der Spiellobby angezeigt, wo die Gastgebenden ihn vor dem Start einstellen können. Ändern die Gastgebenden eine Einstellung, sehen alle Spielenden einen kurzen Hinweis mit Namen und neuem Wert; später Beitretende sehen keinen.
+
+### Computerspieler
+
+Jeder Computerplatz hat zwei voneinander unabhängige Einstellungen, die die Gastgebenden in der Spiellobby wählen (Standard: mittleres Können, mittleres Risiko):
+
+- **Können** - _leicht_ spielt nach einer einfachen Faustregel und macht sichtbare Fehler, _mittel_ wählt meist einen guten Zug, manchmal einen schlechteren, _schwer_ wählt immer den Zug mit dem besten Erwartungswert (er kennt die genauen Würfelwahrscheinlichkeiten und den Anteil jeder Kartenart im Stapel, schaut aber nie auf die tatsächliche Kartenreihenfolge).
+- **Risiko** - wie bereit der Computer ist, Punkte für die Chance auf mehr aufs Spiel zu setzen. _Kein Risiko_ sichert früh und zieht nach einer Vollen Lotte auf einer Bonuskarte nie eine weitere Karte. _Mittel_ wägt Chancen und Verluste gleich ab und zieht etwa in der Hälfte der Fälle, wenn Ziehen und Sichern gleich gut sind. _Hoch_ neigt stark zum Weiterwürfeln und Ziehen, aber nicht blind: bei sehr vielen mitgeführten Punkten und vielen Stopp- und Plus/Minus-Karten hält er sich zurück.
+- **Zufällig** - bei beiden Einstellungen wählt der Computer für jede einzelne Entscheidung neu einen konkreten Wert und spielt dadurch sprunghaft. Ein Computer, der einen ausgestiegenen Menschen ersetzt, hat zufälliges Können und zufälliges Risiko.
+
+Egal bei welchen Einstellungen: Kann ein Computer durch Sichern den Zielstand erreichen, tut er es; auf Straße, Doppel-Lotte, Plus/Minus, Kleeblatt und Stern legt er immer alle möglichen Würfel zur Seite. Hinter den Führenden geht er mehr Risiko ein, nahe am Ziel spielt er vorsichtiger.
 
 Nicht verfügbare Schaltflächen nennen den Grund (zum Beispiel „Du bist nicht dran“). Das Protokoll listet, was passiert ist; wer ein laufendes Spiel verlässt (nach Rückfrage), 30 Sekunden offline ist oder dreimal in Folge nicht reagiert, wird durch einen Computer ersetzt. Ein Timer zeigt die Restzeit: 10 Sekunden zum Ziehen oder Würfeln, 15 zum Auswählen, 20 zum Sichern oder Weiterwürfeln. Läuft die Zeit ab, wird für dich gehandelt (übersprungenes Ziehen oder Auswählen beendet deinen Zug). Nach dem dritten Ablauf siehst du einen Hinweis und kannst nur in die Lobby zurück. Computer pausieren, solange kein Mensch am Tisch sitzt.
 

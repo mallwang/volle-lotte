@@ -1,6 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { CARD_TYPES, type Ack, type Difficulty } from 'game-rules';
+import { CARD_TYPES, type Ack, type Difficulty, type Risk } from 'game-rules';
 import { AvatarModule } from 'primeng/avatar';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
@@ -14,6 +14,7 @@ import { HostSettings } from '../shared/host-settings';
 import { TranslatePipe } from '../core/translate.pipe';
 
 const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard', 'random'];
+const RISKS: Risk[] = ['none', 'medium', 'high', 'random'];
 
 @Component({
   selector: 'app-game-lobby',
@@ -82,7 +83,12 @@ const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard', 'random'];
               @case ('computer') {
                 <p-tag
                   [value]="
-                    'gameLobby.computer' | t: { difficulty: 'difficulty.' + s.difficulty | t }
+                    'gameLobby.computer'
+                      | t
+                        : {
+                            difficulty: 'difficulty.' + s.difficulty | t,
+                            risk: 'risk.' + (s.risk ?? 'medium') | t,
+                          }
                   "
                   icon="pi pi-desktop"
                 />
@@ -90,11 +96,28 @@ const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard', 'random'];
                   <label>
                     <select
                       [attr.aria-label]="'gameLobby.difficultySeat' | t: { n: $index + 1 }"
-                      [value]="s.difficulty"
-                      (change)="setSeat($index, 'computer', $any($event.target).value)"
+                      (change)="
+                        setSeat($index, 'computer', $any($event.target).value, s.risk ?? 'medium')
+                      "
                     >
                       @for (o of difficulties; track o) {
-                        <option [value]="o">{{ 'difficulty.' + o | t }}</option>
+                        <option [value]="o" [selected]="o === s.difficulty">
+                          {{ 'difficulty.' + o | t }}
+                        </option>
+                      }
+                    </select>
+                  </label>
+                  <label>
+                    <select
+                      [attr.aria-label]="'gameLobby.riskSeat' | t: { n: $index + 1 }"
+                      (change)="
+                        setSeat($index, 'computer', s.difficulty, $any($event.target).value)
+                      "
+                    >
+                      @for (o of risks; track o) {
+                        <option [value]="o" [selected]="o === (s.risk ?? 'medium')">
+                          {{ 'risk.' + o | t }}
+                        </option>
                       }
                     </select>
                   </label>
@@ -131,7 +154,7 @@ const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard', 'random'];
                   <p-button
                     [label]="'gameLobby.addComputer' | t"
                     severity="secondary"
-                    (onClick)="setSeat($index, 'computer', 'medium')"
+                    (onClick)="setSeat($index, 'computer', 'medium', 'medium')"
                   />
                 }
               }
@@ -167,6 +190,7 @@ export class GameLobby {
   private readonly i18n = inject(I18nService);
   protected readonly leave = inject(LeaveGame);
   protected readonly difficulties = DIFFICULTIES;
+  protected readonly risks = RISKS;
   protected readonly error = signal<Msg | null>(null);
   protected readonly host = computed(() => {
     const g = this.socket.game();
@@ -200,8 +224,13 @@ export class GameLobby {
     return this.run(this.socket.send('seat:ready', { ready }));
   }
 
-  protected setSeat(seat: number, mode: 'open' | 'locked' | 'computer', difficulty?: Difficulty) {
-    return this.run(this.socket.send('seat:set', { seat, mode, difficulty }));
+  protected setSeat(
+    seat: number,
+    mode: 'open' | 'locked' | 'computer',
+    difficulty?: Difficulty,
+    risk?: Risk,
+  ) {
+    return this.run(this.socket.send('seat:set', { seat, mode, difficulty, risk }));
   }
 
   protected removeSeat(seat: number) {

@@ -1,8 +1,9 @@
 import type { Action, Event, GameState, RejectionReason, Rules } from './types.js';
 
-export const PROTOCOL_VERSION = 5;
+export const PROTOCOL_VERSION = 6;
 
 export type Difficulty = 'easy' | 'medium' | 'hard' | 'random';
+export type Risk = 'none' | 'medium' | 'high' | 'random';
 export type RoomPhase = 'lobby' | 'running' | 'finished';
 
 export type ErrorReason =
@@ -71,6 +72,7 @@ export interface SeatView {
   connected?: boolean;
   ready?: boolean;
   difficulty?: Difficulty;
+  risk?: Risk;
   /** Computer seat that replaced a human. */
   former?: { nickname: string };
 }
@@ -128,7 +130,7 @@ export interface Intents {
   'game:join': [{ gameId: string; password: string; seat?: number }, { game: GameView }];
   'game:leave': [undefined, object];
   'seat:set': [
-    { seat: number; mode: 'open' | 'locked' | 'computer'; difficulty?: Difficulty },
+    { seat: number; mode: 'open' | 'locked' | 'computer'; difficulty?: Difficulty; risk?: Risk },
     object,
   ];
   'seat:ready': [{ ready: boolean }, object];

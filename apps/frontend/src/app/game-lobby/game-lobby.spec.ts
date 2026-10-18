@@ -65,9 +65,49 @@ describe('GameLobby', () => {
 
   it('counts computers as ready', async () => {
     const { button } = await setup(
-      gameView({}, [me(true), { state: 'computer', difficulty: 'easy' }]),
+      gameView({}, [me(true), { state: 'computer', difficulty: 'easy', risk: 'medium' }]),
     );
     expect((button('Start game') as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it('gives each computer seat a skill and a risk select, sent together', async () => {
+    const { socket, el } = await setup(
+      gameView({}, [me(true), { state: 'computer', difficulty: 'hard', risk: 'none' }]),
+    );
+    socket.send.mockResolvedValue({ ok: true });
+    const skill = el.querySelector<HTMLSelectElement>('select[aria-label="Difficulty seat 2"]')!;
+    const risk = el.querySelector<HTMLSelectElement>('select[aria-label="Risk seat 2"]')!;
+    expect(skill.value).toBe('hard');
+    expect(risk.value).toBe('none');
+    expect([...risk.options].map((o) => o.value)).toEqual(['none', 'medium', 'high', 'random']);
+    risk.value = 'high';
+    risk.dispatchEvent(new Event('change'));
+    expect(socket.send).toHaveBeenCalledWith('seat:set', {
+      seat: 1,
+      mode: 'computer',
+      difficulty: 'hard',
+      risk: 'high',
+    });
+    skill.value = 'easy';
+    skill.dispatchEvent(new Event('change'));
+    expect(socket.send).toHaveBeenLastCalledWith('seat:set', {
+      seat: 1,
+      mode: 'computer',
+      difficulty: 'easy',
+      risk: 'none',
+    });
+  });
+
+  it('adds a computer with medium skill and medium risk', async () => {
+    const { socket, button } = await setup(gameView({}, [me(true), { state: 'open' }]));
+    socket.send.mockResolvedValue({ ok: true });
+    button('Add computer')!.click();
+    expect(socket.send).toHaveBeenCalledWith('seat:set', {
+      seat: 1,
+      mode: 'computer',
+      difficulty: 'medium',
+      risk: 'medium',
+    });
   });
 
   it('hides host controls from non-hosts', async () => {
@@ -106,12 +146,12 @@ describe('GameLobby', () => {
     const { el } = await setup(
       gameView({}, [
         me(true),
-        { state: 'computer', difficulty: 'easy' },
+        { state: 'computer', difficulty: 'easy', risk: 'medium' },
         { state: 'locked' },
         { state: 'open' },
       ]),
     );
-    for (const t of ['Ready', 'Computer (easy)', 'Locked', 'Free'])
+    for (const t of ['Ready', 'Computer (easy, medium risk)', 'Locked', 'Free'])
       expect(el.textContent).toContain(t);
     expect(el.querySelectorAll('p-tag .pi').length).toBeGreaterThanOrEqual(4);
   });

@@ -41,7 +41,11 @@ function autoPlay(c: Client): void {
     ]);
     if (key === sent) return;
     sent = key;
-    const action = chooseAction({ ...state, deck: [] } as unknown as GameState, 'medium', rng);
+    const action = chooseAction(
+      { ...state, deck: [] } as unknown as GameState,
+      { difficulty: 'medium', risk: 'medium' },
+      rng,
+    );
     void c.send('turn:action', { action });
   });
 }

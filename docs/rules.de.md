@@ -25,13 +25,13 @@ Deutsche Fassung von [rules.md](rules.md).
 
 ## Konfigurierbare Regeln (bei Spielerstellung, Standardwerte)
 
-| Regel                                                           | Standard                                                  |
-| --------------------------------------------------------------- | --------------------------------------------------------- |
-| Zielpunktzahl                                                   | 6.000 (frei wählbar, z. B. 10.000)                        |
-| Mindestpunkte zum Sichern                                       | 350 (0 = aus)                                             |
-| Vier oder mehr Gleiche: jeder weitere gleiche Würfel verdoppelt | an                                                        |
-| Anzahl der Karten je Typ                                        | Standardsatz unten                                        |
-| Ein Spieler verlässt das Spiel                                  | ein zufälliger Computer übernimmt; Wiedereinstieg möglich |
+| Regel                                                           | Standard                                                                        |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Zielpunktzahl                                                   | 6.000 (frei wählbar, z. B. 10.000)                                              |
+| Mindestpunkte zum Sichern                                       | 350 (0 = aus)                                                                   |
+| Vier oder mehr Gleiche: jeder weitere gleiche Würfel verdoppelt | an                                                                              |
+| Anzahl der Karten je Typ                                        | Standardsatz unten                                                              |
+| Ein Spieler verlässt das Spiel                                  | ein Computer mit zufälligem Können und Risiko übernimmt; Wiedereinstieg möglich |
 
 ### Standardsatz (56 Karten)
 
