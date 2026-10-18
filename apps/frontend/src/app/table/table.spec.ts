@@ -180,6 +180,20 @@ describe('Table', () => {
       expect(button('Draw')!.disabled).toBe(false);
     });
 
+    it('offers banking after the Volle Lotte', async () => {
+      const log = [
+        { kind: 'turn', seat: 0, data: { type: 'cardDrawn', card: 'bonus200' } },
+        {
+          kind: 'turn',
+          seat: 0,
+          data: { type: 'selected', dice: [1, 1, 1, 5, 5, 5], points: 500 },
+        },
+        { kind: 'turn', seat: 0, data: { type: 'volleLotte' } },
+      ];
+      const { button } = await setup(0, { ...decide({ free: 0, run: 700 }), log });
+      expect(button('Bank')!.disabled).toBe(false);
+    });
+
     it.each([
       ['dice are still free', { free: 2, card: 'bonus200' }],
       ['the card is not a bonus', { free: 0, card: 'star' }],

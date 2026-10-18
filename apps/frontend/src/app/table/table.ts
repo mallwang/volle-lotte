@@ -267,11 +267,13 @@ export class Table {
   protected readonly aside = computed(() => {
     const log = (this.socket.game()?.log ?? []).slice(0, this.revealed());
     const out: { dice: readonly number[]; points: number }[] = [];
+    // a Volle Lotte on a Bonus card keeps the collected dice for the bank-or-draw decision
+    const keep = this.socket.game()?.game?.turn?.phase === 'decide';
     for (let i = log.length - 1; i >= 0; i--) {
       const e = log[i];
       const d = e.kind === 'turn' && typeof e.data === 'object' ? e.data : null;
       if (d?.type === 'selected') out.unshift({ dice: d.dice, points: d.points });
-      else if (d && d.type !== 'thrown') break;
+      else if (d && d.type !== 'thrown' && !(keep && d.type === 'volleLotte')) break;
     }
     return out;
   });

@@ -29,7 +29,7 @@ import { TurnTimer } from './turn-timer';
       <span class="vl-pseat-score">{{ 'player.score' | t: { score: score() } }}</span>
       <span class="vl-pseat-line">{{ marks() }}</span>
       <span class="vl-pseat-line" [class.mid]="active() && !you()">
-        @if (active() && computer()) {
+        @if (active() && computer() && action()) {
           <span class="vl-hourglass" aria-hidden="true">⏳</span>
           <span class="vl-sr-only">{{ 'table.thinking' | t }}</span>
         }
@@ -39,7 +39,7 @@ import { TurnTimer } from './turn-timer';
               ? action()
               : you()
                 ? ('player.active' | t)
-                : '⛔ ' + ('player.waiting' | t)
+                : (computer() ? '' : '⛔ ') + ('player.waiting' | t)
             : ('player.waiting' | t)
         }}
       </span>
