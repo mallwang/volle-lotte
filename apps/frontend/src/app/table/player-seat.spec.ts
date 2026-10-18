@@ -10,6 +10,11 @@ describe('PlayerSeat', () => {
     return f.nativeElement as HTMLElement;
   };
 
+  it('has no tab stop and no focusable child', () => {
+    const el = make({ score: 0, you: true, active: true });
+    expect(el.querySelector('[tabindex], button, a, input, select')).toBeNull();
+  });
+
   it('shows name, score and a name that covers kind and states', () => {
     const el = make({ score: 300, you: true, active: true, online: false, computer: true });
     for (const t of ['Ann', 'Score: 300', 'You', 'Active', 'Offline'])

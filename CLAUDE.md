@@ -20,5 +20,5 @@ The Java reference lives as a copy in `tmp/java/` (git-ignored, read-only).
 
 <!-- SPECKIT START -->
 
-Current feature plan: [specs/007-active-game-table-ui/plan.md](specs/007-active-game-table-ui/plan.md)
+Current feature plan: [specs/008-desktop-min-size-table-polish/plan.md](specs/008-desktop-min-size-table-polish/plan.md)
 <!-- SPECKIT END -->

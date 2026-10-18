@@ -134,6 +134,64 @@ select,
   border-radius: 2px;
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
 }
+/* Running game: header and table form one 992x900 stage scaled uniformly (spec 008). */
+.vl-stage {
+  margin-inline: auto;
+}
+.vl-stage-scaled {
+  overflow: hidden;
+}
+.vl-stage-inner {
+  transform-origin: top left;
+}
+/* the 992 px stage equals the unscaled main content width, so positions match */
+.vl-stage-scaled .vl-main {
+  max-width: none;
+  padding-inline: 0;
+}
+.vl-scale-notice {
+  position: fixed;
+  top: 0.25rem;
+  left: 50%;
+  z-index: 10;
+  transform: translateX(-50%);
+  background: var(--p-content-hover-background, var(--p-surface-100));
+  border: 2px solid var(--p-content-border-color);
+  color: var(--p-text-color);
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.125rem 0.25rem 0.125rem 0.75rem;
+  font-size: 0.75rem;
+}
+.vl-scale-dismiss {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+.vl-scale-dismiss:hover {
+  background: var(--p-content-border-color);
+}
+.vl-too-small {
+  max-width: 28rem;
+  margin: 4rem auto;
+  padding: 0 1rem;
+  text-align: center;
+}
+:focus-visible {
+  outline: 3px solid var(--p-primary-color);
+  outline-offset: 2px;
+}
 .vl-main {
   max-width: 64rem;
   margin: 0 auto;

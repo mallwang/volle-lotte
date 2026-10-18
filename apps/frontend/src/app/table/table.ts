@@ -18,6 +18,7 @@ import { errorMessage } from '../core/error-message';
 import { logText, playerSeats, seatName } from '../core/game-view';
 import { I18nService } from '../core/i18n.service';
 import { SocketService } from '../core/socket.service';
+import { TableScale } from '../core/table-scale';
 import { TranslatePipe } from '../core/translate.pipe';
 import { GameCard } from '../shared/game-card';
 import { playedCards, safeLabel, seatRows, seatViews, totalCards } from '../core/table-view';
@@ -495,7 +496,12 @@ export class Table {
 
   constructor() {
     const tick = setInterval(() => this.now.set(Date.now()), 1000);
-    inject(DestroyRef).onDestroy(() => clearInterval(tick));
+    const tableScale = inject(TableScale);
+    tableScale.enable();
+    inject(DestroyRef).onDestroy(() => {
+      clearInterval(tick);
+      tableScale.disable();
+    });
     effect(() => {
       const g = this.socket.game();
       if (!g || this.roll.rolling() || this.notice()) return;

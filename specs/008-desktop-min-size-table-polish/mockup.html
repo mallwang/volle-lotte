@@ -1,0 +1,970 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Table Scaling Review</title>
+    <style>
+      /* Layout: review chrome on top (controls + readout), then a simulated browser window that holds the table at a fixed 992x900 reference size, scaled uniformly. */
+      :root {
+        --bg: #f3f4f6;
+        --panel: #ffffff;
+        --ink: #1c2230;
+        --muted: #596275;
+        --line: #d5d9e2;
+        --accent: #1d6a73;
+        --on-accent: #ffffff;
+        --warn: #8a4b00;
+        --warn-bg: #fdf0d9;
+        --win-edge: #b9bfcc;
+        --font-ui: system-ui, -apple-system, 'Segoe UI', sans-serif;
+        --font-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme='light']) {
+          --bg: #12151b;
+          --panel: #1b2029;
+          --ink: #e6e9f0;
+          --muted: #9aa3b5;
+          --line: #2c3340;
+          --accent: #5cc1cc;
+          --on-accent: #08262a;
+          --warn: #f3c26b;
+          --warn-bg: #3a2c12;
+          --win-edge: #3a4252;
+          color-scheme: dark;
+        }
+      }
+      :root[data-theme='dark'] {
+        --bg: #12151b;
+        --panel: #1b2029;
+        --ink: #e6e9f0;
+        --muted: #9aa3b5;
+        --line: #2c3340;
+        --accent: #5cc1cc;
+        --on-accent: #08262a;
+        --warn: #f3c26b;
+        --warn-bg: #3a2c12;
+        --win-edge: #3a4252;
+        color-scheme: dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      [hidden] {
+        display: none !important;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: var(--font-ui);
+        -webkit-font-smoothing: antialiased;
+      }
+      .wrap {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding-block: 24px 40px;
+        padding-left: max(16px, env(safe-area-inset-left, 0px));
+        padding-right: max(16px, env(safe-area-inset-right, 0px));
+        display: grid;
+        gap: 16px;
+      }
+      .eyebrow {
+        margin: 0;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+      h1 {
+        margin: 2px 0 6px;
+        font-size: 1.35rem;
+        text-wrap: balance;
+      }
+      .intro {
+        margin: 0;
+        max-width: 78ch;
+        line-height: 1.5;
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+      .controls {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 14px 16px;
+        display: grid;
+        gap: 12px;
+      }
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 20px;
+        align-items: center;
+      }
+      .grp {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        min-width: 0;
+      }
+      .lbl {
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .seg {
+        display: inline-flex;
+        flex-wrap: wrap;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      .seg button {
+        appearance: none;
+        border: 0;
+        border-right: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--ink);
+        font: inherit;
+        font-size: 0.82rem;
+        font-weight: 600;
+        padding: 6px 11px;
+        cursor: pointer;
+      }
+      .seg button:last-child {
+        border-right: 0;
+      }
+      .seg button:hover {
+        background: var(--bg);
+      }
+      .seg button[aria-pressed='true'] {
+        background: var(--accent);
+        color: var(--on-accent);
+      }
+      button:focus-visible,
+      input:focus-visible {
+        outline: 3px solid var(--accent);
+        outline-offset: 2px;
+      }
+      .sliders {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 10px 24px;
+      }
+      .sliders label {
+        display: grid;
+        gap: 4px;
+        font-size: 0.82rem;
+        color: var(--muted);
+      }
+      .sliders label b {
+        color: var(--ink);
+        font-family: var(--font-mono);
+        font-weight: 600;
+      }
+      input[type='range'] {
+        width: 100%;
+        accent-color: var(--accent);
+      }
+      .readout {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+        gap: 10px;
+      }
+      .readout div {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 8px 12px;
+      }
+      .readout small {
+        display: block;
+        font-size: 0.7rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--muted);
+        font-weight: 700;
+      }
+      .readout span {
+        font-family: var(--font-mono);
+        font-size: 1.02rem;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+      }
+      .readout .state-ok {
+        color: var(--accent);
+      }
+      .readout .state-warn {
+        color: var(--warn);
+      }
+      .frame {
+        background: color-mix(in srgb, var(--line) 70%, var(--bg));
+        border-radius: 12px;
+        padding: 14px;
+      }
+      .frame-cap {
+        margin: 0 0 8px;
+        text-align: center;
+        font-size: 0.72rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .win {
+        margin: 0 auto;
+        position: relative;
+        border: 1px solid var(--win-edge);
+        border-radius: 4px;
+        overflow: hidden;
+        box-sizing: content-box;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+      }
+      .foot {
+        font-size: 0.85rem;
+        color: var(--muted);
+        line-height: 1.5;
+        max-width: 90ch;
+      }
+      .foot h2 {
+        font-size: 0.82rem;
+        color: var(--ink);
+        margin: 14px 0 4px;
+      }
+      .foot ul {
+        margin: 0;
+        padding-left: 1.1rem;
+      }
+      .foot li {
+        margin: 3px 0;
+      }
+      code {
+        font-family: var(--font-mono);
+        font-size: 0.85em;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        padding: 0.05em 0.35em;
+      }
+      .linkbtn {
+        appearance: none;
+        border: 0;
+        background: none;
+        color: var(--accent);
+        font: inherit;
+        font-size: 0.82rem;
+        text-decoration: underline;
+        cursor: pointer;
+        padding: 0;
+      }
+
+      /* ============ simulated app (Terracotta tokens, same as the shipped app) ============ */
+      .vp {
+        --a-bg: #fbf1ea;
+        --a-surface: #fffaf6;
+        --a-surface2: #f3dccd;
+        --a-line: #e6c3ad;
+        --a-text: #3a241b;
+        --a-muted: #7b5a4c;
+        --a-primary: #a8431f;
+        --a-on-primary: #ffffff;
+        --a-lav: #e6dcef;
+        --a-on-lav: #44305f;
+        --a-rose: #f6d0cb;
+        --a-on-rose: #7a2118;
+        --a-card: #ffffd5;
+        position: absolute;
+        left: 0;
+        top: 0;
+        transform-origin: 0 0;
+        background: var(--a-bg);
+        color: var(--a-text);
+        font-family: var(--font-ui);
+        font-size: 16px;
+        overflow: hidden;
+      }
+      .vp.dark {
+        --a-bg: #1c1411;
+        --a-surface: #2a1d18;
+        --a-surface2: #3b2a22;
+        --a-line: #52382c;
+        --a-text: #f5e6dc;
+        --a-muted: #cbaa98;
+        --a-primary: #f08a5d;
+        --a-on-primary: #2a1008;
+        --a-lav: #3a3159;
+        --a-on-lav: #e0d8fa;
+        --a-rose: #5a2626;
+        --a-on-rose: #ffd9d9;
+        --a-card: #4a4521;
+      }
+      .stage {
+        position: absolute;
+        width: 992px;
+        height: 900px;
+        transform-origin: 0 0;
+      }
+      .stage > * {
+        position: absolute;
+      }
+      .hdr-logo {
+        left: 0;
+        top: 14px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 28px;
+        font-weight: 800;
+      }
+      .hdr-logo i {
+        width: 40px;
+        height: 40px;
+        border-radius: 9px;
+        background: var(--a-surface2);
+        border: 1px solid var(--a-line);
+        display: grid;
+        place-items: center;
+        font-style: normal;
+        font-size: 22px;
+      }
+      .hdr-logo small {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--a-muted);
+        margin-top: 6px;
+      }
+      .hdr-right {
+        right: 0;
+        top: 22px;
+        display: flex;
+        gap: 22px;
+        align-items: center;
+        color: var(--a-muted);
+        font-size: 18px;
+      }
+      .flag {
+        width: 28px;
+        height: 19px;
+        border-radius: 2px;
+        background: linear-gradient(#27408b 33%, #fff 33% 66%, #c8102e 66%);
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.18);
+      }
+      .game-name {
+        left: 0;
+        top: 84px;
+        font-size: 26px;
+        font-weight: 800;
+      }
+      .game-meta {
+        right: 72px;
+        top: 90px;
+        font-weight: 700;
+        font-size: 15px;
+        display: flex;
+        gap: 10px;
+        white-space: nowrap;
+      }
+      .game-icons {
+        right: 0;
+        top: 86px;
+        display: flex;
+        gap: 28px;
+        color: var(--a-muted);
+      }
+      .oval {
+        left: 32px;
+        top: 152px;
+        width: 928px;
+        height: 672px;
+        border-radius: 50%;
+        background: var(--a-surface2);
+        border: 1px solid var(--a-line);
+        opacity: 0.85;
+      }
+      .seat {
+        width: 152px;
+        height: 93px;
+        border-radius: 8px;
+        border: 2px solid var(--a-line);
+        background: var(--a-surface);
+        padding: 7px 9px;
+        overflow: hidden;
+        line-height: 1.25;
+      }
+      .seat b {
+        display: block;
+        font-size: 16px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .seat span {
+        display: block;
+        font-size: 14px;
+      }
+      .seat.me {
+        background: var(--a-lav);
+        color: var(--a-on-lav);
+        border-color: var(--a-on-lav);
+      }
+      .seat.cur {
+        border-color: var(--a-primary);
+        box-shadow: 0 0 0 4px color-mix(in srgb, var(--a-primary) 28%, transparent);
+      }
+      .seat .bar {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        height: 5px;
+        width: 68%;
+        background: var(--a-primary);
+      }
+      .pile {
+        border-radius: 7px;
+        width: 86px;
+        height: 129px;
+      }
+      .pile.draw {
+        background: repeating-linear-gradient(45deg, var(--a-lav) 0 6px, var(--a-surface) 6px 12px);
+        border: 1px solid var(--a-on-lav);
+      }
+      .pile.discard {
+        border: 2px dashed var(--a-line);
+      }
+      .cap {
+        width: 120px;
+        text-align: center;
+        font-size: 12px;
+        color: var(--a-muted);
+      }
+      .gcard {
+        width: 128px;
+        height: 192px;
+        border-radius: 11px;
+        border: 2px solid var(--a-primary);
+        background: var(--a-card);
+        color: #2a1d18;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 0;
+        font-size: 30px;
+        font-weight: 500;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+      .gcard i {
+        width: 3px;
+        flex: 1;
+        margin: 6px 0;
+        background: #f08a2e;
+        border-radius: 2px;
+      }
+      .cardname {
+        width: 128px;
+        text-align: center;
+        font-weight: 800;
+        font-size: 16px;
+      }
+      .die {
+        width: 60px;
+        height: 60px;
+        border-radius: 11px;
+        border: 2px solid #9c7b6a;
+        background: var(--a-surface);
+        display: grid;
+        grid-template: repeat(3, 1fr) / repeat(3, 1fr);
+        padding: 7px;
+      }
+      .die.sel {
+        transform: translateY(-5px);
+        outline: 4px solid var(--a-primary);
+        outline-offset: 0;
+        background: #e9d2c4;
+        filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.3));
+      }
+      .die.small {
+        width: 36px;
+        height: 36px;
+        border-width: 1px;
+        border-radius: 6px;
+        padding: 4px;
+      }
+      .die.ghost {
+        opacity: 0.35;
+      }
+      .die.dim {
+        opacity: 0.55;
+      }
+      .die u {
+        display: grid;
+        place-items: center;
+        text-decoration: none;
+      }
+      .die u b {
+        width: 78%;
+        height: 78%;
+        border-radius: 50%;
+        background: var(--a-text);
+      }
+      .abtn {
+        height: 28px;
+        padding: 0 14px;
+        border-radius: 6px;
+        background: var(--a-primary);
+        color: var(--a-on-primary);
+        font-size: 13px;
+        font-weight: 600;
+        display: grid;
+        place-items: center;
+        white-space: nowrap;
+      }
+      .stat {
+        width: 640px;
+        text-align: center;
+        font-weight: 800;
+        font-size: 16px;
+      }
+      .bust {
+        width: 640px;
+        text-align: center;
+        font-weight: 800;
+        font-size: 17px;
+        color: var(--a-on-rose);
+      }
+      .bust i {
+        display: block;
+        margin: 8px auto 0;
+        width: 220px;
+        height: 4px;
+        border-radius: 2px;
+        background: var(--a-primary);
+      }
+      .logbtn {
+        left: 0;
+        top: 856px;
+        width: 44px;
+        height: 44px;
+        border-radius: 8px;
+        background: var(--a-surface2);
+        color: var(--a-text);
+        display: grid;
+        place-items: center;
+        font-size: 13px;
+      }
+
+      /* unscaled overlays inside the window */
+      .notice {
+        position: absolute;
+        left: 50%;
+        top: 9px;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 6px 4px 12px;
+        border-radius: 999px;
+        background: var(--a-lav);
+        color: var(--a-on-lav);
+        border: 1px solid var(--a-on-lav);
+        font-size: 13px;
+        white-space: nowrap;
+        z-index: 3;
+      }
+      .notice button {
+        appearance: none;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font-size: 16px;
+        line-height: 1;
+        cursor: pointer;
+      }
+      .notice button:focus-visible {
+        outline: 3px solid var(--a-primary);
+      }
+      .block {
+        position: absolute;
+        inset: 0;
+        background: var(--a-bg);
+        display: grid;
+        place-items: center;
+        padding: 16px;
+        z-index: 4;
+        text-align: center;
+      }
+      .block div {
+        max-width: 420px;
+      }
+      .block h2 {
+        margin: 0 0 8px;
+        font-size: 22px;
+      }
+      .block p {
+        margin: 6px 0;
+        line-height: 1.45;
+        color: var(--a-muted);
+      }
+      .block p b {
+        color: var(--a-text);
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <header>
+        <p class="eyebrow">Non-functional review mockup · spec 008</p>
+        <h1>Table scaling and size hints</h1>
+        <p class="intro">
+          The table is built once at 992 × 900 px and shrinks uniformly to the browser window: scale
+          = smaller of width and height ratio, at most 1.0. Drag the sliders or pick a preset to see
+          how the table, the scaling notice and the "window too small" hint behave. The numbers are
+          real: the table is an actual 992 × 900 layout scaled by the shown factor.
+        </p>
+      </header>
+
+      <section class="controls" aria-label="Controls">
+        <div class="row">
+          <div class="grp">
+            <span class="lbl">Window</span>
+            <div class="seg" id="presets">
+              <button type="button" data-w="1920" data-h="950" aria-pressed="false">
+                1920×950
+              </button>
+              <button type="button" data-w="1366" data-h="650" aria-pressed="false">
+                1366×650 laptop
+              </button>
+              <button type="button" data-w="1280" data-h="650" aria-pressed="false">
+                1280×650
+              </button>
+              <button type="button" data-w="1024" data-h="640" aria-pressed="true">
+                1024×640 tablet
+              </button>
+              <button type="button" data-w="1024" data-h="600" aria-pressed="false">
+                1024×600 too short
+              </button>
+              <button type="button" data-w="768" data-h="1024" aria-pressed="false">
+                768×1024 portrait
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="sliders">
+          <label for="sw"
+            >Width <b id="swv">1024 px</b>
+            <input id="sw" type="range" min="560" max="1920" step="1" value="1024" />
+          </label>
+          <label for="sh"
+            >Height <b id="shv">640 px</b>
+            <input id="sh" type="range" min="480" max="1080" step="1" value="640" />
+          </label>
+        </div>
+        <div class="row">
+          <div class="grp">
+            <span class="lbl">Players</span>
+            <div class="seg" id="players">
+              <button type="button" data-n="2" aria-pressed="false">2</button>
+              <button type="button" data-n="4" aria-pressed="false">4</button>
+              <button type="button" data-n="8" aria-pressed="true">8</button>
+            </div>
+          </div>
+          <div class="grp">
+            <span class="lbl">Phase</span>
+            <div class="seg" id="phase">
+              <button type="button" data-p="select" aria-pressed="true">Select dice</button>
+              <button type="button" data-p="bank" aria-pressed="false">Secured + bank</button>
+              <button type="button" data-p="bust" aria-pressed="false">Bust</button>
+            </div>
+          </div>
+          <div class="grp">
+            <span class="lbl">Theme</span>
+            <div class="seg" id="theme">
+              <button type="button" data-t="light" aria-pressed="true">Light</button>
+              <button type="button" data-t="dark" aria-pressed="false">Dark</button>
+            </div>
+          </div>
+          <button type="button" class="linkbtn" id="reshow">Show notice again</button>
+        </div>
+      </section>
+
+      <section class="readout" aria-live="polite" aria-label="Measured values">
+        <div><small>Window</small><span id="r-win">1024 × 640</span></div>
+        <div><small>Table scale</small><span id="r-scale">0.71</span></div>
+        <div><small>Body text 16 px becomes</small><span id="r-text">11.4 px</span></div>
+        <div><small>Small text 12 px becomes</small><span id="r-small">8.5 px</span></div>
+        <div><small>Button 44 px becomes</small><span id="r-btn">31 px</span></div>
+        <div><small>Behaviour</small><span id="r-state" class="state-ok">scaled, notice</span></div>
+      </section>
+
+      <section class="frame" aria-label="Simulated browser window">
+        <p class="frame-cap" id="cap">Simulated browser viewport</p>
+        <div class="win" id="win">
+          <div class="vp" id="vp">
+            <div class="stage" id="stage"></div>
+            <div class="notice" id="notice" hidden>
+              <span id="notice-text">Table scaled to fit your window (71%).</span>
+              <button type="button" id="notice-x" aria-label="Dismiss notice">×</button>
+            </div>
+            <div class="block" id="block" hidden>
+              <div>
+                <h2>Window too small</h2>
+                <p>
+                  The game table needs a window of at least <b id="b-min">695 × 630 px</b>. Your
+                  window is <b id="b-cur">1024 × 600 px</b>.
+                </p>
+                <p>
+                  Enlarge the window or turn your device. The game keeps running in the meantime.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="foot">
+        <h2>What to look at</h2>
+        <ul>
+          <li>
+            1024×640 and 1280×650: everything, including the Secured area, fits without scrolling;
+            compare with 1920×950 at 1.0.
+          </li>
+          <li>1024×600: the scale would fall below 0.70, so the table is replaced by the hint.</li>
+          <li>
+            768×1024 portrait: the width ratio gives 0.77, so with the rule as written the table
+            still shows (small, with empty space below). The spec text says portrait tablets get the
+            hint; this is the open point below.
+          </li>
+        </ul>
+        <h2>Open points</h2>
+        <ul>
+          <li>
+            The hint names the real cut-off: <code>992 × 0.7 = 695</code> wide and
+            <code>900 × 0.7 = 630</code> high. The proposed "about 1024×640" is a design target, not
+            the cut-off. If you want a hard minimum width of 1024 (to keep portrait tablets out),
+            the spec needs that as a second rule.
+          </li>
+          <li>
+            Here the header scales with the table. It could also stay at its normal size and give
+            the table the remaining height; the plan decides.
+          </li>
+          <li>
+            The notice sits in the empty header band, outside the scaled area, so it keeps its
+            normal size and never covers the play area.
+          </li>
+        </ul>
+        <h2>Fidelity</h2>
+        <ul>
+          <li>
+            Positions and sizes follow the measured v0.0.5 layout (seat columns at x=8 and x=832,
+            rows 93 px high, dice 60 px, Secured area below). Eight-player rows use 144, 318, 492
+            and 666 px.
+          </li>
+          <li>
+            Icons and dice are simple stand-ins; the game log is shown only as its button, since it
+            is out of scope.
+          </li>
+        </ul>
+      </section>
+    </main>
+
+    <script>
+      const REF_W = 992,
+        REF_H = 900,
+        MIN_S = 0.7;
+      const S = { w: 1024, h: 640, n: 8, p: 'select', dark: false, dismissed: false };
+      const $ = (id) => document.getElementById(id);
+      const PIPS = {
+        1: [4],
+        2: [0, 8],
+        3: [0, 4, 8],
+        4: [0, 2, 6, 8],
+        5: [0, 2, 4, 6, 8],
+        6: [0, 2, 3, 5, 6, 8],
+      };
+
+      const dieHtml = (v, cls, style) =>
+        `<div class="die ${cls || ''}" style="${style || ''}">${Array.from({ length: 9 }, (_, c) => `<u>${PIPS[v].includes(c) ? '<b></b>' : ''}</u>`).join('')}</div>`;
+
+      function stageHtml() {
+        const rows = { 2: [144], 4: [144, 492], 8: [144, 318, 492, 666] }[S.n];
+        const slots = S.n;
+        let seats = '';
+        for (let k = 0; k < slots; k++) {
+          const x = k % 2 === 0 ? 8 : 832;
+          const y = rows[Math.floor(k / 2)];
+          const me = k === 0;
+          const name = me ? 'Mess' : `Computer ${k + 1}`;
+          const sub = me ? 'You<br>Active' : 'Waiting';
+          seats += `<div class="seat ${me ? 'me cur' : ''}" style="left:${x}px;top:${y}px"><b>${me ? '👤' : '🖥'} ${name}</b><b>Score: 0</b><span>${sub}</span>${me ? '<div class="bar"></div>' : ''}</div>`;
+        }
+        const select = S.p === 'select',
+          bank = S.p === 'bank',
+          bust = S.p === 'bust';
+        const vals = bust ? [2, 3, 4, 6, 6, 3] : bank ? [1, 3, 5, 6, 2, 3] : [1, 1, 4, 1, 6, 1];
+        let dice = '';
+        const count = bank ? 5 : 6;
+        for (let i = 0; i < count; i++)
+          dice += dieHtml(
+            vals[i],
+            (select && i === 0 ? 'sel ' : '') + (bust ? 'dim' : ''),
+            `left:${280 + i * 72}px;top:449px;position:absolute`,
+          );
+        const action = select
+          ? `<div class="abtn" style="left:416px;top:565px;width:160px">Set aside selected</div>`
+          : bank
+            ? `<div class="abtn" style="left:436px;top:565px;width:120px">Throw dice</div>`
+            : `<div class="bust" style="left:176px;top:552px">You went bust. Next player (Computer 2) is up.<i></i></div>`;
+        const secured = bank
+          ? `<div class="stat" style="left:176px;top:630px">Dice 1 of 6, 5 to go for success</div>
+         ${dieHtml(1, 'small', 'left:420px;top:664px;position:absolute')}<div class="cap" style="left:408px;top:704px;width:60px;font-size:14px;font-weight:700;color:var(--a-text)">+100</div>
+         <div class="abtn" style="left:430px;top:790px;width:132px">Bank points</div>`
+          : `<div class="stat" style="left:176px;top:630px">${bust ? 'Dice 0 of 6, 6 to go for success' : 'Dice 0 of 6, 6 to go for success'}</div>
+         ${[1, 2, 3, 4, 5, 6].map((v, i) => dieHtml(v, 'small ghost', `left:${373 + i * 42}px;top:667px;position:absolute`)).join('')}`;
+        return `
+      <div class="hdr-logo"><i>🎲</i><span>Volle Lotte</span><small>v0.0.5</small></div>
+      <div class="hdr-right"><span class="flag"></span><span>▾</span><span style="margin-left:10px">🖥</span></div>
+      <div class="game-name">m${S.n}</div>
+      <div class="game-meta"><span>Round 1 · 0:06</span><span>Points: 6000 · Min. points: 350</span><span>Volle Lotte: 0</span></div>
+      <div class="game-icons"><span>⇥</span><span>⚙</span></div>
+      <div class="oval"></div>
+      ${seats}
+      <div class="pile draw" style="left:327px;top:216px"></div>
+      <div class="cap" style="left:310px;top:343px">Left: 55</div>
+      <div class="gcard" style="left:432px;top:173px"><span>2000</span><i></i><span>2000</span></div>
+      <div class="cardname" style="left:432px;top:371px">Street</div>
+      <div class="pile discard" style="left:580px;top:217px"></div>
+      <div class="cap" style="left:563px;top:341px">Discarded: 0</div>
+      <div style="position:absolute;left:0;top:0">${dice}</div>
+      ${action}
+      ${secured}
+      <div class="logbtn">Log</div>`;
+      }
+
+      function render() {
+        const s = Math.min(1, S.w / REF_W, S.h / REF_H);
+        const tooSmall = s < MIN_S - 1e-9;
+        const frameW = $('win').parentElement.clientWidth - 28;
+        const d = Math.min(1, frameW / S.w);
+
+        $('win').style.width = S.w * d + 'px';
+        $('win').style.height = S.h * d + 'px';
+        const vp = $('vp');
+        vp.style.width = S.w + 'px';
+        vp.style.height = S.h + 'px';
+        vp.style.transform = `scale(${d})`;
+        vp.classList.toggle('dark', S.dark);
+
+        const st = $('stage');
+        st.innerHTML = stageHtml();
+        st.style.transform = `scale(${s})`;
+        st.style.left = (S.w - REF_W * s) / 2 + 'px';
+        st.style.top = Math.max(0, (S.h - REF_H * s) / 2) + 'px';
+
+        const showNotice = !tooSmall && s < 0.999 && !S.dismissed;
+        $('notice').hidden = !showNotice;
+        $('notice-text').textContent = `Table scaled to fit your window (${Math.round(s * 100)}%).`;
+        $('block').hidden = !tooSmall;
+        $('b-min').textContent = `${Math.ceil(REF_W * MIN_S)} × ${Math.ceil(REF_H * MIN_S)} px`;
+        $('b-cur').textContent = `${S.w} × ${S.h} px`;
+        st.hidden = tooSmall;
+
+        $('swv').textContent = S.w + ' px';
+        $('shv').textContent = S.h + ' px';
+        $('sw').value = S.w;
+        $('sh').value = S.h;
+        $('r-win').textContent = `${S.w} × ${S.h}`;
+        $('r-scale').textContent = s.toFixed(2);
+        $('r-text').textContent = (16 * s).toFixed(1) + ' px';
+        $('r-small').textContent = (12 * s).toFixed(1) + ' px';
+        $('r-btn').textContent = Math.round(44 * s) + ' px';
+        const rs = $('r-state');
+        rs.textContent = tooSmall
+          ? 'blocking hint'
+          : s >= 0.999
+            ? 'full size'
+            : S.dismissed
+              ? 'scaled, notice dismissed'
+              : 'scaled, notice';
+        rs.className = tooSmall ? 'state-warn' : 'state-ok';
+        $('cap').textContent =
+          `Simulated browser viewport ${S.w} × ${S.h}` +
+          (d < 1 ? ` (shown at ${Math.round(d * 100)}% to fit this page)` : '');
+
+        for (const [id, key, attr] of [
+          ['players', 'n', 'n'],
+          ['phase', 'p', 'p'],
+        ])
+          document
+            .querySelectorAll(`#${id} button`)
+            .forEach((b) =>
+              b.setAttribute('aria-pressed', String(b.dataset[attr] === String(S[key]))),
+            );
+        document
+          .querySelectorAll('#theme button')
+          .forEach((b) =>
+            b.setAttribute('aria-pressed', String((b.dataset.t === 'dark') === S.dark)),
+          );
+        document
+          .querySelectorAll('#presets button')
+          .forEach((b) =>
+            b.setAttribute('aria-pressed', String(+b.dataset.w === S.w && +b.dataset.h === S.h)),
+          );
+      }
+
+      $('presets').addEventListener('click', (e) => {
+        const b = e.target.closest('button');
+        if (!b) return;
+        S.w = +b.dataset.w;
+        S.h = +b.dataset.h;
+        render();
+      });
+      $('sw').addEventListener('input', (e) => {
+        S.w = +e.target.value;
+        render();
+      });
+      $('sh').addEventListener('input', (e) => {
+        S.h = +e.target.value;
+        render();
+      });
+      $('players').addEventListener('click', (e) => {
+        const b = e.target.closest('button');
+        if (b) {
+          S.n = +b.dataset.n;
+          render();
+        }
+      });
+      $('phase').addEventListener('click', (e) => {
+        const b = e.target.closest('button');
+        if (b) {
+          S.p = b.dataset.p;
+          render();
+        }
+      });
+      $('theme').addEventListener('click', (e) => {
+        const b = e.target.closest('button');
+        if (b) {
+          S.dark = b.dataset.t === 'dark';
+          render();
+        }
+      });
+      $('notice-x').addEventListener('click', () => {
+        S.dismissed = true;
+        render();
+      });
+      $('reshow').addEventListener('click', () => {
+        S.dismissed = false;
+        render();
+      });
+      window.addEventListener('resize', render);
+      render();
+    </script>
+  </body>
+</html>

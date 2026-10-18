@@ -6,6 +6,12 @@ export const de: Record<keyof typeof en, string> = {
   'theme.system': 'System',
   'theme.light': 'Hell',
   'theme.dark': 'Dunkel',
+  'scale.notice': 'Tisch an dein Fenster angepasst ({percent} %).',
+  'scale.dismiss': 'Schließen',
+  'scale.tooSmall.title': 'Fenster zu klein',
+  'scale.tooSmall.body':
+    'Bitte vergrößere das Fenster auf mindestens {width} x {height} px. Aktuelle Größe: {currentWidth} x {currentHeight} px.',
+  'scale.tooSmall.running': 'Das Spiel läuft in der Zwischenzeit weiter.',
   'nav.main': 'Hauptmenü',
   'nav.games': 'Lobby',
   'nav.create': 'Spiel erstellen',
