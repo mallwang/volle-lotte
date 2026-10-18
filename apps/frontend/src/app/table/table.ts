@@ -47,6 +47,14 @@ const ANNOUNCED: Record<string, 'info' | 'warn' | 'success'> = {
   rejoined: 'info',
 };
 
+/** Severity of the toast that announces a turn's result, by notice kind. */
+const NOTICE_SEVERITY: Record<string, 'success' | 'warn'> = {
+  bust: 'warn',
+  banked: 'success',
+  stop: 'warn',
+  timedOut: 'warn',
+};
+
 /**
  * How long a turn's result (bust, bank, Stop, timeout) stays on the table before the next turn
  * starts. The server waits as long (NOTICE_MS in game-room.ts) before the next player's move.
@@ -120,7 +128,7 @@ const NOTICE_MS = 6000;
                     [computer]="p.computer"
                     [online]="p.online"
                     [active]="p.active"
-                    [action]="p.active && computerTurn() ? phaseLabel() : null"
+                    [action]="p.active && !p.you ? phaseLabel() : null"
                     [you]="p.you"
                     [deadlineAt]="p.active ? deadlineAt() : null"
                   />
@@ -154,8 +162,7 @@ const NOTICE_MS = 6000;
                 <app-dice-area
                   [dice]="diceShown()"
                   [selected]="shown()"
-                  [notice]="notice()"
-                  [noticeMs]="NOTICE_MS"
+                  [waitMs]="notice() ? NOTICE_MS : 0"
                   [canSelect]="mine() && turn.phase === 'select'"
                   [mine]="mine()"
                   [computerPick]="computerTurn()"
@@ -222,7 +229,6 @@ export class Table {
   /** Result of a turn: keeps the last throw and secured dice visible until the next player takes over. */
   protected readonly notice = signal<{
     dice: readonly number[];
-    text: string;
     safe: number;
     /** Table seat that ended the turn; stays highlighted while the notice is shown. */
     seat: number;
@@ -434,28 +440,14 @@ export class Table {
     return phase ? this.i18n.t(`table.phase.${phase}`) : '';
   });
 
-  /** Hint under the buttons: what the player on turn does next (for me only while a selection is missing). */
+  /** Hint under the buttons for my turn; other seats show their phase on the seat card. */
   protected readonly next = computed(() => {
     const turn = this.socket.game()?.game?.turn;
     if (!turn || this.notice() || this.roll.rolling()) return '';
     const t = this.i18n.t.bind(this.i18n);
-    // my own buttons say what to do; only a pending selection needs a hint
-    if (this.mine() && turn.card && this.can('draw') && this.canBank())
-      return '🃏 ' + t('table.drawOrBank');
-    if (this.mine())
-      return turn.phase === 'select' && this.shown().length === 0
-        ? '👆 ' + t('table.selectOne')
-        : '';
-    let todo = [
-      this.can('draw') && '🃏 ' + t('table.draw'),
-      this.canThrow() && '🎲 ' + t('table.throw'),
-      this.canBank() && '💰 ' + t('table.bank'),
-    ]
-      .filter(Boolean)
-      .join(t('table.or'));
-    if (turn.phase === 'select')
-      todo = '👆 ' + t(this.shown().length > 0 ? 'table.select' : 'table.selectOne');
-    return todo;
+    if (!this.mine()) return '';
+    if (turn.card && this.can('draw') && this.canBank()) return '🃏 ' + t('table.drawOrBank');
+    return turn.phase === 'select' && this.shown().length === 0 ? '👆 ' + t('table.selectOne') : '';
   });
 
   /** Completed turns, one per player and round (a bust or bank ends a turn). */
@@ -507,7 +499,7 @@ export class Table {
       this.startRoll(g, data.dice);
       if (this.roll.rolling()) return true;
     }
-    // a timeout is announced in the middle of the table, like a bust
+    // a timeout is announced like a bust
     if (e.kind === 'timedOut') {
       const key = e.seat === g.you.seat && g.you.timeoutWarning ? 'timedOutWarn' : 'timedOutYou';
       return this.setNotice(g, e, key, 'timedOutOther', [], 0);
@@ -518,9 +510,18 @@ export class Table {
     const severity = ANNOUNCED[data ? data.type : e.kind];
     // the loss of a Stop card is part of the Stop notice
     const afterStop = data?.type === 'turnLost' && this.isStop(g.log[g.log.indexOf(e) - 1]);
-    if (severity && !notice && !afterStop)
-      this.messages.add({ severity, detail: logText(g, e, this.i18n), life: 4000 });
+    if (severity && !notice && !afterStop && !this.isStarBust(g, e))
+      this.announce(g, e, severity, data?.type);
     return notice;
+  }
+
+  private announce(g: GameView, e: LogEntry, severity: 'info' | 'warn' | 'success', type?: string) {
+    this.messages.add({
+      severity,
+      summary: type === 'volleLotte' ? this.i18n.t('toast.volleLotte') : undefined,
+      detail: logText(g, e, this.i18n),
+      life: 4000,
+    });
   }
 
   /** Show a bust or bank and who is next; returns false when there is nothing to show. */
@@ -549,10 +550,7 @@ export class Table {
     }
     const bust = data.type === 'bust';
     if (!g.game || g.game.result || (bust && this.lastThrow().length === 0)) return false;
-    // Star cannot bust: its final throw is followed by a bank entry, which gets the notice
-    const after = g.log[i + 1]?.data;
-    if (bust && data.lost === 0 && typeof after === 'object' && after.type === 'banked')
-      return false;
+    if (this.isStarBust(g, e)) return false;
     const points = data.type === 'banked' ? data.points : 0;
     return this.setNotice(
       g,
@@ -577,6 +575,15 @@ export class Table {
       }
     }
     return rest;
+  }
+
+  /** Star cannot bust: a final miss with nothing lost is followed by a bank entry, which is announced. */
+  private isStarBust(g: GameView, e: LogEntry): boolean {
+    const d = e.kind === 'turn' && typeof e.data === 'object' ? e.data : null;
+    const after = g.log[g.log.indexOf(e) + 1]?.data;
+    return (
+      d?.type === 'bust' && d.lost === 0 && typeof after === 'object' && after.type === 'banked'
+    );
   }
 
   private isStop(e: LogEntry | undefined): boolean {
@@ -614,7 +621,15 @@ export class Table {
     });
     // a timeout leaves the card as it is; every other notice keeps the finished turn's card
     const card = e.kind === 'timedOut' ? undefined : this.cardAt(g, g.log.indexOf(e));
-    this.notice.set({ dice, text, safe: points, seat: this.seats().indexOf(e.seat ?? -1), card });
+    // the result is a toast; the notice only holds the table state while it is shown
+    const kind = you.replace(/(Lost)?(You|Warn)$/, '');
+    this.messages.add({
+      severity: NOTICE_SEVERITY[kind],
+      summary: this.i18n.t(`toast.${kind}`),
+      detail: text,
+      life: NOTICE_MS,
+    });
+    this.notice.set({ dice, safe: points, seat: this.seats().indexOf(e.seat ?? -1), card });
     setTimeout(() => this.notice.set(null), NOTICE_MS);
     return true;
   }
@@ -693,7 +708,6 @@ export class Table {
   protected async act(action: Action): Promise<void> {
     const ack = await this.socket.send('turn:action', { action });
     if (ack.ok) this.chosen.set([]);
-    else
-      this.messages.add({ severity: 'error', detail: errorMessage(ack, this.i18n), sticky: true });
+    else this.messages.add({ severity: 'error', detail: errorMessage(ack, this.i18n), life: 6000 });
   }
 }

@@ -352,7 +352,7 @@ describe('Table', () => {
     expect(socket.leave).not.toHaveBeenCalled();
   });
 
-  it('shows a new bank as a notice instead of a toast', async () => {
+  it('announces a new bank as a toast', async () => {
     const { socket, toasts, fixture } = await setup(0);
     const view = socket.game()!;
     socket.game.set({
@@ -361,8 +361,13 @@ describe('Table', () => {
     } as never);
     fixture.detectChanges();
     await fixture.whenStable();
-    expect(toasts).not.toHaveBeenCalled();
-    expect(fixture.nativeElement.querySelector('.vl-bust')?.textContent).toContain('banked 300');
+    expect(toasts).toHaveBeenCalledWith(
+      expect.objectContaining({
+        severity: 'success',
+        summary: 'Banked',
+        detail: expect.stringContaining('banked 300'),
+      }),
+    );
   });
 
   describe('turn notices', () => {
@@ -372,7 +377,8 @@ describe('Table', () => {
       t.socket.game.set({ ...t.socket.game()!, log } as never);
       t.fixture.detectChanges();
       await t.fixture.whenStable();
-      return t.el.querySelector('.vl-bust')?.textContent ?? '';
+      expect(t.el.querySelector('.vl-wait .vl-bust-timer')).not.toBeNull();
+      return t.toasts.mock.calls.map(([m]) => `${m.summary} ${m.detail}`).join('\n');
     }
 
     it('announces a timeout to the player', async () => {
@@ -393,7 +399,9 @@ describe('Table', () => {
       } as never);
       t.fixture.detectChanges();
       await t.fixture.whenStable();
-      expect(t.el.querySelector('.vl-bust')?.textContent).toContain('One more');
+      expect(t.toasts).toHaveBeenCalledWith(
+        expect.objectContaining({ detail: expect.stringContaining('One more') }),
+      );
     });
 
     it('announces a Stop card without points at stake', async () => {
@@ -413,6 +421,19 @@ describe('Table', () => {
       localStorage.setItem('vl-skip-dice', 'true');
       const log = [turn(0, { type: 'thrown', dice: [2, 3] }), turn(0, { type: 'bust', lost: 0 })];
       expect(await noticeFor(log)).toContain('went bust');
+      localStorage.removeItem('vl-skip-dice');
+    });
+
+    it('announces only the bank when Star ends with a miss', async () => {
+      localStorage.setItem('vl-skip-dice', 'true');
+      const log = [
+        turn(0, { type: 'thrown', dice: [2, 3] }),
+        turn(0, { type: 'bust', lost: 0 }),
+        turn(0, { type: 'banked', points: 300 }),
+      ];
+      const text = await noticeFor(log);
+      expect(text).toContain('banked 300');
+      expect(text).not.toContain('bust');
       localStorage.removeItem('vl-skip-dice');
     });
   });

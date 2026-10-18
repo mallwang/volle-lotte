@@ -552,10 +552,6 @@ a.vl-menu-link:hover {
   font-variant-numeric: tabular-nums;
   font-weight: 600;
 }
-.vl-bust {
-  margin: 0;
-  font-weight: 600;
-}
 .vl-bust-timer {
   height: 4px;
   margin-bottom: 0.75rem;
@@ -702,6 +698,10 @@ a.vl-menu-link:hover {
   gap: 0.75rem;
   /* keep the height when the buttons are hidden, so nothing above the secured area shifts */
   min-height: 2.5rem;
+}
+.vl-wait {
+  /* the centre row is as wide as its content, and the bar has none */
+  width: 12rem;
 }
 .vl-next {
   margin: 0;
@@ -983,4 +983,9 @@ a.vl-menu-link:hover {
   .vl-drawn {
     animation: none;
   }
+}
+
+/* the close button sits in the corner: keep the text clear of it */
+.p-toast-message-text {
+  padding-inline-end: 1.5rem;
 }

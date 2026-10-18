@@ -53,15 +53,19 @@ describe('DiceArea', () => {
     expect(make({}).el.querySelector('.vl-action')).toBeNull();
   });
 
-  it('shows the bust notice, points and the minimum hint', () => {
+  it('shows the points and the minimum hint', () => {
     const { el } = make({
-      notice: { text: 'Busted!' },
       safeText: 'Secured: 250 points',
       minimum: 300,
     });
-    expect(el.querySelector('.vl-bust')!.textContent).toContain('Busted!');
     expect(el.querySelector('.vl-safe')!.textContent).toContain('250');
     expect(el.querySelector('.vl-safe > small')!.textContent).toMatch(/300/);
+  });
+
+  it('shows a countdown bar while waiting for the next turn', () => {
+    const { el } = make({ waitMs: 6000 });
+    const bar = el.querySelector<HTMLElement>('.vl-bust-timer')!;
+    expect(bar.style.animationDuration).toBe('6000ms');
   });
 
   it('shows Street progress with missing values marked', () => {
