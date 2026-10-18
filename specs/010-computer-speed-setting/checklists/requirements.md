@@ -31,4 +31,4 @@
 
 ## Notes
 
-- Exact step timings and the protocol change are left to planning.
+- Exact step timings and the protocol change are left to planning. "Fast computer dice" stays as a separate switch.

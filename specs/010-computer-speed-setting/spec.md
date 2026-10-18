@@ -6,19 +6,19 @@
 
 **Status**: Draft
 
-**Input**: User description: "Computer player speed setting. The host sets how fast computer players act with a slider, in the game lobby and during a running game. Every player is told with a toast when the host changes a setting. The current computer pacing is too slow and needs a faster default."
+**Input**: User description: "Computer player speed setting. The host sets how fast computer players act (the waits between their actions) with a slider, in the game lobby and during a running game. Every player is told with a toast when the host changes a setting. The current computer pacing is too slow and needs a faster default."
 
 ## Scope
 
-In scope: a host-controlled speed setting for computer players (lobby and running game), faster default pacing, a toast for every player when the host changes a game setting (the new speed setting and the existing "fast computer dice" option).
+In scope: a host-controlled speed setting for the waits between a computer player's actions (lobby and running game), a faster default pace, a toast for every player when the host changes a game setting (the new speed setting and the existing "fast computer dice" option).
 
-Out of scope: remembering any setting between games (every game starts with the defaults), per-computer speeds, changing the pacing of human turns or the human turn limits, changing the rules or the computers' decisions.
+Out of scope: the "fast computer dice" option itself (it stays as it is and only shortens the dice roll animation; the speed setting does not change roll duration), remembering any setting between games (every game starts with the defaults), per-computer speeds, changing the pacing of human turns or the human turn limits, changing the rules or the computers' decisions.
 
 ## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Faster computer players by default (Priority: P1)
 
-A human player at a table with computer players waits much less between their own turns. Today a computer takes a long time before it throws, rolls its dice for a long time, waits again before taking dice, and the result of its turn stays on the table for long. With the new default these waits are noticeably shorter, while every step stays readable (the player can still see what the computer threw, which dice it took and how its turn ended).
+A human player at a table with computer players waits much less between their own turns. Today a computer takes a long time before it throws, waits again before taking dice, and the result of its turn stays on the table for long. With the new default these waits are noticeably shorter, while every step stays readable (the player can still see what the computer threw, which dice it took and how its turn ended).
 
 **Why this priority**: This is the core complaint. It delivers value even without any slider.
 
@@ -34,7 +34,7 @@ A human player at a table with computer players waits much less between their ow
 
 ### User Story 2 - Host chooses the computer speed with a slider (Priority: P1)
 
-The host sees a speed slider in the game lobby, from slow to very fast, with the default preselected. The chosen value is taken over when the game starts. The host can also move the slider in the running game (table settings). Other players see the current value but cannot change it. Every new game starts at the default; nothing is remembered from earlier games.
+The host sees a speed slider in the game lobby, from fast (step 1) to slow (step 5), with the default preselected. The chosen value is taken over when the game starts. The host can also move the slider in the running game (table settings). Other players see the current value but cannot change it. Every new game starts at the default; nothing is remembered from earlier games.
 
 **Why this priority**: It gives the table control over the pace; humans who want to move on quickly can have it.
 
@@ -47,13 +47,13 @@ The host sees a speed slider in the game lobby, from slow to very fast, with the
 3. **Given** a running game, **When** the host moves the slider, **Then** all following computer steps use the new pace for every player at the table.
 4. **Given** a guest in the lobby or at the table, **When** they look at the setting, **Then** they see the current value and a note that only the host can change it; the control is disabled.
 5. **Given** the host created a game earlier with a non-default speed, **When** they create another game, **Then** the slider is at the default again.
-6. **Given** the slider at its fastest position, **When** computers play, **Then** the steps are still shown in the right order (throw, result, selection, end of turn), only with minimal waits.
+6. **Given** the slider at step 1 (fastest), **When** computers play, **Then** the steps are still shown in the right order (throw, result, selection, end of turn), only with minimal waits.
 
 ---
 
 ### User Story 3 - Toast when the host changes a setting (Priority: P2)
 
-When the host changes a game setting, every player in the game (host and guests) gets a short toast that says which setting changed and to what value. This covers the new computer speed and the existing "fast computer dice" option.
+When the host changes a game setting, every player in the game (host and guests) gets a short toast that says which setting changed and to what value. This covers the new computer speed and the existing "fast computer dice" switch.
 
 **Why this priority**: Settings now change the pace for everybody; players must understand why the game suddenly speeds up or slows down.
 
@@ -83,33 +83,33 @@ When the host changes a game setting, every player in the game (host and guests)
 
 ### Functional Requirements
 
-- **FR-001**: The default pace of computer players MUST be clearly faster than today's pace (waiting before a throw, dice rolling time, waiting before and while taking dice, and the time a turn result stays shown), while each step stays readable.
-- **FR-002**: The host MUST be able to set the computer speed with a slider with discrete steps, from slow to very fast, in the game lobby.
+- **FR-001**: The default pace of computer players MUST be clearly faster than today's pace (waiting before an action, waiting before and while taking dice, and the time a turn result stays shown), while each step stays readable.
+- **FR-002**: The host MUST be able to set the computer speed with a slider with five discrete steps, from 1 (fast) to 5 (slow), in the game lobby.
 - **FR-003**: The speed chosen in the lobby MUST apply from the first computer turn of the started game.
 - **FR-004**: The host MUST be able to change the speed in a running game; the change MUST apply to all following computer steps for every player.
 - **FR-005**: Only the host MUST be able to change the speed; other players MUST see the current value but not change it, with a note why. The server MUST reject changes from non-hosts.
 - **FR-006**: Every game MUST start with the default speed; the system MUST NOT remember the setting across games or sessions.
-- **FR-007**: The computer speed MUST also scale the dice roll duration shown for computers' throws, so one setting controls the whole computer pace.
-- **FR-008**: The existing on/off option "fast computer dice" MUST be replaced by the speed setting, so there is one control for computer pace. The range MUST contain a step at least as fast as today's fast mode, and no step may be slower than today's normal pace.
+- **FR-007**: The speed setting MUST control the waits between a computer's actions (before acting, after a throw until it takes dice, how long its pick is highlighted, and how long a turn result is shown). It MUST NOT change the dice roll animation duration.
+- **FR-008**: The existing on/off switch "fast computer dice" MUST stay and keep its current behaviour. It is independent of the speed setting; both can be combined.
 - **FR-009**: All players in the game MUST receive a toast when the host changes a game setting, naming the setting and the new value, in the player's language.
-- **FR-010**: The toast rule MUST cover the computer speed and the existing "fast computer dice" option (as long as it exists), and any later host setting.
+- **FR-010**: The toast rule MUST cover the computer speed, the existing "fast computer dice" switch, and any later host setting.
 - **FR-011**: Repeated changes while dragging the slider MUST result in one toast with the final value, not one per step passed.
 - **FR-012**: Players who join or rejoin MUST NOT see toasts for changes made before they arrived.
 - **FR-013**: Human turn limits MUST remain fair: they start only after the dice animation of the preceding step has finished on the client, regardless of the speed.
 - **FR-014**: The speed setting MUST be available in both languages (English and German) with accessible labels, including keyboard operation of the slider.
-- **FR-015**: Rules, the computers' decisions and the human turn limits MUST remain unchanged.
+- **FR-015**: Rules, the computers' decisions, the human turn limits and the dice roll animation MUST remain unchanged.
 
 ### Key Entities
 
-- **Computer speed**: A per-game setting owned by the host, one of several discrete steps from slow to very fast, with a default; shared with all players; not persisted beyond the game.
+- **Computer speed**: A per-game setting owned by the host, one of five discrete steps from 1 (fast) to 5 (slow), with a default (step 3); shared with all players; not persisted beyond the game.
 - **Setting change notice**: A short message to every player naming the changed setting and its new value.
 
 ## Success Criteria _(mandatory)_
 
 ### Measurable Outcomes
 
-- **SC-001**: At the default speed, the average time a human waits between the end of their own turn and the start of their next one, with three computers at the table, is at least 40% shorter than before this change.
-- **SC-002**: At the fastest step, a computer's turn takes less than a quarter of the time it takes at the slowest step.
+- **SC-001**: At the default step, the average time a human waits between the end of their own turn and the start of their next one, with three computers at the table, is clearly shorter than before this change (target: at least 25% shorter; final value set in planning).
+- **SC-002**: The waits of a computer's turn shrink monotonically from step 5 to step 1; at step 1 they are less than a third of those at step 5.
 - **SC-003**: The host can find and change the speed in the lobby and in a running game in under 10 seconds without help.
 - **SC-004**: In a test with two humans, 100% of host setting changes produce exactly one toast per human, with the correct setting and value.
 - **SC-005**: Over 20 consecutive games with computers at every speed step, no computer step is skipped, repeated or shown out of order.
@@ -117,9 +117,8 @@ When the host changes a game setting, every player in the game (host and guests)
 
 ## Assumptions
 
-- The slider has five steps. The default is the middle step, chosen so that the average wait is at least 40% shorter than today (SC-001). Exact timings are decided in planning.
-- Today's timings are the baseline (computer wait before acting 2 s, dice roll up to 3 s or 1.5 s in fast mode, 3.25 s wait after a throw, 2 s pick highlight, 6 s result notice); the previous "fast dice" mode becomes one of the faster steps.
-- The result notice of a finished turn is shortened but never removed, so players can read what happened; the lowest wait is chosen in planning.
+- The slider has five steps, 1 = fast to 5 = slow. The owner rates today's pace as about step 4, so today's waits are the reference for step 4 and step 5 is slower than today. The default is step 3 (middle), clearly faster than today. Exact timings per step are decided in planning.
+- The result notice of a finished turn is shortened at faster steps but never removed, so players can read what happened.
 - The lobby shows the setting in the game lobby view the host already uses; the running-game control lives in the existing table settings dialog.
 - A protocol change is acceptable; clients and server are deployed together and an older client is rejected by the existing version check.
 - The toast uses the existing toast mechanism and wording style of the app.
