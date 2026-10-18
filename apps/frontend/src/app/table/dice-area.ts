@@ -70,7 +70,7 @@ const STREET_VALUES = [1, 2, 3, 4, 5, 6];
           <ng-container *ngTemplateOutlet="act; context: { $implicit: action('throw') }" />
           <ng-container *ngTemplateOutlet="act; context: { $implicit: action('select') }" />
           @if (waitMs()) {
-            <div class="vl-next" aria-hidden="true">
+            <div class="vl-wait" aria-hidden="true">
               <div class="vl-bust-timer" [style.animation-duration.ms]="waitMs()"></div>
             </div>
           } @else if (next()) {

@@ -699,6 +699,10 @@ a.vl-menu-link:hover {
   /* keep the height when the buttons are hidden, so nothing above the secured area shifts */
   min-height: 2.5rem;
 }
+.vl-wait {
+  /* no text to give the flex item a width */
+  width: 100%;
+}
 .vl-next {
   margin: 0;
   font-size: 1rem;
