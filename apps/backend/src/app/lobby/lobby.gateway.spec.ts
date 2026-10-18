@@ -113,6 +113,13 @@ describe('game lobby and play', () => {
       await host.send('seat:set', { seat: 2, mode: 'computer', difficulty: 'hard' }),
     ).toMatchObject({ ok: true });
     expect(await host.send('seat:set', { seat: 3, mode: 'locked' })).toMatchObject({ ok: true });
+    expect(
+      await host.send('seat:set', { seat: 2, mode: 'computer', difficulty: 'easy', risk: 'wild' }),
+    ).toMatchObject({ reason: 'invalidRequest' });
+    expect(
+      await host.send('seat:set', { seat: 2, mode: 'computer', difficulty: 'hard', risk: 'high' }),
+    ).toMatchObject({ ok: true });
+    expect(await host.until('game:state', (s) => s.game.seats[2].risk === 'high')).toBeTruthy();
     expect(await host.send('game:start')).toMatchObject({ reason: 'notReady' });
     await host.send('seat:ready', { ready: true });
     await p.send('seat:ready', { ready: true });

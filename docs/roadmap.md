@@ -24,20 +24,11 @@ Last updated: 2026-10-18. The Java -> web migration is finished (see [migration.
 | 008  | Desktop minimum size: header and table scale as one 992x900 stage (minimum 695x630, scale 0.7), scaling notice and "window too small" hint, global focus ring, tab order and contrast checked                                                                                                  |
 | 009  | App shell: PrimeNG menubar on every screen (active page, "Current game" status), one shared leave confirmation (navbar, browser back, table and lobby buttons), light/dark-only theme with a sun/moon button; create-game form restyle (P3) dropped, it stays as is until the form is reworked |
 | 010  | Computer speed setting: host slider 1-5 (default 3, faster than before) in lobby and table settings, one shared pacing table, toast on setting changes, protocol v5                                                                                                                            |
+| 011  | Computer AI rework: decisions by expected value from exact dice odds, skill (easy, medium, hard, random) and independent risk (none, medium, high, random) per computer seat, random resolved per decision, score situation shifts risk, protocol v6                                           |
 | -    | Docker image and Portainer stack, release workflow, app icon, page titles, version in the header                                                                                                                                                                                               |
 | -    | Backend integration tests as manual e2e (`npm run test:e2e`, skill `run-e2e`), kept out of CI                                                                                                                                                                                                  |
 
 ## Next
-
-### R7. Computer player AI rework (`in progress`, spec 011)
-
-Goal: computer players that decide by expected value instead of fixed thresholds, with a separate risk setting.
-
-- Skill `easy | medium | hard | random` and risk `none | medium | high | random` per computer seat. `random` is resolved per decision, never per game.
-- Decisions come from exact odds (dice outcomes per number of free dice) and a memoised value function, not from hand-written special cases: which dice to set aside, bank or throw, and draw or bank after a Volle Lotte on a Bonus card (card odds from `rules.cardCounts`, never from the real deck).
-- Street, Double Lotte, Plus/Minus (and Clover, Star): always set aside all possible dice, for every skill.
-- Risk is one loss-aversion parameter; "high" is shifted strongly towards drawing but not blind. The score situation (deficit to the leader, distance to the target) shifts it further.
-- Open: protocol bump, seat UI for the risk setting, balance by bot tournaments (overlaps R2).
 
 ### R2. E2E suite with bots (`planned`)
 

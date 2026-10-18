@@ -43,6 +43,19 @@ describe('GameRoom lobby', () => {
     expect(room.join('r', 'Rob')).toMatchObject({ reason: 'gameFull' });
   });
 
+  it('keeps skill and risk of a computer seat, risk defaults to medium', () => {
+    const { room } = make(4);
+    expect(room.setSeat('h', 2, 'computer', 'hard', 'none')).toMatchObject({ ok: true });
+    expect(room.seats[2]).toEqual({ state: 'computer', difficulty: 'hard', risk: 'none' });
+    expect(room.setSeat('h', 3, 'computer')).toMatchObject({ ok: true });
+    expect(room.seats[3]).toEqual({ state: 'computer', difficulty: 'medium', risk: 'medium' });
+    expect(toView(room, 'h').seats[2]).toEqual({
+      state: 'computer',
+      difficulty: 'hard',
+      risk: 'none',
+    });
+  });
+
   it('resets readiness on seat changes and guards setSeat', () => {
     const { room } = make();
     room.join('p', 'Pia');
@@ -108,13 +121,14 @@ describe('GameRoom leaving', () => {
     expect(seat).toMatchObject({
       state: 'computer',
       difficulty: 'random',
+      risk: 'random',
       former: { playerId: 'p', nickname: 'Pia' },
     });
-    expect(['easy', 'medium', 'hard']).toContain((seat as { effective: string }).effective);
     expect(room.log.at(-1)).toMatchObject({ kind: 'replaced', seat: 1, data: 'left' });
     expect(toView(room, 'h').seats[1]).toEqual({
       state: 'computer',
       difficulty: 'random',
+      risk: 'random',
       former: { nickname: 'Pia' },
     });
     expect(room.leave('h')).toMatchObject({ empty: true });

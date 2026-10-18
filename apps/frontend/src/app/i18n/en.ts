@@ -94,6 +94,11 @@ export const en = {
   'difficulty.hard': 'hard',
   'difficulty.random': 'random',
 
+  'risk.none': 'no risk',
+  'risk.medium': 'medium risk',
+  'risk.high': 'high risk',
+  'risk.random': 'random risk',
+
   'gameLobby.summary': 'Target {target}, minimum {minimum}, four of a kind doubling {doubling}.',
   'gameLobby.cards': 'Cards: {list}.',
   'gameLobby.on': 'on',
@@ -103,8 +108,9 @@ export const en = {
   'gameLobby.offline': 'Offline',
   'gameLobby.ready': 'Ready',
   'gameLobby.notReady': 'Not ready',
-  'gameLobby.computer': 'Computer ({difficulty})',
+  'gameLobby.computer': 'Computer ({difficulty}, {risk})',
   'gameLobby.difficultySeat': 'Difficulty seat {n}',
+  'gameLobby.riskSeat': 'Risk seat {n}',
   'gameLobby.removeComputer': 'Remove computer',
   'gameLobby.locked': 'Locked',
   'gameLobby.unlock': 'Unlock',

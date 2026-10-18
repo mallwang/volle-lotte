@@ -23,13 +23,13 @@
 
 ## Configurable rules (set at game creation, defaults)
 
-| Rule                                                   | Default                                             |
-| ------------------------------------------------------ | --------------------------------------------------- |
-| Target score                                           | 6,000 (free choice, e.g. 10,000)                    |
-| Minimum points to bank                                 | 350 (0 = off)                                       |
-| Four or more of a kind: each further equal die doubles | on                                                  |
-| Number of cards per type                               | default set below                                   |
-| A player leaves                                        | a random computer takes over; the player may rejoin |
+| Rule                                                   | Default                                                                 |
+| ------------------------------------------------------ | ----------------------------------------------------------------------- |
+| Target score                                           | 6,000 (free choice, e.g. 10,000)                                        |
+| Minimum points to bank                                 | 350 (0 = off)                                                           |
+| Four or more of a kind: each further equal die doubles | on                                                                      |
+| Number of cards per type                               | default set below                                                       |
+| A player leaves                                        | a computer with random skill and risk takes over; the player may rejoin |
 
 ### Default set (56 cards)
 

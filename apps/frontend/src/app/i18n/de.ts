@@ -96,6 +96,11 @@ export const de: Record<keyof typeof en, string> = {
   'difficulty.hard': 'schwer',
   'difficulty.random': 'zufällig',
 
+  'risk.none': 'kein Risiko',
+  'risk.medium': 'mittleres Risiko',
+  'risk.high': 'hohes Risiko',
+  'risk.random': 'zufälliges Risiko',
+
   'gameLobby.summary': 'Ziel {target}, Minimum {minimum}, Vierling-Verdopplung {doubling}.',
   'gameLobby.cards': 'Karten: {list}.',
   'gameLobby.on': 'an',
@@ -105,8 +110,9 @@ export const de: Record<keyof typeof en, string> = {
   'gameLobby.offline': 'Offline',
   'gameLobby.ready': 'Bereit',
   'gameLobby.notReady': 'Nicht bereit',
-  'gameLobby.computer': 'Computer ({difficulty})',
+  'gameLobby.computer': 'Computer ({difficulty}, {risk})',
   'gameLobby.difficultySeat': 'Schwierigkeit Platz {n}',
+  'gameLobby.riskSeat': 'Risiko Platz {n}',
   'gameLobby.removeComputer': 'Computer entfernen',
   'gameLobby.locked': 'Gesperrt',
   'gameLobby.unlock': 'Entsperren',

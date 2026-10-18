@@ -1,49 +1,41 @@
 import { legalActions } from './game.js';
-import { scoreDice } from './scoring.js';
+import { chooseBankOrDraw, chooseBankOrThrow } from './computer/decide.js';
+import type { Select } from './computer/easy.js';
+import { resolve } from './computer/profile.js';
+import type { Profile } from './computer/profile.js';
+import { chooseSelect } from './computer/select.js';
+import { kappaFor, reachesTarget } from './computer/situation.js';
 import type { Action, GameState, RandomInt } from './types.js';
 
-export type ComputerLevel = 'easy' | 'medium' | 'hard';
+export { DEFAULT_PROFILE, resolve } from './computer/profile.js';
+export { warmUp } from './computer/warm.js';
+export type { ConcreteRisk, Profile, Skill } from './computer/profile.js';
 
-type Select = Extract<Action, { type: 'select' }>;
-
-// ponytail: initial numbers, calibrate by simulation later
-const BANK_AT: Record<ComputerLevel, number> = { easy: 300, medium: 450, hard: 650 };
-/** Never bank with this many free dice or more. */
-const KEEP_THROWING_FROM: Record<ComputerLevel, number> = { easy: 7, medium: 5, hard: 4 };
-
-/** Picks the candidate with the lowest `cost` (ties broken by `rng`). */
-function pickBy<T>(items: readonly T[], cost: (item: T) => number, rng: RandomInt): T {
-  const best = Math.min(...items.map(cost));
-  const ties = items.filter((item) => cost(item) === best);
-  return ties[rng(ties.length)];
-}
-
-function choose(state: GameState, level: ComputerLevel, rng: RandomInt, legal: Action[]): Action {
+function choose(state: GameState, profile: Profile, rng: RandomInt, legal: Action[]): Action {
   const turn = state.turn;
-  const find = (type: Action['type']) => legal.find((a) => a.type === type);
-  if (!turn) return legal[0];
-  if (turn.phase === 'select') {
-    const picks = legal.filter((a): a is Select => a.type === 'select');
-    const values = (a: Select) => a.dice.map((i) => turn.dice[i]);
-    const points = (a: Select) => Math.max(0, scoreDice(values(a), state.rules));
-    if (level === 'hard') {
-      const all = picks.filter((a) => a.dice.length === turn.free);
-      if (all.length > 0) return pickBy(all, (a) => -points(a), rng);
-      return pickBy(picks, (a) => -points(a) / a.dice.length, rng);
-    }
-    return pickBy(picks, (a) => a.dice.length * 10000 + points(a), rng);
-  }
-  const total = turn.carried + turn.run;
-  const wantBank = total >= BANK_AT[level] && turn.free < KEEP_THROWING_FROM[level];
+  if (!turn || legal.length === 1) return legal[0];
+  const { skill, risk } = resolve(profile, rng);
+  const kappa = kappaFor(state, risk);
+  const find = <T extends Action['type']>(type: T) =>
+    legal.find((a): a is Extract<Action, { type: T }> => a.type === type);
   const bank = find('bank');
-  if (bank && wantBank) return bank;
-  return find('throw') ?? find('draw') ?? bank ?? legal[0];
+  if (bank && reachesTarget(state, turn.carried + turn.run)) return bank;
+  const selects = legal.filter((a): a is Select => a.type === 'select');
+  if (selects.length > 0) return chooseSelect(state, selects, skill, kappa, rng);
+  const draw = find('draw');
+  const again = find('throw');
+  if (bank && draw) return chooseBankOrDraw(state, bank, draw, skill, risk, kappa, rng);
+  if (bank && again) return chooseBankOrThrow(state, bank, again, skill, risk, kappa, rng);
+  return again ?? draw ?? bank ?? legal[0];
 }
 
-/** Next action of a computer player; always one of `legalActions(state)`. Throws when the game is over. */
-export function chooseAction(state: GameState, level: ComputerLevel, rng: RandomInt): Action {
+/**
+ * Next action of a computer player; always one of `legalActions(state)`. Throws when the game is over.
+ * `random` skill and risk of the profile are resolved anew on every call.
+ */
+export function chooseAction(state: GameState, profile: Profile, rng: RandomInt): Action {
   const legal = legalActions(state);
   if (legal.length === 0) throw new Error('no legal action');
-  const action = choose(state, level, rng, legal);
+  const action = choose(state, profile, rng, legal);
   return legal.includes(action) ? action : legal[0];
 }

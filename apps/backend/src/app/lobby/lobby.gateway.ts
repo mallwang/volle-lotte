@@ -13,6 +13,7 @@ import {
   type Ack,
   type Action,
   type Difficulty,
+  type Risk,
   type ErrorReason,
   type Intents,
   type LogEntry,
@@ -28,6 +29,7 @@ import { toView } from './view';
 
 const LOBBY = 'lobby';
 const DIFFICULTIES = new Set(['easy', 'medium', 'hard', 'random']);
+const RISKS = new Set(['none', 'medium', 'high', 'random']);
 const isObj = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && x !== null;
 const isInt = (x: unknown, min: number, max: number): x is number =>
   Number.isInteger(x) && (x as number) >= min && (x as number) <= max;
@@ -37,6 +39,7 @@ const isPassword = (x: unknown): x is string =>
 const isOptionalPassword = (x: unknown): x is string => x === '' || isPassword(x);
 const isDifficulty = (x: unknown): x is Difficulty | undefined =>
   x === undefined || DIFFICULTIES.has(x as string);
+const isRisk = (x: unknown): x is Risk | undefined => x === undefined || RISKS.has(x as string);
 const isAction = (x: unknown): x is Action =>
   isObj(x) &&
   (['draw', 'throw', 'bank'].includes(x['type'] as string) ||
@@ -210,17 +213,19 @@ export class LobbyGateway implements OnGatewayDisconnect {
       !isObj(b) ||
       !isInt(b['seat'], 0, 7) ||
       !['open', 'locked', 'computer'].includes(b['mode'] as string) ||
-      !isDifficulty(b['difficulty'])
+      !isDifficulty(b['difficulty']) ||
+      !isRisk(b['risk'])
     ) {
       return this.session(client) ? bad('invalidRequest') : bad('noSession');
     }
-    const { seat, mode, difficulty } = b as {
+    const { seat, mode, difficulty, risk } = b as {
       seat: number;
       mode: 'open' | 'locked' | 'computer';
       difficulty?: Difficulty;
+      risk?: Risk;
     };
     return this.inRoom(client, (room, session) =>
-      this.removed(room.setSeat(session.playerId, seat, mode, difficulty)),
+      this.removed(room.setSeat(session.playerId, seat, mode, difficulty, risk)),
     );
   }
 
