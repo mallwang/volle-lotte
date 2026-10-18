@@ -29,6 +29,16 @@ Last updated: 2026-10-18. The Java -> web migration is finished (see [migration.
 
 ## Next
 
+### R7. Computer player AI rework (`in progress`, spec 011)
+
+Goal: computer players that decide by expected value instead of fixed thresholds, with a separate risk setting.
+
+- Skill `easy | medium | hard | random` and risk `none | medium | high | random` per computer seat. `random` is resolved per decision, never per game.
+- Decisions come from exact odds (dice outcomes per number of free dice) and a memoised value function, not from hand-written special cases: which dice to set aside, bank or throw, and draw or bank after a Volle Lotte on a Bonus card (card odds from `rules.cardCounts`, never from the real deck).
+- Street, Double Lotte, Plus/Minus (and Clover, Star): always set aside all possible dice, for every skill.
+- Risk is one loss-aversion parameter; "high" is shifted strongly towards drawing but not blind. The score situation (deficit to the leader, distance to the target) shifts it further.
+- Open: protocol bump, seat UI for the risk setting, balance by bot tournaments (overlaps R2).
+
 ### R2. E2E suite with bots (`planned`)
 
 Goal: a thorough suite that plays real games with bots of different strength and checks the functionality and the UI. Run manually through its own skill, never in CI.
