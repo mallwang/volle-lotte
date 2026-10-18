@@ -26,17 +26,17 @@ Last updated: 2026-10-18. The Java -> web migration is finished (see [migration.
 
 ## Next
 
-### R1. Desktop minimum size and table polish (`planned`)
+### R1. Desktop minimum size and table polish (`in progress`, spec 008)
 
 Goal: find one minimum window size that works for every desktop browser user and optimise the table for it. The current frontend is for desktop (and perhaps tablets in landscape) only.
 
-- Today the board is fixed at 44 rem height plus header: the page is about 916 px tall, so a 1366x768 laptop (about 620-650 px of browser viewport) scrolls. Proposal to discuss: optimise for a 1280x640 viewport and show a "window too small" hint below it.
-- Open items from spec 007 (T031, T033), found by a Playwright walk-through at 1024 and 1440 px, 2/4/8 players, light/dark, EN/DE:
+- Today the board is fixed at 44 rem height plus header: the page is about 916 px tall, so a 1366x768 laptop (about 620-650 px of browser viewport) scrolls. Proposal: minimum viewport 1024x640 (landscape tablets, 1366x768 laptops), optimised for about 1280x650 and larger, with a "window too small" hint below it. The board height must follow the viewport instead of the fixed 44 rem. Measure first (Playwright, all phases: drawing, rolling, selecting, bust, at 1024x640, 1280x650 and 1920x950) and put the table into the spec.
+- Open items from spec 007 (T031, T033, moved here), found by a Playwright walk-through at 1024 and 1440 px, 2/4/8 players, light/dark, EN/DE:
   - at 1024 px the left and right seat columns are cut off at the viewport edge;
   - the focus ring is only 1 px;
   - seats are not keyboard focusable, and the tab order puts the header after the table ("Log" comes before it);
   - no overlaps, no horizontal scroll, contrast 8.6:1 or better.
-- Still unchecked: playing a turn (throw, select, bank, bust notice) and the manual two-browser run of spec 002 (T045).
+- Still unchecked: playing a turn (throw, select, bank, bust notice). The manual two-browser run of spec 002 (T045) is closed as covered by the e2e flows; its UI part belongs to R2. A short manual smoke test after this item is enough.
 - Target layout for desktop: seats in two columns, own seat top left, turn order alternating right and left (see [specs/007-active-game-table-ui/design.md](../specs/007-active-game-table-ui/design.md)).
 
 ### R2. E2E suite with bots (`planned`)
@@ -45,6 +45,7 @@ Goal: a thorough suite that plays real games with bots of different strength and
 
 - Starting point: `apps/backend/src/app/lobby/*.e2e.spec.ts` (socket level, no browser) and the `run-e2e` skill.
 - Add Playwright for the UI (not installed in this repo yet; the `verify-ui` skill still says "throw-away scripts only", update it with this item). Stable selectors need `data-testid` attributes; there are none today.
+- Spike: try [Lightpanda](https://github.com/lightpanda-io/browser) as an optional second Playwright project (`connectOverCDP`) for the flow checks (socket and DOM state, two player contexts). It has no layout or rendering engine, so it cannot replace Chromium for layout and focus checks (R1).
 - Ideas: bots of all difficulties against each other, many seeded games, UI checks per player count and language, reconnect and timeout flows in the browser, protocol version mismatch.
 
 ### R3. Mobile app (`idea`, discuss overlap with R5)

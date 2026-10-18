@@ -135,7 +135,7 @@
 - [x] T042 [P] Update `docs/migration.md` status and the root `README.md` (lobby and multiplayer implemented, new dependencies, protocol version)
 - [x] T043 [P] Fix the stale nickname-collision note in `specs/002-lobby-multiplayer/checklists/requirements.md`
 - [x] T044 Run `npm run typecheck`, `npm run test` and `npm run lint`; fix findings and keep the coverage thresholds green (bootstrap files stay on the skip list)
-- [ ] T045 Walk through the manual run in `specs/002-lobby-multiplayer/quickstart.md` with two browser windows
+- [x] T045 Walk through the manual run in `specs/002-lobby-multiplayer/quickstart.md` with two browser windows (covered by the backend e2e flows; UI part moves to the Playwright suite, roadmap R2)
 
 ---
 
