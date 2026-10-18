@@ -1,0 +1,668 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="claude:viewport-fit-sides" content="cover" />
+    <title>Computer Speed Review</title>
+  </head>
+  <body>
+    <style>
+      /* Layout: review chrome on top, one 992px app canvas below; slider (lobby + settings dialog) and toast are the subject. */
+      :root {
+        color-scheme: light;
+        --r-bg: #f3f2ee;
+        --r-ink: #2c2a25;
+        --r-muted: #6e6a5d;
+        --r-line: #ddd9d0;
+        --r-accent: #9a4f22;
+        --r-card: #fff;
+        --r-frame: #d9d4c8;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme='light']) {
+          --r-bg: #1d1b18;
+          --r-ink: #ece8de;
+          --r-muted: #a8a293;
+          --r-line: #3a372f;
+          --r-accent: #e0925a;
+          --r-card: #26231f;
+          --r-frame: #2f2c26;
+          color-scheme: dark;
+        }
+      }
+      :root[data-theme='dark'] {
+        --r-bg: #1d1b18;
+        --r-ink: #ece8de;
+        --r-muted: #a8a293;
+        --r-line: #3a372f;
+        --r-accent: #e0925a;
+        --r-card: #26231f;
+        --r-frame: #2f2c26;
+        color-scheme: dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--r-bg);
+        color: var(--r-ink);
+        font-family:
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+        padding-left: max(16px, env(safe-area-inset-left, 0px));
+        padding-right: max(16px, env(safe-area-inset-right, 0px));
+      }
+      h1,
+      h2,
+      h3,
+      p {
+        text-wrap: balance;
+      }
+      .wrap {
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+      .review-header {
+        padding-block: 1.25rem 0.75rem;
+      }
+      .eyebrow {
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--r-accent);
+        font-weight: 700;
+        margin: 0 0 0.25rem;
+      }
+      .review-header h1 {
+        margin: 0 0 0.35rem;
+        font-size: 1.35rem;
+      }
+      .review-header p {
+        margin: 0;
+        color: var(--r-muted);
+        font-size: 0.9rem;
+        max-width: 72ch;
+        line-height: 1.5;
+      }
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem 1.5rem;
+        padding-block: 0.7rem;
+        border-block: 1px solid var(--r-line);
+      }
+      .cg {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+      .label {
+        font-size: 0.72rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--r-muted);
+        font-weight: 700;
+      }
+      .seg {
+        display: inline-flex;
+        border: 1px solid var(--r-line);
+        border-radius: 8px;
+        overflow: hidden;
+        flex-wrap: wrap;
+        background: var(--r-card);
+      }
+      .seg button {
+        appearance: none;
+        border: 0;
+        border-right: 1px solid var(--r-line);
+        background: transparent;
+        color: var(--r-ink);
+        font: inherit;
+        font-size: 0.83rem;
+        font-weight: 600;
+        padding: 0.4rem 0.7rem;
+        cursor: pointer;
+      }
+      .seg button:last-child {
+        border-right: 0;
+      }
+      .seg button:focus-visible {
+        outline: 2px solid var(--r-accent);
+        outline-offset: -2px;
+      }
+      .seg button[aria-pressed='true'] {
+        background: var(--r-accent);
+        color: #fff;
+      }
+      .stage {
+        padding-block: 1.25rem;
+        display: flex;
+        justify-content: center;
+      }
+      .frame {
+        width: 100%;
+        max-width: 1032px;
+        background: var(--r-frame);
+        border-radius: 14px;
+        padding: 1.25rem;
+      }
+      .frame-label {
+        font-size: 0.72rem;
+        color: var(--r-muted);
+        text-align: center;
+        margin: 0 0 0.5rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .foot {
+        padding-bottom: 2rem;
+        font-size: 0.85rem;
+        color: var(--r-muted);
+        line-height: 1.5;
+      }
+      .foot h3 {
+        margin: 0.9rem 0 0.2rem;
+        font-size: 0.8rem;
+        color: var(--r-ink);
+      }
+      .foot ul {
+        margin: 0.25rem 0;
+        padding-left: 1.1rem;
+      }
+      [hidden] {
+        display: none !important;
+      }
+
+      /* ===== app canvas: Terracotta tokens from apps/frontend ===== */
+      .canvas {
+        --bg: #fbf1ea;
+        --surface: #fffaf6;
+        --surface-2: #f3dccd;
+        --line: #e6c3ad;
+        --text: #3a241b;
+        --muted: #7b5a4c;
+        --primary: #a8431f;
+        --on-primary: #fff;
+        --control: #957058;
+        --mint: #d3e8d6;
+        --on-mint: #1f4a2c;
+        --butter: #f6e3a8;
+        --on-butter: #5a4300;
+        --info: #dbe7f5;
+        --on-info: #1d3a5c;
+        position: relative;
+        min-height: 660px;
+        font-size: 16px;
+        background: var(--bg);
+        color: var(--text);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+      }
+      .canvas.dark {
+        --bg: #1c1411;
+        --surface: #2a1d18;
+        --surface-2: #3b2a22;
+        --line: #52382c;
+        --text: #f5e6dc;
+        --muted: #cbaa98;
+        --primary: #f08a5d;
+        --on-primary: #2a1008;
+        --control: #9a7a68;
+        --mint: #244a38;
+        --on-mint: #c9f1db;
+        --butter: #4d4018;
+        --on-butter: #ffefb0;
+        --info: #22364f;
+        --on-info: #d3e5fb;
+      }
+      .canvas h2,
+      .canvas h3 {
+        text-wrap: wrap;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .bar {
+        background: var(--surface);
+        border-bottom: 1px solid var(--line);
+        padding: 0.45rem 1rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+      .brand {
+        font-weight: 800;
+        font-size: 1.2rem;
+      }
+      .brand span {
+        font-weight: 400;
+        font-size: 0.8rem;
+        opacity: 0.7;
+      }
+      .cur {
+        margin-left: 0.5rem;
+        padding: 0.3rem 0.8rem;
+        border-radius: 8px 8px 0 0;
+        background: var(--surface-2);
+        color: var(--primary);
+        font-weight: 700;
+        box-shadow: inset 0 -3px 0 var(--primary);
+      }
+      .tag {
+        border-radius: 999px;
+        padding: 0.05rem 0.55rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background: var(--mint);
+        color: var(--on-mint);
+      }
+      .tag.b {
+        background: var(--butter);
+        color: var(--on-butter);
+      }
+      .tag.i {
+        background: var(--info);
+        color: var(--on-info);
+      }
+      .main {
+        max-width: 48rem;
+        margin: 0 auto;
+        padding: 1rem 1rem 1.5rem;
+      }
+      .main h2 {
+        margin: 0.5rem 0 0.25rem;
+        font-size: 1.4rem;
+      }
+      .seats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+        gap: 0.5rem;
+        list-style: none;
+        margin: 0.75rem 0;
+        padding: 0;
+      }
+      .seats li {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        border: 1px solid var(--line);
+        border-radius: 0.5rem;
+        background: var(--surface);
+        padding: 0.5rem 0.75rem;
+      }
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: 0.6rem;
+        background: var(--surface);
+        padding: 0.75rem 1rem;
+        margin: 0.75rem 0;
+      }
+      .panel h3 {
+        margin: 0 0 0.5rem;
+        font-size: 1rem;
+      }
+      .actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-top: 0.75rem;
+      }
+      .btn {
+        border: 0;
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        font: inherit;
+        font-weight: 700;
+        min-height: 44px;
+        background: var(--primary);
+        color: var(--on-primary);
+      }
+      .btn.sec {
+        background: transparent;
+        color: var(--primary);
+        border: 1px solid var(--primary);
+      }
+      .ph {
+        border: 2px dashed var(--line);
+        border-radius: 0.75rem;
+        display: grid;
+        place-items: center;
+        color: var(--muted);
+        text-align: center;
+        padding: 1rem;
+        min-height: 420px;
+      }
+
+      /* setting row + slider */
+      .set {
+        padding: 0.7rem 0;
+        border-top: 1px solid var(--line);
+      }
+      .set:first-of-type {
+        border-top: 0;
+      }
+      .set-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.8rem;
+      }
+      .set label,
+      .set .lbl {
+        font-weight: 600;
+      }
+      .set small {
+        display: block;
+        color: var(--muted);
+        margin-top: 0.2rem;
+      }
+      .val {
+        font-weight: 700;
+        color: var(--primary);
+        white-space: nowrap;
+      }
+      .slider {
+        margin-top: 0.5rem;
+      }
+      .slider input[type='range'] {
+        width: 100%;
+        min-height: 44px;
+        accent-color: var(--primary);
+        margin: 0;
+      }
+      .slider input[disabled] {
+        opacity: 0.5;
+      }
+      .ticks {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.75rem;
+        color: var(--muted);
+        margin-top: -0.2rem;
+      }
+      .ticks span {
+        width: 3.2rem;
+        text-align: center;
+      }
+      .ticks span:first-child {
+        text-align: left;
+      }
+      .ticks span:last-child {
+        text-align: right;
+      }
+      .sw {
+        width: 44px;
+        height: 26px;
+        border-radius: 99px;
+        background: var(--line);
+        position: relative;
+        flex: none;
+      }
+      .sw::after {
+        content: '';
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #fff;
+      }
+      .sw.on {
+        background: var(--primary);
+      }
+      .sw.on::after {
+        left: 21px;
+      }
+      .sw.dis {
+        opacity: 0.5;
+      }
+
+      /* dialog + toast */
+      .scrim {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 5rem 1rem 1rem;
+        z-index: 5;
+      }
+      .dlg {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        width: 100%;
+        max-width: 28rem;
+        box-shadow: 0 10px 34px rgba(0, 0, 0, 0.35);
+      }
+      .dlg h3 {
+        margin: 0 0 0.25rem;
+        font-size: 1.15rem;
+      }
+      .toast {
+        position: absolute;
+        top: 3.6rem;
+        right: 1rem;
+        z-index: 8;
+        width: min(22rem, calc(100% - 2rem));
+        background: var(--info);
+        color: var(--on-info);
+        border: 1px solid var(--line);
+        border-left: 4px solid var(--primary);
+        border-radius: 8px;
+        padding: 0.65rem 0.9rem;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+      }
+      .toast strong {
+        display: block;
+      }
+      .toast .x {
+        float: right;
+        opacity: 0.7;
+      }
+    </style>
+
+    <header class="review-header wrap">
+      <p class="eyebrow">Non-functional review mockup · spec 010</p>
+      <h1>Computer speed slider and setting toast</h1>
+      <p>
+        Switch between lobby and table, host and guest. As host, drag the slider: one toast with the
+        final value appears for the other players. The same toast is shown for "Fast computer dice".
+      </p>
+    </header>
+
+    <div class="controls wrap">
+      <div class="cg">
+        <span class="label">Screen</span>
+        <div class="seg" id="screens">
+          <button type="button" data-s="lobbyHost" aria-pressed="true">Lobby (host)</button>
+          <button type="button" data-s="lobbyGuest" aria-pressed="false">Lobby (guest)</button>
+          <button type="button" data-s="setHost" aria-pressed="false">Table settings (host)</button>
+          <button type="button" data-s="setGuest" aria-pressed="false">
+            Table settings (guest)
+          </button>
+          <button type="button" data-s="toast" aria-pressed="false">Guest sees toast</button>
+        </div>
+      </div>
+      <div class="cg">
+        <span class="label">Theme</span>
+        <div class="seg">
+          <button type="button" id="theme" aria-pressed="false">Dark canvas</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage wrap">
+      <div class="frame">
+        <p class="frame-label">Reference width 992 px</p>
+        <div class="canvas" id="canvas">
+          <nav class="bar" aria-label="Main">
+            <div class="brand">Volle Lotte <span>v0.0.5</span></div>
+            <div class="cur">Current game <span class="tag b" id="phase">Lobby</span></div>
+          </nav>
+
+          <main class="main" id="main"></main>
+
+          <div class="scrim" id="scrim" hidden>
+            <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dt">
+              <h3 id="dt">Game settings</h3>
+              <p class="muted" style="margin: 0.25rem 0 0.5rem">
+                Only for this game. Settings are not carried over to other games.
+              </p>
+              <div class="set">
+                <div class="set-row">
+                  <label>Skip dice animation</label><span class="sw"></span>
+                </div>
+                <small>Only on this device. Dice show their value immediately.</small>
+              </div>
+              <div class="set" id="dlg-fast"></div>
+              <div class="set" id="dlg-speed"></div>
+            </div>
+          </div>
+
+          <div class="toast" id="toast" role="status" hidden>
+            <span class="x" aria-hidden="true">✕</span>
+            <strong>Mia changed a setting</strong>
+            <span id="toast-text"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="foot wrap">
+      <h3>What to look at</h3>
+      <ul>
+        <li>
+          <strong>Slider:</strong> five steps, a higher value is faster (1 slow, 5 fast), step 3 is
+          the default and marked. Today's pace is about step 2, so the slider reaches both faster
+          and slower than today. The current step is named next to the label, so it can be read
+          without the thumb position.
+        </li>
+        <li>
+          <strong>Guest view:</strong> same control, disabled, with the note "Only the host can
+          change this." The current value stays readable.
+        </li>
+        <li>
+          <strong>Fast computer dice</strong> stays a separate switch under the same rules (host
+          only, toast on change). The slider does not change dice roll time.
+        </li>
+        <li>
+          <strong>Toast:</strong> top right like the turn-result toasts, names the host, the setting
+          and the new value. Dragging produces one toast after the thumb rests (try it as host; the
+          preview toast on this page is for the host's own view of the demo).
+        </li>
+        <li>
+          <strong>Lobby:</strong> the setting sits in its own panel between the seats and the
+          buttons, so hosts see it before pressing Start.
+        </li>
+      </ul>
+      <h3>Not drawn</h3>
+      <ul>
+        <li>
+          German texts, the real PrimeNG slider look and focus rings, the table behind the dialog
+          (stand-in), toast animation and auto-hide timing.
+        </li>
+      </ul>
+    </footer>
+
+    <script>
+      const $ = (id) => document.getElementById(id);
+      const STEPS = ['Very slow', 'Slow', 'Medium', 'Fast', 'Very fast'];
+      let screen = 'lobbyHost',
+        speed = 3,
+        fast = false,
+        t;
+
+      const sw = (on, dis) => `<span class="sw${on ? ' on' : ''}${dis ? ' dis' : ''}"></span>`;
+      const speedBlock = (host, id) => `
+    <div class="set-row"><span class="lbl" id="${id}-l">Computer speed</span><span class="val" id="${id}-v"></span></div>
+    <div class="slider"><input type="range" id="${id}" min="1" max="5" step="1" value="${speed}" aria-labelledby="${id}-l" ${host ? '' : 'disabled'}>
+      <div class="ticks" aria-hidden="true"><span>1 Slow</span><span>3 Default</span><span>5 Fast</span></div></div>
+    <small>${host ? 'How long computers wait between their actions. Applies to everyone at the table.' : 'Only the host can change this.'}</small>`;
+      const fastBlock = (
+        host,
+      ) => `<div class="set-row"><label>Fast computer dice</label>${sw(fast, !host)}</div>
+    <small>${host ? 'Dice of the computer roll for a shorter time. Applies to everyone at the table.' : 'Only the host can change this.'}</small>`;
+
+      function lobby(host) {
+        return `<h2>Mia's table · lobby</h2>
+      <ul class="seats">
+        <li><strong>Mia</strong><span class="tag i">Host</span></li>
+        <li><strong>Ben</strong><span class="tag">Ready</span></li>
+        <li><strong>Computer</strong><span class="tag i">Medium</span></li>
+        <li><em class="muted">Free</em><span class="tag">Open</span></li></ul>
+      <section class="panel" aria-labelledby="gs"><h3 id="gs">Game settings</h3>
+        <div class="set">${speedBlock(host, 'sp')}</div>
+        <div class="set">${fastBlock(host)}</div></section>
+      <div class="actions"><button class="btn sec" type="button">${host ? 'Withdraw game' : 'Leave game'}</button>${host ? '<button class="btn" type="button">Start</button>' : ''}</div>`;
+      }
+      const table = `<h2>Round 3</h2><div class="ph">[game table · dice · seats · 992 px stage]</div>`;
+
+      function say(text) {
+        $('toast-text').textContent = text;
+        $('toast').hidden = false;
+      }
+      function wire(id, host) {
+        const r = $(id);
+        if (!r) return;
+        const v = $(id + '-v');
+        const label = () => (v.textContent = `${speed} · ${STEPS[speed - 1]}`);
+        label();
+        r.addEventListener('input', () => {
+          speed = +r.value;
+          label();
+        });
+        r.addEventListener('change', () => {
+          clearTimeout(t);
+          t = setTimeout(
+            () => say(`Computer speed: ${speed} (${STEPS[speed - 1].toLowerCase()})`),
+            400,
+          );
+        });
+      }
+      function render() {
+        const lobbyScreen = screen.startsWith('lobby');
+        $('phase').textContent = lobbyScreen ? 'Lobby' : 'Running';
+        $('main').innerHTML =
+          screen === 'lobbyHost' ? lobby(true) : screen === 'lobbyGuest' ? lobby(false) : table;
+        const dlg = screen === 'setHost' || screen === 'setGuest';
+        $('scrim').hidden = !dlg;
+        if (dlg) {
+          const host = screen === 'setHost';
+          $('dlg-fast').innerHTML = fastBlock(host);
+          $('dlg-speed').innerHTML = speedBlock(host, 'sp2');
+        }
+        $('toast').hidden = true;
+        if (screen === 'toast') say('Computer speed: 4 (fast)');
+        wire('sp', true);
+        wire('sp2', true);
+        document
+          .querySelectorAll('#screens button')
+          .forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.s === screen)));
+      }
+      $('screens').addEventListener('click', (e) => {
+        const b = e.target.closest('button[data-s]');
+        if (b) {
+          screen = b.dataset.s;
+          render();
+        }
+      });
+      $('theme').addEventListener('click', () => {
+        const d = $('canvas').classList.toggle('dark');
+        $('theme').setAttribute('aria-pressed', String(d));
+      });
+      render();
+    </script>
+  </body>
+</html>

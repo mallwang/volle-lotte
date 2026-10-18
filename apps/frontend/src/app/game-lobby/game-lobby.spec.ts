@@ -83,6 +83,25 @@ describe('GameLobby', () => {
     expect(el.querySelector('input[type=checkbox]')).toBeTruthy();
   });
 
+  it('shows the settings panel to the host with an enabled slider', async () => {
+    const { el } = await setup(gameView({}, [me(false)]));
+    expect(el.querySelector('h3')?.textContent).toContain('Game settings');
+    expect(el.querySelector('p-slider')).toBeTruthy();
+    expect(el.querySelector('p-slider.p-disabled')).toBeNull();
+  });
+
+  it('shows the settings panel to a guest with a disabled slider', async () => {
+    const { el } = await setup(
+      gameView({ hostId: 'p1', you: { playerId: 'p0', seat: 1, timeoutWarning: false } }, [
+        other(true),
+        me(false),
+      ]),
+    );
+    expect(el.querySelector('p-slider')).toBeTruthy();
+    expect(el.querySelector('p-slider.p-disabled')).toBeTruthy();
+    expect(el.textContent).toContain('Only the host can change this.');
+  });
+
   it('shows every seat state with a text label and icon', async () => {
     const { el } = await setup(
       gameView({}, [

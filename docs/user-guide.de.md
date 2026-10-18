@@ -34,12 +34,13 @@ Wenn du dran bist:
 3. **Würfel wählen** - wähle mindestens einen wertenden Würfel (eine 1, eine 5 oder einen Dreierpasch) und drücke **Auswahl beiseitelegen**.
 4. **Punkte sichern** oder erneut würfeln. Ein Wurf ohne wertenden Würfel ist ein Fehlwurf, die Punkte des Zuges gehen verloren.
 
-Die Würfel werden mit Augen dargestellt. Jeder geworfene Würfel rollt 2-5 Sekunden und bleibt auf dem Wert liegen, den der Server gewürfelt hat; Protokolleintrag und Hinweise zum Wurf erscheinen, sobald der letzte Würfel stillsteht, bis dahin sind Aktionen gesperrt. Die Wahl des Computers wird (mit Computer-Symbol) zwei Sekunden hervorgehoben, bevor sie angewendet wird. Ist in deinem System reduzierte Bewegung aktiviert, rollen die Würfel nicht; sie bleiben leer, bis sie stillstehen, und „Würfel rollen…“ wird angesagt.
+Die Würfel werden mit Augen dargestellt. Jeder geworfene Würfel rollt 1-3 Sekunden und bleibt auf dem Wert liegen, den der Server gewürfelt hat; Protokolleintrag und Hinweise zum Wurf erscheinen, sobald der letzte Würfel stillsteht, bis dahin sind Aktionen gesperrt. Die Wahl des Computers wird (mit Computer-Symbol) kurz hervorgehoben, bevor sie angewendet wird; wie lange, hängt von der Computer-Geschwindigkeit ab. Ist in deinem System reduzierte Bewegung aktiviert, rollen die Würfel nicht; sie bleiben leer, bis sie stillstehen, und „Würfel rollen…“ wird angesagt.
 
 Unter **Einstellungen** am Tisch änderst du:
 
 - **Würfelanimation überspringen** - nur auf deinem Gerät; Würfel und Protokoll erscheinen sofort.
-- **Schnelle Computerwürfel** - nur die Gastgebenden, andere sehen es schreibgeschützt. Computerwürfe dauern 1-2,5 Sekunden.
+- **Schnelle Computerwürfel** - nur die Gastgebenden, andere sehen es schreibgeschützt. Computerwürfe dauern 0,5-1,5 statt 1-3 Sekunden.
+- **Computer-Geschwindigkeit** - nur die Gastgebenden, andere sehen es schreibgeschützt. Ein Regler von 1 (langsam) bis 5 (schnell); jedes Spiel startet bei 3 (Mittel). Er legt fest, wie lange Computer zwischen ihren Aktionen warten und wie lange das Ergebnis eines Zuges auf dem Tisch bleibt, für alle am Tisch. Er wird auch in der Spiellobby angezeigt, wo die Gastgebenden ihn vor dem Start einstellen können. Ändern die Gastgebenden eine Einstellung, sehen alle Spielenden einen kurzen Hinweis mit Namen und neuem Wert; später Beitretende sehen keinen.
 
 Nicht verfügbare Schaltflächen nennen den Grund (zum Beispiel „Du bist nicht dran“). Das Protokoll listet, was passiert ist; wer ein laufendes Spiel verlässt (nach Rückfrage), 30 Sekunden offline ist oder dreimal in Folge nicht reagiert, wird durch einen Computer ersetzt. Ein Timer zeigt die Restzeit: 10 Sekunden zum Ziehen oder Würfeln, 15 zum Auswählen, 20 zum Sichern oder Weiterwürfeln. Läuft die Zeit ab, wird für dich gehandelt (übersprungenes Ziehen oder Auswählen beendet deinen Zug). Nach dem dritten Ablauf siehst du einen Hinweis und kannst nur in die Lobby zurück. Computer pausieren, solange kein Mensch am Tisch sitzt.
 

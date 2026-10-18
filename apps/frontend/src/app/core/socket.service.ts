@@ -8,6 +8,7 @@ import {
   type GameView,
   type Intents,
   type Pushes,
+  type SettingChange,
 } from 'game-rules';
 import { errorMessage } from './error-message';
 import { I18nService } from './i18n.service';
@@ -57,6 +58,9 @@ export class SocketService {
     this.socket.on('disconnect', () => this.connection.set('disconnected'));
     this.socket.on('lobby:games', ((p: Pushes['lobby:games']) => this.games.set(p.games)) as never);
     this.socket.on('game:state', ((p: Pushes['game:state']) => this.game.set(p.game)) as never);
+    this.socket.on('game:settingsChanged', ((p: Pushes['game:settingsChanged']) => {
+      for (const c of p.changes) this.notify('info', this.settingText(p.by, c));
+    }) as never);
     this.socket.on('session:replaced', (() => {
       this.active = false;
       this.session.set(null);
@@ -68,6 +72,16 @@ export class SocketService {
       if (p?.reason === 'banned') this.notify('warn', this.i18n.t('server.banned'));
       else this.notify('info', this.i18n.t('server.closed'));
     }) as never);
+  }
+
+  private settingText(who: string, c: SettingChange): string {
+    if (c.setting === 'computerSpeed')
+      return this.i18n.t('toast.setting.computerSpeed', {
+        who,
+        step: String(c.value),
+        name: this.i18n.t(`settings.computerSpeed.${c.value}`),
+      });
+    return this.i18n.t(`toast.setting.fastComputerDice.${c.value ? 'on' : 'off'}`, { who });
   }
 
   /** Tells the user (server restart, replaced session, closed game); info fades, the rest persists. */
@@ -131,8 +145,8 @@ export class SocketService {
     return ack;
   }
 
-  settings(fastComputerDice: boolean) {
-    return this.send('game:settings', { fastComputerDice });
+  settings(patch: { fastComputerDice?: boolean; computerSpeed?: number }) {
+    return this.send('game:settings', patch);
   }
 
   /** Resolves true once the server accepted the leave; a rejection is shown as an error toast. */

@@ -266,9 +266,26 @@ export class LobbyGateway implements OnGatewayDisconnect {
   @SubscribeMessage('game:settings')
   settings(@ConnectedSocket() client: Socket, @MessageBody() b: unknown): Ack {
     const fast = isObj(b) ? b['fastComputerDice'] : undefined;
-    if (typeof fast !== 'boolean')
-      return this.session(client) ? bad('invalidRequest') : bad('noSession');
-    return this.inRoom(client, (room, session) => room.setSettings(session.playerId, fast));
+    const speed = isObj(b) ? b['computerSpeed'] : undefined;
+    const valid =
+      (fast === undefined || typeof fast === 'boolean') &&
+      (speed === undefined || isInt(speed, 1, 5)) &&
+      (fast !== undefined || speed !== undefined);
+    if (!valid) return this.session(client) ? bad('invalidRequest') : bad('noSession');
+    return this.inRoom(client, (room, session) => {
+      const res = room.setSettings(session.playerId, {
+        ...(fast !== undefined && { fastComputerDice: fast as boolean }),
+        ...(speed !== undefined && { computerSpeed: speed as number }),
+      });
+      if (res.ok && res.changes.length > 0) {
+        for (const h of room.humans())
+          this.emitTo(this.sessions.byPlayerId(h.playerId)?.socketId, 'game:settingsChanged', {
+            by: session.nickname,
+            changes: res.changes,
+          });
+      }
+      return res.ok ? { ok: true } : res; // `changes` is for the push only
+    });
   }
 
   // ---- helpers

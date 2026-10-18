@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { MessageService } from 'primeng/api';
 import { vi } from 'vitest';
+import { I18nService } from './i18n.service';
 import { SOCKET, STORAGE_KEY, SocketService, type SocketLike } from './socket.service';
 
 class FakeSocket implements SocketLike {
@@ -49,12 +50,72 @@ describe('SocketService', () => {
     });
   });
 
-  it('sends the host setting as game:settings', () => {
+  it('sends the host settings as game:settings', () => {
     const { socket, service } = setup();
-    void service.settings(true);
+    void service.settings({ fastComputerDice: true });
+    void service.settings({ computerSpeed: 4 });
     expect(socket.sent).toContainEqual({
       event: 'game:settings',
       payload: { fastComputerDice: true },
+    });
+    expect(socket.sent).toContainEqual({ event: 'game:settings', payload: { computerSpeed: 4 } });
+  });
+
+  describe('game:settingsChanged', () => {
+    it('shows one toast per change entry', () => {
+      const { socket, add } = setup();
+      socket.fire('game:settingsChanged', {
+        by: 'Ann',
+        changes: [
+          { setting: 'computerSpeed', value: 4 },
+          { setting: 'fastComputerDice', value: true },
+        ],
+      });
+      expect(add).toHaveBeenCalledTimes(2);
+      expect(add).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({
+          severity: 'info',
+          life: 4000,
+          detail: 'Ann set the computer speed to 4 (Fast).',
+        }),
+      );
+      expect(add).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({ detail: 'Ann turned fast computer dice on.' }),
+      );
+    });
+
+    it('says when fast computer dice are turned off', () => {
+      const { socket, add } = setup();
+      socket.fire('game:settingsChanged', {
+        by: 'Ann',
+        changes: [{ setting: 'fastComputerDice', value: false }],
+      });
+      expect(add).toHaveBeenCalledWith(
+        expect.objectContaining({ detail: 'Ann turned fast computer dice off.' }),
+      );
+    });
+
+    it('uses the current language', () => {
+      const { socket, add } = setup();
+      TestBed.inject(I18nService).set('de');
+      socket.fire('game:settingsChanged', {
+        by: 'Ann',
+        changes: [{ setting: 'computerSpeed', value: 5 }],
+      });
+      expect(add).toHaveBeenCalledWith(
+        expect.objectContaining({
+          detail: 'Ann hat die Computer-Geschwindigkeit auf 5 (Sehr schnell) gestellt.',
+        }),
+      );
+      TestBed.inject(I18nService).set('en');
+    });
+
+    it('shows no toast for a game:state push alone', () => {
+      const { socket, add } = setup();
+      socket.fire('game:state', { game: { id: 'g1', computerSpeed: 5 } });
+      expect(add).not.toHaveBeenCalled();
     });
   });
 

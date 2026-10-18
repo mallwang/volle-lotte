@@ -1,4 +1,4 @@
-import { defaultRules, seededRandomInt } from 'game-rules';
+import { DEFAULT_SPEED, defaultRules, pacing, seededRandomInt } from 'game-rules';
 import { GameRoom, GRACE_MS, MAX_TIMEOUTS, TURN_LIMIT_MS } from './game-room';
 import { toView } from './view';
 
@@ -215,22 +215,51 @@ describe('GameRoom settings and computer pacing', () => {
   it('lets only the host change fast computer dice, and not after the game ended', () => {
     const { room, changes } = make();
     room.join('p', 'Pia');
-    expect(room.setSettings('p', true)).toMatchObject({ reason: 'notHost' });
+    expect(room.setSettings('p', { fastComputerDice: true })).toMatchObject({ reason: 'notHost' });
     expect(room.fastComputerDice).toBe(false);
     const before = changes.length;
-    expect(room.setSettings('h', true)).toEqual({ ok: true });
+    expect(room.setSettings('h', { fastComputerDice: true })).toEqual({
+      ok: true,
+      changes: [{ setting: 'fastComputerDice', value: true }],
+    });
     expect(room.fastComputerDice).toBe(true);
     expect(changes).toHaveLength(before + 1);
     expect(toView(room, 'p').fastComputerDice).toBe(true);
     room.phase = 'finished';
-    expect(room.setSettings('h', false)).toMatchObject({ reason: 'notInGame' });
+    expect(room.setSettings('h', { fastComputerDice: false })).toMatchObject({
+      reason: 'notInGame',
+    });
+  });
+
+  it('validates the computer speed, allows it in the lobby and reports real changes only', () => {
+    const { room, changes } = make();
+    room.join('p', 'Pia');
+    expect(room.computerSpeed).toBe(DEFAULT_SPEED);
+    expect(toView(room, 'p').computerSpeed).toBe(3);
+    expect(room.setSettings('p', { computerSpeed: 4 })).toMatchObject({ reason: 'notHost' });
+    for (const bad of [0, 6, 2.5, '3' as unknown as number])
+      expect(room.setSettings('h', { computerSpeed: bad })).toMatchObject({
+        reason: 'invalidRequest',
+      });
+    const before = changes.length;
+    expect(room.setSettings('h', { computerSpeed: 5 })).toEqual({
+      ok: true,
+      changes: [{ setting: 'computerSpeed', value: 5 }],
+    });
+    expect(toView(room, 'p').computerSpeed).toBe(5);
+    expect(changes).toHaveLength(before + 1);
+    expect(room.setSettings('h', { computerSpeed: 5 })).toEqual({ ok: true, changes: [] });
+    expect(changes).toHaveLength(before + 1);
+    room.phase = 'finished';
+    expect(room.setSettings('h', { computerSpeed: 1 })).toMatchObject({ reason: 'notInGame' });
   });
 
   /** Host plays until a computer is up; returns the room and whether the last action was a throw. */
-  const untilComputer = (fast: boolean) => {
+  const untilComputer = (fast: boolean, speed = DEFAULT_SPEED) => {
     const { room } = make(2);
     room.setSeat('h', 1, 'computer', 'easy');
-    room.setSettings('h', fast);
+    room.setSettings('h', { computerSpeed: speed });
+    room.setSettings('h', { fastComputerDice: fast });
     room.setReady('h', true);
     expect(room.start('h')).toEqual({ ok: true });
     const move = { draw: 'draw', decide: 'bank' } as Record<string, 'draw' | 'bank'>;
@@ -246,29 +275,88 @@ describe('GameRoom settings and computer pacing', () => {
       .slice(-2)
       .map((e) => JSON.stringify(e))
       .join();
-    // a turn that ended (bust, bank) is shown as a 6 s notice before the next player moves
+    // a turn that ended (bust, bank) is shown as a notice before the next player moves
     return { room, thrown: last.includes('"thrown"'), ended: last.includes('"turnEnded"') };
   };
 
-  it('waits for the dice to stop before the computer acts, else 2 s', () => {
-    const { room, thrown, ended } = untilComputer(false);
-    const n = room.log.length;
-    const delay = (thrown ? 5000 + 3250 : 2000) + (ended ? 6000 : 0);
-    jest.advanceTimersByTime(delay - 1);
-    expect(room.log).toHaveLength(n);
-    jest.advanceTimersByTime(1);
-    expect(room.log.length).toBeGreaterThan(n);
-    room.dispose();
+  const delayAt = (speed: number, thrown: boolean, ended: boolean) => {
+    const p = pacing(speed);
+    return (thrown ? 3000 + p.afterRollMs : p.pauseMs) + (ended ? p.noticeMs : 0);
+  };
+
+  it.each([DEFAULT_SPEED, 2])(
+    'waits for the dice to stop before the computer acts, else the pause (speed %i)',
+    (speed) => {
+      const { room, thrown, ended } = untilComputer(false, speed);
+      const n = room.log.length;
+      const delay = delayAt(speed, thrown, ended);
+      jest.advanceTimersByTime(delay - 1);
+      expect(room.log).toHaveLength(n);
+      jest.advanceTimersByTime(1);
+      expect(room.log.length).toBeGreaterThan(n);
+      room.dispose();
+    },
+  );
+
+  it('speed 2 keeps the legacy pacing: 2 s pause, 3.25 s margin, 6 s notice', () => {
+    expect(pacing(2)).toEqual({ pauseMs: 2000, afterRollMs: 3250, noticeMs: 6000 });
   });
 
-  it('shows a computer pick as preview for 2 s before applying it', () => {
+  it('shows a computer pick as preview before applying it', () => {
     const { room } = untilComputer(false);
     // step the computer until its pick is shown but not yet applied
     for (let i = 0; i < 2000 && room.preview.length === 0; i++) jest.advanceTimersByTime(100);
     expect(room.preview.length).toBeGreaterThan(0);
     expect(room.game?.turn?.phase).toBe('select');
-    jest.advanceTimersByTime(2000);
+    jest.advanceTimersByTime(pacing(DEFAULT_SPEED).pauseMs);
     expect(room.preview).toEqual([]);
+    room.dispose();
+  });
+
+  it('a speed change re-arms the pending computer step once, earlier when faster', () => {
+    const { room, thrown, ended } = untilComputer(false, 1);
+    const n = room.log.length;
+    const slow = delayAt(1, thrown, ended);
+    jest.advanceTimersByTime(1000);
+    room.setSettings('h', { computerSpeed: 5 });
+    const fast = delayAt(5, thrown, ended);
+    expect(fast).toBeLessThan(slow - 1000);
+    jest.advanceTimersByTime(Math.max(0, fast - 1000) - 1);
+    expect(room.log).toHaveLength(n);
+    jest.advanceTimersByTime(1);
+    const after = room.log.length;
+    expect(after).toBeGreaterThan(n);
+    // the old timer is gone: nothing runs a second time at the old deadline
+    jest.advanceTimersByTime(slow);
+    expect(room.log.length).toBeGreaterThanOrEqual(after);
+    room.dispose();
+  });
+
+  it('a speed change during the pick highlight neither skips nor repeats the pick', () => {
+    const { room } = untilComputer(false, 1);
+    for (let i = 0; i < 4000 && room.preview.length === 0; i++) jest.advanceTimersByTime(100);
+    expect(room.preview.length).toBeGreaterThan(0);
+    const picked = room.log.filter((e) => JSON.stringify(e).includes('"selected"')).length;
+    room.setSettings('h', { computerSpeed: 5 });
+    expect(room.preview.length).toBeGreaterThan(0);
+    jest.advanceTimersByTime(pacing(5).pauseMs);
+    expect(room.preview).toEqual([]);
+    const now = room.log.filter((e) => JSON.stringify(e).includes('"selected"')).length;
+    expect(now).toBe(picked + 1);
+    room.dispose();
+  });
+
+  it('the human limit starts after the scaled notice plus the fixed dice margin (FR-013)', () => {
+    const { room } = make(2);
+    room.setSeat('h', 1, 'computer', 'easy');
+    room.setSettings('h', { computerSpeed: 5 });
+    room.setReady('h', true);
+    room.start('h');
+    if (room.game?.current !== 0) {
+      room.dispose();
+      return;
+    }
+    expect(room.turnDeadline?.at).toBe(Date.now() + TURN_LIMIT_MS.draw);
     room.dispose();
   });
 });

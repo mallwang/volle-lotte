@@ -581,6 +581,19 @@ a.vl-menu-link:hover {
   justify-content: space-between;
   gap: 1rem;
 }
+.vl-settings-panel {
+  margin-block: 1rem;
+}
+.vl-settings-panel h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+.vl-scale {
+  display: flex;
+  justify-content: space-between;
+  color: var(--p-text-muted-color);
+  font-size: 0.75rem;
+}
 .vl-setting small {
   color: var(--p-text-muted-color);
 }

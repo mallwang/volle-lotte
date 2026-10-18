@@ -3,6 +3,9 @@ import {
   applyAction,
   chooseAction,
   createGame,
+  DEFAULT_SPEED,
+  isComputerSpeed,
+  pacing,
   skipTurn,
   type Action,
   type ComputerLevel,
@@ -12,10 +15,12 @@ import {
   type GameSummary,
   type LogEntry,
   type LogKind,
+  type Pacing,
   type Phase,
   type RandomInt,
   type RejectionReason,
   type RoomPhase,
+  type SettingChange,
   type Rules,
 } from 'game-rules';
 
@@ -31,13 +36,14 @@ export const TURN_LIMIT_MS = {
 /** The 3rd timeout in a row hands the seat to a computer. */
 export const MAX_TIMEOUTS = 3;
 export const LOG_CAP = 500;
-/** Computer pacing: after a throw wait out the client roll (max) plus 3 s; otherwise 2 s (FR-013, FR-019). */
+/**
+ * Computer pacing comes from `pacing(computerSpeed)`: after a throw wait out the client roll (max) plus a margin,
+ * otherwise a pause (FR-013, FR-019). The roll maximum is the client animation and does not scale.
+ */
 const ROLL_MAX_MS = 3000;
 const ROLL_MAX_FAST_MS = 1500;
-const AFTER_ROLL_MS = 3000 + 250; // ponytail: fixed latency margin, the server cannot observe client animations
-const COMPUTER_PAUSE_MS = 2000;
-/** Clients keep a turn's result (bust, bank, Stop, timeout) on the table this long; keep in sync with table.ts. */
-const NOTICE_MS = 6000;
+/** Human limit after a throw: fixed latency margin, the server cannot observe client animations (FR-013). */
+const HUMAN_AFTER_ROLL_MS = 3000 + 250;
 
 type Level = 'easy' | 'medium' | 'hard';
 
@@ -108,7 +114,11 @@ export class GameRoom {
   preview: number[] = [];
   /** Host setting: computer throws roll for 1–2.5 s instead of 2–5 s on every client. */
   fastComputerDice = false;
-  private computerDelay = COMPUTER_PAUSE_MS;
+  /** Host setting: computer speed 1 (slow) to 5 (fast), see `pacing`. */
+  computerSpeed = DEFAULT_SPEED;
+  private computerDelay: (p: Pacing) => number = (p) => p.pauseMs;
+  /** The armed computer timer, kept so a speed change can re-arm it. */
+  private pending?: { delayFor: (p: Pacing) => number; run: () => void; startedAt: number };
   private fresh: LogEntry[] = [];
   private seatOfEngine: number[] = [];
   private readonly graceTimers = new Map<number, NodeJS.Timeout>();
@@ -334,17 +344,31 @@ export class GameRoom {
     return { ok: true };
   }
 
-  /** Host only, running game; changes how long clients show computer dice rolling. */
-  setSettings(playerId: string, fastComputerDice: boolean): Res {
+  /** Host only, lobby or running game. `changes` lists the values that really changed. */
+  setSettings(
+    playerId: string,
+    patch: { fastComputerDice?: boolean; computerSpeed?: number },
+  ): Res<{ changes: SettingChange[] }> {
     if (playerId !== this.hostId) return fail('notHost');
     if (this.phase === 'finished') return fail('notInGame');
-    this.fastComputerDice = fastComputerDice;
-    this.emit();
-    return { ok: true };
+    if (patch.computerSpeed !== undefined && !isComputerSpeed(patch.computerSpeed))
+      return fail('invalidRequest');
+    const changes: SettingChange[] = [];
+    if (patch.computerSpeed !== undefined && patch.computerSpeed !== this.computerSpeed) {
+      this.computerSpeed = patch.computerSpeed;
+      changes.push({ setting: 'computerSpeed', value: patch.computerSpeed });
+      this.rearmComputer();
+    }
+    if (patch.fastComputerDice !== undefined && patch.fastComputerDice !== this.fastComputerDice) {
+      this.fastComputerDice = patch.fastComputerDice;
+      changes.push({ setting: 'fastComputerDice', value: patch.fastComputerDice });
+    }
+    if (changes.length > 0) this.emit();
+    return { ok: true, changes };
   }
 
-  /** `noticeMs`: result notice shown before this action's events (a timeout). */
-  private apply(action: Action, noticeMs = 0): Res {
+  /** `timeout`: the turn ends by a timeout, so its result notice is shown before this action's events. */
+  private apply(action: Action, timeout = false): Res {
     const game = this.game as GameState;
     const seat = this.currentSeat();
     const outcome = applyAction(game, action, this.rng);
@@ -358,9 +382,11 @@ export class GameRoom {
         : ROLL_MAX_MS;
     const thrown = outcome.events.some((e) => e.type === 'thrown');
     // a finished turn ends in a notice on every client before the next player may move
-    const ended = outcome.events.some((e) => e.type === 'turnEnded') ? NOTICE_MS : 0;
-    this.computerDelay = (thrown ? rollMax + AFTER_ROLL_MS : COMPUTER_PAUSE_MS) + ended + noticeMs;
-    this.turnDelay = (thrown ? ROLL_MAX_MS + AFTER_ROLL_MS : 0) + ended + noticeMs;
+    const ended = outcome.events.some((e) => e.type === 'turnEnded');
+    const notices = (p: Pacing) => (ended ? p.noticeMs : 0) + (timeout ? p.noticeMs : 0);
+    this.computerDelay = (p) => (thrown ? rollMax + p.afterRollMs : p.pauseMs) + notices(p);
+    this.turnDelay =
+      (thrown ? ROLL_MAX_MS + HUMAN_AFTER_ROLL_MS : 0) + notices(pacing(this.computerSpeed));
     for (const event of outcome.events) this.add('turn', seat, event);
     if (outcome.state.result) {
       this.phase = 'finished';
@@ -385,7 +411,7 @@ export class GameRoom {
       const seat = this.seats[this.currentSeat()];
       return this.phase === 'running' && this.game && seat?.state === 'computer' ? seat : undefined;
     };
-    this.computerTimer = setTimeout(() => {
+    this.armComputer(this.computerDelay, () => {
       const seat = stillMine();
       if (!seat || !this.game) return;
       const action = chooseAction(this.game, seat.effective, this.rng);
@@ -393,13 +419,30 @@ export class GameRoom {
         this.apply(action);
         return;
       }
-      // show the pick as a highlight for 2 s before it is applied; the timer is set first so emit() does not reschedule
+      // show the pick as a highlight before it is applied; the timer is set first so emit() does not reschedule
       this.preview = [...action.dice];
-      this.computerTimer = setTimeout(() => {
-        if (stillMine()) this.apply(action);
-      }, COMPUTER_PAUSE_MS);
+      this.armComputer(
+        (p) => p.pauseMs,
+        () => {
+          if (stillMine()) this.apply(action);
+        },
+      );
       this.emit();
-    }, this.computerDelay);
+    });
+  }
+
+  private armComputer(delayFor: (p: Pacing) => number, run: () => void) {
+    this.pending = { delayFor, run, startedAt: this.now() };
+    this.computerTimer = setTimeout(run, delayFor(pacing(this.computerSpeed)));
+  }
+
+  /** A speed change takes effect at once: the pending step waits the new delay minus what has elapsed. */
+  private rearmComputer() {
+    if (!this.computerTimer || !this.pending) return;
+    clearTimeout(this.computerTimer);
+    const { delayFor, run, startedAt } = this.pending;
+    const wait = Math.max(0, delayFor(pacing(this.computerSpeed)) - (this.now() - startedAt));
+    this.computerTimer = setTimeout(run, wait);
   }
 
   /** Arms one limit per human turn step; kept across emits that change nothing about whose move it is. */
@@ -436,13 +479,13 @@ export class GameRoom {
     human.timeouts++;
     if (human.timeouts >= MAX_TIMEOUTS) this.replaceByBot(seat, 'timeouts');
     if (action) {
-      this.apply(action, NOTICE_MS);
+      this.apply(action, true);
       return;
     }
     this.game = skipTurn(this.game);
     this.preview = [];
-    this.computerDelay = COMPUTER_PAUSE_MS + NOTICE_MS;
-    this.turnDelay = NOTICE_MS;
+    this.computerDelay = (p) => p.pauseMs + p.noticeMs;
+    this.turnDelay = pacing(this.computerSpeed).noticeMs;
     this.emit();
   }
 

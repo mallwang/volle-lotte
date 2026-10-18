@@ -381,6 +381,18 @@ describe('Table', () => {
       return t.toasts.mock.calls.map(([m]) => `${m.summary} ${m.detail}`).join('\n');
     }
 
+    it.each([
+      [undefined, 3500],
+      [5, 1500],
+      [1, 8000],
+    ])('shows the notice for the length of computer speed %s', async (speed, ms) => {
+      const t = await setup(0, speed ? { computerSpeed: speed } : {});
+      t.socket.game.set({ ...t.socket.game()!, log: [{ kind: 'timedOut', seat: 0 }] } as never);
+      t.fixture.detectChanges();
+      await t.fixture.whenStable();
+      expect(t.toasts).toHaveBeenCalledWith(expect.objectContaining({ life: ms }));
+    });
+
     it('announces a timeout to the player', async () => {
       expect(await noticeFor([{ kind: 'timedOut', seat: 0 }])).toContain('You ran out of time.');
     });
