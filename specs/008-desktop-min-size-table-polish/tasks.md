@@ -21,7 +21,7 @@ description: 'Task list for 008 Desktop Minimum Size and Table Polish'
 
 ## Phase 1: Setup
 
-- [ ] T001 Run the baseline once more with a throw-away Playwright script (skill `verify-ui`, keep it in the scratchpad, not in the repo) and record tab order, focus ring width and the fixed 44 rem board at 1024x640 for later comparison; note results in the PR description draft only
+- [x] T001 Run the baseline once more with a throw-away Playwright script (skill `verify-ui`, keep it in the scratchpad, not in the repo) and record tab order, focus ring width and the fixed 44 rem board at 1024x640 for later comparison; note results in the PR description draft only
 
 ---
 
@@ -47,7 +47,7 @@ description: 'Task list for 008 Desktop Minimum Size and Table Polish'
 - [x] T008 [US1] In `styles.css` add `.vl-stage` (centred with `margin-inline: auto`, `overflow: hidden` only on the outer box when scaled) and `.vl-stage-inner` (`transform-origin: top left`); when scaled, `.vl-main` must not apply its `max-width: 64rem` / side padding in a way that changes the 992 px stage width (check `.vl-main` and `.vl-board { min-width: 52rem }` fit exactly 992 px; adjust paddings, not the board size, so the oval and seat columns keep their positions: columns at x=8 and x=832, rows 144/318/492/666 for 8 players)
 - [x] T009 [US1] Ensure the stage never causes horizontal scroll (FR-004): the outer box is sized to the scaled width, `body` has no overflow at 1024 px with a visible scrollbar; fix in `styles.css` if the measurement shows any
 - [x] T010 [P] [US1] Component test in `app/app.spec.ts`: with `TableScale.enabled` and a mocked viewport of 1280x650, the stage inner element has `transform: scale(0.72...)` and the outer box height is about 650 px; with viewport 1920x950 or a disabled service no transform is applied
-- [ ] T011 [US1] Verify with a throw-away Playwright script (quickstart section 2): 3 viewports x 4 phases x 3 player counts, every play-area element ends at or above the viewport bottom, relative positions differ by at most 1% between sizes (SC-001, SC-002), wide-flat 1366x650 is centred with margins; paste the result table into the PR description
+- [x] T011 [US1] Verify with a throw-away Playwright script (quickstart section 2): 3 viewports x 4 phases x 3 player counts, every play-area element ends at or above the viewport bottom, relative positions differ by at most 1% between sizes (SC-001, SC-002), wide-flat 1366x650 is centred with margins; paste the result table into the PR description
 
 **Checkpoint**: US1 works alone (no notice or hint yet; below 0.7 the table simply keeps scale 0.7 behaviour until US2).
 
@@ -64,7 +64,7 @@ description: 'Task list for 008 Desktop Minimum Size and Table Polish'
 - [x] T014 [US2] In `app/app.html` render the notice when `mode() === 'scaled' && !dismissed()` and the hint when `mode() === 'blocked'`; while blocked, hide the stage with the `hidden` attribute / `display: none` (never `@if`) so `Table` stays mounted and dice animation, bust timer and turn timer are not restarted (FR-007); dialogs and toasts stay outside the stage
 - [x] T015 [P] [US2] Unit tests `app/shared/scale-notice.spec.ts` and `app/shared/window-too-small.spec.ts`: text in EN and DE, percent rounding, dismiss hides the notice and it stays hidden after a resize, hint shows required and current size
 - [x] T016 [US2] Extend `app/app.spec.ts`: shrinking the mocked viewport below 695x630 shows the hint and keeps the table element in the DOM (same instance), enlarging restores it; notice not shown at scale 1 and after dismissal
-- [ ] T017 [US2] Verify per quickstart section 3 (steps 1-5, including browser zoom 125% / 150% and the 1 s limit of SC-004) with a throw-away script; confirm tooltips, settings and leave dialogs and toasts still sit inside the window while scaled
+- [x] T017 [US2] Verify per quickstart section 3 (steps 1-5, including browser zoom 125% / 150% and the 1 s limit of SC-004) with a throw-away script; confirm tooltips, settings and leave dialogs and toasts still sit inside the window while scaled
 
 **Checkpoint**: US1 and US2 complete the scaling feature.
 
@@ -93,7 +93,7 @@ description: 'Task list for 008 Desktop Minimum Size and Table Polish'
 - [x] T023 [US4] Measure contrast of body text, state markers and icons in light and dark theme (script computing ratios from computed styles) for 2, 4, 8 players; body text must stay at 8.6:1 or better, non-text markers must not rely on colour alone; fix tokens in `app/theme/terracotta-preset.ts` or `styles.css` only where a check fails
 - [x] T024 [US4] Check text fit at scale 0.7 in EN and DE: no label cut off or overlapping, including the longest Secured-area texts for Street, Star, Clover and "Double Lotte" (`app/table/dice-area.ts`, `app/i18n/de.ts`); fix wrapping or widths where needed without changing positions
 - [x] T025 [US4] Judge readability of the smallest text (log 0.75 rem, seat captions, card captions) at 1024x640; if unreadable either raise the smallest sizes in the reference size or raise `MIN_SCALE` in `app/core/table-scale.ts`; record the final value in spec.md (FR-002, Assumptions) and `docs/roadmap.md`
-- [ ] T026 [US4] Repeat the spec 007 quickstart walk-through ([specs/007-active-game-table-ui/quickstart.md](../007-active-game-table-ui/quickstart.md)) at 1024 px and wider for 2, 4, 8 players, both themes and languages: no overlap, no cut-off, no horizontal scroll (SC-006); confirm the earlier "seats cut off at 1024 px" finding does not occur
+- [x] T026 [US4] Repeat the spec 007 quickstart walk-through ([specs/007-active-game-table-ui/quickstart.md](../007-active-game-table-ui/quickstart.md)) at 1024 px and wider for 2, 4, 8 players, both themes and languages: no overlap, no cut-off, no horizontal scroll (SC-006); confirm the earlier "seats cut off at 1024 px" finding does not occur
 
 ---
 
