@@ -12,32 +12,20 @@ Last updated: 2026-10-18. The Java -> web migration is finished (see [migration.
 
 ## Done
 
-| Spec | Feature                                                                                             |
-| ---- | --------------------------------------------------------------------------------------------------- |
-| 001  | Rules engine (`libs/game-rules`), port of the Java game with all card types and 2-8 players         |
-| 002  | Lobby and multiplayer (NestJS gateway, Socket.IO, computer players with difficulties, reconnect)    |
-| 003  | UI foundation (PrimeNG, Terracotta theme, light/dark)                                               |
-| 004  | English and German UI and documentation                                                             |
-| 005  | Pip dice faces, per-die rolling animation, computer pacing                                          |
-| 006  | Open lobbies, rejoin after replacement by a computer, per-phase turn timers, host removal and bans  |
-| 007  | Active game table UI (seat columns, piles, dice area, log); desktop layout is the target, see below |
-| -    | Docker image and Portainer stack, release workflow, app icon, page titles, version in the header    |
-| -    | Backend integration tests as manual e2e (`npm run test:e2e`, skill `run-e2e`), kept out of CI       |
+| Spec | Feature                                                                                                                                                                                       |
+| ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 001  | Rules engine (`libs/game-rules`), port of the Java game with all card types and 2-8 players                                                                                                   |
+| 002  | Lobby and multiplayer (NestJS gateway, Socket.IO, computer players with difficulties, reconnect)                                                                                              |
+| 003  | UI foundation (PrimeNG, Terracotta theme, light/dark)                                                                                                                                         |
+| 004  | English and German UI and documentation                                                                                                                                                       |
+| 005  | Pip dice faces, per-die rolling animation, computer pacing                                                                                                                                    |
+| 006  | Open lobbies, rejoin after replacement by a computer, per-phase turn timers, host removal and bans                                                                                            |
+| 007  | Active game table UI (seat columns, piles, dice area, log); desktop layout is the target, see below                                                                                           |
+| 008  | Desktop minimum size: header and table scale as one 992x900 stage (minimum 695x630, scale 0.7), scaling notice and "window too small" hint, global focus ring, tab order and contrast checked |
+| -    | Docker image and Portainer stack, release workflow, app icon, page titles, version in the header                                                                                              |
+| -    | Backend integration tests as manual e2e (`npm run test:e2e`, skill `run-e2e`), kept out of CI                                                                                                 |
 
 ## Next
-
-### R1. Desktop minimum size and table polish (`in progress`, spec 008)
-
-Goal: find one minimum window size that works for every desktop browser user and optimise the table for it. The current frontend is for desktop (and perhaps tablets in landscape) only.
-
-- Today the board is fixed at 44 rem height plus header: the page is about 916 px tall, so a 1366x768 laptop (about 620-650 px of browser viewport) scrolls. Proposal: minimum viewport 1024x640 (landscape tablets, 1366x768 laptops), optimised for about 1280x650 and larger, with a "window too small" hint below it. The board height must follow the viewport instead of the fixed 44 rem. Measure first (Playwright, all phases: drawing, rolling, selecting, bust, at 1024x640, 1280x650 and 1920x950) and put the table into the spec.
-- Open items from spec 007 (T031, T033, moved here), found by a Playwright walk-through at 1024 and 1440 px, 2/4/8 players, light/dark, EN/DE:
-  - at 1024 px the left and right seat columns are cut off at the viewport edge;
-  - the focus ring is only 1 px;
-  - seats are not keyboard focusable, and the tab order puts the header after the table ("Log" comes before it);
-  - no overlaps, no horizontal scroll, contrast 8.6:1 or better.
-- Still unchecked: playing a turn (throw, select, bank, bust notice). The manual two-browser run of spec 002 (T045) is closed as covered by the e2e flows; its UI part belongs to R2. A short manual smoke test after this item is enough.
-- Target layout for desktop: seats in two columns, own seat top left, turn order alternating right and left (see [specs/007-active-game-table-ui/design.md](../specs/007-active-game-table-ui/design.md)).
 
 ### R2. E2E suite with bots (`planned`)
 
@@ -83,3 +71,9 @@ Goal: a separate mobile frontend, so the desktop frontend stays desktop only. Id
 
 - Accounts: invitations, e-mail confirmation, forgot and change password, profile picture (logic from Vaultfolio), SMTP, invitation by nickname with deep link.
 - Drag and drop for dice selection (tap is the current interaction).
+
+## Ideas
+
+- Screen-reader support for the timers on the table (live announcements of the turn timer and the game clock), found during spec 008.
+
+Decision (spec 008): no separate minimum width; the scale rule alone applies, so portrait tablets (768x1024, scale 0.77) still show the table.

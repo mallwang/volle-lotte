@@ -4,7 +4,7 @@
 
 **Created**: 2026-10-18
 
-**Status**: Draft
+**Status**: Implemented
 
 **Input**: User description: "Desktop minimum size and table polish (roadmap R1). Find one minimum window size that works for desktop browser users and optimise the active game table for it. Includes the open accessibility items moved from spec 007 (T031, T033)."
 
@@ -157,6 +157,7 @@ Text, icons and state markers on the table meet the contrast requirements in lig
 
 ## Assumptions
 
+- Decision: no separate minimum width; the scale rule alone applies (portrait tablets at 768x1024 still show the table). The minimum scale 0.7 was confirmed as readable after a manual check.
 - The target remains desktop browsers and landscape tablets; phones and a dedicated mobile layout are out of scope (roadmap R3).
 - The minimum size refers to the usable browser viewport (excluding browser chrome), not the screen resolution.
 - The measurements and the repeated measurement are done with throw-away scripts in a headless browser; a permanent end-to-end suite is out of scope (roadmap R2).

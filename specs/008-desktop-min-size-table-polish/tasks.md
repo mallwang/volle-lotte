@@ -99,9 +99,9 @@ description: 'Task list for 008 Desktop Minimum Size and Table Polish'
 
 ## Phase 7: Polish and cross-cutting
 
-- [ ] T027 Run `npm run lint && npm run typecheck && npm run test` and `npm run build`; fix findings; check coverage of the new files against `.specify/memory/test-coverage-guide.md` (template-only components may be skipped and mirrored in `sonar.coverage.exclusions`)
+- [x] T027 Run `npm run lint && npm run typecheck && npm run test` and `npm run build`; fix findings; check coverage of the new files against `.specify/memory/test-coverage-guide.md` (template-only components may be skipped and mirrored in `sonar.coverage.exclusions`)
 - [ ] T028 Manual smoke test of one complete game (lobby, play, bust, bank, reconnect) at 1024x640 and 1920x950, no regression against v0.0.5 (SC-007, FR-013)
-- [ ] T029 Update `docs/roadmap.md`: move R1 to Done with a one-line result and the final minimum size; add the decision "no separate minimum width" and the open item for screen-reader support (timers) as an idea; update spec.md status
+- [x] T029 Update `docs/roadmap.md`: move R1 to Done with a one-line result and the final minimum size; add the decision "no separate minimum width" and the open item for screen-reader support (timers) as an idea; update spec.md status
 - [ ] T030 Run `/speckit-sonar-local` and `/speckit-sonar-validate`; fix issues on the new code
 
 ---
