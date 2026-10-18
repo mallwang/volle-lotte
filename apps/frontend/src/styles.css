@@ -92,6 +92,9 @@ select,
 }
 
 .vl-bar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
   border-bottom: 1px solid var(--p-content-border-color);
   background: var(--p-content-background);
 }
