@@ -67,6 +67,14 @@ Goal: a separate mobile frontend, so the desktop frontend stays desktop only. Id
 - Backend table: participants, date and time, duration, final result; plus an event log per game (the in-game log exists, but it is not persisted).
 - Shares the SQLite work with R4.
 
+### R7. App shell navbar and leave confirmation (`in progress`, spec 009)
+
+Goal: a PrimeNG Menubar as the app shell (all page links, active page highlighted, "Current game" entry), one shared leave-game confirmation for the table and the game lobby, a light/dark-only theme toggle, and (lowest priority) a modernised create-game form.
+
+- Deliberately deferred: the open-games list in the lobby and the game log (both get a complete rework later), the scale logic, the table and the dice. Domain-specific components stay custom.
+- Further PrimeNG adoption (for example replacing hand-made form markup elsewhere) is picked up only together with those reworks.
+- Out of scope: a `beforeunload` prompt when closing the tab.
+
 ### Later, not for the next releases
 
 - Accounts: invitations, e-mail confirmation, forgot and change password, profile picture (logic from Vaultfolio), SMTP, invitation by nickname with deep link.
