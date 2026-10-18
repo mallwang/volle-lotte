@@ -6,6 +6,8 @@
 
 **Status**: Draft
 
+**Design**: [design.md](design.md) (approved mockup: [mockup.html](mockup.html))
+
 **Input**: User description: "App shell with PrimeNG Menubar and leave-game confirmation. Rework the global app shell around a navigation bar, show every subpage link with the open page highlighted, ask for confirmation before leaving a running game or a game lobby, simplify the theme toggle to light and dark, and optionally modernise the create-game form."
 
 ## Scope
@@ -34,7 +36,7 @@ A signed-in player sees a single navigation bar at the top of every screen. It s
 
 1. **Given** a signed-in player without a game, **When** they open the games page, **Then** the bar shows "Games" and "Create game", and "Games" is highlighted.
 2. **Given** the same player, **When** they open the create-game page, **Then** only "Create game" is highlighted.
-3. **Given** a player who is in a game lobby or a running game, **When** any page is shown, **Then** the links are still visible and an extra "Current game" entry is shown; it is highlighted while the game page is open.
+3. **Given** a player who is in a game lobby or a running game, **When** any page is shown, **Then** the links are still visible and an extra "Current game" status entry is shown, always highlighted, with a tag for the phase ("Lobby" or "Running").
 4. **Given** a player without a game, **When** the bar is shown, **Then** no "Current game" entry is present.
 5. **Given** a visitor who has not chosen a nickname yet, **When** the nickname page is shown, **Then** the brand, language and theme controls work, and the page links are disabled or hidden so that no signed-in page can be reached from the bar.
 6. **Given** the bar is shown, **When** the user navigates with the keyboard only, **Then** every entry and control can be reached and activated and the focus is visible.
@@ -115,7 +117,7 @@ The create-game form uses the same form look as the rest of the shell (labels, n
 - **FR-001**: The app MUST show one navigation bar on every screen with the brand (logo, name, version) at the start and the language and theme controls at the end.
 - **FR-002**: The bar MUST list a link to every main page the signed-in player can open (games, create game) and MUST keep them visible while the player is in a game lobby or a running game.
 - **FR-003**: The bar MUST highlight exactly the entry of the currently open page, and MUST convey the highlight to assistive technology as well (not by colour alone).
-- **FR-004**: While the player has a game, the bar MUST show an additional "Current game" entry that opens it; without a game, the entry MUST be absent.
+- **FR-004**: While the player has a game, the bar MUST show an additional "Current game" entry as a status indicator (highlighted, with the phase as a tag); without a game, the entry MUST be absent. Leaving the game always requires the confirmation (FR-006), so the entry never leads back to a game the player has left.
 - **FR-005**: Before the player has a nickname/session, the bar MUST NOT allow reaching signed-in pages; brand, language and theme controls MUST keep working.
 - **FR-006**: Leaving a running game, or a game lobby, by any means inside the app (navigation entry, browser back/forward, direct page address, in-page "Leave game"/"Withdraw" button) MUST require confirmation in a modal.
 - **FR-007**: The modal text MUST differ per situation: leaving a running game; cancelling a planned game (host in lobby); leaving a lobby (guest). It MUST be available in English and German.
@@ -127,6 +129,7 @@ The create-game form uses the same form look as the rest of the shell (labels, n
 - **FR-013**: With no stored choice, the initial theme MUST follow the device preference once; an explicit choice MUST be stored and win on later visits. An old stored "system" value MUST be treated as no stored choice.
 - **FR-014**: The theme control MUST use standard icons for sun and moon instead of custom drawn graphics and MUST have an accessible name that includes the current theme.
 - **FR-015**: The create-game form MUST keep all current options, defaults, validation and results while using the shared form look (labels, numeric inputs, validation messages). _(Priority P3; may be postponed without blocking the rest.)_
+- **FR-018**: Menubar and regular pages MUST be limited to a content width of 1200 px and centred in wider windows. Single-purpose forms (nickname, create game) and the lobby and result pages MUST be centred in a narrow column. The game table is exempt from the width limit and keeps its own size and scale rules.
 - **FR-016**: The navigation bar, the modal and the theme control MUST work in light and dark theme, in English and German, with contrast and focus visibility on par with the existing screens.
 - **FR-017**: The feature MUST NOT change the scaling behaviour, the game table, the dice, the game log or the open-games list.
 
@@ -152,7 +155,7 @@ The create-game form uses the same form look as the rest of the shell (labels, n
 
 - The main pages are exactly the ones that exist today (games, create game, the game page); further pages, such as a profile or history, will get their own entries when they are added.
 - The language selection stays a dropdown in the bar's end area; its behaviour and the list of languages do not change.
-- The "Current game" entry opens the game page for the game the player is in, whatever its phase.
+- The "Current game" entry is a status indicator for the game the player is in, whatever its phase; it is not a way back after leaving.
 - Guests and the host can both see the leave situation; the host is the player who created the game.
 - Reloading or closing the browser tab is not intercepted; the existing reconnect behaviour keeps handling it.
 - Existing stored theme values other than "light" and "dark" are ignored.
