@@ -89,10 +89,10 @@ description: 'Task list for 010 Computer Player Speed Setting'
 
 - [x] T022 [P] Update `docs/user-guide.md`: Settings section (computer speed slider, host only, default Medium, applies to everyone, shown in lobby and table, toast on changes, "Fast computer dice" unchanged), the computer pacing sentence (pick highlight, notice length now depend on the speed), and fix the dice timing numbers to match `dice-roll.ts` (1-3 s normal, 0.5-1.5 s fast)
 - [x] T023 [P] Update `docs/roadmap.md`: add spec 010 to the Done table (one line: computer speed slider 1-5, default 3, setting toast, protocol v5) and bump "Last updated"
-- [ ] T024 Run `/speckit-docs-update` for READMEs and user docs touched by this feature
+- [x] T024 Run `/speckit-docs-update` for READMEs and user docs touched by this feature
 - [x] T025 Run `npm run lint && npm run typecheck && npm run test` and fix findings; confirm the backend e2e flows still pass manually with `npm run test:e2e` (skill `run-e2e`)
 - [x] T026 Verify in the real app with the `verify-ui` skill following [quickstart.md](quickstart.md) sections 2 to 4 (two browser contexts: host and guest); check light and dark, keyboard operation of the slider, one toast per drag, reschedule when moving from 1 to 5, no toast on late join; remove any throw-away script afterwards
-- [ ] T027 Run `/speckit-sonar-local` (or `/speckit-sonar-validate` on the PR) and fix new issues; confirm coverage of new files (`pacing.ts`, `host-settings.ts`) per `.specify/memory/test-coverage-guide.md`
+- [x] T027 Run `/speckit-sonar-local` (or `/speckit-sonar-validate` on the PR) and fix new issues; confirm coverage of new files (`pacing.ts`, `host-settings.ts`) per `.specify/memory/test-coverage-guide.md`
 
 ---
 

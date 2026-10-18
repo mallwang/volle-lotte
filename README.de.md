@@ -16,7 +16,7 @@ Funktionen: Oberfläche auf Deutsch und Englisch (folgt der Browsersprache, in d
 
 ## Status
 
-Workspace, CI (Lint, Typecheck, Test, Build, SonarCloud), die Constitution und die reine Regel-Engine (`libs/game-rules`, Spec 001) stehen; Lobby und Multiplayer (Spec 002) sind umgesetzt: ein NestJS-Socket.IO-Gateway (passwortgeschützte Spiele, 2-8 Plätze, Computerspieler, Wiederverbindung mit 30 s Karenzzeit, Protokollversion 4: offene Spiele, Entfernen und Sperren durch den Gastgeber, Computerersatz mit Wiedereinstieg, Zugtimer) und die Angular-Bildschirme Lobby, Spiellobby und Tisch. Ergänzte Abhängigkeiten: `socket.io`, `@nestjs/websockets`, `@nestjs/platform-socket.io`, `socket.io-client`. Siehe [docs/migration.md](docs/migration.md) (englisch).
+Workspace, CI (Lint, Typecheck, Test, Build, SonarCloud), die Constitution und die reine Regel-Engine (`libs/game-rules`, Spec 001) stehen; Lobby und Multiplayer (Spec 002) sind umgesetzt: ein NestJS-Socket.IO-Gateway (passwortgeschützte Spiele, 2-8 Plätze, Computerspieler, Wiederverbindung mit 30 s Karenzzeit, Protokollversion 5: offene Spiele, Entfernen und Sperren durch den Gastgeber, Computerersatz mit Wiedereinstieg, Zugtimer) und die Angular-Bildschirme Lobby, Spiellobby und Tisch. Ergänzte Abhängigkeiten: `socket.io`, `@nestjs/websockets`, `@nestjs/platform-socket.io`, `socket.io-client`. Siehe [docs/migration.md](docs/migration.md) (englisch).
 
 Das UI-Fundament (Spec 003) steht: PrimeNG 22 mit eigenem Terracotta-Theme, Hell-/Dunkelmodus und alle Bildschirme migriert. Mehrsprachigkeit (Spec 004): Deutsch und Englisch.
 
