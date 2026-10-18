@@ -7,6 +7,7 @@ import { MessageModule } from 'primeng/message';
 import { TagModule } from 'primeng/tag';
 import { errorMessage, type Msg } from '../core/error-message';
 import { isHost, seatName } from '../core/game-view';
+import { LeaveGame } from '../core/leave-game';
 import { I18nService } from '../core/i18n.service';
 import { SocketService } from '../core/socket.service';
 import { TranslatePipe } from '../core/translate.pipe';
@@ -136,7 +137,7 @@ const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard', 'random'];
         <p-button
           [label]="(host() ? 'gameLobby.withdraw' : 'game.leave') | t"
           severity="secondary"
-          (onClick)="socket.leave()"
+          (onClick)="leave.request()"
         />
         @if (host()) {
           <p-button [label]="'gameLobby.start' | t" [disabled]="!canStart()" (onClick)="start()" />
@@ -151,6 +152,7 @@ const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard', 'random'];
 export class GameLobby {
   protected readonly socket = inject(SocketService);
   private readonly i18n = inject(I18nService);
+  protected readonly leave = inject(LeaveGame);
   protected readonly difficulties = DIFFICULTIES;
   protected readonly error = signal<Msg | null>(null);
   protected readonly host = computed(() => {

@@ -28,6 +28,7 @@ import { GameLog } from './game-log';
 import { DiscardPile } from './discard-pile';
 import { PlayerSeat } from './player-seat';
 import { TableLayout } from './table-layout';
+import { LeaveGame } from '../core/leave-game';
 import { SettingsDialog } from './settings-dialog';
 
 /** Log events shown as a toast to every player, by severity (FR-010, FR-014). */
@@ -94,7 +95,7 @@ const NOTICE_MS = 6000;
             severity="secondary"
             [ariaLabel]="'game.leave' | t"
             [disabled]="removed()"
-            (onClick)="leaveOpen.set(true)"
+            (onClick)="leave.request()"
           />
           <p-button
             icon="pi pi-cog"
@@ -198,23 +199,6 @@ const NOTICE_MS = 6000;
           <p-button [label]="'removed.confirm' | t" (onClick)="socket.leave()" />
         </div>
       </p-dialog>
-      <p-dialog
-        [header]="'leave.title' | t"
-        [style]="{ width: '28rem', maxWidth: '95vw' }"
-        [(visible)]="leaveOpen"
-        [modal]="true"
-        [draggable]="false"
-      >
-        <p>{{ 'leave.body' | t }}</p>
-        <div class="vl-actions">
-          <p-button
-            [label]="'leave.cancel' | t"
-            severity="secondary"
-            (onClick)="leaveOpen.set(false)"
-          />
-          <p-button [label]="'leave.confirm' | t" severity="danger" (onClick)="socket.leave()" />
-        </div>
-      </p-dialog>
     }
   `,
 })
@@ -230,7 +214,7 @@ export class Table {
   protected readonly roll = inject(DiceRollService);
   private readonly prefs = inject(DicePrefs);
   protected readonly settingsOpen = signal(false);
-  protected readonly leaveOpen = signal(false);
+  protected readonly leave = inject(LeaveGame);
   protected readonly logOpen = signal(false);
   /** A computer took over my seat (timeouts); nothing here is playable anymore. */
   protected readonly removed = computed(() => (this.socket.game()?.you.seat ?? 0) < 0);

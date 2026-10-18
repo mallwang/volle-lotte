@@ -135,12 +135,16 @@ export class SocketService {
     return this.send('game:settings', { fastComputerDice });
   }
 
-  async leave(): Promise<void> {
+  /** Resolves true once the server accepted the leave; a rejection is shown as an error toast. */
+  async leave(): Promise<boolean> {
     const ack = await this.send('game:leave');
-    if (ack.ok) {
-      this.game.set(null);
-      await this.refreshLobby();
+    if (!ack.ok) {
+      this.notify('error', errorMessage(ack, this.i18n));
+      return false;
     }
+    this.game.set(null);
+    await this.refreshLobby();
+    return true;
   }
 
   /** Replays session:start after a reconnect; tells the user if the game is gone. */

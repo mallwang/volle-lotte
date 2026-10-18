@@ -23,6 +23,7 @@ Open the app and enter a nickname (2-20 characters: letters, digits, space, `_` 
 - **Join**: the games list shows each open game with its host, target score and free seats. Press **Join**. Games without a password join in one tap; password-protected games ask for the password, and after several wrong attempts the game is locked for a short time. A game that has started cannot be joined. If you left a running game, a **Rejoin** button takes your seat back from the computer.
 - **Create**: press **Create game**, then choose name, optional password, number of seats (2-8) and the rules (target score, minimum points to bank, whether four of a kind doubles, cards per type). The rules cannot be changed once the game is created.
 - **Game lobby**: the host can add or remove computer players (with a difficulty), lock seats, remove a human player (who cannot rejoin that game and sees a notice in the games list) and start the game. Everyone else waits for the host to start.
+- **Leaving**: leaving a lobby or a running game (the table or lobby button, a link in the menu bar or the browser's back button) always asks for confirmation first; **Stay** keeps you where you are. A finished game is left without a question. Closing or reloading the browser tab while in a lobby or running game shows the browser's own warning (its text cannot be changed).
 
 ## 3. Playing
 
@@ -46,10 +47,10 @@ When a player reaches the target score, the result screen ranks everyone. **Back
 
 ## 4. Language and Theme
 
-The header contains two selectors:
+The menu bar at the top is on every screen. It shows the **Lobby** and **Create game** pages (the open page is highlighted; both are disabled until you have chosen a nickname) and, while you are in a lobby or a running game, a **Current game** entry with a tag for the phase. On the right are two controls:
 
 - **Language** (flag and name): English or Deutsch. On the first visit the app uses your browser language (German for German, otherwise English). Your choice is saved in the browser and applies at once, without reloading. On narrow screens only the flag is shown; the name stays available to screen readers.
-- **Color scheme**: Light, Dark or System.
+- **Color scheme**: a sun or moon button switches between Light and Dark. The first visit follows your device setting; after you switch, your choice is saved in the browser.
 
 ## 5. FAQ
 

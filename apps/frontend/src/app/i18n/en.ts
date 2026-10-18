@@ -2,7 +2,6 @@
 export const en = {
   'language.label': 'Language',
   'theme.label': 'Colour theme',
-  'theme.system': 'System',
   'theme.light': 'Light',
   'theme.dark': 'Dark',
   'scale.notice': 'Table scaled to fit your window ({percent}%).',
@@ -120,11 +119,23 @@ export const en = {
   'gameLobby.addComputer': 'Add computer',
   'gameLobby.start': 'Start game',
   'gameLobby.waiting': 'Waiting for {name} to start the game.',
-  'leave.title': 'Leave the game?',
-  'leave.body':
+  'leave.running.title': 'Leave the running game?',
+  'leave.running.body':
     'A computer player takes over your seat. You can rejoin from the lobby while the game is running.',
+  'leave.running.confirm': 'Leave game',
+  'leave.lobbyHost.title': 'Cancel your planned game?',
+  'leave.lobbyHost.body':
+    'You are the host. If you leave, another player becomes host. If nobody else is in the lobby, the game is cancelled.',
+  'leave.lobbyHost.confirm': 'Cancel game',
+  'leave.lobbyGuest.title': 'Leave the lobby?',
+  'leave.lobbyGuest.body': 'You give up your seat. The game stays open for the others.',
+  'leave.lobbyGuest.confirm': 'Leave lobby',
+  'nav.current': 'Current game',
+  'nav.current.lobby': 'Lobby',
+  'nav.current.running': 'Running',
+  'theme.switchToLight': 'Switch to light theme',
+  'theme.switchToDark': 'Switch to dark theme',
   'leave.cancel': 'Stay',
-  'leave.confirm': 'Leave',
   'game.leave': 'Leave game',
   'player.computer': 'Computer',
 

@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
-import { MessageService } from 'primeng/api';
+import { Router, provideRouter } from '@angular/router';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { providePrimeNG } from 'primeng/config';
 import { signal } from '@angular/core';
 import { App } from './app';
@@ -10,15 +10,40 @@ import { I18nService } from './core/i18n.service';
 import { ThemeService } from './core/theme.service';
 import { TableScale } from './core/table-scale';
 
+const openGame = (phase: string) => ({
+  id: 'g1',
+  phase,
+  hostId: 'p0',
+  you: { playerId: 'p0', seat: 0 },
+});
+
+/** The menubar listens to a media query for its collapsed layout; jsdom has no matchMedia. */
+beforeEach(() => {
+  window.matchMedia = vi.fn().mockReturnValue({
+    matches: false,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+  });
+});
+
 function setup(connection = 'connected') {
-  const theme = { mode: signal('system'), next: vi.fn() };
-  const socket = { connection: signal(connection), session: signal(null), game: signal(null) };
+  const theme = { mode: signal('light'), toggle: vi.fn() };
+  const socket = {
+    connection: signal(connection),
+    session: signal<unknown>({ playerId: 'p0', nickname: 'Ann' }),
+    game: signal<unknown>(null),
+  };
   TestBed.configureTestingModule({
     imports: [App],
     providers: [
-      provideRouter([]),
+      provideRouter([
+        { path: 'lobby', children: [] },
+        { path: 'create-game', children: [] },
+        { path: '**', children: [] },
+      ]),
       providePrimeNG(),
       MessageService,
+      ConfirmationService,
       { provide: SOCKET, useValue: {} },
       { provide: SocketService, useValue: socket },
       { provide: ThemeService, useValue: theme },
@@ -36,16 +61,69 @@ describe('App', () => {
     expect(el.querySelector('main')).not.toBeNull();
   });
 
-  it('theme button cycles the mode and names the current one', async () => {
+  it('theme button toggles the mode, names it and shows the matching icon', async () => {
     const { fixture, theme, el } = setup();
     const button = el.querySelector<HTMLButtonElement>('p-button button')!;
-    expect(button.getAttribute('aria-label')).toBe('Colour theme: System');
+    expect(button.getAttribute('aria-label')).toBe('Colour theme: Light. Switch to dark theme');
+    expect(button.querySelector('.pi-sun')).not.toBeNull();
     button.click();
-    expect(theme.next).toHaveBeenCalled();
-    theme.mode.set('light');
+    expect(theme.toggle).toHaveBeenCalled();
+    theme.mode.set('dark');
     fixture.detectChanges();
     await fixture.whenStable();
-    expect(button.getAttribute('aria-label')).toBe('Colour theme: Light');
+    expect(button.getAttribute('aria-label')).toBe('Colour theme: Dark. Switch to light theme');
+    expect(button.querySelector('.pi-moon')).not.toBeNull();
+  });
+
+  describe('menubar', () => {
+    const links = (el: HTMLElement) => [
+      ...el.querySelectorAll<HTMLAnchorElement>('a.vl-menu-link'),
+    ];
+
+    it('shows the page links and marks the open page', async () => {
+      const { fixture, el } = setup();
+      await TestBed.inject(Router).navigateByUrl('/create-game');
+      fixture.detectChanges();
+      await fixture.whenStable();
+      const [games, create] = links(el);
+      expect(games.textContent).toContain('Lobby');
+      expect(create.textContent).toContain('Create game');
+      expect(create.getAttribute('aria-current')).toBe('page');
+      expect(games.getAttribute('aria-current')).toBeNull();
+    });
+
+    it('disables the page links without a session but keeps language and theme', () => {
+      const { fixture, socket, theme, el } = setup();
+      socket.session.set(null);
+      fixture.detectChanges();
+      expect(links(el)).toHaveLength(0);
+      expect(el.querySelectorAll('.vl-menu-disabled[aria-disabled=true]')).toHaveLength(2);
+      el.querySelector<HTMLButtonElement>('p-button button')!.click();
+      expect(theme.toggle).toHaveBeenCalled();
+      expect(el.querySelector('p-select.vl-lang')).not.toBeNull();
+    });
+
+    it('shows the current game with its phase while a game is open, links stay', () => {
+      const { fixture, socket, el } = setup();
+      socket.game.set(openGame('lobby'));
+      fixture.detectChanges();
+      const status = el.querySelector('.vl-menu-status')!;
+      expect(status.textContent).toContain('Current game');
+      expect(status.textContent).toContain('Lobby');
+      expect(status.getAttribute('aria-current')).toBe('page');
+      socket.game.set(openGame('running'));
+      fixture.detectChanges();
+      expect(el.querySelector('.vl-menu-status')!.textContent).toContain('Running');
+      expect(links(el)).toHaveLength(2);
+    });
+
+    it('has no status entry without a game or for a finished game', () => {
+      const { fixture, socket, el } = setup();
+      expect(el.querySelector('.vl-menu-status')).toBeNull();
+      socket.game.set(openGame('finished'));
+      fixture.detectChanges();
+      expect(el.querySelector('.vl-menu-status')).toBeNull();
+    });
   });
 
   it('shows the offline notice only while not connected', () => {
@@ -64,7 +142,7 @@ describe('App', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     expect(el.querySelector<HTMLElement>('p-button button')?.getAttribute('aria-label')).toBe(
-      'Farbschema: System',
+      'Farbschema: Hell. Zum dunklen Farbschema wechseln',
     );
     expect(el.querySelector('p-select.vl-lang [aria-label="Sprache"]')).not.toBeNull();
     localStorage.clear();
@@ -72,6 +150,17 @@ describe('App', () => {
 
   it('has no axe violations in light and dark', async () => {
     const { fixture } = setup('disconnected');
+    await inBothModes(fixture, () => expectNoA11yViolations(fixture));
+  });
+
+  it('has no axe violations with a game status entry or without a session', async () => {
+    const { fixture, socket } = setup();
+    socket.game.set(openGame('running'));
+    fixture.detectChanges();
+    await inBothModes(fixture, () => expectNoA11yViolations(fixture));
+    socket.session.set(null);
+    socket.game.set(null);
+    fixture.detectChanges();
     await inBothModes(fixture, () => expectNoA11yViolations(fixture));
   });
 });

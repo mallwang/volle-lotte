@@ -58,6 +58,25 @@ describe('SocketService', () => {
     });
   });
 
+  it('leave() clears the game and resolves true when the server accepts', async () => {
+    const { socket, service } = setup();
+    socket.replies['session:start'] = { ...started, game };
+    await service.start('Ann');
+    socket.replies['game:leave'] = { ok: true };
+    expect(await service.leave()).toBe(true);
+    expect(service.game()).toBeNull();
+  });
+
+  it('leave() keeps the game, reports an error and resolves false when rejected', async () => {
+    const { socket, add, service } = setup();
+    socket.replies['session:start'] = { ...started, game };
+    await service.start('Ann');
+    socket.replies['game:leave'] = { ok: false, reason: 'notInGame' };
+    expect(await service.leave()).toBe(false);
+    expect(service.game()).not.toBeNull();
+    expect(add).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
+  });
+
   it('keeps the session empty on an error ack', async () => {
     const { socket, service } = setup();
     socket.replies['session:start'] = { ok: false, reason: 'nicknameTaken' };
