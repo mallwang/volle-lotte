@@ -16,7 +16,7 @@ export function stubSocket(game: GameView | null = null) {
     join: vi.fn(),
     rejoin: vi.fn(),
     leave: vi.fn(),
-    settings: vi.fn(),
+    settings: vi.fn().mockResolvedValue({ ok: true }),
   };
 }
 
@@ -31,6 +31,7 @@ export function gameView(over: Partial<GameView> = {}, seats: SeatView[] = []): 
     you: { playerId: 'p0', seat: 0, timeoutWarning: false },
     seats: [...seats, ...Array.from({ length: 4 - seats.length }, () => open)],
     fastComputerDice: false,
+    computerSpeed: 3,
     log: [],
     ...over,
   };

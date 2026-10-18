@@ -151,6 +151,13 @@ describe('game lobby and play', () => {
   });
 });
 
+/** Counts `game:settingsChanged` pushes a client receives from now on. */
+const noPush = (c: Client) => {
+  let n = 0;
+  c.socket.on('game:settingsChanged', () => n++);
+  return () => n;
+};
+
 describe('game settings', () => {
   it('is host only, validated, and pushed to everyone', async () => {
     const host = await Client.start('Settingshost');
@@ -160,12 +167,45 @@ describe('game settings', () => {
     expect(await p.send('game:settings', { fastComputerDice: true })).toMatchObject({
       reason: 'notHost',
     });
-    expect(await host.send('game:settings', { fastComputerDice: 'yes' })).toMatchObject({
-      reason: 'invalidRequest',
+    expect(await p.send('game:settings', { computerSpeed: 4 })).toMatchObject({
+      reason: 'notHost',
     });
+    for (const body of [
+      {},
+      { fastComputerDice: 'yes' },
+      { computerSpeed: 0 },
+      { computerSpeed: 6 },
+      { computerSpeed: '3' },
+      { computerSpeed: 2.5 },
+    ])
+      expect(await host.send('game:settings', body)).toMatchObject({ reason: 'invalidRequest' });
     expect(await host.send('game:settings', { fastComputerDice: true })).toEqual({ ok: true });
     const state = await p.until('game:state', (s) => s.game.fastComputerDice === true);
     expect(state.game.fastComputerDice).toBe(true);
+    expect(state.game.computerSpeed).toBe(3);
+  });
+
+  it('pushes one game:settingsChanged per accepted change, to host and guest', async () => {
+    const host = await Client.start('Pushhost');
+    const { game } = await create(host, 2);
+    const p = await Client.start('Pushguest');
+    await p.send('game:join', { gameId: game.id, password: 'secret' });
+    const expected = { by: 'Pushhost', changes: [{ setting: 'computerSpeed', value: 5 }] };
+    const seenByGuest = p.until('game:settingsChanged');
+    const seenByHost = host.until('game:settingsChanged');
+    expect(await host.send('game:settings', { computerSpeed: 5 })).toEqual({ ok: true });
+    expect(await seenByGuest).toEqual(expected);
+    expect(await seenByHost).toEqual(expected);
+    const view = await p.until('game:state', (s) => s.game.computerSpeed === 5);
+    expect(view.game.computerSpeed).toBe(5);
+    // a no-op change sends no push; a late joiner gets none either
+    const quiet = noPush(p);
+    expect(await host.send('game:settings', { computerSpeed: 5 })).toEqual({ ok: true });
+    const late = await Client.start('Pushlate');
+    const late2 = noPush(late);
+    await new Promise((r) => setTimeout(r, 100));
+    expect(quiet()).toBe(0);
+    expect(late2()).toBe(0);
   });
 });
 

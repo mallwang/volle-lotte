@@ -34,12 +34,13 @@ On your turn:
 3. **Select dice** - pick at least one scoring die (a 1, a 5 or three of a kind) and press **Set aside selected**.
 4. **Bank points** or throw again. A throw without a scoring die is a bust and the points of the turn are lost.
 
-Dice are drawn with pips. Every thrown die tumbles for 2-5 seconds and stops on the value the server threw; the log entry and notices for the throw appear once the last die has stopped, and actions stay locked until then. The computer's pick is highlighted (with a computer badge) for two seconds before it is applied. With reduced motion enabled in your system, dice do not tumble; they stay blank until they stop and "Dice are rolling…" is announced.
+Dice are drawn with pips. Every thrown die tumbles for 1-3 seconds and stops on the value the server threw; the log entry and notices for the throw appear once the last die has stopped, and actions stay locked until then. The computer's pick is highlighted (with a computer badge) for a short moment before it is applied; how long depends on the computer speed. With reduced motion enabled in your system, dice do not tumble; they stay blank until they stop and "Dice are rolling…" is announced.
 
 Open **Settings** on the table to change:
 
 - **Skip dice animation** - only on your device; dice and log show immediately.
-- **Fast computer dice** - the host only, others see it read-only. Computer throws take 1-2.5 seconds.
+- **Fast computer dice** - the host only, others see it read-only. Computer throws take 0.5-1.5 seconds instead of 1-3.
+- **Computer speed** - the host only, others see it read-only. A slider from 1 (slow) to 5 (fast); every game starts at 3 (Medium). It sets how long computers wait between their actions and how long a turn's result stays on the table, for everyone at the table. It is also shown in the game lobby, where the host can set it before starting. Whenever the host changes a setting, every player sees a short notice naming the host and the new value; players who join later do not.
 
 Buttons that are not available show the reason (for example "Not your turn"). The log lists what happened; players who leave a running game (after a confirmation), lose their connection for 30 seconds or miss three turns in a row are replaced by a computer. A timer shows how long you have left: 10 seconds to draw or roll, 15 to choose dice, 20 to secure or continue. If time runs out the action is taken for you (a skipped draw or selection ends your turn). After the third timeout you see a notice and can only go back to the lobby. Computers pause while no human is seated.
 

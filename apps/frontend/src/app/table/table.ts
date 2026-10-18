@@ -7,6 +7,7 @@ import {
   linkedSignal,
   signal,
 } from '@angular/core';
+import { pacing } from 'game-rules';
 import type { Action, CardType, Event as GameEvent, GameView, LogEntry } from 'game-rules';
 import { ButtonModule } from 'primeng/button';
 import { MessageService } from 'primeng/api';
@@ -54,12 +55,6 @@ const NOTICE_SEVERITY: Record<string, 'success' | 'warn'> = {
   stop: 'warn',
   timedOut: 'warn',
 };
-
-/**
- * How long a turn's result (bust, bank, Stop, timeout) stays on the table before the next turn
- * starts. The server waits as long (NOTICE_MS in game-room.ts) before the next player's move.
- */
-const NOTICE_MS = 6000;
 
 @Component({
   selector: 'app-table',
@@ -162,7 +157,7 @@ const NOTICE_MS = 6000;
                 <app-dice-area
                   [dice]="diceShown()"
                   [selected]="shown()"
-                  [waitMs]="notice() ? NOTICE_MS : 0"
+                  [waitMs]="notice() ? noticeMs() : 0"
                   [canSelect]="mine() && turn.phase === 'select'"
                   [mine]="mine()"
                   [computerPick]="computerTurn()"
@@ -225,7 +220,11 @@ export class Table {
   protected readonly logOpen = signal(false);
   /** A computer took over my seat (timeouts); nothing here is playable anymore. */
   protected readonly removed = computed(() => (this.socket.game()?.you.seat ?? 0) < 0);
-  protected readonly NOTICE_MS = NOTICE_MS;
+  /**
+   * How long a turn's result (bust, bank, Stop, timeout) stays on the table before the next turn
+   * starts. The server waits as long (`pacing` in game-rules) before the next player's move.
+   */
+  protected readonly noticeMs = computed(() => pacing(this.socket.game()?.computerSpeed).noticeMs);
   /** Result of a turn: keeps the last throw and secured dice visible until the next player takes over. */
   protected readonly notice = signal<{
     dice: readonly number[];
@@ -627,10 +626,10 @@ export class Table {
       severity: NOTICE_SEVERITY[kind],
       summary: this.i18n.t(`toast.${kind}`),
       detail: text,
-      life: NOTICE_MS,
+      life: this.noticeMs(),
     });
     this.notice.set({ dice, safe: points, seat: this.seats().indexOf(e.seat ?? -1), card });
-    setTimeout(() => this.notice.set(null), NOTICE_MS);
+    setTimeout(() => this.notice.set(null), this.noticeMs());
     return true;
   }
 

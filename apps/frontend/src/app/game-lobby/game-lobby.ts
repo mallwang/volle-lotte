@@ -10,6 +10,7 @@ import { isHost, seatName } from '../core/game-view';
 import { LeaveGame } from '../core/leave-game';
 import { I18nService } from '../core/i18n.service';
 import { SocketService } from '../core/socket.service';
+import { HostSettings } from '../shared/host-settings';
 import { TranslatePipe } from '../core/translate.pipe';
 
 const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard', 'random'];
@@ -17,7 +18,15 @@ const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard', 'random'];
 @Component({
   selector: 'app-game-lobby',
   host: { class: 'vl-narrow' },
-  imports: [FormsModule, AvatarModule, ButtonModule, MessageModule, TagModule, TranslatePipe],
+  imports: [
+    FormsModule,
+    AvatarModule,
+    ButtonModule,
+    HostSettings,
+    MessageModule,
+    TagModule,
+    TranslatePipe,
+  ],
   template: `
     @if (socket.game(); as game) {
       <h2>{{ game.name }}</h2>
@@ -130,6 +139,10 @@ const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard', 'random'];
           </li>
         }
       </ul>
+      <section class="vl-settings-panel" aria-labelledby="lobby-settings-heading">
+        <h3 id="lobby-settings-heading">{{ 'gameLobby.settings' | t }}</h3>
+        <app-host-settings />
+      </section>
       @if (!host()) {
         <p>{{ 'gameLobby.waiting' | t: { name: hostName() } }}</p>
       }

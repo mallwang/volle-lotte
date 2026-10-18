@@ -22,7 +22,13 @@ describe('SettingsDialog', () => {
     const { socket, input } = await setup('p0');
     expect(input.disabled).toBe(false);
     input.click();
-    expect(socket.settings).toHaveBeenCalledWith(true);
+    expect(socket.settings).toHaveBeenCalledWith({ fastComputerDice: true });
+  });
+
+  it('shows the computer speed slider in the dialog', async () => {
+    await setup('p0');
+    expect(document.body.textContent).toContain('Computer speed');
+    expect(document.body.textContent).toContain('3 · Medium');
   });
 
   it('shows guests the setting read-only', async () => {

@@ -1,6 +1,6 @@
 import type { Action, Event, GameState, RejectionReason, Rules } from './types.js';
 
-export const PROTOCOL_VERSION = 4;
+export const PROTOCOL_VERSION = 5;
 
 export type Difficulty = 'easy' | 'medium' | 'hard' | 'random';
 export type RoomPhase = 'lobby' | 'running' | 'finished';
@@ -91,8 +91,10 @@ export interface GameView {
   preview?: number[];
   /** Set only while a human is to act; `at` already includes the dice animation wait. */
   turnDeadline?: { at: number; phase: 'draw' | 'throw' | 'select' | 'decide' };
-  /** Host setting: computer dice roll for a shorter time. */
+  /** Host setting: computer dice roll for a shorter time (the dice roll only, not the waits). */
   fastComputerDice: boolean;
+  /** Host setting: computer speed 1 (slow) to 5 (fast); see `pacing`. */
+  computerSpeed: number;
   log: LogEntry[];
 }
 
@@ -135,7 +137,12 @@ export interface Intents {
   'seat:remove': [{ seat: number }, object];
   'turn:action': [{ action: Action }, object];
   'turn:preview': [{ dice: number[] }, object];
-  'game:settings': [{ fastComputerDice: boolean }, object];
+  'game:settings': [{ fastComputerDice?: boolean; computerSpeed?: number }, object];
+}
+
+export interface SettingChange {
+  setting: 'computerSpeed' | 'fastComputerDice';
+  value: number | boolean;
 }
 
 /** Server to client pushes: event name -> payload. */
@@ -143,6 +150,7 @@ export interface Pushes {
   'lobby:games': { games: GameSummary[] };
   'game:state': { game: GameView };
   'game:log': { entries: LogEntry[] };
+  'game:settingsChanged': { by: string; changes: SettingChange[] };
   'session:replaced': undefined;
   'game:closed': { reason: 'cleanup' | 'banned' };
 }
