@@ -377,6 +377,7 @@ describe('Table', () => {
       t.socket.game.set({ ...t.socket.game()!, log } as never);
       t.fixture.detectChanges();
       await t.fixture.whenStable();
+      expect(t.el.querySelector('.vl-wait .vl-bust-timer')).not.toBeNull();
       return t.toasts.mock.calls.map(([m]) => `${m.summary} ${m.detail}`).join('\n');
     }
 
