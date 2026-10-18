@@ -107,7 +107,7 @@ The create-game form uses the same form look as the rest of the shell (labels, n
 - Clicking the link of the page that is already open does nothing and shows no modal.
 - A second navigation attempt while the modal is open does not stack a second modal.
 - The game ends (result screen) while the modal is open: the modal closes and the player is not asked again.
-- A game exists but the player opens the games page through a direct address: the same confirmation applies as for a link.
+- A game exists and the player types an address in the browser: the app reloads (like closing the tab, not intercepted) and the existing session resume puts the player back into the game.
 - Narrow windows: the bar keeps all entries reachable at the minimum supported window size.
 
 ## Requirements _(mandatory)_
@@ -119,7 +119,7 @@ The create-game form uses the same form look as the rest of the shell (labels, n
 - **FR-003**: The bar MUST highlight exactly the entry of the currently open page, and MUST convey the highlight to assistive technology as well (not by colour alone).
 - **FR-004**: While the player has a game, the bar MUST show an additional "Current game" entry as a status indicator (highlighted, with the phase as a tag); without a game, the entry MUST be absent. Leaving the game always requires the confirmation (FR-006), so the entry never leads back to a game the player has left.
 - **FR-005**: Before the player has a nickname/session, the bar MUST NOT allow reaching signed-in pages; brand, language and theme controls MUST keep working.
-- **FR-006**: Leaving a running game, or a game lobby, by any means inside the app (navigation entry, browser back/forward, direct page address, in-page "Leave game"/"Withdraw" button) MUST require confirmation in a modal.
+- **FR-006**: Leaving a running game, or a game lobby, by any means inside the app (navigation entry, browser back/forward, in-page "Leave game"/"Withdraw" button) MUST require confirmation in a modal.
 - **FR-007**: The modal text MUST differ per situation: leaving a running game; cancelling a planned game (host in lobby); leaving a lobby (guest). It MUST be available in English and German.
 - **FR-008**: The modal MUST offer "stay" (default, also Escape) and "leave". Staying MUST leave the game and the page untouched.
 - **FR-009**: On "leave" the player MUST be removed from the game and then taken to the requested target, exactly once; for in-page buttons the target is the games page.
