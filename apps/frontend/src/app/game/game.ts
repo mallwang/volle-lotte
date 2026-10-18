@@ -1,5 +1,6 @@
 import { Component, effect, inject } from '@angular/core';
 import { Router } from '@angular/router';
+import { LeaveGame } from '../core/leave-game';
 import { SocketService } from '../core/socket.service';
 import { GameLobby } from '../game-lobby/game-lobby';
 import { Result } from '../result/result';
@@ -28,10 +29,11 @@ import { Table } from '../table/table';
 export class Game {
   protected readonly socket = inject(SocketService);
   private readonly router = inject(Router);
+  private readonly leave = inject(LeaveGame);
 
   constructor() {
     effect(() => {
-      if (!this.socket.game()) void this.router.navigateByUrl('/lobby');
+      if (!this.socket.game() && !this.leave.leaving()) void this.router.navigateByUrl('/lobby');
     });
   }
 }

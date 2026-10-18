@@ -1,4 +1,5 @@
 import { Route } from '@angular/router';
+import { leaveGameGuard } from './core/leave-game';
 import { sessionGuard } from './core/session.guard';
 import { CreateGame } from './create-game/create-game';
 import { Game } from './game/game';
@@ -14,6 +15,12 @@ export const appRoutes: Route[] = [
     title: 'create.title',
     canActivate: [sessionGuard],
   },
-  { path: 'game/:id', component: Game, title: 'game.title', canActivate: [sessionGuard] },
+  {
+    path: 'game/:id',
+    component: Game,
+    title: 'game.title',
+    canActivate: [sessionGuard],
+    canDeactivate: [leaveGameGuard],
+  },
   { path: '**', redirectTo: 'lobby' },
 ];

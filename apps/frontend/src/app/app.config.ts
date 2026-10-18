@@ -1,6 +1,6 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter, TitleStrategy } from '@angular/router';
-import { MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { providePrimeNG } from 'primeng/config';
 import { PageTitleStrategy } from './core/page-title';
 import { appRoutes } from './app.routes';
@@ -20,5 +20,6 @@ export const appConfig = (license?: string): ApplicationConfig => ({
       },
     }),
     MessageService,
+    ConfirmationService,
   ],
 });

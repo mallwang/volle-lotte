@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { defaultRules, type GameStateView, type SeatView } from 'game-rules';
+import { LeaveGame } from '../core/leave-game';
 import { SocketService } from '../core/socket.service';
 import { MessageService } from 'primeng/api';
 import { providePrimeNG } from 'primeng/config';
@@ -46,7 +47,12 @@ async function setup(current: number, over = {}, showLog = true) {
   );
   TestBed.configureTestingModule({
     imports: [Table],
-    providers: [providePrimeNG(), MessageService, { provide: SocketService, useValue: socket }],
+    providers: [
+      providePrimeNG(),
+      MessageService,
+      { provide: SocketService, useValue: socket },
+      { provide: LeaveGame, useValue: { request: vi.fn() } },
+    ],
   });
   const fixture = TestBed.createComponent(Table);
   await fixture.whenStable();
@@ -59,7 +65,7 @@ async function setup(current: number, over = {}, showLog = true) {
     await fixture.whenStable();
   }
   const toasts = vi.spyOn(TestBed.inject(MessageService), 'add');
-  return { socket, el, button, fixture, toasts };
+  return { socket, el, button, fixture, toasts, leave: TestBed.inject(LeaveGame) };
 }
 
 describe('Table', () => {
@@ -339,14 +345,11 @@ describe('Table', () => {
     expect(el.querySelector('p-message')).toBeNull();
   });
 
-  it('asks for confirmation before leaving', async () => {
-    const { socket, el, fixture } = await setup(0);
+  it('leaves through the shared confirmation, not directly', async () => {
+    const { socket, leave, el } = await setup(0);
     el.querySelector<HTMLButtonElement>('[aria-label="Leave game"]')!.click();
-    fixture.detectChanges();
-    await fixture.whenStable();
+    expect(leave.request).toHaveBeenCalled();
     expect(socket.leave).not.toHaveBeenCalled();
-    (document.body.querySelector('p-dialog button.p-button-danger') as HTMLButtonElement).click();
-    expect(socket.leave).toHaveBeenCalled();
   });
 
   it('shows a new bank as a notice instead of a toast', async () => {

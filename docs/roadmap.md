@@ -12,18 +12,19 @@ Last updated: 2026-10-18. The Java -> web migration is finished (see [migration.
 
 ## Done
 
-| Spec | Feature                                                                                                                                                                                       |
-| ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 001  | Rules engine (`libs/game-rules`), port of the Java game with all card types and 2-8 players                                                                                                   |
-| 002  | Lobby and multiplayer (NestJS gateway, Socket.IO, computer players with difficulties, reconnect)                                                                                              |
-| 003  | UI foundation (PrimeNG, Terracotta theme, light/dark)                                                                                                                                         |
-| 004  | English and German UI and documentation                                                                                                                                                       |
-| 005  | Pip dice faces, per-die rolling animation, computer pacing                                                                                                                                    |
-| 006  | Open lobbies, rejoin after replacement by a computer, per-phase turn timers, host removal and bans                                                                                            |
-| 007  | Active game table UI (seat columns, piles, dice area, log); desktop layout is the target, see below                                                                                           |
-| 008  | Desktop minimum size: header and table scale as one 992x900 stage (minimum 695x630, scale 0.7), scaling notice and "window too small" hint, global focus ring, tab order and contrast checked |
-| -    | Docker image and Portainer stack, release workflow, app icon, page titles, version in the header                                                                                              |
-| -    | Backend integration tests as manual e2e (`npm run test:e2e`, skill `run-e2e`), kept out of CI                                                                                                 |
+| Spec | Feature                                                                                                                                                                                                                                                                                        |
+| ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 001  | Rules engine (`libs/game-rules`), port of the Java game with all card types and 2-8 players                                                                                                                                                                                                    |
+| 002  | Lobby and multiplayer (NestJS gateway, Socket.IO, computer players with difficulties, reconnect)                                                                                                                                                                                               |
+| 003  | UI foundation (PrimeNG, Terracotta theme, light/dark)                                                                                                                                                                                                                                          |
+| 004  | English and German UI and documentation                                                                                                                                                                                                                                                        |
+| 005  | Pip dice faces, per-die rolling animation, computer pacing                                                                                                                                                                                                                                     |
+| 006  | Open lobbies, rejoin after replacement by a computer, per-phase turn timers, host removal and bans                                                                                                                                                                                             |
+| 007  | Active game table UI (seat columns, piles, dice area, log); desktop layout is the target, see below                                                                                                                                                                                            |
+| 008  | Desktop minimum size: header and table scale as one 992x900 stage (minimum 695x630, scale 0.7), scaling notice and "window too small" hint, global focus ring, tab order and contrast checked                                                                                                  |
+| 009  | App shell: PrimeNG menubar on every screen (active page, "Current game" status), one shared leave confirmation (navbar, browser back, table and lobby buttons), light/dark-only theme with a sun/moon button; create-game form restyle (P3) dropped, it stays as is until the form is reworked |
+| -    | Docker image and Portainer stack, release workflow, app icon, page titles, version in the header                                                                                                                                                                                               |
+| -    | Backend integration tests as manual e2e (`npm run test:e2e`, skill `run-e2e`), kept out of CI                                                                                                                                                                                                  |
 
 ## Next
 
@@ -66,14 +67,6 @@ Goal: a separate mobile frontend, so the desktop frontend stays desktop only. Id
 
 - Backend table: participants, date and time, duration, final result; plus an event log per game (the in-game log exists, but it is not persisted).
 - Shares the SQLite work with R4.
-
-### R7. App shell navbar and leave confirmation (`in progress`, spec 009)
-
-Goal: a PrimeNG Menubar as the app shell (all page links, active page highlighted, "Current game" entry), one shared leave-game confirmation for the table and the game lobby, a light/dark-only theme toggle, and (lowest priority) a modernised create-game form.
-
-- Deliberately deferred: the open-games list in the lobby and the game log (both get a complete rework later), the scale logic, the table and the dice. Domain-specific components stay custom.
-- Further PrimeNG adoption (for example replacing hand-made form markup elsewhere) is picked up only together with those reworks.
-- Out of scope: a `beforeunload` prompt when closing the tab.
 
 ### Later, not for the next releases
 

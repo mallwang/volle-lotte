@@ -3,7 +3,6 @@ import type { en } from './en';
 export const de: Record<keyof typeof en, string> = {
   'language.label': 'Sprache',
   'theme.label': 'Farbschema',
-  'theme.system': 'System',
   'theme.light': 'Hell',
   'theme.dark': 'Dunkel',
   'scale.notice': 'Tisch an dein Fenster angepasst ({percent} %).',
@@ -123,11 +122,23 @@ export const de: Record<keyof typeof en, string> = {
   'gameLobby.addComputer': 'Computer hinzufügen',
   'gameLobby.start': 'Spiel starten',
   'gameLobby.waiting': 'Warte darauf, dass {name} das Spiel startet.',
-  'leave.title': 'Spiel verlassen?',
-  'leave.body':
+  'leave.running.title': 'Laufendes Spiel verlassen?',
+  'leave.running.body':
     'Ein Computerspieler übernimmt deinen Platz. Du kannst aus der Lobby wieder beitreten, solange das Spiel läuft.',
+  'leave.running.confirm': 'Spiel verlassen',
+  'leave.lobbyHost.title': 'Geplantes Spiel absagen?',
+  'leave.lobbyHost.body':
+    'Du bist der Gastgeber. Wenn du gehst, wird ein anderer Spieler Gastgeber. Ist sonst niemand in der Lobby, wird das Spiel abgesagt.',
+  'leave.lobbyHost.confirm': 'Spiel absagen',
+  'leave.lobbyGuest.title': 'Lobby verlassen?',
+  'leave.lobbyGuest.body': 'Du gibst deinen Platz auf. Das Spiel bleibt für die anderen offen.',
+  'leave.lobbyGuest.confirm': 'Lobby verlassen',
+  'nav.current': 'Aktuelles Spiel',
+  'nav.current.lobby': 'Lobby',
+  'nav.current.running': 'Läuft',
+  'theme.switchToLight': 'Zum hellen Farbschema wechseln',
+  'theme.switchToDark': 'Zum dunklen Farbschema wechseln',
   'leave.cancel': 'Bleiben',
-  'leave.confirm': 'Verlassen',
   'game.leave': 'Spiel verlassen',
   'player.computer': 'Computer',
 

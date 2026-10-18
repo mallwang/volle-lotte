@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import type { SeatView } from 'game-rules';
+import { LeaveGame } from '../core/leave-game';
 import { SocketService } from '../core/socket.service';
 import { providePrimeNG } from 'primeng/config';
 import { expectNoA11yViolations, gameView, inBothModes, stubSocket } from '../core/testing';
@@ -24,14 +25,18 @@ async function setup(game: ReturnType<typeof gameView>) {
   const socket = stubSocket(game);
   TestBed.configureTestingModule({
     imports: [GameLobby],
-    providers: [providePrimeNG(), { provide: SocketService, useValue: socket }],
+    providers: [
+      providePrimeNG(),
+      { provide: SocketService, useValue: socket },
+      { provide: LeaveGame, useValue: { request: vi.fn() } },
+    ],
   });
   const fixture = TestBed.createComponent(GameLobby);
   await fixture.whenStable();
   const el = fixture.nativeElement as HTMLElement;
   const button = (text: string) =>
     [...el.querySelectorAll('button')].find((b) => b.textContent?.includes(text));
-  return { socket, el, button, fixture };
+  return { socket, el, button, fixture, leave: TestBed.inject(LeaveGame) };
 }
 
 describe('GameLobby', () => {
@@ -90,6 +95,23 @@ describe('GameLobby', () => {
     for (const t of ['Ready', 'Computer (easy)', 'Locked', 'Free'])
       expect(el.textContent).toContain(t);
     expect(el.querySelectorAll('p-tag .pi').length).toBeGreaterThanOrEqual(4);
+  });
+
+  it('host withdraw and guest leave go through the shared confirmation', async () => {
+    const host = await setup(gameView({}, [me(true), other(true)]));
+    host.button('Withdraw')!.click();
+    expect(host.leave.request).toHaveBeenCalledTimes(1);
+    expect(host.socket.leave).not.toHaveBeenCalled();
+    TestBed.resetTestingModule();
+    const guest = await setup(
+      gameView({ hostId: 'p1', you: { playerId: 'p0', seat: 1, timeoutWarning: false } }, [
+        other(true),
+        me(false),
+      ]),
+    );
+    guest.button('Leave game')!.click();
+    expect(guest.leave.request).toHaveBeenCalledTimes(1);
+    expect(guest.socket.leave).not.toHaveBeenCalled();
   });
 
   it('has no a11y violations in both modes', async () => {

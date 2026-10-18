@@ -1,29 +1,20 @@
 import { DOCUMENT } from '@angular/common';
-import { Injectable, computed, effect, inject, signal } from '@angular/core';
+import { Injectable, effect, inject, signal } from '@angular/core';
 
-export type ThemeMode = 'system' | 'light' | 'dark';
+export type ThemeMode = 'light' | 'dark';
 /** localStorage key; keep in sync with the pre-paint script in index.html. */
 export const THEME_KEY = 'vl-theme';
-const MODES: readonly ThemeMode[] = ['system', 'light', 'dark'];
-const MODE_SET: ReadonlySet<string> = new Set(MODES);
+const MODES: ReadonlySet<string> = new Set<ThemeMode>(['light', 'dark']);
 
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
   private readonly doc = inject(DOCUMENT);
-  private readonly query =
-    this.doc.defaultView?.matchMedia?.('(prefers-color-scheme: dark)') ?? null;
-  private readonly systemDark = signal(this.query?.matches ?? false);
 
+  /** The stored choice, else the device preference read once; nothing is stored until a toggle. */
   readonly mode = signal<ThemeMode>(this.read());
-  readonly resolved = computed<'light' | 'dark'>(() => {
-    const mode = this.mode();
-    if (mode !== 'system') return mode;
-    return this.systemDark() ? 'dark' : 'light';
-  });
 
   constructor() {
-    this.query?.addEventListener('change', (e) => this.systemDark.set(e.matches));
-    effect(() => this.doc.documentElement.classList.toggle('app-dark', this.resolved() === 'dark'));
+    effect(() => this.doc.documentElement.classList.toggle('app-dark', this.mode() === 'dark'));
   }
 
   set(mode: ThemeMode): void {
@@ -35,17 +26,19 @@ export class ThemeService {
     }
   }
 
-  /** Cycles system → light → dark. */
-  next(): void {
-    this.set(MODES[(MODES.indexOf(this.mode()) + 1) % MODES.length]);
+  toggle(): void {
+    this.set(this.mode() === 'dark' ? 'light' : 'dark');
   }
 
   private read(): ThemeMode {
     try {
       const v = localStorage.getItem(THEME_KEY);
-      return v !== null && MODE_SET.has(v) ? (v as ThemeMode) : 'system';
+      if (v !== null && MODES.has(v)) return v as ThemeMode;
     } catch {
-      return 'system';
+      // fall through to the device preference
     }
+    return this.doc.defaultView?.matchMedia?.('(prefers-color-scheme: dark)')?.matches
+      ? 'dark'
+      : 'light';
   }
 }

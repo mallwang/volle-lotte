@@ -1,15 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { THEME_KEY, ThemeService } from './theme.service';
 
-type Listener = (e: { matches: boolean }) => void;
-
 function mockMatchMedia(matches: boolean) {
-  let listener: Listener = (_e) => undefined;
-  window.matchMedia = vi.fn().mockReturnValue({
-    matches,
-    addEventListener: (...args: [string, Listener]) => (listener = args[1]),
-  });
-  return (m: boolean) => listener({ matches: m });
+  window.matchMedia = vi.fn().mockReturnValue({ matches });
 }
 
 function create(): ThemeService {
@@ -27,44 +20,56 @@ describe('ThemeService', () => {
     document.documentElement.classList.remove('app-dark');
   });
 
-  it('follows the system setting by default (dark and light)', () => {
+  it('starts from the device preference without storing it', () => {
     mockMatchMedia(true);
-    expect(create().mode()).toBe('system');
+    expect(create().mode()).toBe('dark');
     expect(isDark()).toBe(true);
     mockMatchMedia(false);
-    create();
+    expect(create().mode()).toBe('light');
     expect(isDark()).toBe(false);
+    expect(localStorage.getItem(THEME_KEY)).toBeNull();
   });
 
-  it('persists a manual override', () => {
+  it('toggle() flips the mode and persists it', () => {
     mockMatchMedia(true);
     const service = create();
-    service.set('light');
+    service.toggle();
     TestBed.tick();
+    expect(service.mode()).toBe('light');
     expect(isDark()).toBe(false);
     expect(localStorage.getItem(THEME_KEY)).toBe('light');
+    service.toggle();
+    expect(service.mode()).toBe('dark');
+  });
+
+  it('a stored choice wins over the device preference', () => {
+    mockMatchMedia(true);
+    localStorage.setItem(THEME_KEY, 'light');
     expect(create().mode()).toBe('light');
-  });
-
-  it('falls back to system for an invalid stored value', () => {
     mockMatchMedia(false);
-    localStorage.setItem(THEME_KEY, 'purple');
-    expect(create().mode()).toBe('system');
+    localStorage.setItem(THEME_KEY, 'dark');
+    expect(create().mode()).toBe('dark');
   });
 
-  it('reacts to live OS changes while in system mode', () => {
-    const change = mockMatchMedia(false);
-    const service = create();
-    change(true);
-    TestBed.tick();
-    expect(service.resolved()).toBe('dark');
-    expect(isDark()).toBe(true);
+  it.each(['system', 'purple'])('ignores the stored value "%s"', (value) => {
+    mockMatchMedia(true);
+    localStorage.setItem(THEME_KEY, value);
+    expect(create().mode()).toBe('dark');
   });
 
   it('uses light when matchMedia is unavailable', () => {
     (window as { matchMedia?: unknown }).matchMedia = undefined;
+    expect(create().mode()).toBe('light');
+  });
+
+  it('does not throw when storage fails', () => {
+    mockMatchMedia(false);
     const service = create();
-    expect(service.resolved()).toBe('light');
-    expect(isDark()).toBe(false);
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('denied');
+    });
+    expect(() => service.toggle()).not.toThrow();
+    expect(service.mode()).toBe('dark');
+    vi.restoreAllMocks();
   });
 });

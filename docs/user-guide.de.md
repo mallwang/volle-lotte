@@ -23,6 +23,7 @@ Volle Lotte ist ein Online-Würfelspiel für 2-8 Spielende. Computergegner könn
 - **Beitreten**: Die Spieleliste zeigt jedes offene Spiel mit Gastgeber, Zielpunktzahl und freien Plätzen. Drücke **Beitreten**. Spiele ohne Passwort betrittst du mit einem Tipp; passwortgeschützte Spiele fragen nach dem Passwort, nach mehreren falschen Versuchen wird das Spiel kurz gesperrt. Ein gestartetes Spiel kann nicht betreten werden. Hast du ein laufendes Spiel verlassen, holt dich **Wieder beitreten** zurück auf deinen Platz.
 - **Erstellen**: Drücke **Spiel erstellen** und wähle Name, optionales Passwort, Anzahl der Plätze (2-8) und die Regeln (Zielpunktzahl, Mindestpunkte zum Sichern, ob Viererpasch verdoppelt, Karten pro Typ). Die Regeln lassen sich nach dem Erstellen nicht mehr ändern.
 - **Spiellobby**: Die Gastgebenden können Computerspieler (mit Schwierigkeit) hinzufügen oder entfernen, Plätze sperren, Menschen entfernen (sie können dem Spiel nicht mehr beitreten und sehen einen Hinweis in der Spieleliste) und das Spiel starten. Alle anderen warten auf den Start.
+- **Verlassen**: Das Verlassen einer Lobby oder eines laufenden Spiels (Schaltfläche am Tisch oder in der Lobby, ein Link in der Menüleiste oder die Zurück-Taste des Browsers) fragt immer vorher nach; mit **Bleiben** bleibst du, wo du bist. Ein beendetes Spiel verlässt du ohne Rückfrage.
 
 ## 3. Spielen
 
@@ -46,14 +47,14 @@ Erreicht jemand die Zielpunktzahl, zeigt der Ergebnisbildschirm die Rangliste. *
 
 ## 4. Sprache und Farbschema
 
-Die Kopfzeile enthält zwei Auswahlfelder:
+Die Menüleiste oben ist auf jeder Seite da. Sie zeigt die Seiten **Lobby** und **Spiel erstellen** (die geöffnete Seite ist hervorgehoben; beide sind gesperrt, bis du einen Spitznamen gewählt hast) und, solange du in einer Lobby oder einem laufenden Spiel bist, den Eintrag **Aktuelles Spiel** mit einem Hinweis zur Phase. Rechts sind zwei Bedienelemente:
 
-- **Sprache** (Flagge und Name): English oder Deutsch. Beim ersten Besuch nutzt die App deine Browsersprache (Deutsch bei deutschem Browser, sonst Englisch). Deine Wahl wird im Browser gespeichert und gilt sofort ohne Neuladen. Auf schmalen Bildschirmen wird nur die Flagge angezeigt; der Name bleibt für Screenreader erhalten.
-- **Farbschema**: Hell, Dunkel oder System.
+- **Sprache** (Flagge und Name): English oder Deutsch. Beim ersten Besuch nutzt die App die Browsersprache (Deutsch bei deutschem Browser, sonst Englisch). Die Wahl wird im Browser gespeichert und gilt sofort, ohne Neuladen. Auf schmalen Bildschirmen wird nur die Flagge gezeigt; der Name bleibt für Screenreader verfügbar.
+- **Farbschema**: Eine Sonne oder ein Mond schaltet zwischen Hell und Dunkel um. Beim ersten Besuch gilt die Einstellung deines Geräts; nach dem Umschalten wird deine Wahl im Browser gespeichert.
 
 ## 5. FAQ
 
-**Die Seite ist in der falschen Sprache.** Wähle die Sprache in der Kopfzeile; die Wahl bleibt gespeichert.
+**Die Seite ist in der falschen Sprache.** Wähle die Sprache in der Menüleiste; die Wahl bleibt gespeichert.
 
 **Sind alle Meldungen übersetzt?** Ja. Meldungen zu ungültigen Regelwerten und abgelehnten Zügen folgen ebenfalls der gewählten Sprache.
 
