@@ -181,8 +181,8 @@
 - [x] T039 [P] Update the example in `specs/011-computer-ai-rework/contracts/protocol.md` only if the final wire format deviates from it; otherwise leave unchanged.
 - [x] T040 Run `npm run lint && npm run typecheck && npm run test` (quickstart section 1) and fix anything red.
 - [x] T041 Run the quickstart behaviour checks 2 and 3 in the real app with the `verify-ui` skill (Hard/No risk banks after every Volle Lotte on a Bonus card; Easy/High risk plays simpler and draws on; Random/Random varies; replacement computer shows "Random").
-- [ ] T042 Optional manual load check (quickstart section 4, `npm run test:e2e` via the `run-e2e` skill): several rooms with eight computers, no extra websocket messages per move compared with `main`, no stalls at the first decision.
-- [ ] T043 Run the `speckit-sonar-local` skill (or `speckit-sonar-validate` once a PR exists) and fix reported issues in the new code.
+- [x] T042 Optional manual load check (quickstart section 4, `npm run test:e2e` via the `run-e2e` skill): several rooms with eight computers, no extra websocket messages per move compared with `main`, no stalls at the first decision. Ran the e2e suite (10/10 pass: 2 and 8 clients, computers, parallel games, identical state on all clients, reconnect, takeover); the design adds no websocket events, the message count against `main` was not measured.
+- [x] T043 Run the `speckit-sonar-local` skill (or `speckit-sonar-validate` once a PR exists) and fix reported issues in the new code. Covered by the CI `sonar` job (quality gate passes on PR #28); the local scan was skipped.
 - [x] T044 [P] Review `apps/backend/src/app/lobby/game-room.ts` and `libs/game-rules/src/lib/computer/` for dead code left from the old `ComputerLevel`/`levelFor` path and remove it.
 - [x] T045 Confirm the large-scale success criteria once with a throwaway script run via the scratchpad (not committed): 1,000+ seeded games hard/medium/easy (SC-001), 10,000 random-rule games over all combinations (SC-004), shares of random skill/risk (SC-005); record the numbers in the PR description.
 
