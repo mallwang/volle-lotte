@@ -80,7 +80,7 @@ description: 'Task list for 008 Desktop Minimum Size and Table Polish'
 - [x] T019 [US3] (no fix needed, seat cards have no tab stop) Fix the tab order at the cause found in T018 so it is header, table controls (leave, settings, draw, dice, actions), then log; no positive `tabindex`; seat cards in `app/table/player-seat.ts` get no tabindex and no focusable children
 - [x] T020 [P] [US3] In `styles.css` add one global rule `:focus-visible { outline: 3px solid var(--p-primary-color); outline-offset: 2px; }` covering buttons, links, selects, dice (keep `shared/dice-tile.ts` consistent) and PrimeNG buttons; remove conflicting weaker rules; if the primary colour has too little contrast on a filled button or on the dark background add an inner ring (`box-shadow: 0 0 0 2px var(--vl-bg)`); make the ring 4 px if it renders under 2 px at scale 0.7 (FR-008)
 - [x] T021 [P] [US3] Component test in `app/table/table.spec.ts` (or `player-seat.spec.ts`): seat cards contain no focusable element and no `tabindex`; DOM order places leave/settings and turn controls before the log section
-- [ ] T022 [US3] Verify per quickstart section 4: tab-through at 1024x640 and 1920x950, light and dark, EN and DE; play one complete turn (draw, throw, select, set aside, bank) with the keyboard only; measure the ring contrast against its background (at least 3:1)
+- [x] T022 [US3] Verify per quickstart section 4: tab-through at 1024x640 and 1920x950, light and dark, EN and DE; play one complete turn (draw, throw, select, set aside, bank) with the keyboard only; measure the ring contrast against its background (at least 3:1)
 
 ---
 
@@ -90,9 +90,9 @@ description: 'Task list for 008 Desktop Minimum Size and Table Polish'
 
 **Independent Test**: [quickstart.md](quickstart.md) section 5.
 
-- [ ] T023 [US4] Measure contrast of body text, state markers and icons in light and dark theme (script computing ratios from computed styles) for 2, 4, 8 players; body text must stay at 8.6:1 or better, non-text markers must not rely on colour alone; fix tokens in `app/theme/terracotta-preset.ts` or `styles.css` only where a check fails
-- [ ] T024 [US4] Check text fit at scale 0.7 in EN and DE: no label cut off or overlapping, including the longest Secured-area texts for Street, Star, Clover and "Double Lotte" (`app/table/dice-area.ts`, `app/i18n/de.ts`); fix wrapping or widths where needed without changing positions
-- [ ] T025 [US4] Judge readability of the smallest text (log 0.75 rem, seat captions, card captions) at 1024x640; if unreadable either raise the smallest sizes in the reference size or raise `MIN_SCALE` in `app/core/table-scale.ts`; record the final value in spec.md (FR-002, Assumptions) and `docs/roadmap.md`
+- [x] T023 [US4] Measure contrast of body text, state markers and icons in light and dark theme (script computing ratios from computed styles) for 2, 4, 8 players; body text must stay at 8.6:1 or better, non-text markers must not rely on colour alone; fix tokens in `app/theme/terracotta-preset.ts` or `styles.css` only where a check fails
+- [x] T024 [US4] Check text fit at scale 0.7 in EN and DE: no label cut off or overlapping, including the longest Secured-area texts for Street, Star, Clover and "Double Lotte" (`app/table/dice-area.ts`, `app/i18n/de.ts`); fix wrapping or widths where needed without changing positions
+- [x] T025 [US4] Judge readability of the smallest text (log 0.75 rem, seat captions, card captions) at 1024x640; if unreadable either raise the smallest sizes in the reference size or raise `MIN_SCALE` in `app/core/table-scale.ts`; record the final value in spec.md (FR-002, Assumptions) and `docs/roadmap.md`
 - [ ] T026 [US4] Repeat the spec 007 quickstart walk-through ([specs/007-active-game-table-ui/quickstart.md](../007-active-game-table-ui/quickstart.md)) at 1024 px and wider for 2, 4, 8 players, both themes and languages: no overlap, no cut-off, no horizontal scroll (SC-006); confirm the earlier "seats cut off at 1024 px" finding does not occur
 
 ---
