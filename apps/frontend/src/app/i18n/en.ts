@@ -5,6 +5,12 @@ export const en = {
   'theme.system': 'System',
   'theme.light': 'Light',
   'theme.dark': 'Dark',
+  'scale.notice': 'Table scaled to fit your window ({percent}%).',
+  'scale.dismiss': 'Dismiss',
+  'scale.tooSmall.title': 'Window too small',
+  'scale.tooSmall.body':
+    'Please enlarge the window to at least {width} x {height} px. Current size: {currentWidth} x {currentHeight} px.',
+  'scale.tooSmall.running': 'The game keeps running in the meantime.',
   'nav.main': 'Main',
   'nav.games': 'Lobby',
   'nav.create': 'Create game',
