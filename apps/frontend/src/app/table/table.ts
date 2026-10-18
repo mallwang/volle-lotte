@@ -162,6 +162,7 @@ const NOTICE_MS = 6000;
                 <app-dice-area
                   [dice]="diceShown()"
                   [selected]="shown()"
+                  [waitMs]="notice() ? NOTICE_MS : 0"
                   [canSelect]="mine() && turn.phase === 'select'"
                   [mine]="mine()"
                   [computerPick]="computerTurn()"
@@ -224,6 +225,7 @@ export class Table {
   protected readonly logOpen = signal(false);
   /** A computer took over my seat (timeouts); nothing here is playable anymore. */
   protected readonly removed = computed(() => (this.socket.game()?.you.seat ?? 0) < 0);
+  protected readonly NOTICE_MS = NOTICE_MS;
   /** Result of a turn: keeps the last throw and secured dice visible until the next player takes over. */
   protected readonly notice = signal<{
     dice: readonly number[];
@@ -706,7 +708,6 @@ export class Table {
   protected async act(action: Action): Promise<void> {
     const ack = await this.socket.send('turn:action', { action });
     if (ack.ok) this.chosen.set([]);
-    else
-      this.messages.add({ severity: 'error', detail: errorMessage(ack, this.i18n), sticky: true });
+    else this.messages.add({ severity: 'error', detail: errorMessage(ack, this.i18n), life: 6000 });
   }
 }

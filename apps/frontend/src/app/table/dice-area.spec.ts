@@ -62,6 +62,12 @@ describe('DiceArea', () => {
     expect(el.querySelector('.vl-safe > small')!.textContent).toMatch(/300/);
   });
 
+  it('shows a countdown bar while waiting for the next turn', () => {
+    const { el } = make({ waitMs: 6000 });
+    const bar = el.querySelector<HTMLElement>('.vl-bust-timer')!;
+    expect(bar.style.animationDuration).toBe('6000ms');
+  });
+
   it('shows Street progress with missing values marked', () => {
     const { el } = make({ street: [1, 2] });
     expect(el.querySelectorAll('.vl-street .vl-missing')).toHaveLength(4);

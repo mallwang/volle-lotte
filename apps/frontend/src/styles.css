@@ -980,3 +980,8 @@ a.vl-menu-link:hover {
     animation: none;
   }
 }
+
+/* the close button sits in the corner: keep the text clear of it */
+.p-toast-message-text {
+  padding-inline-end: 1.5rem;
+}
