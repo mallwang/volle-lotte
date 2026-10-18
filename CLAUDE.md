@@ -13,7 +13,7 @@ The Java reference lives as a copy in `tmp/java/` (git-ignored, read-only).
 ## Workspace
 
 - Nx monorepo (npm workspaces): `apps/frontend` (Angular), `apps/backend` (NestJS), `libs/game-rules` (shared). Use npm >= 11 (`packageManager` in `package.json`).
-- Run everything through Nx: `npm run dev|build|test|lint|typecheck`. Module boundaries are enforced via `scope:*` tags.
+- Run everything through Nx: `npm run dev|build|test|lint|typecheck`. `npm run test:e2e` (slow end-to-end flows, manual via the `run-e2e` skill) is not part of CI or the hooks. Module boundaries are enforced via `scope:*` tags.
 - Git hooks (husky): pre-commit runs lint-staged (secretlint, eslint, prettier); pre-push runs affected typecheck and tests.
 - Spec-Kit git extension hooks auto-commit around each `/speckit-*` phase; `/speckit-format` runs before those commits.
 - Releases: `npm run release` (Nx Release, conventional commits, fixed version).

@@ -11,6 +11,8 @@ module.exports = {
   displayName: 'backend',
   preset: '../../jest.preset.js',
   testEnvironment: 'node',
+  // slow end-to-end flows run only via `npm run test:e2e`
+  testPathIgnorePatterns: ['/node_modules/', '\\.e2e\\.spec\\.ts$'],
   transform: {
     '^.+\\.[tj]s$': ['@swc/jest', swcJestConfig],
   },
