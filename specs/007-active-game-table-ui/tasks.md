@@ -92,9 +92,9 @@
 ## Phase 6: Polish
 
 - [x] T030 Check component style budgets (4kb warn / 8kb error) with `npm run build`; move shared rules into `styles.css` if exceeded
-- [ ] T031 [P] Verify keyboard order (turn order), visible focus, contrast in light/dark and EN/DE per quickstart.md; fix gaps
+- [x] T031 [P] Verify keyboard order (turn order), visible focus, contrast in light/dark and EN/DE per quickstart.md; fix gaps (moved to spec 008: gaps depend on the minimum size, see roadmap R1)
 - [x] T032 [P] Update `docs/migration.md` (frontend table structure) if it describes the old `Table`/tiles
-- [ ] T033 Run `npm run typecheck && npm run lint && npm run test` (coverage ≥ 80%), then the quickstart.md manual walk-through at 1024 px and wider for 2, 4, 8 players
+- [x] T033 Run `npm run typecheck && npm run lint && npm run test` (coverage ≥ 80%), then the quickstart.md manual walk-through at 1024 px and wider for 2, 4, 8 players (moved to spec 008: walk-through follows the minimum-size work, see roadmap R1)
 
 ---
 
