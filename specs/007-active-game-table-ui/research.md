@@ -19,8 +19,8 @@
 
 ## Seat layout
 
-- **Decision**: CSS grid with areas `tl t tr / l c r / bl b br` and an oval felt behind it. Own seat is rotated to `b`; the rest follow clockwise using the per-count area lists from design.md (2 → b,t; 4 → b,l,t,r; 8 → b,bl,l,tl,t,tr,r,br; other counts are subsets in the same clockwise order).
-- **Rationale**: Deterministic, testable as a pure function, no trigonometry or absolute positioning, keeps tab order = DOM order = clockwise.
+- **Decision**: CSS grid of three columns (seat column, centre, seat column) with up to four rows and an oval felt behind it. Own seat is rotated to the first position (`l1`, top left); the rest alternate right and left from top to bottom (`r1`, `l2`, `r2`, ...) using `seatAreas(count)`.
+- **Rationale**: Deterministic, testable as a pure function, no trigonometry or absolute positioning, keeps tab order = DOM order = turn order.
 - **Alternatives**: Absolute positions on an ellipse (fragile at small widths, harder to test).
 
 ## Component split
@@ -35,4 +35,4 @@
 
 ## Accessibility and i18n
 
-- **Decision**: Seats are list items in clockwise order with an accessible name (name, score, human/computer, offline, you, active). Active state also uses an icon/label, not only colour. New keys added to `en.ts` and `de.ts` (existing i18n spec enforces parity).
+- **Decision**: Seats are list items in turn order with an accessible name (name, score, human/computer, offline, you, active). Active state also uses an icon/label, not only colour. New keys added to `en.ts` and `de.ts` (existing i18n spec enforces parity).

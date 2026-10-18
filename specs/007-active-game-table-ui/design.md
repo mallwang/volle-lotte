@@ -4,24 +4,22 @@
 
 ## Approved layout
 
+> Updated after the implementation: the shipped layout (seats in two side columns, own seat top left) replaced the original oval arrangement (own seat bottom centre) and is the target layout for desktop. `mockup.html` still shows the original arrangement and is kept only as a look reference (colours, seat, piles, card).
+
 ```
 Game · Round 3                                   [⚙] [Leave game]
-┌ TableLayout (3x3 grid, oval felt behind) ───────────────┐ ┌ Log ─────┐
-│  [seat tl]        [seat t]         [seat tr]            │ │ GameLog  │
-│  [seat l]   ▒draw▒  [active card 2:3]  ░discard░  [seat r]│ │ (right,  │
-│  [seat bl]   [ME: seat b, highlighted]  [seat br]       │ │ scrolls) │
-└──────────────────────────────────────────────────────────┘ └──────────┘
-┌ DiceArea ───────────────────────────────┐ ┌ Secured ────────┐
-│ hint / bust message                     │ │ Street 3/6      │
-│ dice row                                │ │ safe groups     │
-│ [Throw] [Bank 350]  (hints below)       │ │ Bank: 350       │
-└─────────────────────────────────────────┘ └─────────────────┘
+┌ TableLayout (3 columns, up to 4 rows, oval felt behind) ┐ ┌ Log ─────┐
+│ [ME  l1]                                        [r1]    │ │ GameLog  │
+│ [l2]      ▒draw▒  [active card 2:3]  ░discard░    [r2]  │ │          │
+│ [l3]            dice, actions, hints              [r3]  │ │          │
+│ [l4]            [Secured: Street, safe groups]    [r4]  │ │          │
+└─────────────────────────────────────────────────────────┘ └──────────┘
 ```
 
-- **Seats** (FR-001..005): clockwise from the local player. 8 players = b, bl, l, tl, t, tr, r, br (3 top, 3 bottom incl. own, 1 left, 1 right); 4 = b, l, t, r; 2 = b, t. Own seat lavender with "You" chip, active seat primary border plus timer bar at the bottom edge of the card, offline seat dashed with a "Reconnecting" chip.
+- **Seats** (FR-001..005): two side columns around the felt, in turn order starting with the local player: l1 (own, top left), r1, l2, r2, ... down to l4/r4 for 8 players; 2 players = l1, r1; 4 = l1, r1, l2, r2. Own seat lavender with "You" chip, active seat primary border plus timer bar at the bottom edge of the card, offline seat dashed with a "Reconnecting" chip.
 - **Centre** (FR-006..010): draw pile (tidy, layered, count label, four levels incl. empty outline), CSS active card 2:3 with value, icon and name, discard pile (untidy, rotation and offset deterministic from the layer index, layers grow with played cards, count label).
 - **DiceArea** (FR-011): dice (existing pip grid and rolling animation), actions with their hint lines, bust message, computer/offline hints; "Secured" panel with Street and safe groups.
-- **GameLog** (FR-011): right column, scrolls; the old player list and text lines for deck and active player are gone (FR-012).
+- **GameLog** (FR-011): scrolls; the old player list and text lines for deck and active player are gone (FR-012).
 - Look follows the Terracotta tokens of [003 design](../003-ui-foundation-primeng/design.md), light and dark.
 
 ## Requirement traceability

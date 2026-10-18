@@ -5,7 +5,7 @@ UI contracts for standalone components (signal inputs / outputs). All presentati
 | Component     | Inputs                                                                                                              | Outputs                                  |
 | ------------- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
 | `PlayerSeat`  | `name`, `score`, `computer`, `online`, `active`, `you`, `deadlineAt?` (timer shown only when set)                   | none                                     |
-| `TableLayout` | `areas` (list of `SeatArea`, clockwise from own seat); slots: seats, centre                                         | none                                     |
+| `TableLayout` | seats projected with a `vl-area-<area>` class (`SeatArea`, own seat first); slots: seats, centre                    | none                                     |
 | `GameCard`    | `card: CardType \| null`                                                                                            | none                                     |
 | `CardDeck`    | `size`, `total`                                                                                                     | none                                     |
 | `DiscardPile` | `played`                                                                                                            | none                                     |
