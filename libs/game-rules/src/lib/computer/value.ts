@@ -49,7 +49,7 @@ export class ValueTable {
   constructor(private readonly key: TableKey) {
     this.carried = bucket(key.carried);
     this.values = Array.from({ length: 7 }, () =>
-      new Float64Array(RUN_CAP / RUN_STEP + 1).fill(NaN),
+      new Float64Array(RUN_CAP / RUN_STEP + 1).fill(Number.NaN),
     );
   }
 
@@ -140,6 +140,9 @@ export function tableFor(
   }
   return table;
 }
+
+/** Drops all shared tables (cold-start measurements in specs). */
+export const resetTables = (): void => tables.clear();
 
 /** Number of shared tables currently held (for the cache-bound test). */
 export const tableCount = (): number => tables.size;

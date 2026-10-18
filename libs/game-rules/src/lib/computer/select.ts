@@ -8,13 +8,13 @@ import type { Skill } from './profile.js';
 import { tableFor } from './value.js';
 
 /** Cards on which every computer sets aside all dice it can. */
-const ALL_DICE_CARDS: readonly CardType[] = [
+const ALL_DICE_CARDS: ReadonlySet<CardType> = new Set<CardType>([
   'street',
   'doubleLotte',
   'plusMinus',
   'clover',
   'star',
-];
+]);
 
 /** Draws an index with probability proportional to exp(value / temperature). */
 export function softmaxIndex(
@@ -64,7 +64,7 @@ export function chooseSelect(
   rng: RandomInt,
 ): Select {
   const turn = state.turn;
-  if (!turn || !turn.card) return legal[0];
+  if (!turn?.card) return legal[0];
   const points = (a: Select) =>
     Math.max(
       0,
@@ -73,7 +73,7 @@ export function chooseSelect(
         state.rules,
       ),
     );
-  if (ALL_DICE_CARDS.includes(turn.card)) return chooseAllDice(legal, points, skill, rng);
+  if (ALL_DICE_CARDS.has(turn.card)) return chooseAllDice(legal, points, skill, rng);
   if (skill === 'easy') return easySelect(legal, points, rng);
   const table = tableFor(
     state.rules,

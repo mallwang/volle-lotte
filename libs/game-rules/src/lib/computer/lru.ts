@@ -8,6 +8,10 @@ export class Lru<K, V> {
     return this.map.size;
   }
 
+  clear(): void {
+    this.map.clear();
+  }
+
   get(key: K): V | undefined {
     const value = this.map.get(key);
     if (value !== undefined) {

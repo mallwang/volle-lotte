@@ -145,11 +145,18 @@ export function allDiceStats(doubling: boolean): AllDiceStats {
 
 let streetProbability: number | undefined;
 
+/** Forgets everything built so far (cold-start measurements in specs). */
+export function resetOdds(): void {
+  cache.clear();
+  statsCache.clear();
+  streetProbability = undefined;
+}
+
 /** Probability to complete a Street (all six values) when each throw takes one die of every missing value. */
 export function streetChance(): number {
   if (streetProbability !== undefined) return streetProbability;
   const memo = new Map<number, number>();
-  const popcount = (x: number) => x.toString(2).replace(/0/g, '').length;
+  const popcount = (x: number) => x.toString(2).replaceAll('0', '').length;
   const win = (have: number): number => {
     const k = 6 - popcount(have);
     if (k === 0) return 1;
