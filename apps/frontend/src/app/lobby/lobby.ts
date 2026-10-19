@@ -96,13 +96,15 @@ const HOST_CHANGED_TOAST_MS = 10_000;
               <p-tag [value]="'lobby.running' | t" icon="pi pi-play" severity="info" />
             }
             @if (g.spectatable && !g.banned && !g.rejoinable && !g.closable) {
-              <p-button
-                [label]="'lobby.watch' | t"
-                icon="pi pi-eye"
-                severity="secondary"
-                [outlined]="true"
-                (onClick)="open(g, $event, true)"
-              />
+              <div class="vl-card-watch">
+                <p-button
+                  [label]="'lobby.watch' | t"
+                  icon="pi pi-eye"
+                  severity="secondary"
+                  [outlined]="true"
+                  (onClick)="open(g, $event, true)"
+                />
+              </div>
             }
           </p-card>
         </li>

@@ -359,7 +359,8 @@ export const de: Record<keyof typeof en, string> = {
   'gameOver.seatReserved':
     '{name} hat eine Revanche gestartet. Dein Platz {n} ist für dich reserviert.',
   'gameOver.startedWithoutYou': 'Das nächste Spiel hat schon ohne dich begonnen.',
-  'gameOver.spectatorHint': 'Du hast zugeschaut. Revanchen sind für die Spieler.',
+  'gameOver.spectatorHint':
+    'Danke fürs Zuschauen! Wir hoffen, du hattest Spaß, und freuen uns, dich beim nächsten Mal wiederzusehen.',
 
   'log.drew': '{who} zog {card}',
   'log.threw': '{who} würfelte {dice}',

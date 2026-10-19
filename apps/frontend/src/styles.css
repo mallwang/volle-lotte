@@ -635,8 +635,20 @@ a.vl-menu-link:hover {
   padding: 0.4rem 0.8rem;
   border-radius: 6px;
   text-align: center;
-  background: var(--p-content-hover-background, #f1f5f9);
-  color: var(--p-text-color);
+  background: var(--p-blue-50, #eff6ff);
+  border: 1px solid var(--p-blue-200, #bfdbfe);
+  color: var(--p-blue-700, #1d4ed8);
+  font-weight: 700;
+}
+.app-dark .vl-watching {
+  background: color-mix(in srgb, var(--p-blue-500, #3b82f6) 15%, transparent);
+  border-color: var(--p-blue-700, #1d4ed8);
+  color: var(--p-blue-300, #93c5fd);
+}
+.vl-card-watch {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.75rem;
 }
 .vl-spectators {
   display: inline-flex;

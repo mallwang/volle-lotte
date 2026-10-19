@@ -342,7 +342,8 @@ export const en = {
   'gameOver.waitingForHost': 'Waiting for {name} to decide about a rematch.',
   'gameOver.seatReserved': '{name} started a rematch. Your seat {n} is reserved for you.',
   'gameOver.startedWithoutYou': 'The next game has already started without you.',
-  'gameOver.spectatorHint': 'You were watching. Rematches are for the players.',
+  'gameOver.spectatorHint':
+    'Thanks for watching! We hope you had fun and look forward to seeing you next time.',
 
   'log.drew': '{who} drew {card}',
   'log.threw': '{who} threw {dice}',

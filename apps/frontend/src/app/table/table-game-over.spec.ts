@@ -240,7 +240,7 @@ describe('Table game-over modal', () => {
     );
     const text = dialog()?.textContent ?? '';
     expect(text).toContain('Ann won.');
-    expect(text).toContain('Rematches are for the players');
+    expect(text).toContain('Thanks for watching');
     const buttons = [...dialog()!.querySelectorAll('button')].map((b) => b.textContent?.trim());
     expect(buttons).toEqual(['Back to the lobby']);
     expect(celebration.start).not.toHaveBeenCalled();
