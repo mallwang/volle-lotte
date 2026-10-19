@@ -1,6 +1,6 @@
 import type { LogEntry } from 'game-rules';
 import { gameView } from './testing';
-import { logText, rematchState, seatName } from './game-view';
+import { isHost, isSpectator, logText, rematchState, seatName } from './game-view';
 import { I18nService } from './i18n.service';
 import { TestBed } from '@angular/core/testing';
 
@@ -64,5 +64,16 @@ describe('rematch state', () => {
     ]);
     const entry: LogEntry = { at: 0, kind: 'rematch', seat: 0 };
     expect(logText(game, entry, TestBed.inject(I18nService))).toBe('Ann started a rematch');
+  });
+});
+
+describe('isSpectator', () => {
+  it('is true only for a spectator view and never makes a spectator the host', () => {
+    expect(isSpectator(gameView())).toBe(false);
+    const view = gameView({
+      you: { playerId: 'v1', seat: -1, timeoutWarning: false, spectator: true },
+    });
+    expect(isSpectator(view)).toBe(true);
+    expect(isHost(view)).toBe(false);
   });
 });

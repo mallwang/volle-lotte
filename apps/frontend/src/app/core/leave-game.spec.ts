@@ -196,4 +196,19 @@ describe('leaveGameGuard', () => {
     expect(await result).toBe(false);
     expect(leave.leaving()).toBe(false);
   });
+
+  it('lets a spectator leave without a dialog, and tells the server', async () => {
+    const watching = gameView({
+      phase: 'running',
+      you: { playerId: 'v1', seat: -1, timeoutWarning: false, spectator: true },
+    });
+    const { socket, confirmation, leave } = setup(watching);
+    expect(leave.situation()).toBe('none');
+    await leave.request();
+    expect(confirmation.confirm).not.toHaveBeenCalled();
+    expect(socket.leave).toHaveBeenCalledTimes(1);
+    expect(await guard()).toBe(true);
+    expect(socket.leave).toHaveBeenCalledTimes(2);
+    expect(confirmation.confirm).not.toHaveBeenCalled();
+  });
 });

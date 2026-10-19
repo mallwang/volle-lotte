@@ -1,0 +1,1013 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Spectators</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: light;
+
+        /* App tokens: terracotta theme (specs/003-ui-foundation-primeng/design.md), light + dark below */
+        --bg: #fbf1ea;
+        --surface: #fffaf6;
+        --surface-2: #f3dccd;
+        --line: #e6c3ad;
+        --text: #3a241b;
+        --muted: #7b5a4c;
+        --primary: #a8431f;
+        --on-primary: #fff;
+        --mint: #d3e8d6;
+        --on-mint: #1f4a2c;
+        --lavender: #e6dcef;
+        --on-lavender: #44305f;
+        --butter: #f6e3a8;
+        --on-butter: #5a4300;
+
+        /* Review-tool-only tokens */
+        --review-bg: #f3f2ee;
+        --review-ink: #2c2a25;
+        --review-muted: #7a7669;
+        --review-line: #ddd9d0;
+        --review-accent: #b45f2c;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--review-bg);
+        color: var(--review-ink);
+        font-family:
+          'Nunito',
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        text-wrap: balance;
+      }
+
+      /* ============ Review-tool chrome (reusable as-is) ============ */
+
+      .review-header {
+        padding: 1.5rem 2rem 1rem;
+        border-bottom: 1px solid var(--review-line);
+      }
+      .review-eyebrow {
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--review-accent);
+        font-weight: 700;
+        margin: 0 0 0.25rem;
+      }
+      .review-header h1 {
+        margin: 0 0 0.35rem;
+        font-size: 1.35rem;
+        font-weight: 800;
+      }
+      .review-header p {
+        margin: 0;
+        color: var(--review-muted);
+        font-size: 0.9rem;
+        max-width: 68ch;
+        line-height: 1.5;
+      }
+
+      .review-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.25rem;
+        align-items: center;
+        padding: 0.85rem 2rem;
+        background: #fff;
+        border-bottom: 1px solid var(--review-line);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+      .control-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .control-group span.label {
+        font-size: 0.72rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--review-muted);
+        font-weight: 700;
+      }
+
+      .segmented {
+        display: inline-flex;
+        border: 1px solid var(--review-line);
+        border-radius: 8px;
+        overflow: hidden;
+        flex-wrap: wrap;
+      }
+      .segmented button {
+        appearance: none;
+        border: none;
+        background: #fff;
+        color: var(--review-ink);
+        font: inherit;
+        font-size: 0.83rem;
+        font-weight: 600;
+        padding: 0.4rem 0.75rem;
+        cursor: pointer;
+        border-right: 1px solid var(--review-line);
+      }
+      .segmented button:last-child {
+        border-right: none;
+      }
+      .segmented button:hover {
+        background: #f1efe9;
+      }
+      .segmented button:focus-visible {
+        outline: 2px solid var(--review-accent);
+        outline-offset: -2px;
+      }
+      .segmented button[aria-pressed='true'] {
+        background: var(--review-accent);
+        color: #fff;
+      }
+
+      .review-stage {
+        padding: 2rem;
+        display: flex;
+        justify-content: center;
+      }
+
+      .stage-frame {
+        width: 100%;
+        max-width: 1180px;
+        background: #d9d4c8;
+        border-radius: 14px;
+        padding: 1.25rem;
+        transition: max-width 0.2s ease;
+      }
+      .stage-frame[data-viewport='mobile'] {
+        max-width: 400px;
+      }
+
+      .stage-frame-label {
+        font-size: 0.72rem;
+        color: var(--review-muted);
+        text-align: center;
+        margin: 0 0 0.5rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .canvas {
+        background: var(--bg, #fff);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+        color: var(--text, #1a1a1a);
+      }
+
+      .review-footer {
+        padding: 0 2rem 2rem;
+        max-width: 1180px;
+        margin: 0 auto;
+        font-size: 0.85rem;
+        color: var(--review-muted);
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+      }
+      .review-footer code {
+        background: #fff;
+        border: 1px solid var(--review-line);
+        border-radius: 4px;
+        padding: 0.1em 0.4em;
+        font-size: 0.8em;
+      }
+      .review-footer h3 {
+        margin: 0.5rem 0 0;
+        font-size: 0.8rem;
+        color: var(--review-ink);
+      }
+      .review-footer ul {
+        margin: 0.25rem 0 0.5rem;
+        padding-left: 1.1rem;
+      }
+
+      /* ============ generic state-visibility mechanism (reusable as-is) ============ */
+
+      /* state visibility: JS toggles [hidden] from data-show tokens, e.g. data-show="select rolling" ("all" = always) */
+      [hidden] {
+        display: none !important;
+      }
+
+      /* ============ app shell: mirrors apps/frontend (.vl-header, .vl-main, .vl-table, .vl-players, .vl-log, ...) ============ */
+      .canvas.dark {
+        --bg: #1c1411;
+        --surface: #2a1d18;
+        --surface-2: #3b2a22;
+        --line: #52382c;
+        --text: #f5e6dc;
+        --muted: #cbaa98;
+        --primary: #f08a5d;
+        --on-primary: #2a1008;
+        --mint: #244a38;
+        --on-mint: #c9f1db;
+        --lavender: #3a3159;
+        --on-lavender: #e0d8fa;
+        --butter: #4d4018;
+        --on-butter: #ffefb0;
+      }
+      .canvas {
+        font-size: 16px;
+        position: relative;
+        min-height: 640px;
+      }
+      .canvas h1,
+      .canvas h2,
+      .canvas h3 {
+        text-wrap: wrap;
+      }
+      .vl-header {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.75rem 1rem;
+      }
+      .vl-header h1 {
+        margin: 0;
+        font-size: 1.5rem;
+      }
+      .vl-hdr-r {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        margin-left: auto;
+      }
+      .ibtn {
+        min-width: 44px;
+        min-height: 44px;
+        border: 1px solid transparent;
+        background: transparent;
+        color: var(--text);
+        border-radius: 8px;
+        font: inherit;
+        font-size: 1.2rem;
+        cursor: pointer;
+      }
+      .ibtn:hover {
+        background: var(--surface-2);
+      }
+      .lang {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        min-height: 44px;
+        padding: 0 0.5rem;
+        color: var(--text);
+      }
+      .flag {
+        width: 1.75rem;
+        height: 1.17rem;
+        border-radius: 2px;
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
+        background: linear-gradient(#000 33%, #d00 33% 66%, #fc0 66%);
+      }
+      .vl-main {
+        max-width: 64rem;
+        margin: 0 auto;
+        padding: 0 1rem 1rem;
+      }
+      .vl-title-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+      }
+      .vl-main h2 {
+        margin: 0.5rem 0;
+        font-size: 1.4rem;
+      }
+      .vl-main p {
+        margin: 0.35rem 0;
+      }
+      .vl-table {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: 1fr;
+      }
+      @media (min-width: 900px) {
+        .canvas[data-vp='desktop'] .vl-table {
+          grid-template-columns: 1fr 18rem;
+        }
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .vl-status {
+        display: inline-block;
+        border-radius: 999px;
+        padding: 0.1rem 0.6rem;
+        font-size: 0.82rem;
+      }
+      .mint {
+        background: var(--mint);
+        color: var(--on-mint);
+      }
+      .lav {
+        background: var(--lavender);
+        color: var(--on-lavender);
+      }
+      .butter {
+        background: var(--butter);
+        color: var(--on-butter);
+      }
+      .vl-card {
+        display: inline-block;
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.5rem;
+        border: 1px solid var(--line);
+        background: var(--surface);
+      }
+      .vl-dice {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin: 1.25rem 0;
+        position: relative;
+      }
+      .vl-turn-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+        gap: 0.75rem;
+      }
+      .vl-turn-actions small {
+        display: block;
+        min-height: 1.25rem;
+        color: var(--muted);
+      }
+      .btn {
+        width: 100%;
+        border: 0;
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        font: inherit;
+        font-weight: 700;
+        min-height: 44px;
+        background: var(--primary);
+        color: var(--on-primary);
+      }
+      .btn[disabled] {
+        opacity: 0.45;
+      }
+      .btn.sec {
+        background: transparent;
+        color: var(--primary);
+        border: 1px solid var(--primary);
+        width: auto;
+      }
+      .vl-players {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+        padding: 0;
+        margin: 0;
+        list-style: none;
+      }
+      .vl-player {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--line);
+        border-radius: 0.5rem;
+        background: var(--surface);
+      }
+      .vl-player.cur {
+        border: 2px solid var(--primary);
+      }
+      .vl-log {
+        max-height: 14rem;
+        font-size: 0.8125rem;
+        line-height: 1.3;
+        overflow-y: auto;
+        margin: 0;
+        padding-left: 1.5rem;
+      }
+      .vl-log li {
+        padding: 0.2rem 0;
+      }
+      /* dialog (overlays the canvas) */
+      .scrim {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 4rem 1rem;
+        z-index: 5;
+      }
+      .dlg {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        width: 100%;
+        max-width: 26rem;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+      }
+      .dlg h3 {
+        margin: 0 0 0.5rem;
+        font-size: 1.1rem;
+      }
+      .set {
+        display: flex;
+        gap: 0.8rem;
+        align-items: flex-start;
+        padding: 0.7rem 0;
+        border-top: 1px solid var(--line);
+      }
+      .set small {
+        display: block;
+        color: var(--muted);
+        margin-top: 0.15rem;
+      }
+      .set.ro {
+        opacity: 0.6;
+      }
+      .sw {
+        width: 44px;
+        height: 26px;
+        border-radius: 99px;
+        background: var(--line);
+        position: relative;
+        flex: none;
+        margin-top: 2px;
+      }
+      .sw::after {
+        content: '';
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #fff;
+      }
+      .sw.on {
+        background: var(--primary);
+      }
+      .sw.on::after {
+        left: 21px;
+      }
+
+      /* ============ feature styles (authored fresh per feature) ============ */
+
+      .eye {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        border-radius: 999px;
+        padding: 0.15rem 0.7rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        background: var(--lavender);
+        color: var(--on-lavender);
+      }
+      .eye.zero {
+        background: transparent;
+        color: var(--muted);
+        border: 1px solid var(--line);
+      }
+      .vl-cards {
+        list-style: none;
+        margin: 0.5rem 0;
+        padding: 0;
+        display: grid;
+        gap: 0.75rem;
+        grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+      }
+      .vl-cards .vl-card {
+        display: block;
+        padding: 0.9rem 1rem;
+      }
+      .vl-cards h3 {
+        margin: 0 0 0.15rem;
+        font-size: 1.1rem;
+      }
+      .vl-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.6rem;
+        flex-wrap: wrap;
+      }
+      .vl-actions .btn {
+        width: auto;
+      }
+      .vl-banner {
+        border-radius: 8px;
+        padding: 0.5rem 0.75rem;
+        margin: 0.5rem 0;
+        font-size: 0.9rem;
+      }
+      .vl-banner.lav {
+        background: var(--lavender);
+        color: var(--on-lavender);
+      }
+      .vl-banner.butter {
+        background: var(--butter);
+        color: var(--on-butter);
+      }
+      .die {
+        width: 48px;
+        height: 48px;
+        border-radius: 9px;
+        border: 2px solid var(--line);
+        background: var(--surface);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 1.2rem;
+      }
+      .die.sec {
+        border-color: var(--primary);
+        background: var(--surface-2);
+      }
+      .vl-watchline {
+        margin: 0.5rem 0;
+        padding: 0.75rem 1rem;
+        border: 1px dashed var(--line);
+        border-radius: 8px;
+        color: var(--muted);
+      }
+      .vl-table-stub {
+        border: 1px dashed var(--line);
+        border-radius: 8px;
+        padding: 1rem;
+        color: var(--muted);
+      }
+      .vl-title-row h2 {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+      }
+      .vl-right {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .vl-rank {
+        list-style: none;
+        margin: 0.75rem 0 0;
+        padding: 0;
+        display: grid;
+        gap: 0.4rem;
+      }
+      .vl-rank li {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+      }
+      .set .info {
+        flex: 1;
+      }
+      .dlg .row-end {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 0.75rem;
+      }
+      .dlg .row-end .btn {
+        width: auto;
+      }
+      .vl-field {
+        display: grid;
+        gap: 0.25rem;
+        margin: 0.75rem 0;
+      }
+      .vl-field input {
+        min-height: 44px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 0 0.75rem;
+        font: inherit;
+        background: var(--surface);
+        color: var(--text);
+      }
+    </style>
+  </head>
+  <body>
+    <header class="review-header">
+      <p class="review-eyebrow">Non-functional review mockup</p>
+      <h1>Spectators</h1>
+      <p>
+        Spec 016. Watching a running game (games list, spectator table, counter), the settings
+        spectators and the host see, the game-over view and being sent back when the host turns
+        spectating off. Use the buttons or click Watch, the gear and the Allow spectators switch.
+      </p>
+    </header>
+
+    <div class="review-controls">
+      <div class="control-group">
+        <span class="label">Viewport</span>
+        <div class="segmented" id="viewport-toggle">
+          <button type="button" data-viewport="desktop" aria-pressed="true">Desktop</button>
+          <button type="button" data-viewport="mobile" aria-pressed="false">Mobile</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <span class="label">Screen</span>
+        <div class="segmented" id="screen-toggle">
+          <button type="button" data-screen="list" aria-pressed="true">Games list</button
+          ><button type="button" data-screen="pw" aria-pressed="false">Watch: password</button
+          ><button type="button" data-screen="spec" aria-pressed="false">Spectator: table</button
+          ><button type="button" data-screen="player" aria-pressed="false">Player: table</button
+          ><button type="button" data-screen="set-spec" aria-pressed="false">
+            Spectator: settings</button
+          ><button type="button" data-screen="set-host" aria-pressed="false">Host: settings</button
+          ><button type="button" data-screen="over" aria-pressed="false">
+            Spectator: game over</button
+          ><button type="button" data-screen="removed" aria-pressed="false">
+            Spectator: switched off
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="review-stage">
+      <div class="stage-frame" id="stage-frame" data-viewport="desktop">
+        <p class="stage-frame-label" id="stage-frame-label">Desktop (reference 992 px)</p>
+        <div class="canvas" data-screen="list" data-vp="desktop" id="canvas">
+          <header class="vl-header">
+            <h1>Volle Lotte</h1>
+            <div class="vl-hdr-r">
+              <span class="lang"><span class="flag"></span> ▾</span>
+              <button class="ibtn" type="button" aria-label="Toggle theme" id="theme">◐</button>
+            </div>
+          </header>
+          <main class="vl-main">
+            <div class="vl-title-row">
+              <h2>
+                <span data-show="list pw removed">Lobby</span
+                ><span data-show="spec player set-spec set-host over"
+                  >Friday Lotte
+                  <span class="vl-status butter" data-show="spec set-spec">Watching</span></span
+                >
+              </h2>
+              <div class="vl-right" data-show="spec player set-spec set-host over">
+                <span class="eye" id="eye" role="status" aria-label="3 spectators"
+                  >👁 3 <span data-show="spec set-spec over">watching</span
+                  ><span data-show="player set-host">spectators</span></span
+                >
+                <button
+                  class="ibtn"
+                  type="button"
+                  aria-label="Open settings"
+                  data-open="set-spec"
+                  data-show="spec"
+                >
+                  ⚙
+                </button>
+                <button
+                  class="ibtn"
+                  type="button"
+                  aria-label="Open settings"
+                  data-open="set-host"
+                  data-show="player"
+                >
+                  ⚙
+                </button>
+              </div>
+              <a
+                class="btn"
+                style="
+                  width: auto;
+                  display: inline-flex;
+                  align-items: center;
+                  text-decoration: none;
+                "
+                data-show="list pw removed"
+                >Create game</a
+              >
+            </div>
+            <p class="muted">
+              <span data-show="spec player set-spec set-host"
+                >Target 5000 · 3 players · running</span
+              ><span data-show="over">Finished · 3 players</span
+              ><span data-show="list pw removed"
+                >Running games can be watched unless the host turned spectating off.</span
+              >
+            </p>
+            <div class="vl-table" data-show="spec player set-spec set-host over">
+              <section data-show="spec player set-spec set-host over">
+                <div data-show="spec player set-spec set-host">
+                  <p class="vl-banner lav" data-show="spec set-spec">
+                    You are watching. You cannot play in this game.
+                  </p>
+                  <p>
+                    <span class="vl-status butter">Anna is playing</span>
+                    <span class="muted">Turn total 300</span>
+                  </p>
+                  <div class="vl-dice">
+                    <span class="die sec">1</span><span class="die sec">5</span
+                    ><span class="die">3</span><span class="die">2</span><span class="die">6</span
+                    ><span class="die">4</span>
+                  </div>
+                  <div class="vl-turn-actions" data-show="player set-host">
+                    <div>
+                      <button class="btn" type="button">Throw</button
+                      ><small>Anna may throw 4 dice</small>
+                    </div>
+                    <div><button class="btn" type="button">Bank 300</button><small></small></div>
+                  </div>
+                  <p class="vl-watchline" data-show="spec set-spec">
+                    [no play buttons for spectators: the action area shows only what the active
+                    player does]
+                  </p>
+                </div>
+                <div data-show="over">
+                  <div class="vl-table-stub">
+                    [finished table behind the modal: final scores, no play buttons]
+                  </div>
+                </div>
+                <p style="margin-top: 1rem">
+                  <button class="btn sec" type="button">Leave game</button>
+                </p>
+              </section>
+              <aside data-show="spec player set-spec set-host over">
+                <h3>Players</h3>
+                <ul class="vl-players" data-show="spec player set-spec set-host">
+                  <li class="vl-player cur">
+                    <strong>Anna</strong><span class="muted">2450</span
+                    ><span class="vl-status butter">Turn · 300</span>
+                  </li>
+                  <li class="vl-player"><strong>Markus</strong><span class="muted">3100</span></li>
+                  <li class="vl-player">
+                    <strong>Robo</strong><span class="muted">1850</span
+                    ><span class="vl-status lav">Computer</span>
+                  </li>
+                </ul>
+                <ul class="vl-players" data-show="over">
+                  <li class="vl-player"><strong>Markus</strong><span class="muted">5150</span></li>
+                  <li class="vl-player"><strong>Anna</strong><span class="muted">4700</span></li>
+                  <li class="vl-player"><strong>Robo</strong><span class="muted">3250</span></li>
+                </ul>
+                <h3>Log</h3>
+                <ol class="vl-log">
+                  <li data-show="spec player set-spec set-host">Anna secured 1 and 5.</li>
+                  <li data-show="spec player set-spec set-host">Anna threw 4 dice.</li>
+                  <li data-show="spec player set-spec set-host">Markus banked 450.</li>
+                  <li data-show="over">Markus reached the target score.</li>
+                  <li data-show="over">The game is over</li>
+                </ol>
+              </aside>
+            </div>
+
+            <div data-show="list pw removed">
+              <p class="vl-banner butter" data-show="removed" role="status">
+                The host turned spectating off. You are back in the lobby.
+              </p>
+              <ul class="vl-cards">
+                <li>
+                  <div class="vl-card">
+                    <h3>Friday Lotte</h3>
+                    <span class="muted">Host: Markus</span>
+                    <p style="margin: 0.4rem 0">
+                      Target 5000 · 3 of 8 seats <span class="vl-status butter">Running</span>
+                      <span class="vl-status lav">🔒 Password</span>
+                    </p>
+                    <div class="vl-actions">
+                      <button class="btn sec" type="button" data-open="pw">Watch</button>
+                    </div>
+                  </div>
+                </li>
+                <li>
+                  <div class="vl-card">
+                    <h3>Open round</h3>
+                    <span class="muted">Host: Ben</span>
+                    <p style="margin: 0.4rem 0">
+                      Target 5000 · 5 of 8 seats <span class="vl-status butter">Running</span>
+                      <span class="vl-status mint">Open</span>
+                    </p>
+                    <div class="vl-actions">
+                      <button class="btn sec" type="button" data-open="spec">Watch</button>
+                    </div>
+                  </div>
+                </li>
+                <li>
+                  <div class="vl-card">
+                    <h3>Private table</h3>
+                    <span class="muted">Host: Eva</span>
+                    <p style="margin: 0.4rem 0">
+                      Target 10000 · 4 of 4 seats <span class="vl-status butter">Running</span>
+                      <span class="vl-status mint">Open</span>
+                    </p>
+                    <p class="muted" style="margin: 0.2rem 0 0">
+                      Spectating is off for this game. [no Watch button]
+                    </p>
+                  </div>
+                </li>
+                <li>
+                  <div class="vl-card">
+                    <h3>Lunch break</h3>
+                    <span class="muted">Host: Sue</span>
+                    <p style="margin: 0.4rem 0">
+                      Target 5000 · 2 of 8 seats <span class="vl-status mint">Open</span>
+                    </p>
+                    <div class="vl-actions"><button class="btn" type="button">Join</button></div>
+                    <p class="muted" style="margin: 0.4rem 0 0">
+                      Not started yet: join as a player. [no Watch before the game runs]
+                    </p>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </main>
+
+          <div class="scrim" data-show="set-spec">
+            <div class="dlg" role="dialog" aria-label="Game settings">
+              <h3>Game settings</h3>
+              <p class="muted">Only for this game. Settings are not carried over to other games.</p>
+              <div class="set">
+                <span class="sw on"></span>
+                <div class="info">
+                  <strong>Skip dice animation</strong
+                  ><small>Only on this device. Dice show their value immediately.</small>
+                </div>
+              </div>
+              <p class="vl-hint muted" style="font-size: 0.85rem">
+                Spectators only see the settings that apply to them; all other settings stay with
+                the host.
+              </p>
+              <div class="row-end">
+                <button class="btn sec" type="button" data-open="spec">Close</button>
+              </div>
+            </div>
+          </div>
+          <div class="scrim" data-show="set-host">
+            <div class="dlg" role="dialog" aria-label="Game settings">
+              <h3>Game settings</h3>
+              <p class="muted">Only for this game. Settings are not carried over to other games.</p>
+              <div class="set">
+                <span class="sw on"></span>
+                <div class="info">
+                  <strong>Skip dice animation</strong
+                  ><small>Only on this device. Dice show their value immediately.</small>
+                </div>
+              </div>
+              <div class="set">
+                <span class="sw"></span>
+                <div class="info">
+                  <strong>Fast computer dice</strong
+                  ><small>Computer dice skip their rolling animation.</small>
+                </div>
+              </div>
+              <div class="set" id="spec-setting">
+                <span class="sw on" id="spec-sw"></span>
+                <div class="info">
+                  <strong>Allow spectators</strong
+                  ><small
+                    >Visitors can watch this game. Turning this off sends all current spectators
+                    back to the lobby.</small
+                  >
+                </div>
+              </div>
+              <p class="vl-banner butter" id="spec-off-hint" hidden>
+                Spectating is off. Nobody can watch; the counter is hidden. 3 spectators were sent
+                back to the lobby.
+              </p>
+              <div class="row-end">
+                <button class="btn sec" type="button" data-open="player">Close</button>
+              </div>
+            </div>
+          </div>
+          <div class="scrim" data-show="over">
+            <div class="dlg" role="dialog" aria-label="Game over">
+              <h3>Game over</h3>
+              <p style="font-size: 1.15rem; font-weight: 600; margin: 0">
+                Markus won with 5150 points.
+              </p>
+              <ul class="vl-rank">
+                <li><strong>1.</strong> Markus <span class="muted">5150</span></li>
+                <li><strong>2.</strong> Anna <span class="muted">4700</span></li>
+                <li><strong>3.</strong> Robo <span class="muted">3250</span></li>
+              </ul>
+              <p class="vl-hint muted" style="font-size: 0.85rem">
+                Thanks for watching! We hope you had fun and look forward to seeing you next time.
+              </p>
+              <div class="row-end">
+                <button class="btn" type="button" data-open="list">Back to the lobby</button>
+              </div>
+            </div>
+          </div>
+          <div class="scrim" data-show="pw">
+            <div class="dlg" role="dialog" aria-label="Watch Friday Lotte">
+              <h3>Watch Friday Lotte</h3>
+              <p class="muted">This game is protected. Enter the password to watch.</p>
+              <label class="vl-field">Password<input type="password" value="••••••" /></label>
+              <div class="row-end" style="gap: 0.5rem">
+                <button class="btn sec" type="button" data-open="list">Cancel</button
+                ><button class="btn" type="button" data-open="spec">Watch</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="review-footer">
+      <h3>What to look at</h3>
+      <ul>
+        <li>
+          Spectator table: same table, scores and log as the players, but no Throw/Bank buttons, and
+          only the skip-dice-animation setting.
+        </li>
+        <li>
+          Counter ("👁 3 watching") sits next to the game title for players and spectators alike.
+          Joining or leaving only changes this number; no log line, no toast.
+        </li>
+        <li>
+          Host settings gain one switch: Allow spectators. Off removes everybody and hides the
+          counter. There is no spectator list (spectators are anonymous).
+        </li>
+        <li>
+          Stand-ins: dice are plain squares; the real table uses the existing dice area. Icons here
+          are emoji; the real app uses PrimeIcons.
+        </li>
+      </ul>
+    </footer>
+
+    <script>
+      const canvas = document.getElementById('canvas');
+      const stageFrame = document.getElementById('stage-frame');
+      const stageLabel = document.getElementById('stage-frame-label');
+      const show = () => {
+        const v = canvas.dataset.screen;
+        canvas.querySelectorAll('[data-show]').forEach((e) => {
+          const t = e.dataset.show.split(' ');
+          e.hidden = !(t.includes('all') || t.includes(v));
+        });
+      };
+      const setScreen = (v) => {
+        canvas.dataset.screen = v;
+        show();
+        document
+          .querySelectorAll('#screen-toggle button[data-screen]')
+          .forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.screen === v)));
+      };
+      document.getElementById('screen-toggle').addEventListener('click', (e) => {
+        const b = e.target.closest('button[data-screen]');
+        if (b) setScreen(b.dataset.screen);
+      });
+      document
+        .querySelectorAll('[data-open]')
+        .forEach((b) => b.addEventListener('click', () => setScreen(b.dataset.open)));
+      document.getElementById('viewport-toggle').addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-viewport]');
+        if (!btn) return;
+        const value = btn.dataset.viewport;
+        stageFrame.dataset.viewport = value;
+        canvas.dataset.vp = value;
+        stageLabel.textContent =
+          value === 'mobile' ? 'Mobile (360 px)' : 'Desktop (reference 992 px)';
+        document
+          .querySelectorAll('#viewport-toggle button')
+          .forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+      });
+      document
+        .getElementById('theme')
+        .addEventListener('click', () => canvas.classList.toggle('dark'));
+
+      const sw = document.getElementById('spec-sw');
+      const hint = document.getElementById('spec-off-hint');
+      const eye = document.getElementById('eye');
+      document.getElementById('spec-setting').addEventListener('click', () => {
+        const on = sw.classList.toggle('on');
+        hint.hidden = on;
+        eye.style.visibility = on ? '' : 'hidden';
+      });
+      show();
+    </script>
+  </body>
+</html>

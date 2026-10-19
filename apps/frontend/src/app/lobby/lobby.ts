@@ -95,6 +95,17 @@ const HOST_CHANGED_TOAST_MS = 10_000;
             } @else {
               <p-tag [value]="'lobby.running' | t" icon="pi pi-play" severity="info" />
             }
+            @if (g.spectatable && !g.banned && !g.rejoinable && !g.closable) {
+              <div class="vl-card-watch">
+                <p-button
+                  [label]="'lobby.watch' | t"
+                  icon="pi pi-eye"
+                  severity="secondary"
+                  [outlined]="true"
+                  (onClick)="open(g, $event, true)"
+                />
+              </div>
+            }
           </p-card>
         </li>
       }
@@ -103,7 +114,10 @@ const HOST_CHANGED_TOAST_MS = 10_000;
       [visible]="!!selectedGame()"
       (visibleChange)="!$event && close()"
       [modal]="true"
-      [header]="'lobby.joinTitle' | t: { name: selectedGame()?.name ?? '' }"
+      [header]="
+        (watching() ? 'lobby.watchTitle' : 'lobby.joinTitle')
+          | t: { name: selectedGame()?.name ?? '' }
+      "
       appendTo="self"
       [style]="{ width: '24rem', maxWidth: '95vw' }"
     >
@@ -127,7 +141,11 @@ const HOST_CHANGED_TOAST_MS = 10_000;
           <p-message severity="error" role="alert">{{ error()?.() }}</p-message>
         }
         <div class="vl-actions">
-          <p-button type="submit" [label]="'lobby.enter' | t" [disabled]="retry() > 0" />
+          <p-button
+            type="submit"
+            [label]="(watching() ? 'lobby.watch' : 'lobby.enter') | t"
+            [disabled]="retry() > 0"
+          />
         </div>
       </form>
     </p-dialog>
@@ -144,6 +162,8 @@ export class Lobby {
     () => this.socket.games().find((g) => g.id === this.selected()) ?? null,
   );
   protected readonly password = signal('');
+  /** The open password dialog is for watching, not for joining. */
+  protected readonly watching = signal(false);
   protected readonly error = signal<Msg | null>(null);
   protected readonly retry = signal(0);
   /** Game whose end confirmation is open. */
@@ -166,9 +186,10 @@ export class Lobby {
   }
 
   /** Open games are joined with one tap, protected ones ask for the password first. */
-  protected open(g: GameSummary, event: Event): void {
+  protected open(g: GameSummary, event: Event, watch = false): void {
     this.trigger = (event.target as HTMLElement).closest('button') ?? undefined;
     this.error.set(null);
+    this.watching.set(watch);
     if (g.protected) this.selected.set(g.id);
     else void this.join(g);
   }
@@ -180,7 +201,10 @@ export class Lobby {
   }
 
   protected async join(g: GameSummary): Promise<void> {
-    const ack = await this.socket.join({ gameId: g.id, password: this.password() });
+    const payload = { gameId: g.id, password: this.password() };
+    const ack = this.watching()
+      ? await this.socket.spectate(payload)
+      : await this.socket.join(payload);
     if (ack.ok) {
       this.password.set('');
       await this.router.navigate(['/game', g.id]);

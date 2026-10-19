@@ -1,5 +1,5 @@
 import { defaultRules } from 'game-rules';
-import { GameRegistryService, LOBBY_CLEANUP_MS } from './game-registry.service';
+import { GameRegistryService, LOBBY_CLEANUP_MS, RUNNING_CLEANUP_MS } from './game-registry.service';
 
 const make = (reg: GameRegistryService) =>
   reg.create({
@@ -79,6 +79,23 @@ describe('GameRegistryService', () => {
     const reg = new GameRegistryService();
     const room = make(reg);
     room.leave('h');
+    expect(reg.get(room.id)).toBeUndefined();
+  });
+
+  it('ignores spectators for the cleanup of a running game', () => {
+    const reg = new GameRegistryService();
+    const closed = jest.fn();
+    reg.onClosed = closed;
+    const room = make(reg);
+    room.setSeat('h', 1, 'computer');
+    room.setReady('h', true);
+    room.start('h');
+    room.addSpectator('v');
+    room.setPaused('h', true); // no move re-arms the timer
+    room.setConnected('h', false);
+    expect(room.hasConnectedHuman()).toBe(false);
+    jest.advanceTimersByTime(RUNNING_CLEANUP_MS);
+    expect(closed).toHaveBeenCalledWith(room, 'cleanup');
     expect(reg.get(room.id)).toBeUndefined();
   });
 });

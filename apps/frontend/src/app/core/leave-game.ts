@@ -4,7 +4,7 @@ import { NavigationCancel, NavigationEnd, NavigationError, Router } from '@angul
 import type { CanDeactivateFn } from '@angular/router';
 import { ConfirmationService } from 'primeng/api';
 import type { Game } from '../game/game';
-import { isHost } from './game-view';
+import { isHost, isSpectator } from './game-view';
 import { I18nService } from './i18n.service';
 import { SocketService } from './socket.service';
 
@@ -77,7 +77,10 @@ export class LeaveGame {
 
   /** In-page leave buttons: confirm, then leave (the game page redirects to the games list). */
   async request(): Promise<void> {
-    if ((await this.confirm()) && this.situation() !== 'none') await this.socket.leave();
+    if (!(await this.confirm())) return;
+    const game = this.socket.game();
+    // a spectator leaves without a question, but still has to tell the server
+    if (this.situation() !== 'none' || (game && isSpectator(game))) await this.socket.leave();
   }
 
   private settle(leave: boolean): void {
@@ -94,9 +97,10 @@ export const leaveGameGuard: CanDeactivateFn<Game> = async () => {
   const socket = inject(SocketService);
   const router = inject(Router); // inject before the first await
   if (!(await leave.confirm())) return false;
-  // a finished game needs no confirmation, but navigating away must not strand the player in it
-  const finished = socket.game()?.phase === 'finished';
-  if (leave.situation() === 'none' && !finished) return true;
+  // a finished game or a watched one needs no confirmation, but navigating away must not strand the player in it
+  const game = socket.game();
+  const stranded = game?.phase === 'finished' || (!!game && isSpectator(game));
+  if (leave.situation() === 'none' && !stranded) return true;
   leave.leaving.set(true);
   const left = await socket.leave();
   if (!left) leave.leaving.set(false);

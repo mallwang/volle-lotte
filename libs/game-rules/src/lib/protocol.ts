@@ -1,6 +1,6 @@
 import type { Action, Event, GameState, RejectionReason, Rules } from './types.js';
 
-export const PROTOCOL_VERSION = 10;
+export const PROTOCOL_VERSION = 11;
 
 /** UI language a player reports; the server names computers in the host's language. */
 export type UiLanguage = 'en' | 'de';
@@ -30,6 +30,8 @@ export type ErrorReason =
   | 'notHost'
   | 'notReady'
   | 'banned'
+  /** The game is not running, or the host switched spectating off. */
+  | 'notSpectatable'
   | 'notRejoinable'
   | 'notEnoughPlayers'
   | 'notYourTurn'
@@ -104,7 +106,14 @@ export interface GameView {
    * `seat` is -1 without a seat. A player who waits for the rematch gets the finished game
    * (`phase: 'finished'`, `rematch` set) with their seat of that game and `reserved` = the seat held for them.
    */
-  you: { playerId: string; seat: number; timeoutWarning: boolean; reserved?: number };
+  you: {
+    playerId: string;
+    seat: number;
+    timeoutWarning: boolean;
+    reserved?: number;
+    /** Anonymous read-only viewer; `seat` is -1. */
+    spectator?: boolean;
+  };
   /** Game number in this room, starting at 1; each rematch adds one. A waiting player's view has the finished game's round. */
   round: number;
   /** Only for a player waiting after a rematch: `open` = a reserved seat to rejoin, `closed` = the next game started without them. */
@@ -121,6 +130,10 @@ export interface GameView {
   computerSpeed: number;
   /** Host setting: show next-throw bust odds to everyone at the table. */
   showBustProbability: boolean;
+  /** Host setting: visitors may watch the running game. */
+  spectating: boolean;
+  /** Number of spectators watching right now. */
+  spectators: number;
   /** Host paused the running game: no computer move, no turn limit, no action. */
   paused: boolean;
   /** Entries dropped from the front of `log` so far; `logBase + i` is the stable index of `log[i]`. */
@@ -144,6 +157,8 @@ export interface GameSummary {
   /** The requesting player is the last host of a running game with only computers left and may end it. */
   closable: boolean;
   phase: RoomPhase;
+  /** Running and the host allows spectators: the list offers "Watch". */
+  spectatable: boolean;
 }
 
 /** Client to server: event name -> [payload, ack data]. */
@@ -159,6 +174,8 @@ export interface Intents {
     { game: GameView },
   ];
   'game:join': [{ gameId: string; password: string; seat?: number }, { game: GameView }];
+  /** Watch a running game without a seat; same password rule and rate limit as `game:join`. */
+  'game:spectate': [{ gameId: string; password: string }, { game: GameView }];
   'game:leave': [undefined, object];
   'seat:set': [
     { seat: number; mode: 'open' | 'locked' | 'computer'; difficulty?: Difficulty; risk?: Risk },
@@ -185,6 +202,7 @@ export interface GameSettings {
   fastComputerDice?: boolean;
   computerSpeed?: number;
   showBustProbability?: boolean;
+  spectating?: boolean;
 }
 
 export interface SettingChange {
@@ -199,5 +217,5 @@ export interface Pushes {
   'game:log': { entries: LogEntry[] };
   'game:settingsChanged': { by: string; changes: SettingChange[] };
   'session:replaced': undefined;
-  'game:closed': { reason: 'cleanup' | 'banned' | 'ended' };
+  'game:closed': { reason: 'cleanup' | 'banned' | 'ended' | 'spectatingOff' };
 }

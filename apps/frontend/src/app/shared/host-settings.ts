@@ -2,7 +2,7 @@ import { Component, computed, effect, inject, OnDestroy, signal } from '@angular
 import { FormsModule } from '@angular/forms';
 import { SliderModule } from 'primeng/slider';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
-import { isHost } from '../core/game-view';
+import { isHost, isSpectator } from '../core/game-view';
 import { I18nService } from '../core/i18n.service';
 import { SocketService } from '../core/socket.service';
 import { TranslatePipe } from '../core/translate.pipe';
@@ -16,53 +16,69 @@ const SEND_DELAY_MS = 300;
   imports: [FormsModule, SliderModule, ToggleSwitchModule, TranslatePipe],
   template: `
     @if (socket.game(); as game) {
-      <div class="vl-setting">
-        <div class="vl-setting-row">
-          <span id="host-speed-label">{{ 'settings.computerSpeed' | t }}</span>
-          <strong aria-live="polite">{{
-            'settings.computerSpeedValue' | t: { step: speed(), name: speedName() }
-          }}</strong>
-        </div>
-        <p-slider
-          [ngModel]="speed()"
-          [min]="1"
-          [max]="5"
-          [step]="1"
-          ariaLabelledBy="host-speed-label"
-          [disabled]="!host()"
-          (ngModelChange)="changeSpeed($event)"
-        />
-        <div class="vl-scale" aria-hidden="true">
-          <span>1 {{ 'settings.scaleSlow' | t }}</span>
-          <span>3 {{ 'settings.scaleDefault' | t }}</span>
-          <span>5 {{ 'settings.scaleFast' | t }}</span>
-        </div>
-        <small>{{ (host() ? 'settings.computerSpeedHint' : 'settings.hostOnly') | t }}</small>
-      </div>
-      <div class="vl-setting">
-        <div class="vl-setting-row">
-          <label for="fast-computer-dice">{{ 'settings.fastComputerDice' | t }}</label>
-          <p-toggleswitch
-            inputId="fast-computer-dice"
-            [ngModel]="game.fastComputerDice"
+      @if (!spectator()) {
+        <div class="vl-setting">
+          <div class="vl-setting-row">
+            <span id="host-speed-label">{{ 'settings.computerSpeed' | t }}</span>
+            <strong aria-live="polite">{{
+              'settings.computerSpeedValue' | t: { step: speed(), name: speedName() }
+            }}</strong>
+          </div>
+          <p-slider
+            [ngModel]="speed()"
+            [min]="1"
+            [max]="5"
+            [step]="1"
+            ariaLabelledBy="host-speed-label"
             [disabled]="!host()"
-            (ngModelChange)="socket.settings({ fastComputerDice: $event })"
+            (ngModelChange)="changeSpeed($event)"
           />
+          <div class="vl-scale" aria-hidden="true">
+            <span>1 {{ 'settings.scaleSlow' | t }}</span>
+            <span>3 {{ 'settings.scaleDefault' | t }}</span>
+            <span>5 {{ 'settings.scaleFast' | t }}</span>
+          </div>
+          <small>{{ (host() ? 'settings.computerSpeedHint' : 'settings.hostOnly') | t }}</small>
         </div>
-        <small>{{ (host() ? 'settings.fastComputerDiceHint' : 'settings.hostOnly') | t }}</small>
-      </div>
-      <div class="vl-setting">
-        <div class="vl-setting-row">
-          <label for="show-bust-probability">{{ 'settings.showBustProbability' | t }}</label>
-          <p-toggleswitch
-            inputId="show-bust-probability"
-            [ngModel]="game.showBustProbability"
-            [disabled]="!host()"
-            (ngModelChange)="socket.settings({ showBustProbability: $event })"
-          />
+        <div class="vl-setting">
+          <div class="vl-setting-row">
+            <label for="fast-computer-dice">{{ 'settings.fastComputerDice' | t }}</label>
+            <p-toggleswitch
+              inputId="fast-computer-dice"
+              [ngModel]="game.fastComputerDice"
+              [disabled]="!host()"
+              (ngModelChange)="socket.settings({ fastComputerDice: $event })"
+            />
+          </div>
+          <small>{{ (host() ? 'settings.fastComputerDiceHint' : 'settings.hostOnly') | t }}</small>
         </div>
-        <small>{{ (host() ? 'settings.showBustProbabilityHint' : 'settings.hostOnly') | t }}</small>
-      </div>
+        <div class="vl-setting">
+          <div class="vl-setting-row">
+            <label for="show-bust-probability">{{ 'settings.showBustProbability' | t }}</label>
+            <p-toggleswitch
+              inputId="show-bust-probability"
+              [ngModel]="game.showBustProbability"
+              [disabled]="!host()"
+              (ngModelChange)="socket.settings({ showBustProbability: $event })"
+            />
+          </div>
+          <small>{{
+            (host() ? 'settings.showBustProbabilityHint' : 'settings.hostOnly') | t
+          }}</small>
+        </div>
+        <div class="vl-setting">
+          <div class="vl-setting-row">
+            <label for="allow-spectators">{{ 'settings.spectating' | t }}</label>
+            <p-toggleswitch
+              inputId="allow-spectators"
+              [ngModel]="game.spectating"
+              [disabled]="!host()"
+              (ngModelChange)="socket.settings({ spectating: $event })"
+            />
+          </div>
+          <small>{{ (host() ? 'settings.spectatingHint' : 'settings.hostOnly') | t }}</small>
+        </div>
+      }
     }
   `,
 })
@@ -73,6 +89,11 @@ export class HostSettings implements OnDestroy {
   private readonly local = signal<number | null>(null);
   private timer?: ReturnType<typeof setTimeout>;
 
+  /** Spectators see none of the host settings, not even read-only. */
+  protected readonly spectator = computed(() => {
+    const g = this.socket.game();
+    return !!g && isSpectator(g);
+  });
   protected readonly host = computed(() => {
     const g = this.socket.game();
     return !!g && isHost(g);

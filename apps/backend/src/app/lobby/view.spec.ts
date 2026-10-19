@@ -72,3 +72,25 @@ describe('toView', () => {
     room.dispose();
   });
 });
+
+describe('toView for spectators', () => {
+  it('marks the spectator, counts them for everyone and leaks no deck', () => {
+    const room = finishedRoom();
+    room.phase = 'running';
+    room.addSpectator('v');
+    const spectator = toView(room, 'v');
+    expect(spectator.you).toEqual({
+      playerId: 'v',
+      seat: -1,
+      timeoutWarning: false,
+      spectator: true,
+    });
+    expect(spectator.spectators).toBe(1);
+    expect(spectator.spectating).toBe(true);
+    expect(JSON.stringify(spectator)).not.toContain('"deck"');
+    const player = toView(room, 'p');
+    expect(player.spectators).toBe(1);
+    expect(player.you.spectator).toBeUndefined();
+    room.dispose();
+  });
+});

@@ -25,13 +25,19 @@ export class DiceRollService {
   private readonly tick = signal(0);
   private timers: ReturnType<typeof setTimeout>[] = [];
   private swap?: ReturnType<typeof setInterval>;
+  /** Roll without spinning: dice stay blank until the roll is over. */
+  private blank = false;
 
   readonly rolling = computed(() => this.stopped().some((s) => !s));
 
   /** Start rolling `count` dice; a running roll is finished first. Skip = no roll at all. */
-  start(count: number, opts: { computerFast?: boolean; skip?: boolean } = {}): void {
+  start(
+    count: number,
+    opts: { computerFast?: boolean; skip?: boolean; blank?: boolean } = {},
+  ): void {
     this.finish();
-    if (opts.skip || count === 0) return;
+    if ((opts.skip && !opts.blank) || count === 0) return;
+    this.blank = !!opts.skip;
     const durations = rollDurations(count, opts.computerFast ? FAST : NORMAL);
     this.stopped.set(durations.map(() => false));
     this.swap = setInterval(() => this.tick.update((t) => t + 1), SWAP_MS);
@@ -45,11 +51,12 @@ export class DiceRollService {
 
   /** Is die `i` of the current throw still rolling? */
   isRolling(i: number): boolean {
-    return this.stopped()[i] === false;
+    return !this.blank && this.stopped()[i] === false;
   }
 
   /** Face to draw: a random one while rolling, otherwise the server value. */
   faceFor(i: number, value: number | null): number | null {
+    if (this.blank && this.stopped()[i] === false) return null;
     if (!this.isRolling(i)) return value;
     this.tick();
     // cosmetic face only; the final value always comes from the server
@@ -62,5 +69,6 @@ export class DiceRollService {
     this.timers = [];
     clearInterval(this.swap);
     this.stopped.set([]);
+    this.blank = false;
   }
 }

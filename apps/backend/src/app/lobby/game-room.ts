@@ -139,6 +139,10 @@ export class GameRoom {
   archive?: Archive;
   /** Players whose reserved seat the start of the next game dropped; they still see `archive`. */
   readonly dropped = new Set<string>();
+  /** Host setting: visitors may watch while the game runs. */
+  spectating = true;
+  /** Player ids of connected spectators; never seated, never counted as humans (they cannot disturb timers). */
+  readonly spectators = new Set<string>();
   onChange?: (entries: LogEntry[]) => void;
 
   private readonly now: () => number;
@@ -228,7 +232,42 @@ export class GameRoom {
       banned: !!forPlayer && this.banned.has(forPlayer),
       closable: this.canEnd(forPlayer),
       phase: this.phase,
+      spectatable: this.phase === 'running' && this.spectating,
     };
+  }
+
+  /**
+   * A visitor starts watching. `resume` lets a returning spectator back into a finished game
+   * (until they leave); a new one needs a running game. Join and leave write no log entry.
+   */
+  addSpectator(playerId: string, resume = false): Res {
+    const open = this.phase === 'running' || (resume && this.phase === 'finished');
+    if (!open || !this.spectating) return fail('notSpectatable');
+    if (
+      this.seatOf(playerId) >= 0 ||
+      this.reservedSeat(playerId) >= 0 ||
+      this.dropped.has(playerId)
+    ) {
+      return fail('alreadyInGame');
+    }
+    if (!this.spectators.has(playerId)) {
+      this.spectators.add(playerId);
+      this.onChange?.([]);
+    }
+    return { ok: true };
+  }
+
+  removeSpectator(playerId: string): boolean {
+    if (!this.spectators.delete(playerId)) return false;
+    this.onChange?.([]);
+    return true;
+  }
+
+  /** Removes all spectators without a push and returns them; the caller tells them. */
+  private evictSpectators(): string[] {
+    const ids = [...this.spectators];
+    this.spectators.clear();
+    return ids;
   }
 
   /** Only the last host may end a running game, and only while no human is seated any more. */
@@ -296,7 +335,7 @@ export class GameRoom {
    * humans get a reserved seat; computers the host set up stay; seats of players who left, and of
    * humans a computer replaced, are freed. `round` is the finished game's round.
    */
-  rematch(playerId: string, round: number): Res {
+  rematch(playerId: string, round: number): Res<{ evicted: string[] }> {
     if (playerId !== this.hostId) return fail('notHost');
     if (round !== this.round) return fail('staleRound');
     if (this.phase !== 'finished' || !this.game) return fail('gameStarted');
@@ -338,8 +377,9 @@ export class GameRoom {
     this.fresh = [];
     this.round++;
     this.add('rematch', this.seatOf(this.hostId));
+    const evicted = this.evictSpectators();
     this.emit();
-    return { ok: true };
+    return { ok: true, evicted };
   }
 
   /** A player waiting in the game-over modal takes their reserved seat; `round` is the finished game's round. */
@@ -552,7 +592,10 @@ export class GameRoom {
   }
 
   /** Host only, lobby or running game. `changes` lists the values that really changed. */
-  setSettings(playerId: string, patch: GameSettings): Res<{ changes: SettingChange[] }> {
+  setSettings(
+    playerId: string,
+    patch: GameSettings,
+  ): Res<{ changes: SettingChange[]; evicted: string[] }> {
     if (playerId !== this.hostId) return fail('notHost');
     if (this.phase === 'finished') return fail('notInGame');
     if (patch.computerSpeed !== undefined && !isComputerSpeed(patch.computerSpeed))
@@ -574,8 +617,14 @@ export class GameRoom {
       this.showBustProbability = patch.showBustProbability;
       changes.push({ setting: 'showBustProbability', value: patch.showBustProbability });
     }
+    let evicted: string[] = [];
+    if (patch.spectating !== undefined && patch.spectating !== this.spectating) {
+      this.spectating = patch.spectating;
+      changes.push({ setting: 'spectating', value: patch.spectating });
+      if (!patch.spectating) evicted = this.evictSpectators();
+    }
     if (changes.length > 0) this.emit();
-    return { ok: true, changes };
+    return { ok: true, changes, evicted };
   }
 
   /** Host only: freezes or continues a running game, keeping what is left of every wait. */

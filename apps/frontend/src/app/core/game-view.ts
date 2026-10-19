@@ -3,6 +3,9 @@ import type { I18nService } from './i18n.service';
 
 export const isHost = (g: GameView): boolean => g.hostId === g.you.playerId;
 
+/** An anonymous read-only viewer without a seat. */
+export const isSpectator = (g: GameView): boolean => g.you.spectator === true;
+
 /** Seat numbers of the engine players (engine index = position among occupied seats). */
 export function playerSeats(g: GameView): number[] {
   return g.seats.flatMap((s, i) => (s.state === 'human' || s.state === 'computer' ? [i] : []));

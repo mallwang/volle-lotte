@@ -97,3 +97,25 @@ describe('HostSettings', () => {
     await inBothModes(fixture, () => expectNoA11yViolations(fixture));
   });
 });
+
+describe('HostSettings spectating switch', () => {
+  it('is on by default, host only, and sends the new value', async () => {
+    const { el, socket } = await setup('p0');
+    const input = el.querySelector('#allow-spectators') as HTMLInputElement;
+    expect(input.disabled).toBe(false);
+    expect(input.checked).toBe(true);
+    input.click();
+    expect(socket.settings).toHaveBeenCalledWith({ spectating: false });
+  });
+
+  it('is read-only for a guest and hidden for a spectator', async () => {
+    const guest = await setup('p9');
+    expect((guest.el.querySelector('#allow-spectators') as HTMLInputElement).disabled).toBe(true);
+    TestBed.resetTestingModule();
+    const spectator = await setup('v1', {
+      you: { playerId: 'v1', seat: -1, timeoutWarning: false, spectator: true },
+    });
+    expect(spectator.el.querySelector('#allow-spectators')).toBeNull();
+    expect(spectator.el.textContent).not.toContain('Computer speed');
+  });
+});

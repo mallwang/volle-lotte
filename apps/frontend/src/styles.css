@@ -630,6 +630,38 @@ a.vl-menu-link:hover {
   background: var(--p-orange-100, #ffedd5);
   color: var(--p-orange-900, #7c2d12);
 }
+.vl-watching {
+  margin: 0.25rem 0;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  text-align: center;
+  background: var(--p-blue-50, #eff6ff);
+  border: 1px solid var(--p-blue-200, #bfdbfe);
+  color: var(--p-blue-700, #1d4ed8);
+  font-weight: 700;
+}
+.app-dark .vl-watching {
+  background: color-mix(in srgb, var(--p-blue-500, #3b82f6) 15%, transparent);
+  border-color: var(--p-blue-700, #1d4ed8);
+  color: var(--p-blue-300, #93c5fd);
+}
+.vl-card-watch {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.75rem;
+}
+.vl-spectators {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.vl-spectators-none {
+  color: var(--p-text-muted-color);
+  font-weight: 400;
+}
 .vl-game-clock {
   font-variant-numeric: tabular-nums;
   font-weight: 600;
@@ -1089,6 +1121,7 @@ a.vl-menu-link:hover {
   flex-direction: column;
   align-items: center;
   gap: 0.35rem;
+  white-space: nowrap;
 }
 .vl-card-spot {
   width: 8rem;

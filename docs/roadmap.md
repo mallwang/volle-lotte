@@ -29,6 +29,7 @@ Last updated: 2026-10-19. The Java -> web migration is finished (see [migration.
 | 013  | Game-over modal over the finished table (no result page), finished games are not restored on reload, winner confetti (`party-js`, shared `Celebration` service, reduced motion respected) and a victory sound played once (preloaded at the table, blocked autoplay tolerated)                                      |
 | 014  | Rematch in the same room: the host reopens the finished room as a lobby (same settings, computers and seat order), other players rejoin their reserved seat from the game-over modal, a start drops missing players, rounds reject stale requests, protocol v10                                                     |
 | 015  | Remembered settings and presets: the last started setup (seats, rules, computers, speed) prefills the next game, up to 10 named presets (save, load, apply in the lobby, delete) on the create-game and lobby pages, "Reset to defaults", a save question on Start for new setups; device-local, no protocol change |
+| 016  | Spectators: anonymous read-only viewers of running games ("Watch" in the games list, same password rule), spectator counter, no log entry or toast on join and leave, host switch "Allow spectators", spectators never affect timers or game end, reload resumes watching, protocol v11                             |
 | N/A  | Connection state as toasts (lost, restored, failed with reload); the page is locked while offline                                                                                                                                                                                                                   |
 | N/A  | Host handover: a player rejoining a game with only computers becomes host; the last host can end such a game from the games list (protocol v9)                                                                                                                                                                      |
 | N/A  | Playtest fix: one-card discard piles have no background card                                                                                                                                                                                                                                                        |
@@ -80,13 +81,9 @@ Goal: a persisted, structured game log. The in-game log is shown below the table
 - First step: check which data is needed for a replay (R13): seating order, the global dice animation setting, card order if the engine is seeded.
 - Saved games keep their log assigned to the saving players (R15).
 
-### R8. Spectators (`idea`)
+### R8. Spectators (`done`)
 
-- Goal: other players can join a running game as read-only spectators.
-- Spectators see the table with scores and the current action of the active players, the log, the leave button and the settings every non-host player has (only "skip dice animation"; the rest stays host-only, for example fast computer dice). No play buttons.
-- A counter shows the current number of real spectators (players do not count). A spectator joining or leaving only changes the counter: no log entry, no toast or other message for the players, so the game is not disturbed.
-- Constraints: separate from the 2-8 player limit; spectators never block timers or the game end; the host can disable spectating or remove spectators.
-- Open: open to everybody in the games list or only with the game password; protocol change, bump `PROTOCOL_VERSION`.
+Done in spec 016. Visitors watch a running game anonymously and read-only; the games list shows "Watch" (same password and rate limit as joining), players and spectators see a counter of spectators, joining or leaving writes no log entry and shows no toast, spectators never influence timers, cleanup or the game end, and the host can switch spectating off (default on), which sends all spectators back to the lobby. A reload resumes watching. Protocol v11.
 
 ### R9. Rule options per game (`idea`)
 
