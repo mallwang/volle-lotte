@@ -116,7 +116,7 @@ description: 'Task list for spectators'
 - [x] T032 [P] Update `docs/roadmap.md`: set R8 to `done` with the decisions (anonymous, on/off switch, password rule, running games only) and add a row for spec 016 in the done table in the format of the 015 row; note the protocol version 11
 - [x] T033 Extend `apps/backend/src/app/lobby/lobby.gateway.e2e.spec.ts` with one spectator flow (spectate, receive state, leave) and run `npm run test:e2e` once
 - [x] T034 Run `npm run typecheck`, `npm run lint`, `npm run test` and `npm run build` and fix findings; confirm per-project coverage stays at or above 80% and no new skip-list entry is needed
-- [ ] T035 Verify the UI once with the `verify-ui` skill (Playwright): the scenarios of `quickstart.md` on desktop and phone width, light and dark; fix visible problems
+- [x] T035 Verify the UI once with the `verify-ui` skill (Playwright): the scenarios of `quickstart.md` on desktop and phone width, light and dark; fix visible problems
 - [x] T036 Review the German texts in `apps/frontend/src/app/i18n/de.ts` and `docs/*.de.md` for gender-inclusive forms (CLAUDE.md) and the new English texts for consistency with the mockup wording
 
 ---
