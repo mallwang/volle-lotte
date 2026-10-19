@@ -362,8 +362,15 @@ a.vl-menu-link:hover {
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem;
+}
+.vl-seats {
+  gap: 0;
   border: 1px solid var(--p-content-border-color);
   border-radius: var(--p-content-border-radius);
+  overflow: hidden;
+}
+.vl-seats > .vl-seat + .vl-seat {
+  border-top: 1px solid var(--p-content-border-color);
 }
 .vl-block {
   display: block;
@@ -499,7 +506,11 @@ a.vl-menu-link:hover {
   background: var(--p-surface-800);
 }
 .vl-seat-reserved {
-  border-style: dashed;
+  background: repeating-linear-gradient(
+    135deg,
+    transparent 0 0.5rem,
+    var(--p-content-hover-background) 0.5rem 1rem
+  );
 }
 .vl-presets {
   display: flex;
@@ -1116,6 +1127,34 @@ a.vl-menu-link:hover {
 }
 .vl-start-question-choices {
   display: flex;
-  flex-wrap: wrap;
   gap: 0.5rem;
+}
+.vl-start-question-actions {
+  flex-wrap: nowrap;
+}
+.vl-start-question-text {
+  margin-top: 0;
+}
+/* lobby: two columns on wide screens, rules, presets and seats left, settings right */
+.vl-lobby {
+  max-width: 64rem;
+}
+.vl-lobby-title {
+  text-align: center;
+}
+.vl-lobby-columns {
+  display: grid;
+  gap: 1.5rem;
+  align-items: start;
+}
+@media (min-width: 52rem) {
+  .vl-lobby-columns {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  }
+}
+.vl-lobby-main > .vl-presets {
+  margin-bottom: 1rem;
+}
+.vl-lobby-columns .vl-settings-panel {
+  margin-block: 0;
 }

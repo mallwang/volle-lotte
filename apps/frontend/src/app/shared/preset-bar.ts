@@ -8,7 +8,7 @@ import { PresetSaveDialog } from './preset-save-dialog';
 
 /**
  * "Load preset" and "Save as preset" with their dialogs, shared by the create-game page and the lobby.
- * Extra actions (for example "Reset to defaults") go in as content.
+ * "Reset to defaults" appears only while `changed` is true.
  */
 @Component({
   selector: 'app-preset-bar',
@@ -40,12 +40,21 @@ import { PresetSaveDialog } from './preset-save-dialog';
         [disabled]="!store.available()"
         (onClick)="saveOpen.set(true)"
       />
-      <ng-content />
+      @if (changed()) {
+        <p-button
+          type="button"
+          severity="secondary"
+          [text]="true"
+          [label]="'preset.reset' | t"
+          (onClick)="resetRequested.emit()"
+        />
+      }
     </div>
     <app-preset-list-dialog [(visible)]="listOpen" [mode]="mode()" (chosen)="loaded.emit($event)" />
     <app-preset-save-dialog
       [(visible)]="saveOpen"
       [setup]="current()()"
+      [suggestedName]="suggestedName()"
       (saved)="onSaved($event)"
     />
   `,
@@ -57,7 +66,12 @@ export class PresetBar {
   readonly current = input.required<() => Setup>();
   readonly title = input('');
   readonly hint = input('');
+  /** Name offered in the save dialog. */
+  readonly suggestedName = input('');
+  /** The current setup differs from the defaults, so resetting makes sense. */
+  readonly changed = input(false);
   readonly loaded = output<Preset>();
+  readonly resetRequested = output();
   protected readonly listOpen = signal(false);
   protected readonly saveOpen = signal(false);
 

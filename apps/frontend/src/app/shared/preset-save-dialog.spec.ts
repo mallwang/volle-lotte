@@ -6,13 +6,14 @@ import { PresetSaveDialog } from './preset-save-dialog';
 
 const setup = { ...defaultSetup(), seats: 6 };
 
-async function open() {
+async function open(suggestedName = '') {
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({ imports: [PresetSaveDialog], providers: [providePrimeNG()] });
   const store = TestBed.inject(SetupStore);
   const fixture = TestBed.createComponent(PresetSaveDialog);
   fixture.componentRef.setInput('visible', true);
   fixture.componentRef.setInput('setup', setup);
+  fixture.componentRef.setInput('suggestedName', suggestedName);
   const saved: Preset[] = [];
   fixture.componentInstance.saved.subscribe((p) => saved.push(p));
   await fixture.whenStable();
@@ -45,7 +46,12 @@ describe('PresetSaveDialog', () => {
   it('shows the character counter', async () => {
     const { type } = await open();
     await type('Friday');
-    expect(document.body.textContent).toContain('6 of 30 characters');
+    expect(document.body.textContent).toContain('6 of 40 characters');
+  });
+
+  it('starts with the suggested name', async () => {
+    const { input } = await open('Ann Spiel');
+    expect(input().value).toBe('Ann Spiel');
   });
 
   it('does not save a blank name', async () => {

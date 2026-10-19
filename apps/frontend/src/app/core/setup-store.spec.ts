@@ -54,7 +54,7 @@ describe('SetupStore', () => {
       item('ok'),
       item(5),
       item('   '),
-      item('x'.repeat(31)),
+      item('x'.repeat(41)),
       null,
       ...Array.from({ length: 12 }, (_, i) => item(`P${i}`)),
     ];
@@ -74,14 +74,14 @@ describe('SetupStore', () => {
       expect(make().presets()).toEqual([{ name: 'Friday', setup: custom }]);
     });
 
-    it.each(['', '   ', 'x'.repeat(31)])('rejects the name %j', (name) => {
+    it.each(['', '   ', 'x'.repeat(41)])('rejects the name %j', (name) => {
       const store = make();
       expect(store.savePreset(name, custom)).toBe('name');
       expect(store.presets()).toEqual([]);
     });
 
-    it('accepts exactly 30 characters', () => {
-      expect(make().savePreset('x'.repeat(30), custom)).toBe('ok');
+    it('accepts exactly 40 characters', () => {
+      expect(make().savePreset('x'.repeat(40), custom)).toBe('ok');
     });
 
     it('asks before replacing a name, ignoring case and spaces', () => {

@@ -17,6 +17,7 @@ import {
   defaultSetup,
   planComputers,
   sanitizeSetup,
+  setupsEqual,
   type ComputerSeat,
   type Preset,
   type Setup,
@@ -45,16 +46,10 @@ import { TranslatePipe } from '../core/translate.pipe';
         [current]="currentSetup"
         [title]="(store.last() ? 'preset.prefilled' : 'preset.group') | t"
         [hint]="(store.last() ? 'preset.prefilledHint' : 'preset.hintCreate') | t"
+        [changed]="changedFromDefaults()"
         (loaded)="loadPreset($event)"
-      >
-        <p-button
-          type="button"
-          severity="secondary"
-          [text]="true"
-          [label]="'preset.reset' | t"
-          (onClick)="resetToDefaults()"
-        />
-      </app-preset-bar>
+        (resetRequested)="resetToDefaults()"
+      />
       <div class="vl-row">
         <div class="vl-field">
           <label for="game-name">{{ 'create.name' | t }}</label>
@@ -217,6 +212,8 @@ export class CreateGame {
   /** Computers and speed the lobby of the new game gets; they are changed in the lobby, not here. */
   protected readonly pendingComputers = signal<ComputerSeat[]>(this.initial.computers);
   protected readonly pendingSpeed = signal(this.initial.speed);
+  private readonly pendingFastDice = signal(this.initial.fastComputerDice);
+  private readonly pendingShowBust = signal(this.initial.showBustProbability);
   /** The pending computers as they fit into a fresh room with the chosen number of seats. */
   protected readonly effectiveComputers = computed(
     () =>
@@ -229,7 +226,11 @@ export class CreateGame {
       ).place,
   );
   protected readonly showPending = computed(
-    () => this.effectiveComputers().length > 0 || this.pendingSpeed() !== DEFAULT_SPEED,
+    () =>
+      this.effectiveComputers().length > 0 ||
+      this.pendingSpeed() !== DEFAULT_SPEED ||
+      this.pendingFastDice() ||
+      this.pendingShowBust(),
   );
   protected readonly error = signal<Msg | null>(null);
 
@@ -240,7 +241,13 @@ export class CreateGame {
       rules: this.rules(),
       computers: this.effectiveComputers(),
       speed: this.pendingSpeed(),
+      fastComputerDice: this.pendingFastDice(),
+      showBustProbability: this.pendingShowBust(),
     });
+
+  protected readonly changedFromDefaults = computed(
+    () => !setupsEqual(this.currentSetup(), defaultSetup()),
+  );
 
   /** Defaults for seats, rules and the pending computers; presets and the typed name and password stay. */
   protected resetToDefaults(): void {
@@ -261,6 +268,8 @@ export class CreateGame {
     this.counts.set({ ...setup.rules.cardCounts });
     this.pendingComputers.set(setup.computers);
     this.pendingSpeed.set(setup.speed);
+    this.pendingFastDice.set(setup.fastComputerDice);
+    this.pendingShowBust.set(setup.showBustProbability);
   }
 
   protected setCount(type: CardType, value: number): void {
@@ -309,7 +318,11 @@ export class CreateGame {
     }
     // best effort: the lobby shows what was applied, a failed step just leaves fewer computers
     if (this.showPending())
-      await applySetup(this.socket, ack.game, this.effectiveComputers(), this.pendingSpeed());
+      await applySetup(this.socket, ack.game, this.effectiveComputers(), {
+        speed: this.pendingSpeed(),
+        fastComputerDice: this.pendingFastDice(),
+        showBustProbability: this.pendingShowBust(),
+      });
     await this.router.navigate(['/game', ack.game.id]);
   }
 }

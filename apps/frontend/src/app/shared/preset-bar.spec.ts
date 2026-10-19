@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { providePrimeNG } from 'primeng/config';
 import { defaultSetup, type Preset, type Setup } from '../core/setup';
@@ -16,6 +16,8 @@ const room: Setup = {
   template: `<app-preset-bar
     [mode]="mode"
     [current]="current"
+    [changed]="changed()"
+    (resetRequested)="resets = resets + 1"
     title="Presets"
     hint="Hint text"
     (loaded)="loaded.push($event)"
@@ -25,6 +27,8 @@ class Host {
   mode: 'create' | 'lobby' = 'create';
   current = () => room;
   loaded: Preset[] = [];
+  changed = signal(false);
+  resets = 0;
 }
 
 async function setup(mode: 'create' | 'lobby' = 'create') {
@@ -42,6 +46,15 @@ async function setup(mode: 'create' | 'lobby' = 'create') {
 
 describe('PresetBar', () => {
   beforeEach(() => localStorage.clear());
+
+  it('offers "Reset to defaults" only while the setup differs from the defaults', async () => {
+    const { fixture, button } = await setup();
+    expect(button('Reset to defaults')).toBeUndefined();
+    fixture.componentInstance.changed.set(true);
+    await fixture.whenStable();
+    button('Reset to defaults')!.click();
+    expect(fixture.componentInstance.resets).toBe(1);
+  });
 
   it('shows the title, the hint and both buttons', async () => {
     const { el, button } = await setup();

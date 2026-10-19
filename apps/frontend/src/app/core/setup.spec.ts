@@ -29,6 +29,8 @@ describe('setup', () => {
       rules: defaultRules(),
       computers: [],
       speed: 3,
+      fastComputerDice: false,
+      showBustProbability: false,
     });
   });
 
@@ -43,6 +45,8 @@ describe('setup', () => {
         rules: { ...defaultRules(), targetScore: 4000 },
         computers: [{ seat: 3, difficulty: 'hard', risk: 'high' }],
         speed: 5,
+        fastComputerDice: true,
+        showBustProbability: true,
       };
       expect(sanitizeSetup(JSON.parse(JSON.stringify(setup)))).toEqual(setup);
     });
@@ -148,6 +152,8 @@ describe('setup', () => {
       seats: 4,
       rules: game.rules,
       speed: 4,
+      fastComputerDice: false,
+      showBustProbability: false,
       computers: [
         { seat: 1, difficulty: 'hard', risk: 'high' },
         { seat: 3, difficulty: 'easy', risk: 'none' },

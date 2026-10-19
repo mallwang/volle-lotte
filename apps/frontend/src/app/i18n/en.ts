@@ -408,5 +408,5 @@ export const en = {
     'You have not saved this setup yet. Next time you can load it with one click.',
   'startQuestion.no': 'No, start the game',
   'startQuestion.save': 'Save as preset',
-  'startQuestion.back': 'Back to lobby',
+  'startQuestion.back': 'Back',
 } as const;

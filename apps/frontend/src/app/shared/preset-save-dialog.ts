@@ -1,4 +1,15 @@
-import { Component, computed, effect, inject, input, model, output, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  effect,
+  ElementRef,
+  inject,
+  input,
+  model,
+  output,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -19,6 +30,7 @@ import { TranslatePipe } from '../core/translate.pipe';
       [(visible)]="visible"
       [modal]="true"
       [draggable]="false"
+      (onShow)="selectName()"
     >
       <form class="vl-form" (ngSubmit)="save()">
         <p class="vl-hint">{{ 'preset.saveHint' | t }}</p>
@@ -26,6 +38,7 @@ import { TranslatePipe } from '../core/translate.pipe';
           <label for="preset-name">{{ 'preset.name' | t }}</label>
           <input
             pInputText
+            #nameInput
             id="preset-name"
             name="presetName"
             [ngModel]="name()"
@@ -76,9 +89,12 @@ export class PresetSaveDialog {
   private readonly store = inject(SetupStore);
   readonly visible = model(false);
   readonly setup = input.required<Setup>();
+  /** Name the field starts with; it is selected so typing replaces it. */
+  readonly suggestedName = input('');
   readonly saved = output<Preset>();
   protected readonly maxName = MAX_PRESET_NAME;
   protected readonly maxPresets = MAX_PRESETS;
+  private readonly nameInput = viewChild<ElementRef<HTMLInputElement>>('nameInput');
   protected readonly name = signal('');
   protected readonly failed = signal(false);
   protected readonly exists = computed(() => this.store.hasPreset(this.name()));
@@ -93,9 +109,18 @@ export class PresetSaveDialog {
   constructor() {
     effect(() => {
       if (this.visible()) {
-        this.name.set('');
+        this.name.set(this.suggestedName().trim().slice(0, MAX_PRESET_NAME));
         this.failed.set(false);
       }
+    });
+  }
+
+  protected selectName(): void {
+    // the model writes the value on the next tick
+    setTimeout(() => {
+      const input = this.nameInput()?.nativeElement;
+      input?.focus();
+      input?.select();
     });
   }
 

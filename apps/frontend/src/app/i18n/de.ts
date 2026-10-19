@@ -426,5 +426,5 @@ export const de: Record<keyof typeof en, string> = {
     'Du hast diese Einstellungen noch nicht gespeichert. Beim nächsten Mal kannst du sie mit einem Klick laden.',
   'startQuestion.no': 'Nein, Spiel starten',
   'startQuestion.save': 'Als Vorlage speichern',
-  'startQuestion.back': 'Zurück zur Lobby',
+  'startQuestion.back': 'Zurück',
 };

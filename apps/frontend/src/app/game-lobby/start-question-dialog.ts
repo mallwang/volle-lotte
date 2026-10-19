@@ -17,14 +17,14 @@ import { TranslatePipe } from '../core/translate.pipe';
       [modal]="true"
       [draggable]="false"
     >
-      <p>{{ 'startQuestion.text' | t }}</p>
+      <p class="vl-start-question-text">{{ 'startQuestion.text' | t }}</p>
       <p class="vl-hint">{{ summary() }}</p>
-      <div class="vl-actions">
+      <div class="vl-actions vl-start-question-actions">
         <p-button
           type="button"
           [label]="'startQuestion.back' | t"
           severity="secondary"
-          [text]="true"
+          [link]="true"
           (onClick)="visible.set(false)"
         />
         <span class="vl-start-question-choices">

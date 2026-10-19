@@ -1,5 +1,5 @@
-import type { Ack, ErrorAck } from 'game-rules';
-import { planComputers, type ComputerSeat } from './setup';
+import type { Ack, ErrorAck, Intents } from 'game-rules';
+import { planComputers, type ComputerSeat, type Setup } from './setup';
 import type { SocketService } from './socket.service';
 import type { GameView } from 'game-rules';
 
@@ -12,9 +12,9 @@ export type ApplyResult =
  */
 export async function applySetup(
   socket: Pick<SocketService, 'send'>,
-  game: Pick<GameView, 'seats' | 'computerSpeed'>,
+  game: Pick<GameView, 'seats' | 'computerSpeed' | 'fastComputerDice' | 'showBustProbability'>,
   computers: readonly ComputerSeat[],
-  speed?: number,
+  settings: Partial<Pick<Setup, 'speed' | 'fastComputerDice' | 'showBustProbability'>> = {},
 ): Promise<ApplyResult> {
   const plan = planComputers(game.seats, computers);
   const run = async (p: Promise<Ack>): Promise<ErrorAck | null> => {
@@ -37,9 +37,25 @@ export async function applySetup(
     );
     if (failed) return { ok: false, ack: failed };
   }
-  if (speed !== undefined && speed !== game.computerSpeed) {
-    const failed = await run(socket.send('game:settings', { computerSpeed: speed }));
+  const patch = settingsPatch(game, settings);
+  if (Object.keys(patch).length > 0) {
+    const failed = await run(socket.send('game:settings', patch));
     if (failed) return { ok: false, ack: failed };
   }
   return { ok: true, placed: plan.place.length, skipped: plan.skipped };
+}
+
+/** Only the settings that differ from the room, so an unchanged setup sends nothing. */
+function settingsPatch(
+  game: Pick<GameView, 'computerSpeed' | 'fastComputerDice' | 'showBustProbability'>,
+  settings: Partial<Pick<Setup, 'speed' | 'fastComputerDice' | 'showBustProbability'>>,
+): Intents['game:settings'][0] {
+  const patch: Intents['game:settings'][0] = {};
+  const { speed, fastComputerDice, showBustProbability } = settings;
+  if (speed !== undefined && speed !== game.computerSpeed) patch.computerSpeed = speed;
+  if (fastComputerDice !== undefined && fastComputerDice !== game.fastComputerDice)
+    patch.fastComputerDice = fastComputerDice;
+  if (showBustProbability !== undefined && showBustProbability !== game.showBustProbability)
+    patch.showBustProbability = showBustProbability;
+  return patch;
 }

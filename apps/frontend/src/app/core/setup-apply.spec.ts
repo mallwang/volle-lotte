@@ -23,7 +23,7 @@ describe('applySetup', () => {
         { seat: 2, difficulty: 'hard', risk: 'high' },
         { seat: 1, difficulty: 'easy', risk: 'none' },
       ],
-      5,
+      { speed: 5 },
     );
     expect(result).toEqual({ ok: true, placed: 2, skipped: 0 });
     expect(socket.send.mock.calls).toEqual([
@@ -58,7 +58,7 @@ describe('applySetup', () => {
   it('sends no speed without one or when it is unchanged', async () => {
     const socket = socketWith();
     await applySetup(socket, gameView(), [], undefined);
-    await applySetup(socket, gameView({ computerSpeed: 4 }), [], 4);
+    await applySetup(socket, gameView({ computerSpeed: 4 }), [], { speed: 4 });
     expect(socket.send).not.toHaveBeenCalled();
   });
 
@@ -72,7 +72,7 @@ describe('applySetup', () => {
         { seat: 2, difficulty: 'easy', risk: 'none' },
         { seat: 3, difficulty: 'easy', risk: 'none' },
       ],
-      5,
+      { speed: 5 },
     );
     expect(result).toEqual({ ok: false, ack: { ok: false, reason: 'rejected' } });
     expect(socket.send).toHaveBeenCalledTimes(2);
@@ -80,7 +80,7 @@ describe('applySetup', () => {
 
   it('returns a failing speed change', async () => {
     const socket = socketWith({ ok: false, reason: 'notHost' });
-    const result = await applySetup(socket, gameView(), [], 5);
+    const result = await applySetup(socket, gameView(), [], { speed: 5 });
     expect(result).toEqual({ ok: false, ack: { ok: false, reason: 'notHost' } });
   });
 

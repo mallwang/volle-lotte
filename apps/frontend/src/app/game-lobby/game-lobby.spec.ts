@@ -4,6 +4,7 @@ import { defaultSetup, setupFromGame, type Setup } from '../core/setup';
 import { SetupStore } from '../core/setup-store';
 import { LeaveGame } from '../core/leave-game';
 import { SocketService } from '../core/socket.service';
+import { MessageService } from 'primeng/api';
 import { providePrimeNG } from 'primeng/config';
 import { expectNoA11yViolations, gameView, inBothModes, stubSocket } from '../core/testing';
 import { GameLobby } from './game-lobby';
@@ -33,6 +34,7 @@ async function setup(
     imports: [GameLobby],
     providers: [
       providePrimeNG(),
+      MessageService,
       { provide: SocketService, useValue: socket },
       { provide: LeaveGame, useValue: { request: vi.fn() } },
     ],
@@ -43,7 +45,8 @@ async function setup(
   const el = fixture.nativeElement as HTMLElement;
   const button = (text: string) =>
     [...el.querySelectorAll('button')].find((b) => b.textContent?.includes(text));
-  return { socket, el, button, fixture, leave: TestBed.inject(LeaveGame) };
+  const toast = vi.spyOn(TestBed.inject(MessageService), 'add');
+  return { socket, el, button, fixture, toast, leave: TestBed.inject(LeaveGame) };
 }
 
 describe('GameLobby', () => {
@@ -132,7 +135,7 @@ describe('GameLobby', () => {
     };
 
     it('applies computers and speed, keeps seated humans and warns about computers that do not fit', async () => {
-      const { socket, el, fixture } = await setup(gameView({}, [me(true), other(true)]));
+      const { socket, el, fixture, toast } = await setup(gameView({}, [me(true), other(true)]));
       TestBed.inject(SetupStore).savePreset('Friday', preset as never);
       socket.send.mockResolvedValue({ ok: true });
       await openList(fixture, el);
@@ -143,22 +146,30 @@ describe('GameLobby', () => {
         { seat: 3, mode: 'computer', difficulty: 'medium', risk: 'none' },
         { computerSpeed: 5 },
       ]);
-      expect(el.querySelector('p-message[role=status]')?.textContent).toContain(
-        'skipped because no seat was free: 1',
+      expect(toast).toHaveBeenCalledWith(
+        expect.objectContaining({
+          severity: 'warn',
+          life: 5000,
+          detail: expect.stringContaining('skipped because no seat was free: 1'),
+        }),
       );
       expect(TestBed.inject(SetupStore).reference()).toEqual(preset);
     });
 
     it('shows the success message without a warning when everything fits', async () => {
-      const { socket, el, fixture } = await setup(gameView({}, [me(true)]));
+      const { socket, el, fixture, toast } = await setup(gameView({}, [me(true)]));
       TestBed.inject(SetupStore).savePreset('Friday', preset as never);
       socket.send.mockResolvedValue({ ok: true });
       await openList(fixture, el);
       await clickApply(fixture);
       fixture.detectChanges();
-      const message = el.querySelector('p-message[role=status]')?.textContent;
-      expect(message).toContain('Computers added: 3');
-      expect(message).not.toContain('skipped');
+      expect(toast).toHaveBeenCalledWith(
+        expect.objectContaining({
+          severity: 'success',
+          life: 5000,
+          detail: expect.stringContaining('Computers added: 3'),
+        }),
+      );
     });
 
     it('shows the error and keeps the reference when a step fails', async () => {
@@ -290,7 +301,7 @@ describe('GameLobby', () => {
     it('does not start on "Back to lobby" and keeps asking next time', async () => {
       const { socket, button, fixture } = await setup(base());
       await clickStart(button, fixture);
-      dialogButton('Back to lobby').click();
+      dialogButton('Back').click();
       await fixture.whenStable();
       expect(socket.send).not.toHaveBeenCalled();
       expect(TestBed.inject(SetupStore).reference()).toBeNull();

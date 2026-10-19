@@ -135,6 +135,8 @@ describe('CreateGame', () => {
           id: 'g1',
           seats: [{ state: 'human' }, ...Array(5).fill({ state: 'open' })],
           computerSpeed: 3,
+          fastComputerDice: false,
+          showBustProbability: false,
         },
       });
       socket.send.mockResolvedValue({ ok: true });

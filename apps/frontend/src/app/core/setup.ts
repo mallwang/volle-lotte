@@ -10,7 +10,7 @@ import {
 } from 'game-rules';
 
 export const MAX_PRESETS = 10;
-export const MAX_PRESET_NAME = 30;
+export const MAX_PRESET_NAME = 40;
 export const DEFAULT_SPEED = 3;
 
 const DIFFICULTIES: readonly Difficulty[] = ['easy', 'medium', 'hard', 'random'];
@@ -29,6 +29,8 @@ export interface Setup {
   rules: Rules;
   computers: ComputerSeat[];
   speed: number;
+  fastComputerDice: boolean;
+  showBustProbability: boolean;
 }
 
 export interface Preset {
@@ -37,7 +39,14 @@ export interface Preset {
 }
 
 export function defaultSetup(): Setup {
-  return { seats: 4, rules: defaultRules(), computers: [], speed: DEFAULT_SPEED };
+  return {
+    seats: 4,
+    rules: defaultRules(),
+    computers: [],
+    speed: DEFAULT_SPEED,
+    fastComputerDice: false,
+    showBustProbability: false,
+  };
 }
 
 const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null;
@@ -91,13 +100,21 @@ export function sanitizeSetup(value: unknown): Setup {
     rules: sanitizeRules(v['rules']),
     computers: sanitizeComputers(v['computers'], seats),
     speed: int(v['speed'], 1, 5) ?? DEFAULT_SPEED,
+    fastComputerDice: v['fastComputerDice'] === true,
+    showBustProbability: v['showBustProbability'] === true,
   };
 }
 
 /** Same setup, ignoring computer names and the order of the computers. */
 export function setupsEqual(a: Setup | null, b: Setup | null): boolean {
   if (!a || !b) return false;
-  if (a.seats !== b.seats || a.speed !== b.speed) return false;
+  if (
+    a.seats !== b.seats ||
+    a.speed !== b.speed ||
+    a.fastComputerDice !== b.fastComputerDice ||
+    a.showBustProbability !== b.showBustProbability
+  )
+    return false;
   if (
     a.rules.targetScore !== b.rules.targetScore ||
     a.rules.minimumPoints !== b.rules.minimumPoints ||
@@ -126,6 +143,8 @@ export function setupFromGame(game: GameView): Setup {
     rules: game.rules,
     computers,
     speed: game.computerSpeed,
+    fastComputerDice: game.fastComputerDice,
+    showBustProbability: game.showBustProbability,
   };
 }
 

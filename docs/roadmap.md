@@ -172,6 +172,7 @@ Goal: a persisted, structured game log. The in-game log is shown below the table
   - a table of all registered players with statistics: games played, aborts (several aborts of the same game count as one), wins, Volle Lottes, timer overruns (every overrun counts);
   - a quick statistics page: total games played, running games, connected players, active players in running games;
   - a health page: current version, backend connection, database health.
+- Presets of R10 move to the account: they are stored on the server per user, so they load on every device and browser, not only in the local storage of one client. The "settings cannot be saved on this device" notice of R10 is removed then, and existing local presets are offered for import on the first sign-in.
 - Foundation for R12, R15, R21 and R23. Needs the persistence of R4 and R6.
 
 ### R23. Credits and cosmetics (`idea`, needs R22; builds on R21)

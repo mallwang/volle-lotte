@@ -39,9 +39,9 @@ describe('StartQuestionDialog', () => {
     expect(events).toEqual(['start', 'save']);
   });
 
-  it('closes on "Back to lobby" without a choice', async () => {
+  it('closes on "Back" without a choice', async () => {
     const { button, events, fixture } = await open();
-    button('Back to lobby').click();
+    button('Back').click();
     expect(fixture.componentInstance.visible()).toBe(false);
     expect(events).toEqual([]);
   });
