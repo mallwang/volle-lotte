@@ -6,9 +6,22 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
 import { SelectButtonModule } from 'primeng/selectbutton';
-import { CARD_TYPES, defaultRules, rulesError, type CardType, type Rules } from 'game-rules';
+import { CARD_TYPES, rulesError, type CardType, type Rules } from 'game-rules';
 import { errorMessage, type Msg } from '../core/error-message';
 import { I18nService } from '../core/i18n.service';
+import { PresetBar } from '../shared/preset-bar';
+import { applySetup } from '../core/setup-apply';
+import { SetupStore } from '../core/setup-store';
+import {
+  DEFAULT_SPEED,
+  defaultSetup,
+  planComputers,
+  sanitizeSetup,
+  setupsEqual,
+  type ComputerSeat,
+  type Preset,
+  type Setup,
+} from '../core/setup';
 import { SocketService } from '../core/socket.service';
 import { TranslatePipe } from '../core/translate.pipe';
 
@@ -21,12 +34,22 @@ import { TranslatePipe } from '../core/translate.pipe';
     CheckboxModule,
     InputTextModule,
     MessageModule,
+    PresetBar,
     SelectButtonModule,
     TranslatePipe,
   ],
   template: `
     <form class="vl-form" (ngSubmit)="submit()">
       <h2>{{ 'create.title' | t }}</h2>
+      <app-preset-bar
+        mode="create"
+        [current]="currentSetup"
+        [title]="(store.last() ? 'preset.prefilled' : 'preset.group') | t"
+        [hint]="(store.last() ? 'preset.prefilledHint' : 'preset.hintCreate') | t"
+        [changed]="changedFromDefaults()"
+        (loaded)="loadPreset($event)"
+        (resetRequested)="resetToDefaults()"
+      />
       <div class="vl-row">
         <div class="vl-field">
           <label for="game-name">{{ 'create.name' | t }}</label>
@@ -134,6 +157,12 @@ import { TranslatePipe } from '../core/translate.pipe';
           <p-message severity="error" size="small" role="alert">{{ e }}</p-message>
         }
       </details>
+      @if (showPending()) {
+        <p-message severity="info" size="small" role="status">{{
+          'create.pendingComputers'
+            | t: { count: effectiveComputers().length, speed: pendingSpeed() }
+        }}</p-message>
+      }
       <div class="vl-actions">
         <a routerLink="/lobby">{{ 'create.cancel' | t }}</a>
         <p-button type="submit" [label]="'create.submit' | t" />
@@ -147,7 +176,8 @@ import { TranslatePipe } from '../core/translate.pipe';
 export class CreateGame {
   private readonly socket = inject(SocketService);
   private readonly router = inject(Router);
-  private readonly defaults = defaultRules();
+  protected readonly store = inject(SetupStore);
+  private readonly initial = this.store.last() ?? defaultSetup();
   protected readonly cardTypes = CARD_TYPES;
   protected readonly seatOptions = [2, 3, 4, 5, 6, 7, 8].map((n) => ({
     label: String(n),
@@ -172,12 +202,75 @@ export class CreateGame {
     this.i18n.t('create.defaultName', { nickname: this.socket.session()?.nickname ?? 'My' }),
   );
   protected readonly password = signal('');
-  protected readonly seats = signal(4);
-  protected readonly targetScore = signal(this.defaults.targetScore);
-  protected readonly minimumPoints = signal(this.defaults.minimumPoints);
-  protected readonly doubling = signal(this.defaults.fourOfAKindDoubling);
-  protected readonly counts = signal<Record<CardType, number>>({ ...this.defaults.cardCounts });
+  protected readonly seats = signal(this.initial.seats);
+  protected readonly targetScore = signal(this.initial.rules.targetScore);
+  protected readonly minimumPoints = signal(this.initial.rules.minimumPoints);
+  protected readonly doubling = signal(this.initial.rules.fourOfAKindDoubling);
+  protected readonly counts = signal<Record<CardType, number>>({
+    ...this.initial.rules.cardCounts,
+  });
+  /** Computers and speed the lobby of the new game gets; they are changed in the lobby, not here. */
+  protected readonly pendingComputers = signal<ComputerSeat[]>(this.initial.computers);
+  protected readonly pendingSpeed = signal(this.initial.speed);
+  private readonly pendingFastDice = signal(this.initial.fastComputerDice);
+  private readonly pendingShowBust = signal(this.initial.showBustProbability);
+  /** The pending computers as they fit into a fresh room with the chosen number of seats. */
+  protected readonly effectiveComputers = computed(
+    () =>
+      planComputers(
+        Array.from(
+          { length: this.seats() },
+          (_, i) => ({ state: i === 0 ? 'human' : 'open' }) as const,
+        ),
+        this.pendingComputers(),
+      ).place,
+  );
+  protected readonly showPending = computed(
+    () =>
+      this.effectiveComputers().length > 0 ||
+      this.pendingSpeed() !== DEFAULT_SPEED ||
+      this.pendingFastDice() ||
+      this.pendingShowBust(),
+  );
   protected readonly error = signal<Msg | null>(null);
+
+  /** What "Save as preset" stores: the form plus the computers and speed the lobby will get. */
+  protected readonly currentSetup = (): Setup =>
+    sanitizeSetup({
+      seats: this.seats(),
+      rules: this.rules(),
+      computers: this.effectiveComputers(),
+      speed: this.pendingSpeed(),
+      fastComputerDice: this.pendingFastDice(),
+      showBustProbability: this.pendingShowBust(),
+    });
+
+  protected readonly changedFromDefaults = computed(
+    () => !setupsEqual(this.currentSetup(), defaultSetup()),
+  );
+
+  /** Defaults for seats, rules and the pending computers; presets and the typed name and password stay. */
+  protected resetToDefaults(): void {
+    this.apply(defaultSetup());
+    this.store.resetLast();
+  }
+
+  protected loadPreset(preset: Preset): void {
+    this.apply(preset.setup);
+    this.store.setReference(preset.setup);
+  }
+
+  private apply(setup: Setup): void {
+    this.seats.set(setup.seats);
+    this.targetScore.set(setup.rules.targetScore);
+    this.minimumPoints.set(setup.rules.minimumPoints);
+    this.doubling.set(setup.rules.fourOfAKindDoubling);
+    this.counts.set({ ...setup.rules.cardCounts });
+    this.pendingComputers.set(setup.computers);
+    this.pendingSpeed.set(setup.speed);
+    this.pendingFastDice.set(setup.fastComputerDice);
+    this.pendingShowBust.set(setup.showBustProbability);
+  }
 
   protected setCount(type: CardType, value: number): void {
     this.counts.update((c) => ({ ...c, [type]: value }));
@@ -219,7 +312,17 @@ export class CreateGame {
       seats: this.seats(),
       rules: this.rules(),
     });
-    if (ack.ok) await this.router.navigate(['/game', ack.game.id]);
-    else this.error.set(() => errorMessage(ack, this.i18n));
+    if (!ack.ok) {
+      this.error.set(() => errorMessage(ack, this.i18n));
+      return;
+    }
+    // best effort: the lobby shows what was applied, a failed step just leaves fewer computers
+    if (this.showPending())
+      await applySetup(this.socket, ack.game, this.effectiveComputers(), {
+        speed: this.pendingSpeed(),
+        fastComputerDice: this.pendingFastDice(),
+        showBustProbability: this.pendingShowBust(),
+      });
+    await this.router.navigate(['/game', ack.game.id]);
   }
 }

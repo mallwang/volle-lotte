@@ -68,6 +68,50 @@ export const de: Record<keyof typeof en, string> = {
   'create.cardsPerType': 'Karten pro Art',
   'create.submit': 'Erstellen',
   'create.cancel': 'Abbrechen',
+  'create.pendingComputers':
+    'Computer aus deinem letzten Spiel ({count}) werden der Lobby dieses Spiels hinzugefügt, Computer-Geschwindigkeit {speed}.',
+  'preset.group': 'Vorlagen',
+  'preset.hintCreate': 'Speichere diese Einstellungen als Vorlage, um sie später wieder zu laden.',
+  'preset.prefilled': 'Aus deinem letzten Spiel vorausgefüllt',
+  'preset.prefilledHint': 'Plätze, Regeln und Computer. Spielname und Passwort werden nie gemerkt.',
+  'preset.lobbyHint': 'In der Lobby setzt eine Vorlage nur Computer und Geschwindigkeit.',
+  'preset.load': 'Vorlage laden',
+  'preset.save': 'Als Vorlage speichern',
+  'preset.reset': 'Auf Standard zurücksetzen',
+  'preset.storageBlocked': 'Einstellungen können auf diesem Gerät nicht gespeichert werden',
+  'preset.storageBlockedHint':
+    'Dein Browser blockiert den Speicher (privater Modus?). Alles funktioniert weiter, aber nichts wird gemerkt und Vorlagen sind nicht verfügbar.',
+  'preset.loadTitle': 'Vorlage laden',
+  'preset.loadHintCreate':
+    'Ersetzt Plätze, Regeln, Computer und Geschwindigkeit in diesem Formular.',
+  'preset.loadHintLobby':
+    'Setzt Computer und Geschwindigkeit auf freie Plätze. Spieler am Tisch, Plätze und Regeln bleiben unverändert.',
+  'preset.loadButton': 'Laden',
+  'preset.apply': 'Anwenden',
+  'preset.delete': 'Löschen',
+  'preset.keep': 'Behalten',
+  'preset.deleteConfirm': 'Diese Vorlage löschen? Das lässt sich nicht rückgängig machen.',
+  'preset.deleteLabel': 'Vorlage {name} löschen',
+  'preset.empty': 'Noch keine Vorlagen. Speichere die aktuellen Einstellungen, um eine anzulegen.',
+  'preset.count': '{count} von {max} Vorlagen',
+  'preset.close': 'Schließen',
+  'preset.cancel': 'Abbrechen',
+  'preset.summary':
+    '{seats} Plätze · Zielpunktzahl {target} · Computer: {computers} · Geschwindigkeit {speed}',
+  'preset.summaryLobby': 'Computer: {computers} · Geschwindigkeit {speed}',
+  'preset.saveTitle': 'Als Vorlage speichern',
+  'preset.saveHint':
+    'Speichert Plätze, Regeln, Computer und Geschwindigkeit. Nicht den Spielnamen oder das Passwort.',
+  'preset.name': 'Name der Vorlage',
+  'preset.nameCount': '{count} von {max} Zeichen',
+  'preset.exists': '„{name}“ gibt es schon. Speichern ersetzt deren Einstellungen.',
+  'preset.replace': 'Vorlage ersetzen',
+  'preset.saveButton': 'Speichern',
+  'preset.full':
+    'Alle {max} Vorlagen sind belegt. Lösche zuerst eine unter „Vorlage laden“ oder speichere unter dem Namen einer bestehenden Vorlage, um sie zu ersetzen.',
+  'preset.applied': 'Vorlage „{name}“ angewendet. Hinzugefügte Computer: {placed}.',
+  'preset.appliedSkipped':
+    'Vorlage „{name}“ angewendet. Hinzugefügte Computer: {placed}, übersprungen, weil kein Platz frei war: {skipped}. Spieler am Tisch wurden nicht verändert.',
   'create.defaultName': 'Spiel von {nickname}',
   'create.nameError': 'Der Name muss 1-40 Zeichen haben.',
   'create.passwordError': 'Das Passwort muss leer sein oder 4-64 Zeichen haben.',
@@ -377,4 +421,10 @@ export const de: Record<keyof typeof en, string> = {
   'engine.nonScoringDie': 'jeder gewählte Würfel muss zählen',
   'engine.belowMinimum': 'die Mindestpunktzahl ist nicht erreicht',
   'engine.nothingToBank': 'es gibt nichts zu notieren',
+  'startQuestion.title': 'Diese Einstellungen als Vorlage speichern?',
+  'startQuestion.text':
+    'Du hast diese Einstellungen noch nicht gespeichert. Beim nächsten Mal kannst du sie mit einem Klick laden.',
+  'startQuestion.no': 'Nein, Spiel starten',
+  'startQuestion.save': 'Als Vorlage speichern',
+  'startQuestion.back': 'Zurück',
 };

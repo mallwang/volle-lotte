@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CARD_TYPES, type Ack, type Difficulty, type Risk } from 'game-rules';
+import { MessageService } from 'primeng/api';
 import { AvatarModule } from 'primeng/avatar';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
@@ -9,17 +10,33 @@ import { errorMessage, type Msg } from '../core/error-message';
 import { isHost, seatName } from '../core/game-view';
 import { LeaveGame } from '../core/leave-game';
 import { I18nService } from '../core/i18n.service';
+import { SetupStore } from '../core/setup-store';
+import { applySetup } from '../core/setup-apply';
+import {
+  DEFAULT_SPEED,
+  defaultSetup,
+  setupFromGame,
+  setupsEqual,
+  type Preset,
+  type Setup,
+} from '../core/setup';
 import { SocketService } from '../core/socket.service';
+import { StartQuestionDialog } from './start-question-dialog';
+import { PresetSaveDialog } from '../shared/preset-save-dialog';
+import { PresetBar } from '../shared/preset-bar';
 import { ComputerRename } from '../shared/computer-rename';
 import { HostSettings } from '../shared/host-settings';
 import { TranslatePipe } from '../core/translate.pipe';
+
+/** The preset toast stays this long. */
+const PRESET_TOAST_MS = 5000;
 
 const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard', 'random'];
 const RISKS: Risk[] = ['none', 'medium', 'high', 'random'];
 
 @Component({
   selector: 'app-game-lobby',
-  host: { class: 'vl-narrow' },
+  host: { class: 'vl-narrow vl-lobby' },
   imports: [
     FormsModule,
     AvatarModule,
@@ -27,12 +44,15 @@ const RISKS: Risk[] = ['none', 'medium', 'high', 'random'];
     ComputerRename,
     HostSettings,
     MessageModule,
+    PresetBar,
+    PresetSaveDialog,
+    StartQuestionDialog,
     TagModule,
     TranslatePipe,
   ],
   template: `
     @if (socket.game(); as game) {
-      <h2>
+      <h2 class="vl-lobby-title">
         {{ game.name }}
         @if (game.round > 1) {
           <p-tag
@@ -42,174 +62,204 @@ const RISKS: Risk[] = ['none', 'medium', 'high', 'random'];
           />
         }
       </h2>
-      <p>
-        {{
-          'gameLobby.summary'
-            | t
-              : {
-                  target: game.rules.targetScore,
-                  minimum: game.rules.minimumPoints,
-                  doubling: (game.rules.fourOfAKindDoubling ? 'gameLobby.on' : 'gameLobby.off') | t,
-                }
-        }}
-      </p>
-      <p>{{ 'gameLobby.cards' | t: { list: cardList() } }}</p>
-      <ul class="vl-cards">
-        @for (s of game.seats; track $index) {
-          <li
-            class="vl-seat"
-            [class.vl-seat-locked]="s.state === 'locked'"
-            [class.vl-seat-reserved]="s.state === 'reserved'"
-          >
-            <p-avatar [label]="'' + ($index + 1)" shape="circle" aria-hidden="true" />
-            <span class="vl-seat-name">{{ 'gameLobby.seat' | t: { n: $index + 1 } }}</span>
-            @switch (s.state) {
-              @case ('human') {
-                <strong>{{ s.nickname }}</strong>
-                @if (s.playerId === game.hostId) {
-                  <p-tag [value]="'gameLobby.host' | t" icon="pi pi-star" severity="info" />
-                }
-                @if (s.connected === false) {
-                  <p-tag [value]="'gameLobby.offline' | t" icon="pi pi-wifi" severity="danger" />
-                }
-                <p-tag
-                  [value]="(s.ready ? 'gameLobby.ready' : 'gameLobby.notReady') | t"
-                  [icon]="s.ready ? 'pi pi-check' : 'pi pi-clock'"
-                  [severity]="s.ready ? 'success' : 'warn'"
-                />
-                @if (host() && s.playerId !== game.hostId) {
-                  <p-button
-                    [label]="'gameLobby.removePlayer' | t"
-                    severity="secondary"
-                    (onClick)="removeSeat($index)"
-                  />
-                }
-                @if ($index === game.you.seat) {
-                  <label class="vl-check">
-                    <input
-                      type="checkbox"
-                      [checked]="s.ready"
-                      (change)="ready($any($event.target).checked)"
+      <div class="vl-lobby-columns">
+        <div class="vl-lobby-main">
+          <p>
+            {{
+              'gameLobby.summary'
+                | t
+                  : {
+                      target: game.rules.targetScore,
+                      minimum: game.rules.minimumPoints,
+                      doubling:
+                        (game.rules.fourOfAKindDoubling ? 'gameLobby.on' : 'gameLobby.off') | t,
+                    }
+            }}
+          </p>
+          <p>{{ 'gameLobby.cards' | t: { list: cardList() } }}</p>
+          @if (host() && game.phase === 'lobby') {
+            <app-preset-bar
+              mode="lobby"
+              [current]="currentSetup"
+              [title]="'preset.group' | t"
+              [hint]="'preset.lobbyHint' | t"
+              [suggestedName]="game.name"
+              [changed]="changedFromDefaults()"
+              (loaded)="applyPreset($event)"
+              (resetRequested)="resetToDefaults()"
+            />
+          }
+          <ul class="vl-cards vl-seats">
+            @for (s of game.seats; track $index) {
+              <li
+                class="vl-seat"
+                [class.vl-seat-locked]="s.state === 'locked'"
+                [class.vl-seat-reserved]="s.state === 'reserved'"
+              >
+                <p-avatar [label]="'' + ($index + 1)" shape="circle" aria-hidden="true" />
+                <span class="vl-seat-name">{{ 'gameLobby.seat' | t: { n: $index + 1 } }}</span>
+                @switch (s.state) {
+                  @case ('human') {
+                    <strong>{{ s.nickname }}</strong>
+                    @if (s.playerId === game.hostId) {
+                      <p-tag [value]="'gameLobby.host' | t" icon="pi pi-star" severity="info" />
+                    }
+                    @if (s.connected === false) {
+                      <p-tag
+                        [value]="'gameLobby.offline' | t"
+                        icon="pi pi-wifi"
+                        severity="danger"
+                      />
+                    }
+                    <p-tag
+                      [value]="(s.ready ? 'gameLobby.ready' : 'gameLobby.notReady') | t"
+                      [icon]="s.ready ? 'pi pi-check' : 'pi pi-clock'"
+                      [severity]="s.ready ? 'success' : 'warn'"
                     />
-                    {{ 'gameLobby.ready' | t }}
-                  </label>
-                }
-              }
-              @case ('computer') {
-                @if (host()) {
-                  <app-computer-rename [seat]="$index" [name]="s.name ?? ''" />
-                } @else {
-                  <strong>{{ s.name }}</strong>
-                }
-                <p-tag
-                  [value]="
-                    'gameLobby.computer'
-                      | t
-                        : {
-                            difficulty: 'difficulty.' + s.difficulty | t,
-                            risk: 'risk.' + (s.risk ?? 'medium') | t,
-                          }
-                  "
-                  icon="pi pi-desktop"
-                  [severity]="severity[s.difficulty ?? 'random']"
-                />
-                @if (host()) {
-                  <div class="vl-seat-row">
-                    <label>
-                      <select
-                        [attr.aria-label]="'gameLobby.difficultySeat' | t: { n: $index + 1 }"
-                        (change)="
-                          setSeat($index, 'computer', $any($event.target).value, s.risk ?? 'medium')
-                        "
-                      >
-                        @for (o of difficulties; track o) {
-                          <option [value]="o" [selected]="o === s.difficulty">
-                            {{ 'difficulty.' + o | t }}
-                          </option>
-                        }
-                      </select>
-                    </label>
-                    <label>
-                      <select
-                        [attr.aria-label]="'gameLobby.riskSeat' | t: { n: $index + 1 }"
-                        (change)="
-                          setSeat($index, 'computer', s.difficulty, $any($event.target).value)
-                        "
-                      >
-                        @for (o of risks; track o) {
-                          <option [value]="o" [selected]="o === (s.risk ?? 'medium')">
-                            {{ 'risk.' + o | t }}
-                          </option>
-                        }
-                      </select>
-                    </label>
-                  </div>
-                  <div class="vl-seat-row">
-                    <p-button
-                      size="small"
-                      [label]="'gameLobby.removeComputer' | t"
+                    @if (host() && s.playerId !== game.hostId) {
+                      <p-button
+                        [label]="'gameLobby.removePlayer' | t"
+                        severity="secondary"
+                        (onClick)="removeSeat($index)"
+                      />
+                    }
+                    @if ($index === game.you.seat) {
+                      <label class="vl-check">
+                        <input
+                          type="checkbox"
+                          [checked]="s.ready"
+                          (change)="ready($any($event.target).checked)"
+                        />
+                        {{ 'gameLobby.ready' | t }}
+                      </label>
+                    }
+                  }
+                  @case ('computer') {
+                    @if (host()) {
+                      <app-computer-rename [seat]="$index" [name]="s.name ?? ''" />
+                    } @else {
+                      <strong>{{ s.name }}</strong>
+                    }
+                    <p-tag
+                      [value]="
+                        'gameLobby.computer'
+                          | t
+                            : {
+                                difficulty: 'difficulty.' + s.difficulty | t,
+                                risk: 'risk.' + (s.risk ?? 'medium') | t,
+                              }
+                      "
+                      icon="pi pi-desktop"
+                      [severity]="severity[s.difficulty ?? 'random']"
+                    />
+                    @if (host()) {
+                      <div class="vl-seat-row">
+                        <label>
+                          <select
+                            [attr.aria-label]="'gameLobby.difficultySeat' | t: { n: $index + 1 }"
+                            (change)="
+                              setSeat(
+                                $index,
+                                'computer',
+                                $any($event.target).value,
+                                s.risk ?? 'medium'
+                              )
+                            "
+                          >
+                            @for (o of difficulties; track o) {
+                              <option [value]="o" [selected]="o === s.difficulty">
+                                {{ 'difficulty.' + o | t }}
+                              </option>
+                            }
+                          </select>
+                        </label>
+                        <label>
+                          <select
+                            [attr.aria-label]="'gameLobby.riskSeat' | t: { n: $index + 1 }"
+                            (change)="
+                              setSeat($index, 'computer', s.difficulty, $any($event.target).value)
+                            "
+                          >
+                            @for (o of risks; track o) {
+                              <option [value]="o" [selected]="o === (s.risk ?? 'medium')">
+                                {{ 'risk.' + o | t }}
+                              </option>
+                            }
+                          </select>
+                        </label>
+                      </div>
+                      <div class="vl-seat-row">
+                        <p-button
+                          size="small"
+                          [label]="'gameLobby.removeComputer' | t"
+                          severity="secondary"
+                          (onClick)="setSeat($index, 'open')"
+                        />
+                      </div>
+                    }
+                  }
+                  @case ('locked') {
+                    <p-tag
+                      [value]="'gameLobby.locked' | t"
+                      icon="pi pi-lock"
                       severity="secondary"
-                      (onClick)="setSeat($index, 'open')"
+                      styleClass="vl-tag-locked"
                     />
-                  </div>
-                }
-              }
-              @case ('locked') {
-                <p-tag
-                  [value]="'gameLobby.locked' | t"
-                  icon="pi pi-lock"
-                  severity="secondary"
-                  styleClass="vl-tag-locked"
-                />
-                @if (host()) {
-                  <div class="vl-seat-row">
-                    <p-button
-                      size="small"
-                      [label]="'gameLobby.unlock' | t"
-                      severity="secondary"
-                      (onClick)="setSeat($index, 'open')"
+                    @if (host()) {
+                      <div class="vl-seat-row">
+                        <p-button
+                          size="small"
+                          [label]="'gameLobby.unlock' | t"
+                          severity="secondary"
+                          (onClick)="setSeat($index, 'open')"
+                        />
+                      </div>
+                    }
+                  }
+                  @case ('reserved') {
+                    <strong>{{ s.nickname }}</strong>
+                    <p-tag [value]="'gameLobby.reserved' | t" icon="pi pi-clock" severity="warn" />
+                    @if (host()) {
+                      <p-button
+                        [label]="'gameLobby.removePlayer' | t"
+                        severity="secondary"
+                        (onClick)="removeSeat($index)"
+                      />
+                    }
+                  }
+                  @default {
+                    <p-tag
+                      [value]="'gameLobby.free' | t"
+                      icon="pi pi-user-plus"
+                      severity="success"
                     />
-                  </div>
+                    @if (host()) {
+                      <div class="vl-seat-row">
+                        <p-button
+                          size="small"
+                          [label]="'gameLobby.lock' | t"
+                          severity="secondary"
+                          (onClick)="setSeat($index, 'locked')"
+                        />
+                        <p-button
+                          size="small"
+                          [label]="'gameLobby.addComputer' | t"
+                          severity="secondary"
+                          (onClick)="setSeat($index, 'computer', 'medium', 'medium')"
+                        />
+                      </div>
+                    }
+                  }
                 }
-              }
-              @case ('reserved') {
-                <strong>{{ s.nickname }}</strong>
-                <p-tag [value]="'gameLobby.reserved' | t" icon="pi pi-clock" severity="warn" />
-                @if (host()) {
-                  <p-button
-                    [label]="'gameLobby.removePlayer' | t"
-                    severity="secondary"
-                    (onClick)="removeSeat($index)"
-                  />
-                }
-              }
-              @default {
-                <p-tag [value]="'gameLobby.free' | t" icon="pi pi-user-plus" severity="success" />
-                @if (host()) {
-                  <div class="vl-seat-row">
-                    <p-button
-                      size="small"
-                      [label]="'gameLobby.lock' | t"
-                      severity="secondary"
-                      (onClick)="setSeat($index, 'locked')"
-                    />
-                    <p-button
-                      size="small"
-                      [label]="'gameLobby.addComputer' | t"
-                      severity="secondary"
-                      (onClick)="setSeat($index, 'computer', 'medium', 'medium')"
-                    />
-                  </div>
-                }
-              }
+              </li>
             }
-          </li>
-        }
-      </ul>
-      <section class="vl-settings-panel" aria-labelledby="lobby-settings-heading">
-        <h3 id="lobby-settings-heading">{{ 'gameLobby.settings' | t }}</h3>
-        <app-host-settings />
-      </section>
+          </ul>
+        </div>
+        <section class="vl-settings-panel" aria-labelledby="lobby-settings-heading">
+          <h3 id="lobby-settings-heading">{{ 'gameLobby.settings' | t }}</h3>
+          <app-host-settings />
+        </section>
+      </div>
       @if (!host()) {
         <p>{{ 'gameLobby.waiting' | t: { name: hostName() } }}</p>
       }
@@ -229,12 +279,29 @@ const RISKS: Risk[] = ['none', 'medium', 'high', 'random'];
       @if (error()) {
         <p-message severity="error" role="alert">{{ error()?.() }}</p-message>
       }
+      @if (host()) {
+        <app-start-question-dialog
+          [(visible)]="questionOpen"
+          [setup]="currentSetup()"
+          (startAnyway)="startAnyway()"
+          (saveFirst)="saveFirst()"
+        />
+        <app-preset-save-dialog
+          [visible]="saveOpen()"
+          (visibleChange)="saveClosed($event)"
+          [setup]="currentSetup()"
+          [suggestedName]="game.name"
+          (saved)="savedForStart($event)"
+        />
+      }
     }
   `,
 })
 export class GameLobby {
   protected readonly socket = inject(SocketService);
   private readonly i18n = inject(I18nService);
+  private readonly store = inject(SetupStore);
+  private readonly messages = inject(MessageService);
   protected readonly leave = inject(LeaveGame);
   protected readonly difficulties = DIFFICULTIES;
   protected readonly severity = {
@@ -245,6 +312,24 @@ export class GameLobby {
   } as const;
   protected readonly risks = RISKS;
   protected readonly error = signal<Msg | null>(null);
+  protected readonly questionOpen = signal(false);
+  protected readonly saveOpen = signal(false);
+  /** Computers or a computer setting differ from the defaults; rules and seats are fixed in the lobby. */
+  protected readonly changedFromDefaults = computed(() => {
+    const game = this.socket.game();
+    if (!game) return false;
+    const s = setupFromGame(game);
+    return (
+      s.computers.length > 0 ||
+      s.speed !== DEFAULT_SPEED ||
+      s.fastComputerDice ||
+      s.showBustProbability
+    );
+  });
+  protected readonly currentSetup = (): Setup => {
+    const game = this.socket.game();
+    return game ? setupFromGame(game) : defaultSetup();
+  };
   protected readonly host = computed(() => {
     const g = this.socket.game();
     return !!g && isHost(g);
@@ -294,7 +379,80 @@ export class GameLobby {
     return this.run(this.socket.send('seat:remove', { seat }));
   }
 
+  protected async applyPreset(preset: Preset): Promise<void> {
+    const game = this.socket.game();
+    if (!game) return;
+    const result = await applySetup(this.socket, game, preset.setup.computers, preset.setup);
+    if (!result.ok) {
+      this.error.set(() => errorMessage(result.ack, this.i18n));
+      return;
+    }
+    this.error.set(null);
+    this.store.setReference(preset.setup);
+    const { name } = preset;
+    const text = this.i18n.t(result.skipped > 0 ? 'preset.appliedSkipped' : 'preset.applied', {
+      name,
+      placed: result.placed,
+      skipped: result.skipped,
+    });
+    this.messages.add({
+      severity: result.skipped > 0 ? 'warn' : 'success',
+      detail: text,
+      life: PRESET_TOAST_MS,
+    });
+  }
+
+  /** Removes the computers and sets the computer settings back to their defaults. */
+  protected async resetToDefaults(): Promise<void> {
+    const game = this.socket.game();
+    if (!game) return;
+    const result = await applySetup(this.socket, game, [], defaultSetup());
+    this.error.set(result.ok ? null : () => errorMessage(result.ack, this.i18n));
+  }
+
   protected start(): Promise<void> {
-    return this.run(this.socket.send('game:start'));
+    const game = this.socket.game();
+    if (game) {
+      const current = setupFromGame(game);
+      const known =
+        setupsEqual(current, this.store.reference()) || setupsEqual(current, this.store.last());
+      if (this.store.available() && !known) {
+        this.questionOpen.set(true);
+        return Promise.resolve();
+      }
+    }
+    return this.begin();
+  }
+
+  protected startAnyway(): Promise<void> {
+    this.questionOpen.set(false);
+    const game = this.socket.game();
+    if (game) this.store.setReference(setupFromGame(game));
+    return this.begin();
+  }
+
+  protected saveFirst(): void {
+    this.questionOpen.set(false);
+    this.saveOpen.set(true);
+  }
+
+  protected savedForStart(preset: Preset): void {
+    this.store.setReference(preset.setup);
+    this.saveOpen.set(false);
+    void this.begin();
+  }
+
+  /** Cancelling the save dialog goes back to the question. */
+  protected saveClosed(open: boolean): void {
+    if (open || !this.saveOpen()) return;
+    this.saveOpen.set(false);
+    this.questionOpen.set(true);
+  }
+
+  private async begin(): Promise<void> {
+    const game = this.socket.game();
+    const ack = await this.socket.send('game:start');
+    this.error.set(ack.ok ? null : () => errorMessage(ack, this.i18n));
+    if (ack.ok && game && isHost(game)) this.store.saveLast(setupFromGame(game));
   }
 }
