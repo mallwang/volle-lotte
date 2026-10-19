@@ -815,3 +815,221 @@ describe('GameRoom finished', () => {
     room.dispose();
   });
 });
+
+describe('GameRoom rematch', () => {
+  /** Host, Pia, Quin and a computer (seat 3) played; the game is finished. */
+  const finishedRoom = () => {
+    const { room, changes } = make(5);
+    room.join('p', 'Pia');
+    room.join('q', 'Quin');
+    room.setSeat('h', 3, 'computer', 'hard', 'high');
+    room.setSeat('h', 4, 'locked');
+    room.setSettings('h', { computerSpeed: 5, fastComputerDice: true, showBustProbability: true });
+    for (const id of ['h', 'p', 'q']) room.setReady(id, true);
+    expect(room.start('h')).toEqual({ ok: true });
+    room.phase = 'finished';
+    return { room, changes };
+  };
+
+  it('reopens the room as a lobby with the same settings and seat order', () => {
+    const { room } = finishedRoom();
+    const computer = room.seats[3];
+    expect(room.rematch('h', 1)).toEqual({ ok: true });
+    expect(room.phase).toBe('lobby');
+    expect(room.game).toBeNull();
+    expect(room.round).toBe(2);
+    expect(room.id).toBe('g1');
+    expect(room.passwordHash).toBe('secret-hash');
+    expect(room.seats.map((s) => s.state)).toEqual([
+      'human',
+      'reserved',
+      'reserved',
+      'computer',
+      'locked',
+      'locked',
+      'locked',
+      'locked',
+    ]);
+    expect(room.seats[3]).toEqual(computer);
+    expect(room.seats[0]).toMatchObject({ nickname: 'Host', ready: false });
+    expect(room.seats[1]).toMatchObject({ playerId: 'p', nickname: 'Pia' });
+    expect(room).toMatchObject({
+      computerSpeed: 5,
+      fastComputerDice: true,
+      showBustProbability: true,
+      paused: false,
+    });
+    room.dispose();
+  });
+
+  it('starts a clean log and keeps the entry indices growing', () => {
+    const { room } = finishedRoom();
+    const before = room.logBase + room.log.length;
+    room.rematch('h', 1);
+    expect(room.log.map((e) => e.kind)).toEqual(['rematch']);
+    expect(room.logBase + room.log.length).toBe(before + 1);
+    room.dispose();
+  });
+
+  it('frees seats of players who left and of humans a computer replaced', () => {
+    const { room } = finishedRoom();
+    room.leave('q');
+    expect(room.seats[2]).toMatchObject({ state: 'computer', former: { playerId: 'q' } });
+    room.rematch('h', 1);
+    expect(room.seats[2]).toEqual({ state: 'open' });
+    expect(room.seats[1].state).toBe('reserved');
+    room.dispose();
+  });
+
+  it('refuses a non-host, a stale round and a game that is not finished', () => {
+    const { room } = finishedRoom();
+    const log = room.log.length;
+    expect(room.rematch('p', 1)).toMatchObject({ reason: 'notHost' });
+    expect(room.rematch('h', 2)).toMatchObject({ reason: 'staleRound' });
+    expect(room.rematch('h', 0)).toMatchObject({ reason: 'staleRound' });
+    expect(room.phase).toBe('finished');
+    expect(room.log).toHaveLength(log);
+    room.phase = 'running';
+    expect(room.rematch('h', 1)).toMatchObject({ reason: 'gameStarted' });
+    room.dispose();
+  });
+
+  it('shows a waiting player the finished game with the reserved seat', () => {
+    const { room } = finishedRoom();
+    room.rematch('h', 1);
+    const view = toView(room, 'p');
+    expect(view).toMatchObject({
+      phase: 'finished',
+      round: 1,
+      rematch: 'open',
+      you: { seat: 1, reserved: 1 },
+      hostId: 'h',
+    });
+    const computer = (room.seats[3] as { name: string }).name;
+    expect(view.game?.players.map((p) => p.name)).toEqual(['Host', 'Pia', 'Quin', computer]);
+    expect(view.log.some((e) => e.kind === 'rematch')).toBe(false);
+    const host = toView(room, 'h');
+    expect(host).toMatchObject({ phase: 'lobby', round: 2, you: { seat: 0 } });
+    expect(host.rematch).toBeUndefined();
+    expect(host.seats[1]).toEqual({ state: 'reserved', nickname: 'Pia' });
+    room.dispose();
+  });
+
+  it('counts reserved seats as used, keeps them from newcomers and reserves the nickname', () => {
+    const { room } = finishedRoom();
+    room.rematch('h', 1);
+    expect(room.summary().seatsUsed).toBe(4);
+    expect(room.join('n', 'Pia')).toMatchObject({ reason: 'nicknameTaken' });
+    expect(room.join('n', 'Nia', 1)).toMatchObject({ reason: 'seatNotFree' });
+    expect(room.setSeat('h', 1, 'open')).toMatchObject({ reason: 'seatOccupied' });
+    expect(room.setSeat('h', 1, 'computer')).toMatchObject({ reason: 'seatOccupied' });
+    room.dispose();
+  });
+
+  it('lets a waiting player rejoin their seat, not ready, and resets the others', () => {
+    const { room } = finishedRoom();
+    room.rematch('h', 1);
+    room.setReady('h', true);
+    expect(room.rematchJoin('p', 1, 'de')).toEqual({ ok: true, seat: 1 });
+    expect(room.seats[1]).toMatchObject({
+      state: 'human',
+      playerId: 'p',
+      ready: false,
+      language: 'de',
+    });
+    expect(room.seats[0]).toMatchObject({ ready: false });
+    expect(room.log.at(-1)).toMatchObject({ kind: 'rejoined', seat: 1 });
+    expect(toView(room, 'p')).toMatchObject({ phase: 'lobby', round: 2, you: { seat: 1 } });
+    expect(room.rematchJoin('p', 1)).toMatchObject({ reason: 'notRejoinable' });
+    room.dispose();
+  });
+
+  it('refuses a rejoin with the wrong round, without a reservation or when banned', () => {
+    const { room } = finishedRoom();
+    room.rematch('h', 1);
+    expect(room.rematchJoin('p', 2)).toMatchObject({ reason: 'staleRound' });
+    expect(room.rematchJoin('x', 1)).toMatchObject({ reason: 'notRejoinable' });
+    expect(room.removeSeat('h', 2)).toEqual({ ok: true, removed: 'q' });
+    expect(room.seats[2]).toEqual({ state: 'open' });
+    expect(room.rematchJoin('q', 1)).toMatchObject({ reason: 'banned' });
+    room.dispose();
+  });
+
+  it('frees a reservation when the waiting player leaves', () => {
+    const { room } = finishedRoom();
+    room.rematch('h', 1);
+    expect(room.leave('p')).toMatchObject({ ok: true, empty: false });
+    expect(room.seats[1]).toEqual({ state: 'open' });
+    expect(room.rematchJoin('p', 1)).toMatchObject({ reason: 'notRejoinable' });
+    expect(toView(room, 'p').phase).toBe('lobby');
+    room.dispose();
+  });
+
+  it('does not let the old computer takeover rejoin touch a reservation', () => {
+    const { room } = finishedRoom();
+    room.rematch('h', 1);
+    expect(room.rejoin('p')).toMatchObject({ reason: 'notRejoinable' });
+    expect(room.seats[1].state).toBe('reserved');
+    room.dispose();
+  });
+
+  it('starts without reserved players, drops them and refuses a late rejoin', () => {
+    const { room } = finishedRoom();
+    room.rematch('h', 1);
+    room.rematchJoin('p', 1);
+    room.setReady('h', true);
+    room.setReady('p', true);
+    expect(room.start('h')).toEqual({ ok: true });
+    expect(room.phase).toBe('running');
+    expect(room.seats[2]).toEqual({ state: 'open' });
+    expect(room.game?.players.map((p) => p.score)).toEqual([0, 0, 0]);
+    expect(room.dropped.has('q')).toBe(true);
+    expect(toView(room, 'q')).toMatchObject({ phase: 'finished', rematch: 'closed', round: 1 });
+    expect(room.rematchJoin('q', 1)).toMatchObject({ reason: 'notRejoinable' });
+    expect(room.leave('q')).toMatchObject({ ok: true });
+    expect(room.dropped.has('q')).toBe(false);
+    room.dispose();
+  });
+
+  it('needs two players even when reserved seats exist', () => {
+    const { room } = make(3);
+    room.join('p', 'Pia');
+    room.setReady('h', true);
+    room.setReady('p', true);
+    room.start('h');
+    room.phase = 'finished';
+    room.rematch('h', 1);
+    expect(room.start('h')).toMatchObject({ reason: 'notEnoughPlayers' });
+    expect(room.seats[1].state).toBe('reserved');
+    room.dispose();
+  });
+
+  it('supports another rematch and rejects the older round', () => {
+    const { room } = finishedRoom();
+    room.rematch('h', 1);
+    room.rematchJoin('p', 1);
+    for (const id of ['h', 'p']) room.setReady(id, true);
+    room.start('h');
+    room.phase = 'finished';
+    expect(room.rematch('h', 1)).toMatchObject({ reason: 'staleRound' });
+    expect(room.rematch('h', 2)).toEqual({ ok: true });
+    expect(room.round).toBe(3);
+    expect(room.rematchJoin('p', 1)).toMatchObject({ reason: 'staleRound' });
+    expect(room.rematchJoin('p', 2)).toEqual({ ok: true, seat: 1 });
+    room.dispose();
+  });
+
+  it('leaves everything unchanged when a request is rejected', () => {
+    const { room, changes } = finishedRoom();
+    room.rematch('h', 1);
+    const calls = changes.length;
+    const seats = JSON.stringify(room.seats);
+    room.rematchJoin('p', 5);
+    room.rematch('h', 1);
+    room.rematch('p', 2);
+    expect(changes).toHaveLength(calls);
+    expect(JSON.stringify(room.seats)).toBe(seats);
+    expect(room.round).toBe(2);
+    room.dispose();
+  });
+});

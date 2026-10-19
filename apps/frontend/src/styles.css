@@ -498,6 +498,13 @@ a.vl-menu-link:hover {
 .app-dark .vl-seat-locked {
   background: var(--p-surface-800);
 }
+.vl-seat-reserved {
+  border-style: dashed;
+}
+.vl-hint {
+  color: var(--p-text-muted-color);
+  font-size: 0.875rem;
+}
 .vl-tag-locked {
   background: var(--p-surface-400);
   color: var(--p-surface-900);

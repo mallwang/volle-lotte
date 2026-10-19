@@ -1,6 +1,6 @@
 import type { LogEntry } from 'game-rules';
 import { gameView } from './testing';
-import { logText, seatName } from './game-view';
+import { logText, rematchState, seatName } from './game-view';
 import { I18nService } from './i18n.service';
 import { TestBed } from '@angular/core/testing';
 
@@ -48,5 +48,21 @@ describe('game view names', () => {
     ]);
     const entry: LogEntry = { at: 0, kind: 'replaced', seat: 1, data: 'left' };
     expect(logText(replaced, entry, i18n())).toContain('Pia left');
+  });
+});
+
+describe('rematch state', () => {
+  it('waits for the host unless the view says otherwise', () => {
+    expect(rematchState(gameView({ phase: 'finished' }))).toBe('waiting');
+    expect(rematchState(gameView({ phase: 'finished', rematch: 'open' }))).toBe('open');
+    expect(rematchState(gameView({ phase: 'finished', rematch: 'closed' }))).toBe('closed');
+  });
+
+  it('writes the rematch into the log', () => {
+    const game = gameView({}, [
+      { state: 'human', playerId: 'p0', nickname: 'Ann', connected: true },
+    ]);
+    const entry: LogEntry = { at: 0, kind: 'rematch', seat: 0 };
+    expect(logText(game, entry, TestBed.inject(I18nService))).toBe('Ann started a rematch');
   });
 });

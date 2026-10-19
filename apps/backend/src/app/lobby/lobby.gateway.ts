@@ -103,6 +103,8 @@ export class LobbyGateway implements OnGatewayDisconnect {
       // removed by the host while offline: tell them now
       if (room?.banned.has(session.playerId))
         this.emitTo(client.id, 'game:closed', { reason: 'banned' });
+      // a reload or reconnect gives up a seat held for the rematch
+      room?.leave(session.playerId);
       session.gameId = undefined;
       void client.join(LOBBY);
     }
@@ -235,6 +237,32 @@ export class LobbyGateway implements OnGatewayDisconnect {
       if (left.ok) this.exit(session);
       return left;
     });
+  }
+
+  @SubscribeMessage('rematch:start')
+  rematch(@ConnectedSocket() client: Socket, @MessageBody() b: unknown): Ack {
+    if (!isObj(b) || !isInt(b['round'], 1, 1e6))
+      return this.session(client) ? bad('invalidRequest') : bad('noSession');
+    const round = b['round'];
+    return this.inRoom(client, (room, session) => room.rematch(session.playerId, round));
+  }
+
+  @SubscribeMessage('rematch:join')
+  rematchJoin(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() b: unknown,
+  ): Ack<Intents['rematch:join'][1]> {
+    if (!isObj(b) || !isInt(b['round'], 1, 1e6))
+      return this.session(client) ? bad('invalidRequest') : bad('noSession');
+    const round = b['round'];
+    const session = this.session(client);
+    if (!session) return bad('noSession');
+    const room = this.roomOf(session);
+    if (!room) return bad('notInGame');
+    const res = room.rematchJoin(session.playerId, round, session.language);
+    if (!res.ok) return done(res) as Ack<never>;
+    this.pushLobby();
+    return { ok: true, game: toView(room, session.playerId) };
   }
 
   @SubscribeMessage('seat:set')
@@ -432,11 +460,16 @@ export class LobbyGateway implements OnGatewayDisconnect {
         const id = s.former.playerId;
         if (this.sessions.byPlayerId(id)?.gameId === room.id) watchers.add(id);
       }
+    // players who wait for the rematch, and the ones its start just dropped, still look at the finished game
+    const waiting = new Set(room.watchers());
+    for (const id of waiting) watchers.add(id);
     for (const playerId of watchers) {
       const socketId = this.sessions.byPlayerId(playerId)?.socketId;
       this.emitTo(socketId, 'game:state', { game: toView(room, playerId) });
-      if (entries.length) this.emitTo(socketId, 'game:log', { entries });
+      if (entries.length && !waiting.has(playerId)) this.emitTo(socketId, 'game:log', { entries });
     }
+    // dropped players are told once; they leave the room when they press "Back to the lobby"
+    room.dropped.clear();
     const summary = JSON.stringify(room.summary());
     if (this.summaries.get(room.id) !== summary) {
       this.summaries.set(room.id, summary);
@@ -471,6 +504,13 @@ export class LobbyGateway implements OnGatewayDisconnect {
       if (!session) continue;
       this.exit(session);
       if (reason === 'cleanup') this.emitTo(session.socketId, 'game:closed', { reason });
+    }
+    // players waiting for a rematch lose it with the room
+    for (const id of room.watchers()) {
+      const session = this.sessions.byPlayerId(id);
+      if (session?.gameId !== room.id) continue;
+      this.exit(session);
+      this.emitTo(session.socketId, 'game:closed', { reason: 'cleanup' });
     }
     if (reason === 'ended') this.releaseFormerPlayers(room);
     this.pushLobby();

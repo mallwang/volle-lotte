@@ -3,7 +3,7 @@ import type { GameView } from 'game-rules';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { TagModule } from 'primeng/tag';
-import { playerSeats, youWon } from '../core/game-view';
+import { isHost, playerSeats, rematchState, seatName, youWon } from '../core/game-view';
 import { SocketService } from '../core/socket.service';
 import { TranslatePipe } from '../core/translate.pipe';
 
@@ -45,8 +45,43 @@ import { TranslatePipe } from '../core/translate.pipe';
           }
         </ol>
       }
+      @if (host()) {
+        <p class="vl-hint">{{ 'gameOver.rematchHint' | t }}</p>
+      } @else {
+        @switch (state()) {
+          @case ('open') {
+            <p class="vl-hint" role="status">
+              {{
+                'gameOver.seatReserved' | t: { name: hostName(), n: (view().you.reserved ?? 0) + 1 }
+              }}
+            </p>
+          }
+          @case ('closed') {
+            <p class="vl-hint" role="status">{{ 'gameOver.startedWithoutYou' | t }}</p>
+          }
+          @default {
+            <p class="vl-hint" role="status">
+              {{ 'gameOver.waitingForHost' | t: { name: hostName() } }}
+            </p>
+          }
+        }
+      }
       <div class="vl-actions">
-        <p-button [label]="'gameOver.back' | t" (onClick)="socket.leave()" />
+        @if (host()) {
+          <p-button [label]="'gameOver.rematch' | t" (onClick)="socket.rematch()" />
+        } @else {
+          <p-button
+            [label]="'gameOver.rejoin' | t"
+            [disabled]="state() !== 'open'"
+            (onClick)="socket.rejoinRematch()"
+          />
+        }
+        <p-button
+          [label]="'gameOver.back' | t"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="socket.leave()"
+        />
       </div>
     </p-dialog>
   `,
@@ -74,6 +109,13 @@ export class GameOver {
   protected readonly socket = inject(SocketService);
 
   protected readonly won = computed(() => youWon(this.view()));
+  /** The host decides about the rematch; everybody else waits for it. */
+  protected readonly host = computed(() => isHost(this.view()));
+  protected readonly state = computed(() => rematchState(this.view()));
+  protected readonly hostName = computed(() => {
+    const v = this.view();
+    return seatName(v.seats.find((s) => s.playerId === v.hostId));
+  });
   protected readonly winner = computed(() => {
     const g = this.view().game;
     return g?.result ? g.players[g.result.winner].name : '';

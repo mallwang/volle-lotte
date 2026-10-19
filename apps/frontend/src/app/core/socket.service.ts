@@ -242,6 +242,25 @@ export class SocketService {
     return ack;
   }
 
+  /** Host of a finished game: reopens the room as a lobby; the lobby view arrives as a push. */
+  async rematch(): Promise<boolean> {
+    const game = this.game();
+    if (!game) return false;
+    const ack = await this.send('rematch:start', { round: game.round });
+    if (!ack.ok) this.notify('error', errorMessage(ack, this.i18n));
+    return ack.ok;
+  }
+
+  /** A player waiting after a rematch takes their reserved seat and sees the lobby. */
+  async rejoinRematch(): Promise<boolean> {
+    const game = this.game();
+    if (!game) return false;
+    const ack = await this.send('rematch:join', { round: game.round });
+    if (ack.ok) this.game.set(ack.game);
+    else this.notify('error', errorMessage(ack, this.i18n));
+    return ack.ok;
+  }
+
   /** The last host ends a game that only has computers left; a failure is up to the caller. */
   end(gameId: string): Promise<Ack> {
     return this.send('game:end', { gameId });
