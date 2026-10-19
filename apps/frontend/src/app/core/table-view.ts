@@ -16,11 +16,21 @@ export interface TableSeat {
   area: SeatArea;
 }
 
-/** Seats fill the sides top to bottom, alternating left and right. */
-export const seatAreas = (count: number): readonly SeatArea[] =>
-  Array.from<unknown, SeatArea>({ length: Math.min(Math.max(count, 0), 8) }, (_, k) =>
-    k % 2 === 0 ? `l${k / 2 + 1}` : `r${(k - 1) / 2 + 1}`,
-  );
+/** Seats run clockwise from the top left: down the right side, then up the left. */
+export const seatAreas = (count: number): readonly SeatArea[] => {
+  const n = Math.min(Math.max(count, 0), 8);
+  const rows = Math.ceil(n / 2);
+  const right = Array.from({ length: rows }, (_, k) => `r${k + 1}`);
+  const left = Array.from({ length: rows - 1 }, (_, k) => `l${rows - k}`);
+  return ['l1', ...right, ...left].slice(0, n) as SeatArea[];
+};
+
+/** Top seats sit flush at the top, bottom seats at the bottom, the rest in the middle. */
+export const seatAlign = (area: SeatArea, rows: number): 'start' | 'end' | 'center' => {
+  const row = Number(area.slice(1));
+  if (rows < 2 || (row > 1 && row < rows)) return 'center';
+  return row === 1 ? 'start' : 'end';
+};
 
 /** Rows needed on each side. */
 export const seatRows = (count: number): number => Math.ceil(Math.min(Math.max(count, 0), 8) / 2);

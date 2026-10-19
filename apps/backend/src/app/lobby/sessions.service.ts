@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { randomBytes } from 'node:crypto';
+import type { UiLanguage } from 'game-rules';
 
 const NICKNAME = /^[A-Za-z0-9 _-]{2,20}$/;
 const IDLE_MS = 24 * 3_600_000;
@@ -8,6 +9,8 @@ export interface Session {
   token: string;
   playerId: string;
   nickname: string;
+  /** Last UI language the player reported; used to name computers in the host's language. */
+  language: UiLanguage;
   socketId?: string;
   gameId?: string;
   lastSeen: number;
@@ -28,11 +31,12 @@ export class SessionsService {
 
   constructor(private readonly now: () => number = Date.now) {}
 
-  create(nickname: string): Session {
+  create(nickname: string, language: UiLanguage = 'en'): Session {
     const session: Session = {
       token: randomBytes(32).toString('hex'),
       playerId: randomBytes(8).toString('hex'),
       nickname,
+      language,
       lastSeen: this.now(),
     };
     this.byToken.set(session.token, session);

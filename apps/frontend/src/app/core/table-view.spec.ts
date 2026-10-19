@@ -7,6 +7,7 @@ import {
   pileLevel,
   playedCards,
   safeLabel,
+  seatAlign,
   seatAreas,
   seatRows,
   seatViews,
@@ -28,8 +29,16 @@ const view = (n: number, current: number, youSeat: number): GameView =>
   }) as unknown as GameView;
 
 describe('table-view', () => {
-  it('fills the sides top to bottom, alternating left and right', () => {
-    expect(seatAreas(5)).toEqual(['l1', 'r1', 'l2', 'r2', 'l3']);
+  it('seats clockwise from the top left, bottom seats in the corners', () => {
+    expect(seatAreas(2)).toEqual(['l1', 'r1']);
+    expect(seatAreas(3)).toEqual(['l1', 'r1', 'r2']);
+    expect(seatAreas(4)).toEqual(['l1', 'r1', 'r2', 'l2']);
+    expect(seatAreas(5)).toEqual(['l1', 'r1', 'r2', 'r3', 'l3']);
+    expect(seatAreas(6)).toEqual(['l1', 'r1', 'r2', 'r3', 'l3', 'l2']);
+    expect(seatAlign('l1', 3)).toBe('start');
+    expect(seatAlign('r2', 3)).toBe('center');
+    expect(seatAlign('l3', 3)).toBe('end');
+    expect(seatAlign('l1', 1)).toBe('center');
     expect(seatAreas(0)).toEqual([]);
     expect(seatAreas(9)).toHaveLength(8);
     expect(seatRows(5)).toBe(3);

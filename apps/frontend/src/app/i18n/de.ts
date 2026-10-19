@@ -227,6 +227,12 @@ export const de: Record<keyof typeof en, string> = {
   'settings.fastComputerDice': 'Schnelle Computer-Würfel',
   'settings.fastComputerDiceHint': 'Würfel des Computers rollen kürzer. Gilt für alle am Tisch.',
   'settings.hostOnly': 'Nur der Host kann das ändern.',
+  'computerName.label': '{name} umbenennen',
+  'computerName.regenerate': 'Neuen Namen würfeln',
+  'computerName.invalid':
+    'Der Name muss 2-20 Zeichen haben: Buchstaben, Ziffern, Leerzeichen, _ oder -.',
+  'computerName.taken':
+    'Dieser Name wird im Spiel bereits von einem Spieler oder Computer verwendet.',
   'settings.showBustProbability': 'Fehlschlag-Wahrscheinlichkeit anzeigen',
   'settings.showBustProbabilityHint':
     'Für alle. Vorschau auf den nächsten Wurf nach Beiseitelegen der markierten Würfel.',
@@ -285,6 +291,7 @@ export const de: Record<keyof typeof en, string> = {
   'log.gameOver': 'Das Spiel ist vorbei',
   'log.joined': '{who} ist beigetreten',
   'log.rejoined': '{who} ist zurück',
+  'log.renamed': '{old} heißt jetzt {who}',
   'log.left': '{who} ist gegangen',
   'log.disconnected': '{who} hat die Verbindung verloren',
   'log.reconnected': '{who} ist wieder verbunden',

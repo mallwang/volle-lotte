@@ -10,6 +10,9 @@
       "path": "./libs/game-rules"
     },
     {
+      "path": "./libs/computer-names"
+    },
+    {
       "path": "./apps/frontend"
     }
   ]

@@ -1,4 +1,5 @@
 import { randomInt } from 'node:crypto';
+import { uniqueName } from 'computer-names';
 import {
   applyAction,
   chooseAction,
@@ -6,6 +7,7 @@ import {
   DEFAULT_SPEED,
   isComputerSpeed,
   pacing,
+  renamePlayer,
   skipTurn,
   type Action,
   type Difficulty,
@@ -23,7 +25,9 @@ import {
   type RoomPhase,
   type SettingChange,
   type Rules,
+  type UiLanguage,
 } from 'game-rules';
+import { validNickname } from './sessions.service';
 
 export const SEATS = 8;
 export const GRACE_MS = 30_000;
@@ -53,6 +57,8 @@ export type Seat =
       state: 'human';
       playerId: string;
       nickname: string;
+      /** Latest UI language of the player; kept when they leave so a takeover can be named in it. */
+      language: UiLanguage;
       connected: boolean;
       ready: boolean;
       disconnectedAt?: number;
@@ -60,6 +66,8 @@ export type Seat =
     }
   | {
       state: 'computer';
+      /** Display name, generated or entered by the host; unique among all occupied seats. */
+      name: string;
       difficulty: Difficulty;
       risk: Risk;
       /** Set only when the computer replaced a human, who may rejoin. */
@@ -67,6 +75,7 @@ export type Seat =
     };
 
 type Human = Extract<Seat, { state: 'human' }>;
+type ComputerSeat = Extract<Seat, { state: 'computer' }>;
 export type ReplaceReason = 'left' | 'disconnected' | 'timeouts';
 
 export type Fail = { ok: false; reason: ErrorReason; engine?: RejectionReason };
@@ -80,9 +89,11 @@ export interface RoomOptions {
   passwordHash: string;
   rules: Rules;
   seatCount: number;
-  host: { playerId: string; nickname: string };
+  host: { playerId: string; nickname: string; language?: UiLanguage };
   now?: () => number;
   rng?: RandomInt;
+  /** Picks computer names; separate from `rng` so naming never consumes dice or deck randomness. */
+  nameRng?: RandomInt;
   graceMs?: number;
   /** Called after every accepted change, also from timers, with the log entries added since the last call. */
   onChange?: (entries: LogEntry[]) => void;
@@ -108,6 +119,7 @@ export class GameRoom {
 
   private readonly now: () => number;
   private readonly rng: RandomInt;
+  private readonly nameRng: RandomInt;
   /** Dice indices the active player has ticked but not yet confirmed; shown to the others. */
   preview: number[] = [];
   /** Host setting: computer throws roll for 1–2.5 s instead of 2–5 s on every client. */
@@ -139,11 +151,12 @@ export class GameRoom {
     this.hostId = o.host.playerId;
     this.now = o.now ?? Date.now;
     this.rng = o.rng ?? ((n) => randomInt(n));
+    this.nameRng = o.nameRng ?? ((n) => randomInt(n));
     this.graceMs = o.graceMs ?? GRACE_MS;
     this.onChange = o.onChange;
     this.createdAt = this.now();
     for (let i = 0; i < SEATS; i++) this.seats.push({ state: i < o.seatCount ? 'open' : 'locked' });
-    this.seats[0] = this.humanSeat(o.host.playerId, o.host.nickname);
+    this.seats[0] = this.humanSeat(o.host.playerId, o.host.nickname, o.host.language);
   }
 
   // ---- queries
@@ -187,11 +200,15 @@ export class GameRoom {
 
   // ---- lobby
 
-  join(playerId: string, nickname: string, seat?: number): Res<{ seat: number }> {
+  join(
+    playerId: string,
+    nickname: string,
+    seat?: number,
+    language?: UiLanguage,
+  ): Res<{ seat: number }> {
     if (this.banned.has(playerId)) return fail('banned');
     if (this.phase !== 'lobby') return fail('gameStarted');
-    const lower = nickname.toLowerCase();
-    if (this.humans().some((h) => h.nickname.toLowerCase() === lower)) return fail('nicknameTaken');
+    if (this.takenNames().has(nickname.toLowerCase())) return fail('nicknameTaken');
     let index = seat;
     if (index === undefined) {
       index = this.seats.findIndex((s) => s.state === 'open');
@@ -199,7 +216,7 @@ export class GameRoom {
     } else if (this.seats[index]?.state !== 'open') {
       return fail('seatNotFree');
     }
-    this.seats[index] = this.humanSeat(playerId, nickname);
+    this.seats[index] = this.humanSeat(playerId, nickname, language);
     this.resetReady();
     this.add('joined', index);
     this.emit();
@@ -207,19 +224,54 @@ export class GameRoom {
   }
 
   /** A player who left or timed out takes their seat back from the computer. */
-  rejoin(playerId: string): Res<{ seat: number }> {
+  rejoin(playerId: string, language?: UiLanguage): Res<{ seat: number }> {
     if (this.banned.has(playerId)) return fail('banned');
     if (this.seatOf(playerId) >= 0) return fail('alreadyInGame');
     const seat = this.formerSeat(playerId);
     if (seat < 0) return fail('notRejoinable');
-    const computer = this.seats[seat] as Extract<Seat, { state: 'computer' }>;
-    this.seats[seat] = this.humanSeat(playerId, computer.former!.nickname);
+    const { former } = this.seats[seat] as ComputerSeat;
+    const { nickname } = former as NonNullable<ComputerSeat['former']>;
+    this.seats[seat] = this.humanSeat(playerId, nickname, language);
+    this.nameEnginePlayer(seat, nickname);
     clearTimeout(this.computerTimer);
     this.computerTimer = undefined;
     this.preview = [];
     this.add('rejoined', seat);
     this.emit();
     return { ok: true, seat };
+  }
+
+  /** Remembers the UI language of a seated player; computers are named in the host's. */
+  setLanguage(playerId: string, language: UiLanguage): void {
+    const seat = this.seats[this.seatOf(playerId)];
+    if (seat?.state === 'human') seat.language = language;
+  }
+
+  /** Host only: renames a computer in the lobby or a running game; without a name it gets a newly generated one. */
+  renameComputer(playerId: string, seat: number, name?: unknown): Res {
+    if (playerId !== this.hostId) return fail('notHost');
+    if (this.phase === 'finished') return fail('notInGame');
+    const current = this.seats[seat];
+    if (current?.state !== 'computer') return fail('invalidRequest');
+    const others = this.takenNames();
+    others.delete(current.name.toLowerCase());
+    const valid =
+      name === undefined
+        ? uniqueName(
+            this.hostLanguage(),
+            new Set([...others, current.name.toLowerCase()]),
+            this.nameRng,
+          )
+        : validNickname(name);
+    if (!valid) return fail('invalidNickname');
+    if (others.has(valid.toLowerCase())) return fail('nicknameTaken');
+    if (valid === current.name) return { ok: true };
+    const old = current.name;
+    current.name = valid;
+    this.nameEnginePlayer(seat, valid);
+    this.add('renamed', seat, old);
+    this.emit();
+    return { ok: true };
   }
 
   /** Deliberate leave. Returns whether the room has no human left. */
@@ -257,11 +309,7 @@ export class GameRoom {
         if (current.playerId === this.hostId) return fail('seatOccupied');
         removed = current.playerId;
       }
-      this.seats[seat] = {
-        state: 'computer',
-        difficulty,
-        risk,
-      };
+      this.seats[seat] = this.computerSeat(current, difficulty, risk);
     } else if (current.state === 'human' || current.state === 'computer') {
       // occupied seats are freed by removing the occupant first: computers via 'open'
       if (mode === 'locked' || current.state === 'human') return fail('seatOccupied');
@@ -310,7 +358,7 @@ export class GameRoom {
     this.game = createGame(
       occupied.map((i) => {
         const s = this.seats[i];
-        return s.state === 'human' ? s.nickname : `Computer ${i + 1}`;
+        return s.state === 'human' ? s.nickname : (s as ComputerSeat).name;
       }),
       this.rules,
       this.rng,
@@ -581,12 +629,17 @@ export class GameRoom {
   private replaceByBot(seat: number, reason: ReplaceReason) {
     const human = this.seats[seat] as Human;
     this.clearGrace(seat);
+    // the host's language, also when the host is the one leaving: the seat still holds it before an election
+    const language = this.host()?.language ?? human.language;
+    const name = this.newComputerName(language);
     this.seats[seat] = {
       state: 'computer',
+      name,
       difficulty: 'random',
       risk: 'random',
       former: { playerId: human.playerId, nickname: human.nickname },
     };
+    this.nameEnginePlayer(seat, name);
     if (seat === this.currentSeat()) this.preview = [];
     this.add('replaced', seat, reason);
   }
@@ -620,8 +673,50 @@ export class GameRoom {
     this.graceTimers.delete(seat);
   }
 
-  private humanSeat(playerId: string, nickname: string): Seat {
-    return { state: 'human', playerId, nickname, connected: true, ready: false, timeouts: 0 };
+  private humanSeat(playerId: string, nickname: string, language: UiLanguage = 'en'): Seat {
+    return {
+      state: 'human',
+      playerId,
+      nickname,
+      language,
+      connected: true,
+      ready: false,
+      timeouts: 0,
+    };
+  }
+
+  /** A computer that only changes skill keeps its name; any other seat gets a fresh one. */
+  private computerSeat(current: Seat, difficulty: Difficulty, risk: Risk): ComputerSeat {
+    const name =
+      current.state === 'computer' ? current.name : this.newComputerName(this.hostLanguage());
+    return { state: 'computer', name, difficulty, risk };
+  }
+
+  /** Lower-case names no new seat name may equal: players, computers and reserved former nicknames. */
+  private takenNames(): Set<string> {
+    const names = new Set<string>();
+    for (const s of this.seats) {
+      if (s.state === 'human') names.add(s.nickname.toLowerCase());
+      else if (s.state === 'computer') {
+        names.add(s.name.toLowerCase());
+        if (s.former) names.add(s.former.nickname.toLowerCase());
+      }
+    }
+    return names;
+  }
+
+  /** Keeps the engine player's name equal to the name its room seat shows. */
+  private nameEnginePlayer(seat: number, name: string) {
+    const engine = this.seatOfEngine.indexOf(seat);
+    if (this.game && engine >= 0) this.game = renamePlayer(this.game, engine, name);
+  }
+
+  private hostLanguage(): UiLanguage {
+    return this.host()?.language ?? 'en';
+  }
+
+  private newComputerName(language: UiLanguage): string {
+    return uniqueName(language, this.takenNames(), this.nameRng);
   }
 
   private resetReady() {

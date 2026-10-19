@@ -26,6 +26,14 @@ describe('PlayerSeat', () => {
     expect(el.querySelector('[aria-current=true]')).not.toBeNull();
   });
 
+  it('keeps long names with umlauts readable for pointer and keyboard users', () => {
+    const name = 'Neugieriges Eichhörnchen';
+    const el = make({ name, computer: true });
+    expect(el.querySelector('strong')?.getAttribute('title')).toBe(name);
+    expect(el.querySelector('[role=group]')?.getAttribute('aria-label')).toContain(name);
+    expect(el.textContent).toContain(name);
+  });
+
   it('shows the hourglass only while the computer has a phase to show', () => {
     const idle = make({ active: true, computer: true });
     expect(idle.querySelector('.vl-hourglass')).toBeNull();

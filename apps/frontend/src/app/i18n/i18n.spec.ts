@@ -39,3 +39,19 @@ describe('dictionaries', () => {
     for (const k of Object.keys(engine)) expect(en, k).toHaveProperty(`engine.${k}`);
   });
 });
+
+describe('computer name texts', () => {
+  const keys = [
+    'computerName.regenerate',
+    'computerName.label',
+    'computerName.invalid',
+    'computerName.taken',
+    'log.renamed',
+  ];
+
+  it.each(keys)('%s exists in both languages and differs between them', (key) => {
+    expect(en[key as keyof typeof en], key).toBeTruthy();
+    expect(de[key as keyof typeof de], key).toBeTruthy();
+    expect(de[key as keyof typeof de]).not.toBe(en[key as keyof typeof en]);
+  });
+});

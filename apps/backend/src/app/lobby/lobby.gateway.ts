@@ -9,6 +9,7 @@ import {
 import type { Server, Socket } from 'socket.io';
 import {
   PROTOCOL_VERSION,
+  isUiLanguage,
   rulesError,
   type Ack,
   type Action,
@@ -81,21 +82,21 @@ export class LobbyGateway implements OnGatewayDisconnect {
     if (!isObj(body) || !isInt(body['protocolVersion'], 0, 1e6)) return bad('invalidRequest');
     if (body['protocolVersion'] !== PROTOCOL_VERSION) return bad('versionMismatch');
     const token = body['token'];
+    const language = isUiLanguage(body['language']) ? body['language'] : undefined;
     let session = typeof token === 'string' ? this.sessions.byTokenValue(token) : undefined;
     if (!session) {
       const nickname = validNickname(body['nickname']);
       if (!nickname) return bad('invalidNickname');
-      session = this.sessions.create(nickname);
+      session = this.sessions.create(nickname, language);
+    } else if (language) {
+      session.language = language;
     }
-    const replaced = this.sessions.attach(session, client.id);
-    if (replaced) {
-      this.emitTo(replaced, 'session:replaced', undefined);
-      this.server.sockets.sockets.get(replaced)?.disconnect(true);
-    }
+    this.dropReplacedSocket(this.sessions.attach(session, client.id));
     let game;
     const room = session.gameId ? this.registry.get(session.gameId) : undefined;
     if (room && room.seatOf(session.playerId) >= 0) {
       void client.leave(LOBBY);
+      room.setLanguage(session.playerId, session.language);
       room.setConnected(session.playerId, true);
       game = toView(room, session.playerId);
     } else {
@@ -113,6 +114,16 @@ export class LobbyGateway implements OnGatewayDisconnect {
       protocolVersion: PROTOCOL_VERSION,
       ...(game && { game }),
     };
+  }
+
+  @SubscribeMessage('session:language')
+  setLanguage(@ConnectedSocket() client: Socket, @MessageBody() b: unknown): Ack {
+    const session = this.session(client);
+    if (!session) return bad('noSession');
+    if (!isObj(b) || !isUiLanguage(b['language'])) return bad('invalidRequest');
+    session.language = b['language'];
+    this.roomOf(session)?.setLanguage(session.playerId, session.language);
+    return { ok: true };
   }
 
   @SubscribeMessage('lobby:list')
@@ -141,7 +152,11 @@ export class LobbyGateway implements OnGatewayDisconnect {
       passwordHash: b['password'] === '' ? '' : hashPassword(b['password']),
       rules: b['rules'] as unknown as Rules,
       seatCount: b['seats'],
-      host: { playerId: session.playerId, nickname: session.nickname },
+      host: {
+        playerId: session.playerId,
+        nickname: session.nickname,
+        language: session.language,
+      },
     });
     this.enter(client, session, room);
     this.pushLobby();
@@ -171,7 +186,12 @@ export class LobbyGateway implements OnGatewayDisconnect {
       }
       this.limiter.succeed(key, room.id);
     }
-    const joined = room.join(session.playerId, session.nickname, b['seat'] as number | undefined);
+    const joined = room.join(
+      session.playerId,
+      session.nickname,
+      b['seat'] as number | undefined,
+      session.language,
+    );
     if (!joined.ok) return done(joined) as Ack<never>;
     this.enter(client, session, room);
     this.pushLobby();
@@ -189,7 +209,7 @@ export class LobbyGateway implements OnGatewayDisconnect {
     if (!isObj(b) || typeof b['gameId'] !== 'string') return bad('invalidRequest');
     const room = this.registry.get(b['gameId']);
     if (!room) return bad('gameNotFound');
-    const res = room.rejoin(session.playerId);
+    const res = room.rejoin(session.playerId, session.language);
     if (!res.ok) return res;
     this.enter(client, session, room);
     this.pushLobby();
@@ -226,6 +246,20 @@ export class LobbyGateway implements OnGatewayDisconnect {
     };
     return this.inRoom(client, (room, session) =>
       this.removed(room.setSeat(session.playerId, seat, mode, difficulty, risk)),
+    );
+  }
+
+  @SubscribeMessage('seat:rename')
+  renameSeat(@ConnectedSocket() client: Socket, @MessageBody() b: unknown): Ack {
+    if (
+      !isObj(b) ||
+      !isInt(b['seat'], 0, 7) ||
+      (b['name'] !== undefined && typeof b['name'] !== 'string')
+    )
+      return this.session(client) ? bad('invalidRequest') : bad('noSession');
+    const { seat, name } = b as { seat: number; name?: string };
+    return this.inRoom(client, (room, session) =>
+      room.renameComputer(session.playerId, seat, name),
     );
   }
 
@@ -305,6 +339,12 @@ export class LobbyGateway implements OnGatewayDisconnect {
   }
 
   // ---- helpers
+
+  private dropReplacedSocket(replaced: string | undefined): void {
+    if (!replaced) return;
+    this.emitTo(replaced, 'session:replaced', undefined);
+    this.server.sockets.sockets.get(replaced)?.disconnect(true);
+  }
 
   private session(client: Socket): Session | undefined {
     return this.sessions.bySocketId(client.id);

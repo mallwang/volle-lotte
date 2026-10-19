@@ -1,8 +1,9 @@
-import { DEFAULT_SPEED, defaultRules, pacing, seededRandomInt } from 'game-rules';
+import { ENGLISH_ADJECTIVES, GERMAN_ADJECTIVES } from 'computer-names';
+import { DEFAULT_SPEED, defaultRules, pacing, seededRandomInt, type UiLanguage } from 'game-rules';
 import { GameRoom, GRACE_MS, MAX_TIMEOUTS, TURN_LIMIT_MS } from './game-room';
 import { toView } from './view';
 
-const make = (seatCount = 3) => {
+const make = (seatCount = 3, language: UiLanguage = 'en') => {
   const changes: number[] = [];
   const room = new GameRoom({
     id: 'g1',
@@ -10,8 +11,9 @@ const make = (seatCount = 3) => {
     passwordHash: 'secret-hash',
     rules: defaultRules(),
     seatCount,
-    host: { playerId: 'h', nickname: 'Host' },
+    host: { playerId: 'h', nickname: 'Host', language },
     rng: seededRandomInt(1),
+    nameRng: seededRandomInt(2),
     graceMs: 1000,
     onChange: (e) => changes.push(e.length),
   });
@@ -46,11 +48,16 @@ describe('GameRoom lobby', () => {
   it('keeps skill and risk of a computer seat, risk defaults to medium', () => {
     const { room } = make(4);
     expect(room.setSeat('h', 2, 'computer', 'hard', 'none')).toMatchObject({ ok: true });
-    expect(room.seats[2]).toEqual({ state: 'computer', difficulty: 'hard', risk: 'none' });
+    expect(room.seats[2]).toMatchObject({ state: 'computer', difficulty: 'hard', risk: 'none' });
     expect(room.setSeat('h', 3, 'computer')).toMatchObject({ ok: true });
-    expect(room.seats[3]).toEqual({ state: 'computer', difficulty: 'medium', risk: 'medium' });
+    expect(room.seats[3]).toMatchObject({
+      state: 'computer',
+      difficulty: 'medium',
+      risk: 'medium',
+    });
     expect(toView(room, 'h').seats[2]).toEqual({
       state: 'computer',
+      name: (room.seats[2] as { name: string }).name,
       difficulty: 'hard',
       risk: 'none',
     });
@@ -127,6 +134,7 @@ describe('GameRoom leaving', () => {
     expect(room.log.at(-1)).toMatchObject({ kind: 'replaced', seat: 1, data: 'left' });
     expect(toView(room, 'h').seats[1]).toEqual({
       state: 'computer',
+      name: (seat as { name: string }).name,
       difficulty: 'random',
       risk: 'random',
       former: { nickname: 'Pia' },
@@ -465,6 +473,238 @@ describe('GameRoom turn timer', () => {
     room.start('h');
     const humanFirst = room.game?.current === 0;
     expect(room.turnDeadline !== undefined).toBe(humanFirst);
+    room.dispose();
+  });
+});
+
+const nameOf = (room: GameRoom, seat: number) => (room.seats[seat] as { name: string }).name;
+const engineNames = (room: GameRoom) => room.game?.players.map((p) => p.name);
+
+describe('computer names', () => {
+  it('gives each lobby computer a distinct two-word English name', () => {
+    const { room } = make(8);
+    for (let i = 1; i < 8; i++) room.setSeat('h', i, 'computer');
+    const names = room.seats.slice(1).map((_, i) => nameOf(room, i + 1));
+    expect(new Set(names.map((n) => n.toLowerCase())).size).toBe(7);
+    for (const name of names) {
+      const [adjective, noun] = name.split(' ');
+      expect(ENGLISH_ADJECTIVES).toContain(adjective);
+      expect(noun).toBeTruthy();
+      expect(name).not.toMatch(/^Computer \d/);
+    }
+  });
+
+  it("uses the host's German UI language", () => {
+    const { room } = make(3, 'de');
+    room.setSeat('h', 1, 'computer');
+    const [adjective] = nameOf(room, 1).split(' ');
+    expect(GERMAN_ADJECTIVES.flatMap((a) => Object.values(a))).toContain(adjective);
+  });
+
+  it('keeps the name when only skill changes and makes a fresh one after reopening', () => {
+    const { room } = make(3);
+    room.setSeat('h', 1, 'computer', 'easy');
+    const first = nameOf(room, 1);
+    room.setSeat('h', 1, 'computer', 'hard');
+    expect(nameOf(room, 1)).toBe(first);
+    room.setSeat('h', 1, 'open');
+    room.setSeat('h', 1, 'computer');
+    expect(nameOf(room, 1)).not.toBe(first);
+  });
+
+  it('never reuses a name taken by a player or another computer, ignoring case', () => {
+    const forced = new GameRoom({
+      id: 'x',
+      name: 'x',
+      passwordHash: '',
+      rules: defaultRules(),
+      seatCount: 4,
+      host: { playerId: 'h', nickname: 'Host' },
+      nameRng: () => 0,
+    });
+    forced.setSeat('h', 1, 'computer');
+    expect(nameOf(forced, 1)).toBe('Brave Badger');
+    expect(forced.join('p', 'brave badger')).toMatchObject({ ok: false, reason: 'nicknameTaken' });
+    forced.setSeat('h', 2, 'computer');
+    expect(nameOf(forced, 2).toLowerCase()).not.toBe('brave badger');
+  });
+
+  it('uses the computer names for the engine players and shows them in every view', () => {
+    const { room } = make(3);
+    room.join('p', 'Pia');
+    room.setSeat('h', 2, 'computer');
+    room.setSeat('h', 2, 'open');
+    room.setSeat('h', 2, 'computer');
+    room.setReady('h', true);
+    room.setReady('p', true);
+    expect(room.start('h')).toEqual({ ok: true });
+    expect(engineNames(room)).toEqual(['Host', 'Pia', nameOf(room, 2)]);
+    expect(toView(room, 'p').seats[2].name).toBe(nameOf(room, 2));
+    room.dispose();
+  });
+});
+
+describe('computer rename', () => {
+  const running = () => {
+    const { room } = make(4);
+    room.join('p', 'Pia');
+    room.setSeat('h', 2, 'computer');
+    room.setSeat('h', 3, 'computer');
+    room.setReady('h', true);
+    room.setReady('p', true);
+    return room;
+  };
+
+  it('renames in the lobby and logs the old name', () => {
+    const room = running();
+    const old = nameOf(room, 2);
+    expect(room.renameComputer('h', 2, '  Rex  ')).toEqual({ ok: true });
+    expect(nameOf(room, 2)).toBe('Rex');
+    expect(toView(room, 'p').seats[2].name).toBe('Rex');
+    expect(room.log.at(-1)).toMatchObject({ kind: 'renamed', seat: 2, data: old });
+  });
+
+  it('renames the engine player of a running game without touching state', () => {
+    const room = running();
+    room.start('h');
+    const before = room.game;
+    expect(room.renameComputer('h', 3, 'Rex')).toEqual({ ok: true });
+    expect(engineNames(room)).toEqual(['Host', 'Pia', nameOf(room, 2), 'Rex']);
+    expect(room.game).toMatchObject({ current: before?.current, deck: before?.deck });
+    expect(room.game?.players.map((p) => p.score)).toEqual(before?.players.map((p) => p.score));
+    room.dispose();
+  });
+
+  it('rejects non-hosts, non-computers, bad and duplicate names without changes', () => {
+    const room = running();
+    const names = [nameOf(room, 2), nameOf(room, 3)];
+    const logged = room.log.length;
+    expect(room.renameComputer('p', 2, 'Rex')).toMatchObject({ reason: 'notHost' });
+    expect(room.renameComputer('h', 1, 'Rex')).toMatchObject({ reason: 'invalidRequest' });
+    expect(room.renameComputer('h', 0, 'Rex')).toMatchObject({ reason: 'invalidRequest' });
+    expect(room.renameComputer('h', 7, 'Rex')).toMatchObject({ reason: 'invalidRequest' });
+    expect(room.renameComputer('h', 2, '   ')).toMatchObject({ reason: 'invalidNickname' });
+    expect(room.renameComputer('h', 2, 'x'.repeat(21))).toMatchObject({
+      reason: 'invalidNickname',
+    });
+    expect(room.renameComputer('h', 2, 'Bad<>')).toMatchObject({ reason: 'invalidNickname' });
+    expect(room.renameComputer('h', 2, 42)).toMatchObject({ reason: 'invalidNickname' });
+    expect(room.renameComputer('h', 2, 'pia')).toMatchObject({ reason: 'nicknameTaken' });
+    expect(room.renameComputer('h', 2, nameOf(room, 3).toUpperCase())).toMatchObject({
+      reason: 'nicknameTaken',
+    });
+    expect([nameOf(room, 2), nameOf(room, 3)]).toEqual(names);
+    expect(room.log).toHaveLength(logged);
+  });
+
+  it('allows a case-only change of the own name and ignores an identical one', () => {
+    const room = running();
+    expect(room.renameComputer('h', 2, 'Rex')).toEqual({ ok: true });
+    const logged = room.log.length;
+    expect(room.renameComputer('h', 2, 'REX')).toEqual({ ok: true });
+    expect(nameOf(room, 2)).toBe('REX');
+    expect(room.renameComputer('h', 2, 'REX')).toEqual({ ok: true });
+    expect(room.log).toHaveLength(logged + 1);
+  });
+
+  it('is refused once the game is finished', () => {
+    const room = running();
+    room.start('h');
+    room.phase = 'finished';
+    expect(room.renameComputer('h', 2, 'Rex')).toMatchObject({ reason: 'notInGame' });
+    room.dispose();
+  });
+
+  it('keeps a renamed computer after the host changes', () => {
+    const room = running();
+    room.renameComputer('h', 2, 'Rex');
+    room.start('h');
+    room.leave('h');
+    expect(nameOf(room, 2)).toBe('Rex');
+    room.dispose();
+  });
+
+  it('blocks a former nickname reserved for a rejoin', () => {
+    const room = running();
+    room.start('h');
+    room.leave('p');
+    expect(room.renameComputer('h', 2, 'Pia')).toMatchObject({ reason: 'nicknameTaken' });
+    room.dispose();
+  });
+});
+
+describe('takeover names', () => {
+  const duo = (hostLanguage: UiLanguage, guestLanguage: UiLanguage) => {
+    const { room } = make(3, hostLanguage);
+    room.join('p', 'Pia', undefined, guestLanguage);
+    room.join('q', 'Quin', undefined, guestLanguage);
+    room.setReady('h', true);
+    room.setReady('p', true);
+    room.setReady('q', true);
+    room.start('h');
+    return room;
+  };
+  const german = (name: string) =>
+    GERMAN_ADJECTIVES.some((a) => Object.values(a).includes(name.split(' ')[0]));
+
+  it("names a non-host takeover in the current host's language", () => {
+    const room = duo('de', 'en');
+    room.leave('p');
+    expect(german(nameOf(room, 1))).toBe(true);
+    room.dispose();
+  });
+
+  it("names a host takeover in the leaving host's language, not the successor's", () => {
+    const room = duo('de', 'en');
+    room.leave('h');
+    expect(room.hostId).not.toBe('h');
+    expect(german(nameOf(room, 0))).toBe(true);
+    room.leave('p');
+    expect(german(nameOf(room, 1))).toBe(false);
+    expect(ENGLISH_ADJECTIVES).toContain(nameOf(room, 1).split(' ')[0]);
+    room.dispose();
+  });
+
+  it('uses the retained language after a disconnect grace election', () => {
+    jest.useFakeTimers();
+    try {
+      const room = duo('de', 'en');
+      room.setConnected('h', false);
+      jest.advanceTimersByTime(1000);
+      expect(room.hostId).not.toBe('h');
+      expect(german(nameOf(room, 0))).toBe(true);
+      room.dispose();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('follows language updates of the host', () => {
+    const room = duo('en', 'en');
+    room.setLanguage('h', 'de');
+    room.leave('p');
+    expect(german(nameOf(room, 1))).toBe(true);
+    room.dispose();
+  });
+
+  it('gives simultaneous takeovers unique names', () => {
+    const room = duo('de', 'de');
+    room.leave('p');
+    room.leave('q');
+    expect(nameOf(room, 1)).not.toBe(nameOf(room, 2));
+    room.dispose();
+  });
+
+  it('restores the nickname on rejoin and keeps score and engine seat', () => {
+    const room = duo('en', 'en');
+    room.leave('p');
+    const name = nameOf(room, 1);
+    expect(engineNames(room)?.[1]).toBe(name);
+    const score = room.game?.players[1].score;
+    expect(room.rejoin('p', 'de')).toEqual({ ok: true, seat: 1 });
+    expect(room.seats[1]).toMatchObject({ nickname: 'Pia', language: 'de' });
+    expect(room.game?.players[1]).toEqual({ name: 'Pia', score });
+    expect(JSON.stringify(toView(room, 'h'))).not.toContain(name);
     room.dispose();
   });
 });

@@ -27,6 +27,11 @@ describe('SessionsService', () => {
     expect(sessions.byPlayerId(s.playerId)).toBe(s);
   });
 
+  it('keeps the reported UI language and defaults to English', () => {
+    expect(sessions.create('Anna').language).toBe('en');
+    expect(sessions.create('Ben', 'de').language).toBe('de');
+  });
+
   it('allows one active socket per token', () => {
     const s = sessions.create('Anna');
     expect(sessions.attach(s, 'a')).toBeUndefined();

@@ -17,7 +17,12 @@ export function toView(room: GameRoom, playerId: string): GameView {
       };
     }
     if (s.state === 'computer') {
-      const view: SeatView = { state: 'computer', difficulty: s.difficulty, risk: s.risk };
+      const view: SeatView = {
+        state: 'computer',
+        name: s.name,
+        difficulty: s.difficulty,
+        risk: s.risk,
+      };
       if (s.former) view.former = { nickname: s.former.nickname };
       return view;
     }

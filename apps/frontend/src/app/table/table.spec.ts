@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { defaultRules, type GameStateView, type SeatView } from 'game-rules';
 import { LeaveGame } from '../core/leave-game';
-import { SocketService } from '../core/socket.service';
+import { SocketService, TOAST_MS } from '../core/socket.service';
 import { MessageService } from 'primeng/api';
 import { providePrimeNG } from 'primeng/config';
 import { expectNoA11yViolations, gameView, inBothModes, stubSocket } from '../core/testing';
@@ -77,6 +77,21 @@ describe('Table', () => {
     expect(el.textContent).toContain('Bob');
     expect(el.textContent).toContain('Offline');
     expect(el.querySelector('[aria-current=true]')?.textContent).toContain('Ann');
+  });
+
+  it('shows computer names from the game state and the renamed log entry', async () => {
+    const view = state(0);
+    const { el } = await setup(0, {
+      game: { ...view, players: [view.players[0], { name: 'Rex', score: 200 }] },
+      seats: [
+        human('p0', 'Ann'),
+        { state: 'computer', name: 'Rex', difficulty: 'easy', risk: 'medium' },
+      ],
+      log: [{ at: 1, kind: 'renamed', seat: 1, data: 'Brave Fox' }],
+    });
+    expect(el.textContent).toContain('Rex');
+    expect(el.textContent).toContain('Brave Fox is now called Rex');
+    expect(el.textContent).not.toMatch(/Computer \d/);
   });
 
   it('hides the log until toggled', async () => {
@@ -458,7 +473,9 @@ describe('Table', () => {
       t.socket.game.set({ ...t.socket.game()!, log: [{ kind: 'timedOut', seat: 0 }] } as never);
       t.fixture.detectChanges();
       await t.fixture.whenStable();
-      expect(t.toasts).toHaveBeenCalledWith(expect.objectContaining({ life: ms }));
+      expect(t.toasts).toHaveBeenCalledWith(
+        expect.objectContaining({ life: Math.max(ms, TOAST_MS) }),
+      );
     });
 
     it('announces a timeout to the player', async () => {

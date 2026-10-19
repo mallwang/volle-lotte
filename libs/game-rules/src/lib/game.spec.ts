@@ -1,4 +1,4 @@
-import { applyAction, createGame, legalActions, ranking, skipTurn } from './game.js';
+import { applyAction, createGame, legalActions, ranking, renamePlayer, skipTurn } from './game.js';
 import { scriptedRandomInt, seededRandomInt } from './rng.js';
 import { defaultRules } from './types.js';
 import type { Action, CardType, GameState } from './types.js';
@@ -251,5 +251,60 @@ describe('skipTurn', () => {
   it('leaves a finished game unchanged', () => {
     const state = { ...createGame(['a', 'b'], rules, seededRandomInt(1)), turn: null };
     expect(skipTurn(state)).toBe(state);
+  });
+});
+
+describe('player names', () => {
+  it('keeps the names given at creation through turns and the final result', () => {
+    let s = rigged(['Ann', 'Brave Fox'], ['bonus200']);
+    s = act(s, { type: 'draw' });
+    expect(s.players.map((p) => p.name)).toEqual(['Ann', 'Brave Fox']);
+    const over: GameState = {
+      ...s,
+      turn: null,
+      result: { reason: 'targetScore', winner: 1, ranking: ranking(s, 1) },
+    };
+    expect(over.players[over.result?.winner ?? 0].name).toBe('Brave Fox');
+  });
+});
+
+describe('renamePlayer', () => {
+  const base = (): GameState => ({
+    ...createGame(['Ann', 'Brave Fox', 'Cid'], rules, seededRandomInt(1)),
+    current: 1,
+    players: [
+      { name: 'Ann', score: 300 },
+      { name: 'Brave Fox', score: 1200 },
+      { name: 'Cid', score: 0 },
+    ],
+  });
+
+  it('replaces one name and keeps everything else', () => {
+    const state = deepFreeze(base());
+    const next = renamePlayer(state, 1, 'Rex');
+    expect(next.players).toEqual([
+      { name: 'Ann', score: 300 },
+      { name: 'Rex', score: 1200 },
+      { name: 'Cid', score: 0 },
+    ]);
+    expect(next).toMatchObject({ current: 1, deck: state.deck, turn: state.turn, result: null });
+    expect(next.players[0]).toBe(state.players[0]);
+    expect(state.players[1].name).toBe('Brave Fox');
+  });
+
+  it('keeps ranking and result intact', () => {
+    const state: GameState = {
+      ...base(),
+      turn: null,
+      result: { reason: 'targetScore', winner: 1, ranking: ranking(base(), 1) },
+    };
+    const next = renamePlayer(state, 1, 'Rex');
+    expect(next.result).toEqual(state.result);
+    expect(ranking(next).map((r) => r.players)).toEqual(ranking(state).map((r) => r.players));
+  });
+
+  it('ignores an unknown player index', () => {
+    const state = base();
+    expect(renamePlayer(state, 5, 'Rex')).toBe(state);
   });
 });

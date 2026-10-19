@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { MessageService } from 'primeng/api';
 import { vi } from 'vitest';
 import { I18nService } from './i18n.service';
-import { SOCKET, STORAGE_KEY, SocketService, type SocketLike } from './socket.service';
+import { SOCKET, STORAGE_KEY, SocketService, TOAST_MS, type SocketLike } from './socket.service';
 
 class FakeSocket implements SocketLike {
   connected = true;
@@ -88,7 +88,7 @@ describe('SocketService', () => {
         1,
         expect.objectContaining({
           severity: 'info',
-          life: 4000,
+          life: TOAST_MS,
           detail: 'Ann set the computer speed to 4 (Fast).',
         }),
       );
@@ -174,6 +174,61 @@ describe('SocketService', () => {
     expect(service.session()).toBeNull();
   });
 
+  describe('UI language', () => {
+    const languages = (socket: FakeSocket) =>
+      socket.sent.filter((s) => s.event === 'session:language').map((s) => s.payload);
+
+    it('is sent on the initial start', async () => {
+      const { socket, service } = setup();
+      socket.replies['session:start'] = started;
+      await service.start('Ann');
+      expect(socket.sent[0]).toMatchObject({
+        event: 'session:start',
+        payload: { language: TestBed.inject(I18nService).lang() },
+      });
+    });
+
+    it('is sent again when the session is replayed after a reconnect', async () => {
+      const { socket, service } = setup();
+      socket.replies['session:start'] = { ...started, game };
+      await service.start('Ann');
+      TestBed.inject(I18nService).set('de');
+      socket.sent.length = 0;
+      socket.fire('connect');
+      expect(socket.sent[0]).toMatchObject({
+        event: 'session:start',
+        payload: { token: 't1', language: 'de' },
+      });
+    });
+
+    it('is sent on every switch after the start, but not before it', async () => {
+      const { socket, service } = setup();
+      const i18n = TestBed.inject(I18nService);
+      i18n.set('en');
+      TestBed.tick();
+      i18n.set('de');
+      TestBed.tick();
+      expect(languages(socket)).toEqual([]);
+      socket.replies['session:start'] = started;
+      await service.start('Ann');
+      i18n.set('en');
+      TestBed.tick();
+      i18n.set('de');
+      TestBed.tick();
+      expect(languages(socket)).toEqual([{ language: 'en' }, { language: 'de' }]);
+    });
+
+    it('is not sent while disconnected', async () => {
+      const { socket, service } = setup();
+      socket.replies['session:start'] = started;
+      await service.start('Ann');
+      socket.connected = false;
+      TestBed.inject(I18nService).set(TestBed.inject(I18nService).lang() === 'en' ? 'de' : 'en');
+      TestBed.tick();
+      expect(languages(socket)).toEqual([]);
+    });
+  });
+
   it('replays session:start with the token on reconnect', async () => {
     const { socket, service } = setup();
     socket.replies['session:start'] = { ...started, game };
@@ -212,7 +267,7 @@ describe('SocketService', () => {
     expect(add).toHaveBeenCalledWith({
       severity: 'info',
       detail: 'The game was closed.',
-      life: 4000,
+      life: TOAST_MS,
     });
     socket.fire('game:closed', { reason: 'banned' });
     expect(add).toHaveBeenCalledWith(
