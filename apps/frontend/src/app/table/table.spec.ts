@@ -340,6 +340,24 @@ describe('Table', () => {
       expect(logLen(el)).toBe(1);
     });
 
+    it('holds back the dice of spectators who skip the animation', async () => {
+      localStorage.setItem('vl-skip-dice', 'true');
+      const t = await setup(0, {
+        you: { playerId: 'v1', seat: -1, timeoutWarning: false, spectator: true },
+        hostId: 'p0',
+      });
+      vi.useFakeTimers();
+      t.socket.game.set({ ...t.socket.game()!, log: [thrown] } as never);
+      t.fixture.detectChanges();
+      expect(logLen(t.el)).toBe(0);
+      expect(t.el.querySelector('.vl-roll-status')?.textContent).toContain('rolling');
+      expect(t.el.querySelectorAll('.vl-dice .pip')).toHaveLength(0);
+      vi.advanceTimersByTime(5000);
+      t.fixture.detectChanges();
+      expect(logLen(t.el)).toBe(1);
+      expect(t.el.querySelectorAll('.vl-dice .pip').length).toBeGreaterThan(0);
+    });
+
     it('does not roll for history present at load (reload/reconnect)', async () => {
       const { el } = await setup(0, { log: [thrown] });
       expect(logLen(el)).toBe(1);

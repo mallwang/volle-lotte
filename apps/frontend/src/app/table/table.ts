@@ -816,7 +816,9 @@ export class Table {
     const seat = g.game ? this.seats()[g.game.current] : undefined;
     this.roll.start(dice.length, {
       computerFast: g.seats[seat ?? -1]?.state === 'computer' && g.fastComputerDice,
+      // spectators who skip the animation still wait with blank dice, so they never see the result early
       skip: this.prefs.skip(),
+      blank: this.spectator(),
     });
   }
 
