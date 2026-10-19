@@ -14,13 +14,15 @@ export const de: Record<keyof typeof en, string> = {
   'nav.main': 'Hauptmenü',
   'nav.games': 'Lobby',
   'nav.create': 'Spiel erstellen',
-  'connection.status': 'Verbindung: {state}. Verbindung wird neu aufgebaut.',
-  'connection.connecting': 'verbinde',
-  'connection.disconnected': 'getrennt',
-  'connection.connected': 'verbunden',
+  'connection.lost': 'Verbindung zum Spielserver verloren. Verbindung wird wiederhergestellt…',
+  'connection.failed':
+    'Verbindung zum Spielserver konnte nicht hergestellt werden. Bitte lade die Seite neu oder versuche es zu einem späteren Zeitpunkt erneut.',
+  'connection.restored': 'Verbindung zum Spielserver wurde hergestellt.',
+  'connection.reload': 'Seite neu laden',
   'server.replaced': 'Deine Sitzung wurde in einem anderen Fenster oder Tab geöffnet.',
   'server.banned': 'Der Gastgeber hat dich aus diesem Spiel entfernt.',
   'server.closed': 'Das Spiel wurde geschlossen.',
+  'server.ended': 'Das Spiel wurde vom Gastgeber beendet.',
   'server.restarted': 'Der Server wurde neu gestartet und dein Spiel ist weg.',
 
   'nickname.title': 'Spitzname',
@@ -41,6 +43,13 @@ export const de: Record<keyof typeof en, string> = {
   'lobby.join': 'Beitreten',
   'lobby.rejoin': 'Zurückkehren',
   'lobby.running': 'Läuft',
+  'lobby.noHost': 'Kein Gastgeber, nur noch Computer',
+  'lobby.end': 'Spiel beenden',
+  'lobby.endTitle': 'Spiel beenden?',
+  'lobby.endBody': 'In „{game}“ spielen nur noch Computer. Das Spiel wird endgültig gelöscht.',
+  'lobby.endKeep': 'Spiel behalten',
+  'lobby.hostChanged':
+    'Du bist nicht mehr Gastgeber von „{game}“: {host} ist wieder beigetreten und jetzt Gastgeber. Du kannst das Spiel nicht mehr beenden.',
   'lobby.joinTitle': '{name} beitreten',
   'lobby.passwordFor': 'Passwort für {name}',
   'lobby.locked': 'Gesperrt. Versuche es in {n} s erneut.',
@@ -87,7 +96,7 @@ export const de: Record<keyof typeof en, string> = {
   'card.info.street':
     'Straße: Sammle über mehrere Würfe je einen Würfel pro Wert 1-6. Bei Erfolg gibt es genau 2.000 Punkte; ein Wurf ohne fehlenden Wert ist ein Fehlwurf.',
   'card.info.plusMinus':
-    'Plus/Minus: Sichern ist nicht möglich. Mit einer Vollen Lotte gibt es +1.000 Punkte; jeder Führende verliert 1.000.',
+    'Plus/Minus: Sichern ist nicht möglich. Mit einer Vollen Lotte gibt es +1.000 Punkte; jeder führende Spieler verliert 1.000.',
   'card.info.clover':
     'Kleeblatt: Zwei neue Volle Lotten hintereinander gewinnen das Spiel sofort. Ein Fehlwurf verliert alle Zugpunkte.',
 
@@ -331,6 +340,7 @@ export const de: Record<keyof typeof en, string> = {
   'error.notYourTurn': 'Du bist nicht dran.',
   'error.paused': 'Das Spiel ist pausiert.',
   'error.rejected': 'Dieser Zug ist nicht erlaubt.',
+  'error.offline': 'Keine Verbindung zum Spielserver.',
   'error.rejectedEngine': 'Dieser Zug ist nicht erlaubt: {engine}.',
 
   'rules.notObject': 'Die Regeln sind ungültig.',

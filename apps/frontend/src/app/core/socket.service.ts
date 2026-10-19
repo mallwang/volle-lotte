@@ -1,4 +1,12 @@
-import { Injectable, InjectionToken, effect, inject, signal } from '@angular/core';
+import {
+  Injectable,
+  InjectionToken,
+  computed,
+  effect,
+  inject,
+  signal,
+  untracked,
+} from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { io } from 'socket.io-client';
 import {
@@ -33,11 +41,20 @@ export interface Session {
   playerId: string;
   nickname: string;
 }
-export type Connection = 'connecting' | 'connected' | 'disconnected';
+export type Connection = 'connecting' | 'connected' | 'reconnecting' | 'failed';
 type Stored = { token: string; nickname: string };
 
 /** How long every self-closing toast stays visible. */
 export const TOAST_MS = 6000;
+
+/** Toast key of the connection notice; it has its own toast outlet so it never mixes with the others. */
+export const CONNECTION_KEY = 'connection';
+/** A shorter drop is not announced (tab switch, network hiccup). */
+export const LOST_DELAY_MS = 1500;
+/** Without a connection for this long, the user is asked to reload (retries continue meanwhile). */
+export const FAIL_AFTER_MS = 20000;
+/** How long "connection restored" stays visible. */
+export const RESTORED_MS = 5000;
 
 @Injectable({ providedIn: 'root' })
 export class SocketService {
@@ -50,6 +67,14 @@ export class SocketService {
   readonly games = signal<GameSummary[]>([]);
   readonly game = signal<GameView | null>(null);
   readonly connection = signal<Connection>(this.socket.connected ? 'connected' : 'connecting');
+  /** False between a reconnect and the finished session replay, when the server does not know us yet. */
+  private readonly synced = signal(true);
+  /** Whether intents can be sent now; the UI is locked while a signed-in user is offline. */
+  readonly online = computed(() => this.connection() === 'connected' && this.synced());
+  private lostTimer: ReturnType<typeof setTimeout> | undefined;
+  private failTimer: ReturnType<typeof setTimeout> | undefined;
+  /** A connection toast is on screen, so the recovery has to be announced. */
+  private announced = false;
   private readonly messages = inject(MessageService);
   private readonly i18n = inject(I18nService);
 
@@ -57,13 +82,24 @@ export class SocketService {
     // the server names new computers in the host's language, so it must follow every switch
     effect(() => {
       const language = this.i18n.lang();
-      if (this.active && this.socket.connected) void this.send('session:language', { language });
+      if (this.active && this.socket.connected)
+        untracked(() => void this.send('session:language', { language }));
     });
     this.socket.on('connect', () => {
       this.connection.set('connected');
-      if (this.active && this.stored) void this.replay(this.stored);
+      this.endOutage();
+      if (this.active && this.stored) {
+        this.synced.set(false);
+        void this.replay(this.stored);
+      }
     });
-    this.socket.on('disconnect', () => this.connection.set('disconnected'));
+    this.socket.on('disconnect', ((reason: string) => {
+      this.connection.set('reconnecting');
+      // the client only retries on its own after a network problem, not after a server-side close
+      if (reason === 'io server disconnect') this.socket.connect();
+      this.beginOutage(true);
+    }) as never);
+    if (this.connection() === 'connecting') this.beginOutage(false);
     this.socket.on('lobby:games', ((p: Pushes['lobby:games']) => this.games.set(p.games)) as never);
     this.socket.on('game:state', ((p: Pushes['game:state']) => this.game.set(p.game)) as never);
     this.socket.on('game:settingsChanged', ((p: Pushes['game:settingsChanged']) => {
@@ -78,8 +114,51 @@ export class SocketService {
     this.socket.on('game:closed', ((p: Pushes['game:closed']) => {
       this.game.set(null);
       if (p?.reason === 'banned') this.notify('warn', this.i18n.t('server.banned'));
+      else if (p?.reason === 'ended') this.notify('info', this.i18n.t('server.ended'));
       else this.notify('info', this.i18n.t('server.closed'));
     }) as never);
+  }
+
+  private beginOutage(announceLoss: boolean): void {
+    clearTimeout(this.lostTimer);
+    clearTimeout(this.failTimer);
+    if (announceLoss)
+      this.lostTimer = setTimeout(
+        () => this.showConnection('warn', 'connection.lost'),
+        LOST_DELAY_MS,
+      );
+    this.failTimer = setTimeout(() => {
+      this.connection.set('failed');
+      this.showConnection('error', 'connection.failed', true);
+    }, FAIL_AFTER_MS);
+  }
+
+  private endOutage(): void {
+    clearTimeout(this.lostTimer);
+    clearTimeout(this.failTimer);
+    if (!this.announced) return;
+    this.announced = false;
+    this.messages.clear(CONNECTION_KEY);
+    this.messages.add({
+      key: CONNECTION_KEY,
+      severity: 'success',
+      detail: this.i18n.t('connection.restored'),
+      life: RESTORED_MS,
+    });
+  }
+
+  /** Replaces the connection toast; the failure one stays and offers a reload. */
+  private showConnection(severity: 'warn' | 'error', text: string, reload = false): void {
+    this.announced = true;
+    this.messages.clear(CONNECTION_KEY);
+    this.messages.add({
+      key: CONNECTION_KEY,
+      severity,
+      detail: this.i18n.t(text),
+      sticky: true,
+      closable: false,
+      data: { reload },
+    });
   }
 
   private settingText(who: string, c: SettingChange): string {
@@ -102,13 +181,22 @@ export class SocketService {
     return this.stored?.nickname ?? '';
   }
 
+  /** Refuses while offline: socket.io would queue the intent and replay it before the session is back. */
   send<K extends keyof Intents>(event: K, payload?: Intents[K][0]): Promise<Ack<Intents[K][1]>> {
+    if (!this.online()) return Promise.resolve({ ok: false, reason: 'offline' });
+    return this.emit(event, payload);
+  }
+
+  private emit<K extends keyof Intents>(
+    event: K,
+    payload?: Intents[K][0],
+  ): Promise<Ack<Intents[K][1]>> {
     return new Promise((resolve) => this.socket.emit(event, payload, resolve));
   }
 
   async start(nickname: string): Promise<Ack<Intents['session:start'][1]>> {
     if (!this.socket.connected) this.socket.connect();
-    const ack = await this.send('session:start', {
+    const ack = await this.emit('session:start', {
       nickname,
       token: this.stored?.token,
       protocolVersion: PROTOCOL_VERSION,
@@ -154,6 +242,11 @@ export class SocketService {
     return ack;
   }
 
+  /** The last host ends a game that only has computers left; a failure is up to the caller. */
+  end(gameId: string): Promise<Ack> {
+    return this.send('game:end', { gameId });
+  }
+
   async settings(patch: Intents['game:settings'][0]) {
     const ack = await this.send('game:settings', patch);
     if (!ack.ok) this.notify('error', errorMessage(ack, this.i18n));
@@ -179,12 +272,13 @@ export class SocketService {
   /** Replays session:start after a reconnect; tells the user if the game is gone. */
   private async replay(stored: Stored): Promise<void> {
     const hadGame = this.game() !== null;
-    const ack = await this.send('session:start', {
+    const ack = await this.emit('session:start', {
       nickname: stored.nickname,
       token: stored.token,
       protocolVersion: PROTOCOL_VERSION,
       language: this.i18n.lang(),
     });
+    this.synced.set(true);
     if (!ack.ok) {
       this.active = false;
       this.session.set(null);

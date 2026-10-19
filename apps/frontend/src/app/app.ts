@@ -5,7 +5,6 @@ import type { MenuItem } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { MenubarModule } from 'primeng/menubar';
-import { MessageModule } from 'primeng/message';
 import { SelectModule } from 'primeng/select';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
@@ -26,7 +25,6 @@ import { WindowTooSmall } from './shared/window-too-small';
     RouterLink,
     RouterLinkActive,
     FormsModule,
-    MessageModule,
     ButtonModule,
     TooltipModule,
     SelectModule,
@@ -51,6 +49,9 @@ export class App {
   /** Instantiated here so its tab-close warning is active on every screen. */
   protected readonly leaveGame = inject(LeaveGame);
   private signedIn = false;
+
+  /** Signed in but offline: everything that would go over the socket is out of reach until it is back. */
+  protected readonly locked = computed(() => !!this.socket.session() && !this.socket.online());
 
   /** Page links (disabled without a session) and, while a game is open, its status entry. */
   protected readonly items = computed<MenuItem[]>(() => {
@@ -87,6 +88,10 @@ export class App {
       ? { width: `${STAGE_WIDTH}px`, minHeight: `${STAGE_HEIGHT}px`, transform: `scale(${s})` }
       : null;
   });
+
+  protected reload(): void {
+    location.reload();
+  }
 
   constructor() {
     effect(() => {

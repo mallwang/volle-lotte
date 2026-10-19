@@ -9,6 +9,9 @@ The Java reference lives as a copy in `tmp/java/` (git-ignored, read-only).
 - All documentation (README, `docs/`, specs, plans, code comments), commit messages, pull request titles and descriptions, and issues **must be written in English**.
 - Commits follow [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): summary`, imperative, max ~72 chars.
 - Conversation with the user may be in German.
+- German texts (`*.de.md`, `apps/frontend/src/app/i18n/de.ts`, German examples in specs) **do not use gender-inclusive language**: no gender star, underscore, colon, slash, parenthesis forms or neutralized participles (`Spieler*innen`, `Spieler:innen`, `Spieler_innen`, `Spieler/-innen`, `Spielende`, `Gastgebende`). Use the generic masculine (`Spieler`, `Gastgeber`, `jeder führende Spieler`).
+- In plural, spell out both forms only where the generic masculine would read poorly or be ambiguous, for example `Spielerinnen und Spieler`, `Nutzerinnen und Nutzer`. Prefer rephrasing (`wer später beitritt`) over a participle.
+- English texts use no gendered or gender-inclusive forms either (`s/he`, `he or she`, `(s)he`); rephrase or use singular `they`.
 
 ## Workspace
 

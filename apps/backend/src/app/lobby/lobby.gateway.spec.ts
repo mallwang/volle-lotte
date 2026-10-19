@@ -289,6 +289,41 @@ describe('game:rejoin', () => {
   });
 });
 
+describe('game:end', () => {
+  const abandoned = async () => {
+    const host = await Client.start('Endhost');
+    const { game } = await create(host, 2);
+    const p = await Client.start('Endguest');
+    await p.send('game:join', { gameId: game.id, password: 'secret' });
+    await host.send('seat:ready', { ready: true });
+    await p.send('seat:ready', { ready: true });
+    await host.send('game:start');
+    await host.send('game:leave');
+    await p.send('game:leave');
+    return { host, p, id: game.id as string };
+  };
+  const find = async (c: Client, id: string) =>
+    (await c.send('lobby:list')).games.find((g: Any) => g.id === id);
+
+  it('is offered to the last host only and removes the game', async () => {
+    const { host, p, id } = await abandoned();
+    expect(await find(p, id)).toMatchObject({ closable: true, host: '' });
+    expect(await find(host, id)).toMatchObject({ closable: false });
+    expect(await p.send('game:end', { gameId: 1 })).toMatchObject({ reason: 'invalidRequest' });
+    expect(await p.send('game:end', { gameId: 'nope' })).toMatchObject({ reason: 'gameNotFound' });
+    expect(await host.send('game:end', { gameId: id })).toMatchObject({ reason: 'notHost' });
+    expect(await p.send('game:end', { gameId: id })).toEqual({ ok: true });
+    expect(await find(p, id)).toBeUndefined();
+  });
+
+  it('fails once another player rejoined and became the host', async () => {
+    const { host, p, id } = await abandoned();
+    expect(await host.send('game:rejoin', { gameId: id })).toMatchObject({ ok: true });
+    expect(await p.send('game:end', { gameId: id })).toMatchObject({ reason: 'notHost' });
+    expect(await find(p, id)).toMatchObject({ closable: false, host: 'Endhost' });
+  });
+});
+
 const nameOf = (g: GameView, seat: number) => g.seats[seat].name as string;
 
 describe('session language', () => {

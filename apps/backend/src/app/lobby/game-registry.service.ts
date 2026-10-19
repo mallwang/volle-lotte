@@ -14,7 +14,7 @@ export class GameRegistryService implements OnModuleDestroy {
   /** Set by the gateway: a room changed (also from timers). */
   onChange?: (room: GameRoom, entries: LogEntry[]) => void;
   /** Set by the gateway: a room was removed by cleanup or because it emptied. */
-  onClosed?: (room: GameRoom, reason: 'cleanup' | 'empty') => void;
+  onClosed?: (room: GameRoom, reason: 'cleanup' | 'empty' | 'ended') => void;
 
   create(options: Omit<RoomOptions, 'id' | 'onChange'>): GameRoom {
     const room = new GameRoom({
@@ -57,6 +57,14 @@ export class GameRegistryService implements OnModuleDestroy {
     if (room.phase === 'running' || room.humans().length > 0) return false;
     this.remove(room.id);
     this.onClosed?.(room, 'empty');
+    return true;
+  }
+
+  /** The last host ends a running game that only has computers left; false if they may not. */
+  end(room: GameRoom, playerId: string): boolean {
+    if (this.rooms.get(room.id) !== room || !room.canEnd(playerId)) return false;
+    this.remove(room.id);
+    this.onClosed?.(room, 'ended');
     return true;
   }
 

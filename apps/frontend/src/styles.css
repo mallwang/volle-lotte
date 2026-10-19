@@ -243,6 +243,18 @@ a.vl-menu-link:hover {
   outline: 3px solid var(--p-primary-color);
   outline-offset: 2px;
 }
+.vl-offline {
+  opacity: 0.5;
+  filter: grayscale(0.6);
+  transition: opacity 0.2s;
+}
+.vl-connection-toast {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
 .vl-main {
   max-width: 64rem;
   margin: 0 auto;

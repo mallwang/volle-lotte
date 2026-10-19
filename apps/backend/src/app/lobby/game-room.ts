@@ -189,8 +189,19 @@ export class GameRoom {
       protected: this.passwordHash !== '',
       rejoinable: this.formerSeat(forPlayer) >= 0,
       banned: !!forPlayer && this.banned.has(forPlayer),
+      closable: this.canEnd(forPlayer),
       phase: this.phase,
     };
+  }
+
+  /** Only the last host may end a running game, and only while no human is seated any more. */
+  canEnd(playerId?: string): boolean {
+    return (
+      !!playerId &&
+      this.phase === 'running' &&
+      playerId === this.hostId &&
+      this.humans().length === 0
+    );
   }
 
   private formerSeat(playerId?: string): number {
@@ -237,6 +248,8 @@ export class GameRoom {
     this.computerTimer = undefined;
     this.preview = [];
     this.add('rejoined', seat);
+    // nobody hosts while only computers were left: the first one back takes over
+    if (!this.host()) this.setHost(playerId);
     this.emit();
     return { ok: true, seat };
   }
@@ -648,8 +661,12 @@ export class GameRoom {
     const others = this.humans().filter((h) => h.playerId !== leaving);
     const next = others.find((h) => h.connected) ?? others[0];
     if (!next) return;
-    this.hostId = next.playerId;
-    this.add('hostChanged', this.seatOf(next.playerId));
+    this.setHost(next.playerId);
+  }
+
+  private setHost(playerId: string) {
+    this.hostId = playerId;
+    this.add('hostChanged', this.seatOf(playerId));
   }
 
   // ---- internals

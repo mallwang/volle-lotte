@@ -24,6 +24,7 @@ Open the app and enter a nickname (2-20 characters: letters, digits, space, `_` 
 - **Create**: press **Create game**, then choose name, optional password, number of seats (2-8) and the rules (target score, minimum points to bank, whether four of a kind doubles, cards per type). The rules cannot be changed once the game is created.
 - **Game lobby**: the host can add or remove computer players (each with a skill and a risk, see below), lock seats, remove a human player (who cannot rejoin that game and sees a notice in the games list) and start the game. Everyone else waits for the host to start.
 - **Leaving**: leaving a lobby or a running game (the table or lobby button, a link in the menu bar or the browser's back button) always asks for confirmation first; **Stay** keeps you where you are. A finished game is left without a question. Closing or reloading the browser tab while in a lobby or running game shows the browser's own warning (its text cannot be changed).
+- **Host changes**: if the host leaves or stays offline, the next human player becomes host. A player who comes back does not get the role back. If only computers are left, nobody hosts; the first player who rejoins becomes host. The last host can instead **End game** in the games list (after a confirmation) while only computers are left. If someone rejoined in the meantime, the games list shows the new host and the end button is gone, with a notice that you are no longer the host.
 
 ## 3. Playing
 
@@ -62,6 +63,8 @@ The player's score changes only when the turn ends, not when dice are set aside.
 Buttons that are not available show the reason (for example "Not your turn"). The log lists what happened; players who leave a running game (after a confirmation), lose their connection for 30 seconds or miss three turns in a row are replaced by a computer. A timer shows how long you have left: 10 seconds to draw or roll, 15 to choose dice, 20 to secure or continue. If time runs out the action is taken for you (a skipped draw or selection ends your turn). After the third timeout you see a notice and can only go back to the lobby. Computers pause while no human is seated.
 
 When a player reaches the target score, the result screen ranks everyone. **Back to lobby** returns to the games list.
+
+If the connection to the game server drops for more than a moment, a notice at the bottom says it is reconnecting and the page content is greyed out and cannot be used until the connection is back (nothing you click while offline is sent later). When it returns you see "Connection to the game server restored." for a few seconds. If it does not come back within 20 seconds, the notice turns red and offers **Reload page**; reconnecting continues in the background.
 
 ## 4. Language and Theme
 

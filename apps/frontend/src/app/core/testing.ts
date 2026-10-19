@@ -7,6 +7,7 @@ import { defaultRules } from 'game-rules';
 export function stubSocket(game: GameView | null = null) {
   return {
     session: signal({ playerId: 'p0', nickname: 'Ann' }),
+    online: signal(true),
     games: signal([]),
     game: signal(game),
     storedNickname: '',
@@ -15,6 +16,8 @@ export function stubSocket(game: GameView | null = null) {
     create: vi.fn(),
     join: vi.fn(),
     rejoin: vi.fn(),
+    end: vi.fn(),
+    refreshLobby: vi.fn().mockResolvedValue(undefined),
     leave: vi.fn(),
     settings: vi.fn().mockResolvedValue({ ok: true }),
   };

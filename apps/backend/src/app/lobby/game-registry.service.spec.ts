@@ -56,6 +56,25 @@ describe('GameRegistryService', () => {
     expect(reg.get(room.id)).toBe(room);
   });
 
+  it('lets the last host end a running game with only computers', () => {
+    const reg = new GameRegistryService();
+    const closed = jest.fn();
+    reg.onClosed = closed;
+    const room = make(reg);
+    room.join('p', 'Pia');
+    room.setReady('h', true);
+    room.setReady('p', true);
+    room.start('h');
+    expect(reg.end(room, 'h')).toBe(false);
+    room.leave('h');
+    room.leave('p');
+    expect(reg.end(room, 'h')).toBe(false);
+    expect(reg.end(room, 'p')).toBe(true);
+    expect(closed).toHaveBeenCalledWith(room, 'ended');
+    expect(reg.get(room.id)).toBeUndefined();
+    expect(reg.end(room, 'p')).toBe(false);
+  });
+
   it('closes an empty lobby', () => {
     const reg = new GameRegistryService();
     const room = make(reg);

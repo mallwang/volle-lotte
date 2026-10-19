@@ -1,6 +1,6 @@
 import type { Action, Event, GameState, RejectionReason, Rules } from './types.js';
 
-export const PROTOCOL_VERSION = 8;
+export const PROTOCOL_VERSION = 9;
 
 /** UI language a player reports; the server names computers in the host's language. */
 export type UiLanguage = 'en' | 'de';
@@ -34,7 +34,9 @@ export type ErrorReason =
   | 'notEnoughPlayers'
   | 'notYourTurn'
   | 'paused'
-  | 'rejected';
+  | 'rejected'
+  /** Client-side only: the intent was not sent because the connection is down. */
+  | 'offline';
 
 export interface ErrorAck {
   ok: false;
@@ -128,6 +130,8 @@ export interface GameSummary {
   rejoinable: boolean;
   /** The host removed the requesting player from this game. */
   banned: boolean;
+  /** The requesting player is the last host of a running game with only computers left and may end it. */
+  closable: boolean;
   phase: RoomPhase;
 }
 
@@ -153,6 +157,8 @@ export interface Intents {
   'seat:ready': [{ ready: boolean }, object];
   'game:start': [undefined, object];
   'game:rejoin': [{ gameId: string }, { game: GameView }];
+  /** Last host ends a running game that only has computers left; `notHost` once a human took over. */
+  'game:end': [{ gameId: string }, object];
   'seat:remove': [{ seat: number }, object];
   'turn:action': [{ action: Action }, object];
   'turn:preview': [{ dice: number[] }, object];
@@ -178,5 +184,5 @@ export interface Pushes {
   'game:log': { entries: LogEntry[] };
   'game:settingsChanged': { by: string; changes: SettingChange[] };
   'session:replaced': undefined;
-  'game:closed': { reason: 'cleanup' | 'banned' };
+  'game:closed': { reason: 'cleanup' | 'banned' | 'ended' };
 }
