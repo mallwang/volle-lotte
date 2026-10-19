@@ -6,7 +6,7 @@
 
 **Status**: Draft
 
-**Input**: User description: "R8. Spectators (docs/roadmap.md): other players can join a running game as read-only spectators. They see the table with scores and the current action of the active players, the log, the leave button and the 'skip dice animation' setting; no play buttons. A counter shows the number of real spectators (players do not count). Joining or leaving only changes the counter: no log entry, toast or message for the players. Spectators are separate from the 2-8 player limit, never block timers or the game end; the host can disable spectating or remove spectators."
+**Input**: User description: "R8. Spectators (docs/roadmap.md): other players can join a running game as read-only spectators. They see the table with scores and the current action of the active players, the log, the leave button and the 'skip dice animation' setting; no play buttons. A counter shows the number of real spectators (players do not count). Joining or leaving only changes the counter: no log entry, toast or message for the players. Spectators are separate from the 2-8 player limit, never block timers or the game end; the host can disable spectating."
 
 ## User Scenarios & Testing _(mandatory)_
 
@@ -44,20 +44,19 @@ Players and spectators see how many real spectators are currently watching. When
 
 ---
 
-### User Story 3 - Host controls spectating (Priority: P2)
+### User Story 3 - Host switches spectating off (Priority: P2)
 
-The host decides whether a game may be watched. The host can switch spectating off, which prevents new spectators and removes the current ones, and can remove individual spectators.
+The host decides whether a game may be watched. Spectators are anonymous, so the host has one switch for all of them: spectating is on or off. Switching it off prevents new spectators and removes the current ones; switching it on again lets visitors watch again.
 
 **Why this priority**: Hosts need control over who watches their game, but watching works without it.
 
-**Independent Test**: As host, disable spectating while a spectator watches: the spectator is sent back to the lobby and the game no longer offers "watch". Re-enable it and remove a single spectator.
+**Independent Test**: As host, disable spectating while a spectator watches: the spectator is sent back to the lobby and the game no longer offers "watch". Re-enable it and watch again.
 
 **Acceptance Scenarios**:
 
 1. **Given** a host who disables spectating, **When** the setting is saved, **Then** the game offers no "watch" action, and current spectators are returned to the lobby with a short explanation shown to them only.
-2. **Given** a game with spectators, **When** the host removes one, **Then** that spectator is returned to the lobby with a short explanation, and the counter decreases.
-3. **Given** a removed spectator, **When** they try to watch the same game again, **Then** they are refused for that game while the host keeps it that way.
-4. **Given** a non-host player, **When** they look at the game settings, **Then** they cannot change spectating or remove spectators.
+2. **Given** a game with spectating disabled, **When** the host enables it again, **Then** the game offers "watch" again and the counter starts at 0.
+3. **Given** a non-host player, **When** they look at the game settings, **Then** they cannot change spectating.
 
 ---
 
@@ -95,7 +94,7 @@ A spectator who briefly loses the connection (reload, network drop) returns to w
 ### Edge Cases
 
 - A game that is still in its lobby phase (not yet running): spectating is offered only for running games.
-- The host disables spectating while spectators are connected: spectators are removed (see User Story 3).
+- The host disables spectating while spectators are connected: all spectators are removed (see User Story 3).
 - A player of the same game tries to also watch it: not possible; players already see the table.
 - A spectator tries to perform a play action (for example by manipulating the client): the server rejects it.
 - A restarted server loads a persisted game: spectators are not persisted; the counter starts at 0.
@@ -115,9 +114,9 @@ A spectator who briefly loses the connection (reload, network drop) returns to w
 - **FR-006**: Every participant of the game, players and spectators, MUST see a counter of the current number of real spectators; players and computer players MUST NOT be counted.
 - **FR-007**: A spectator joining or leaving MUST change only the counter: no log entry, toast, sound or other message for players or other spectators.
 - **FR-008**: Spectators MUST NOT block or influence turn timers, inactivity handling, the game end or the cleanup of a game.
-- **FR-009**: The host MUST be able to disable and re-enable spectating per game; disabling MUST remove all current spectators and hide the "watch" action.
-- **FR-010**: The host MUST be able to remove individual spectators; a removed spectator MUST NOT be able to watch the same game again while the game runs.
-- **FR-011**: A spectator who is removed or whose game ended or disabled spectating MUST be returned to the lobby with a short message shown to that spectator only.
+- **FR-009**: The host MUST be able to disable and re-enable spectating per game; disabling MUST remove all current spectators and hide the "watch" action. Individual spectators cannot be identified or removed; the switch applies to all of them.
+- **FR-010**: Spectators MUST be anonymous: they enter no name, are shown to nobody by name or number, and are visible only through the counter.
+- **FR-011**: A spectator whose game ended or disabled spectating MUST be returned to the lobby with a short message shown to that spectator only.
 - **FR-012**: A password-protected game MUST require its password from spectators as well; an open game can be watched by anyone who sees it in the games list.
 - **FR-013**: A spectator who reloads or briefly loses the connection MUST return to the same game as spectator without extra steps while it is still running and allowed.
 - **FR-014**: Spectating MUST be enabled by default for new games.
@@ -127,8 +126,8 @@ A spectator who briefly loses the connection (reload, network drop) returns to w
 
 ### Key Entities
 
-- **Spectator**: An anonymous visitor watching one running game without a seat. Has a display name for the host's removal list, no score, no turn, no influence on game state. Not persisted across server restarts.
-- **Spectating setting**: A per-game switch controlled by the host, on by default, deciding whether the game can be watched.
+- **Spectator**: An anonymous visitor watching one running game without a seat. Has no name, no score, no turn, no influence on game state. Not persisted across server restarts.
+- **Spectating setting**: A per-game switch controlled by the host, on by default, deciding whether the game can be watched. It affects all spectators at once.
 - **Spectator counter**: The number of currently connected real spectators of a game, shown to all participants.
 
 ## Success Criteria _(mandatory)_
@@ -140,15 +139,16 @@ A spectator who briefly loses the connection (reload, network drop) returns to w
 - **SC-003**: In a game of 8 players with 10 spectators, all players still play normally and no player is refused a seat because of spectators.
 - **SC-004**: Across repeated joins and leaves of spectators, 0 additional log entries, toasts or messages appear for players.
 - **SC-005**: With a spectator connected, game end, timers and cleanup happen at exactly the same moments as without the spectator.
-- **SC-006**: After the host disables spectating or removes a spectator, the affected spectator is back in the lobby within 2 seconds.
+- **SC-006**: After the host disables spectating, every spectator is back in the lobby within 2 seconds.
 
 ## Assumptions
 
 - Open question from the roadmap resolved as: open games can be watched by anyone from the games list; password-protected games require the password for spectators too (consistent with the optional lobby passwords principle).
 - Spectating is offered for running games only; games still in their lobby phase are joined as players.
-- Spectators are anonymous like players (nickname plus server-issued session); they enter a display name so the host can recognise and remove them, but it is not shown to players beyond the host's removal list.
-- The spectator counter is shown to players and spectators alike; names of spectators are visible to the host only.
+- Spectators are fully anonymous: no nickname, no list of spectators for anybody, not even the host. They are identified only by a server-issued session so that a reload returns them to the game.
+- The spectator counter is shown to players and spectators alike.
+- Removing single spectators is out of scope; the host's only control is the on/off switch.
 - No upper limit for the number of spectators is set in this feature.
 - Spectators are held in memory only and do not survive a server restart.
-- Out of scope: chat or reactions from spectators, spectator replays of finished games, and letting spectators take over a free seat.
+- Out of scope: removing individual spectators, blocking a spectator from rejoining, chat or reactions from spectators, spectator replays of finished games, and letting spectators take over a free seat.
 - Depends on the existing games list, lobby password, game log and settings features.

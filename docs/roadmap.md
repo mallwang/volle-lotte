@@ -85,7 +85,7 @@ Goal: a persisted, structured game log. The in-game log is shown below the table
 - Goal: other players can join a running game as read-only spectators.
 - Spectators see the table with scores and the current action of the active players, the log, the leave button and the settings every non-host player has (only "skip dice animation"; the rest stays host-only, for example fast computer dice). No play buttons.
 - A counter shows the current number of real spectators (players do not count). A spectator joining or leaving only changes the counter: no log entry, no toast or other message for the players, so the game is not disturbed.
-- Constraints: separate from the 2-8 player limit; spectators never block timers or the game end; the host can disable spectating or remove spectators.
+- Constraints: separate from the 2-8 player limit; spectators never block timers or the game end; the host can disable spectating (spectators are anonymous, so there is no per-spectator removal).
 - Open: open to everybody in the games list or only with the game password; protocol change, bump `PROTOCOL_VERSION`.
 
 ### R9. Rule options per game (`idea`)

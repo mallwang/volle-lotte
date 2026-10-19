@@ -32,4 +32,5 @@
 ## Notes
 
 - The roadmap's open question (games list vs. password) was resolved with a documented default in Assumptions.
+- Spectators are anonymous (decided with the maintainer): no names, no list, host has only an on/off switch.
 - FR-016 mentions the versioned contract only as a user-visible update behaviour; the concrete `PROTOCOL_VERSION` bump belongs to the plan.
