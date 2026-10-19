@@ -110,7 +110,7 @@ All new texts (button labels, the "waiting for host" hint, reserved-seat markers
 - A human who is still in the modal when the host starts the next game (never clicked "Rejoin"): the seat is lost, see User Story 3.
 - Two players click "Rejoin" at the same moment: both succeed, since each seat is reserved for exactly one player.
 - A player clicks "Rejoin" twice or after already rejoining: no effect and no error for the others.
-- A computer took over a human's seat during the game after timeouts: that player has no seat to return to and gets no "Rejoin" (see Assumptions).
+- A computer took over a human's seat during the game after timeouts: that player has no seat to return to and gets no "Rejoin"; the seat is freed by the rematch like the seat of any player who left (see Assumptions).
 - Every human but the host left before the rematch: the host gets a lobby with their own seat and the computers; they can start if the minimum of two players is met, otherwise they keep waiting for joiners like in any lobby.
 - A rematch right after a game that ended with a Clover win, a target score win or any other end: no difference in behaviour.
 - A rematch of a rematch: works the same, each rematch is a new round.
@@ -162,7 +162,7 @@ All new texts (button labels, the "waiting for host" hint, reserved-seat markers
 
 - The host-first approach (the lobby opens right after the host's click, others follow) was chosen over waiting for every player's confirmation, because an absent player would block everyone.
 - A reload or a reconnect after the game ended counts as leaving the finished game (existing behaviour of the game-over modal); such players join the rematch lobby like any other newcomer.
-- A player whose seat was taken over by a computer during the game (after timeouts) has no seat of their own at the end and therefore gets no "Rejoin"; their seat stays with the computer.
+- A player whose seat was taken over by a computer during the game (after timeouts) has no seat of their own at the end and therefore gets no "Rejoin". Such a seat, like the seat of a player who left the finished game, is freed by the rematch; only computers the host set up keep their settings.
 - The rematch lobby uses the existing lobby rules for starting, ready marks, host changes, removal of players and cleanup; this feature adds no new timers.
 - The game name, password and settings are not changed by a rematch; adjusting them afterwards uses the existing lobby controls.
 - No new limits on the number of rematches in a row.
