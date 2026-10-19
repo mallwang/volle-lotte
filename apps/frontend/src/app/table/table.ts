@@ -19,7 +19,7 @@ import { DiceRollService } from '../core/dice-roll';
 import { errorMessage } from '../core/error-message';
 import { isHost, logText, playerSeats, seatName } from '../core/game-view';
 import { I18nService } from '../core/i18n.service';
-import { SocketService } from '../core/socket.service';
+import { SocketService, TOAST_MS } from '../core/socket.service';
 import { TableScale } from '../core/table-scale';
 import { TranslatePipe } from '../core/translate.pipe';
 import { GameCard } from '../shared/game-card';
@@ -27,6 +27,8 @@ import {
   nextThrowRisk,
   playedCards,
   safeLabel,
+  seatAlign,
+  type SeatArea,
   seatRows,
   seatViews,
   totalCards,
@@ -142,7 +144,7 @@ const logEnd = (g: GameView | null | undefined): number => (g?.logBase ?? 0) + (
           <section [attr.aria-label]="'table.table' | t">
             <app-table-layout [label]="'table.players' | t" [style.--vl-rows]="rows()">
               @for (p of tableSeats(); track $index) {
-                <li seat [class]="'vl-area-' + p.area">
+                <li seat [class]="'vl-area-' + p.area" [style.align-self]="align(p.area)">
                   <app-player-seat
                     [name]="p.name"
                     [score]="p.score"
@@ -406,6 +408,7 @@ export class Table {
   protected readonly totalCards = totalCards;
   protected readonly playedCards = playedCards;
   protected readonly rows = computed(() => seatRows(this.tableSeats().length));
+  protected readonly align = (area: SeatArea) => seatAlign(area, this.rows());
   /** The server may already have ended the turn; do not spoil its result during the last roll. */
   private readonly displayedScores = linkedSignal<{ scores: number[]; rolling: boolean }, number[]>(
     {
@@ -604,7 +607,7 @@ export class Table {
       severity,
       summary: type === 'volleLotte' ? this.i18n.t('toast.volleLotte') : undefined,
       detail: logText(g, e, this.i18n),
-      life: 4000,
+      life: TOAST_MS,
     });
   }
 
@@ -714,7 +717,7 @@ export class Table {
       severity: NOTICE_SEVERITY[kind],
       summary: this.i18n.t(`toast.${kind}`),
       detail: text,
-      life: this.noticeMs(),
+      life: Math.max(this.noticeMs(), TOAST_MS),
     });
     this.notice.set({ dice, safe: points, seat: this.seats().indexOf(e.seat ?? -1), card });
     this.noticeLeft = this.noticeMs();
@@ -805,6 +808,11 @@ export class Table {
   protected async act(action: Action): Promise<void> {
     const ack = await this.socket.send('turn:action', { action });
     if (ack.ok) this.chosen.set([]);
-    else this.messages.add({ severity: 'error', detail: errorMessage(ack, this.i18n), life: 6000 });
+    else
+      this.messages.add({
+        severity: 'error',
+        detail: errorMessage(ack, this.i18n),
+        life: TOAST_MS,
+      });
   }
 }

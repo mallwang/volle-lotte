@@ -36,6 +36,9 @@ export interface Session {
 export type Connection = 'connecting' | 'connected' | 'disconnected';
 type Stored = { token: string; nickname: string };
 
+/** How long every self-closing toast stays visible. */
+export const TOAST_MS = 6000;
+
 @Injectable({ providedIn: 'root' })
 export class SocketService {
   private readonly socket = inject(SOCKET);
@@ -91,7 +94,7 @@ export class SocketService {
 
   /** Tells the user (server restart, replaced session, closed game); info fades, the rest persists. */
   private notify(severity: 'info' | 'warn' | 'error', detail: string): void {
-    this.messages.add({ severity, detail, life: severity === 'info' ? 4000 : undefined });
+    this.messages.add({ severity, detail, life: severity === 'info' ? TOAST_MS : undefined });
   }
 
   /** Nickname saved from an earlier visit, if any. */

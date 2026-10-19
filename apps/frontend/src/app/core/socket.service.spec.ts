@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { MessageService } from 'primeng/api';
 import { vi } from 'vitest';
 import { I18nService } from './i18n.service';
-import { SOCKET, STORAGE_KEY, SocketService, type SocketLike } from './socket.service';
+import { SOCKET, STORAGE_KEY, SocketService, TOAST_MS, type SocketLike } from './socket.service';
 
 class FakeSocket implements SocketLike {
   connected = true;
@@ -88,7 +88,7 @@ describe('SocketService', () => {
         1,
         expect.objectContaining({
           severity: 'info',
-          life: 4000,
+          life: TOAST_MS,
           detail: 'Ann set the computer speed to 4 (Fast).',
         }),
       );
@@ -267,7 +267,7 @@ describe('SocketService', () => {
     expect(add).toHaveBeenCalledWith({
       severity: 'info',
       detail: 'The game was closed.',
-      life: 4000,
+      life: TOAST_MS,
     });
     socket.fire('game:closed', { reason: 'banned' });
     expect(add).toHaveBeenCalledWith(

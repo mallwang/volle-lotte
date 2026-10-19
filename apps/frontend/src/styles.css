@@ -597,6 +597,12 @@ a.vl-menu-link:hover {
   margin: 0;
   font-size: 0.95rem;
 }
+.vl-seat-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  flex-basis: 100%;
+}
 .vl-rename {
   display: grid;
   gap: 0.25rem;
@@ -657,13 +663,13 @@ a.vl-menu-link:hover {
 .vl-board {
   position: relative;
   display: grid;
-  grid-template-columns: 9.5rem 1fr 9.5rem;
+  grid-template-columns: 12rem 1fr 12rem;
   /* fixed size: nothing inside may grow or shrink the board */
   grid-template-rows: repeat(var(--vl-rows, 1), minmax(0, 1fr));
   gap: 0.5rem;
   padding: 0.5rem;
   height: 44rem;
-  min-width: 52rem;
+  min-width: 58rem;
 }
 .vl-felt {
   position: absolute;
@@ -739,6 +745,9 @@ a.vl-menu-link:hover {
   font-size: 3.75rem;
 }
 .vl-centre .vl-turn-actions {
+  /* above the flying dice, so the buttons stay clickable */
+  position: relative;
+  z-index: 3;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -793,6 +802,8 @@ a.vl-menu-link:hover {
   font-size: 2.25rem;
 }
 .vl-centre .vl-safe > .vl-action {
+  position: relative;
+  z-index: 3;
   grid-area: 3 / 1 / 4 / 3;
   justify-self: center;
 }
@@ -806,7 +817,7 @@ a.vl-menu-link:hover {
   position: relative;
   align-self: center;
   justify-self: center;
-  width: 9.5rem;
+  width: 12rem;
   max-height: 100%;
   line-height: 1.2;
   padding: 0.3rem 0.5rem 0.4rem;
@@ -1036,4 +1047,8 @@ a.vl-menu-link:hover {
 /* the close button sits in the corner: keep the text clear of it */
 .p-toast-message-text {
   padding-inline-end: 1.5rem;
+}
+/* centre the icon on the first text line (title) */
+.p-toast-message-icon {
+  margin-top: 0.25rem;
 }

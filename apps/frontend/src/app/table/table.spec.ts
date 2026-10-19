@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { defaultRules, type GameStateView, type SeatView } from 'game-rules';
 import { LeaveGame } from '../core/leave-game';
-import { SocketService } from '../core/socket.service';
+import { SocketService, TOAST_MS } from '../core/socket.service';
 import { MessageService } from 'primeng/api';
 import { providePrimeNG } from 'primeng/config';
 import { expectNoA11yViolations, gameView, inBothModes, stubSocket } from '../core/testing';
@@ -473,7 +473,9 @@ describe('Table', () => {
       t.socket.game.set({ ...t.socket.game()!, log: [{ kind: 'timedOut', seat: 0 }] } as never);
       t.fixture.detectChanges();
       await t.fixture.whenStable();
-      expect(t.toasts).toHaveBeenCalledWith(expect.objectContaining({ life: ms }));
+      expect(t.toasts).toHaveBeenCalledWith(
+        expect.objectContaining({ life: Math.max(ms, TOAST_MS) }),
+      );
     });
 
     it('announces a timeout to the player', async () => {
