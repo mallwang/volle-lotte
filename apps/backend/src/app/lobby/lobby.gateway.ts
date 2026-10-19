@@ -251,9 +251,13 @@ export class LobbyGateway implements OnGatewayDisconnect {
 
   @SubscribeMessage('seat:rename')
   renameSeat(@ConnectedSocket() client: Socket, @MessageBody() b: unknown): Ack {
-    if (!isObj(b) || !isInt(b['seat'], 0, 7) || typeof b['name'] !== 'string')
+    if (
+      !isObj(b) ||
+      !isInt(b['seat'], 0, 7) ||
+      (b['name'] !== undefined && typeof b['name'] !== 'string')
+    )
       return this.session(client) ? bad('invalidRequest') : bad('noSession');
-    const { seat, name } = b as { seat: number; name: string };
+    const { seat, name } = b as { seat: number; name?: string };
     return this.inRoom(client, (room, session) =>
       room.renameComputer(session.playerId, seat, name),
     );

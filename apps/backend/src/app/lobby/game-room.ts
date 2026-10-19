@@ -247,16 +247,23 @@ export class GameRoom {
     if (seat?.state === 'human') seat.language = language;
   }
 
-  /** Host only: renames a computer in the lobby or a running game. Names follow the nickname rules. */
-  renameComputer(playerId: string, seat: number, name: unknown): Res {
+  /** Host only: renames a computer in the lobby or a running game; without a name it gets a newly generated one. */
+  renameComputer(playerId: string, seat: number, name?: unknown): Res {
     if (playerId !== this.hostId) return fail('notHost');
     if (this.phase === 'finished') return fail('notInGame');
     const current = this.seats[seat];
     if (current?.state !== 'computer') return fail('invalidRequest');
-    const valid = validNickname(name);
-    if (!valid) return fail('invalidNickname');
     const others = this.takenNames();
     others.delete(current.name.toLowerCase());
+    const valid =
+      name === undefined
+        ? uniqueName(
+            this.hostLanguage(),
+            new Set([...others, current.name.toLowerCase()]),
+            this.nameRng,
+          )
+        : validNickname(name);
+    if (!valid) return fail('invalidNickname');
     if (others.has(valid.toLowerCase())) return fail('nicknameTaken');
     if (valid === current.name) return { ok: true };
     const old = current.name;

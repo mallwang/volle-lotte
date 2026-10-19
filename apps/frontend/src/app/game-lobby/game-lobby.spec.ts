@@ -164,8 +164,10 @@ describe('GameLobby', () => {
         { state: 'computer', name: 'Mutiges Kaninchen', difficulty: 'hard', risk: 'none' },
       ]),
     );
-    expect(el.textContent).toContain('Brave Fox');
-    expect(el.textContent).toContain('Mutiges Kaninchen');
+    const names = [...el.querySelectorAll<HTMLInputElement>('.vl-rename input')].map(
+      (i) => i.value,
+    );
+    expect(names).toEqual(['Brave Fox', 'Mutiges Kaninchen']);
     expect(el.textContent).not.toMatch(/Computer \d/);
   });
 
@@ -188,6 +190,67 @@ describe('GameLobby', () => {
 
   it('has no a11y violations in both modes', async () => {
     const { fixture } = await setup(gameView({}, [me(true), other(false)]));
+    await inBothModes(fixture, () => expectNoA11yViolations(fixture));
+  });
+});
+
+describe('GameLobby computer names', () => {
+  const computer = {
+    state: 'computer',
+    name: 'Brave Fox',
+    difficulty: 'easy',
+    risk: 'medium',
+  } as const;
+
+  async function setupNames(playerId = 'p0') {
+    const ctx = await setup(
+      gameView({ you: { playerId, seat: 0, timeoutWarning: false } }, [me(false), computer]),
+    );
+    const input = () => ctx.el.querySelector<HTMLInputElement>('.vl-rename input')!;
+    const type = async (value: string) => {
+      input().value = value;
+      input().dispatchEvent(new Event('input', { bubbles: true }));
+      ctx.fixture.detectChanges();
+      await ctx.fixture.whenStable();
+    };
+    return { ...ctx, input, type };
+  }
+
+  it('shows the name in an input for the host and renames on submit', async () => {
+    const { socket, el, input, type } = await setupNames();
+    socket.send.mockResolvedValue({ ok: true });
+    expect(input().value).toBe('Brave Fox');
+    await type('  Rex ');
+    el.querySelector('.vl-rename')!.dispatchEvent(new Event('submit'));
+    expect(socket.send).toHaveBeenCalledWith('seat:rename', { seat: 1, name: 'Rex' });
+  });
+
+  it('rolls a new name without sending one', async () => {
+    const { socket, el } = await setupNames();
+    socket.send.mockResolvedValue({ ok: true });
+    el.querySelector<HTMLButtonElement>('.vl-rename button')!.click();
+    expect(socket.send).toHaveBeenCalledWith('seat:rename', { seat: 1, name: undefined });
+  });
+
+  it('explains a rejection and keeps the draft', async () => {
+    const { socket, el, input, type, fixture } = await setupNames();
+    socket.send.mockResolvedValue({ ok: false, reason: 'nicknameTaken' });
+    await type('Rex');
+    el.querySelector('.vl-rename')!.dispatchEvent(new Event('submit'));
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(el.querySelector('.vl-rename-error')?.textContent).toContain('already used');
+    expect(input().value).toBe('Rex');
+  });
+
+  it('shows guests the plain name', async () => {
+    const { el } = await setupNames('p9');
+    expect(el.querySelector('.vl-rename')).toBeNull();
+    expect(el.textContent).toContain('Brave Fox');
+  });
+
+  it('has no a11y violations in both modes', async () => {
+    const { fixture } = await setupNames();
     await inBothModes(fixture, () => expectNoA11yViolations(fixture));
   });
 });

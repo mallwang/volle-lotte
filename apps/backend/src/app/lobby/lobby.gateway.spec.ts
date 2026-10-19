@@ -346,6 +346,23 @@ describe('session language', () => {
 });
 
 describe('seat:rename', () => {
+  it('rolls a new name when none is given', async () => {
+    const host = await Client.start('Rollhost');
+    const { game } = await create(host, 4, '');
+    await host.send('seat:set', { seat: 1, mode: 'computer' });
+    const name = (await host.until('game:state', (s) => s.game.seats[1].state === 'computer')).game
+      .seats[1];
+    expect(await host.send('seat:rename', { seat: 1 })).toEqual({ ok: true });
+    const next = (
+      await host.until(
+        'game:state',
+        (s) => s.game.seats[1].name !== (name as { name: string }).name,
+      )
+    ).game.seats[1];
+    expect(next).toMatchObject({ state: 'computer' });
+    expect(game.id).toBeTruthy();
+  });
+
   it('renames for everyone, rejects the rest and never mutates on errors', async () => {
     const host = await Client.start('Renamehost');
     const { game } = await create(host, 4, '');
@@ -370,7 +387,9 @@ describe('seat:rename', () => {
     expect(await host.send('seat:rename', { seat: 9, name: 'Rex' })).toMatchObject({
       reason: 'invalidRequest',
     });
-    expect(await host.send('seat:rename', { seat: 2 })).toMatchObject({ reason: 'invalidRequest' });
+    expect(await host.send('seat:rename', { seat: 2, name: 5 })).toMatchObject({
+      reason: 'invalidRequest',
+    });
     expect(await host.send('seat:rename', { seat: 2, name: 'Rex' })).toEqual({ ok: true });
 
     for (const c of [host, guest]) {

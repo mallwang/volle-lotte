@@ -5,7 +5,6 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { isHost } from '../core/game-view';
 import { I18nService } from '../core/i18n.service';
 import { SocketService } from '../core/socket.service';
-import { ComputerRename } from './computer-rename';
 import { TranslatePipe } from '../core/translate.pipe';
 
 /** Quiet time after the last slider change before it is sent, so a drag is one intent and one toast. */
@@ -14,7 +13,7 @@ const SEND_DELAY_MS = 300;
 /** Shared host controls in the lobby panel and table dialog. */
 @Component({
   selector: 'app-host-settings',
-  imports: [ComputerRename, FormsModule, SliderModule, ToggleSwitchModule, TranslatePipe],
+  imports: [FormsModule, SliderModule, ToggleSwitchModule, TranslatePipe],
   template: `
     @if (socket.game(); as game) {
       <div class="vl-setting">
@@ -64,14 +63,6 @@ const SEND_DELAY_MS = 300;
         </div>
         <small>{{ (host() ? 'settings.showBustProbabilityHint' : 'settings.hostOnly') | t }}</small>
       </div>
-      @if (host() && computers().length > 0) {
-        <div class="vl-setting">
-          <h4 class="vl-setting-heading">{{ 'computerName.heading' | t }}</h4>
-          @for (c of computers(); track c.seat) {
-            <app-computer-rename [seat]="c.seat" [name]="c.name" />
-          }
-        </div>
-      }
     }
   `,
 })
@@ -86,12 +77,6 @@ export class HostSettings implements OnDestroy {
     const g = this.socket.game();
     return !!g && isHost(g);
   });
-  /** Computer seats the host may rename. */
-  protected readonly computers = computed(() =>
-    (this.socket.game()?.seats ?? []).flatMap((s, seat) =>
-      s.state === 'computer' && s.name ? [{ seat, name: s.name }] : [],
-    ),
-  );
   private readonly server = computed(() => this.socket.game()?.computerSpeed ?? 3);
   protected readonly speed = computed(() => this.local() ?? this.server());
   protected readonly speedName = computed(() => {

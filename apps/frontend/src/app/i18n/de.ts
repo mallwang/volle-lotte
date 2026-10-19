@@ -227,9 +227,8 @@ export const de: Record<keyof typeof en, string> = {
   'settings.fastComputerDice': 'Schnelle Computer-Würfel',
   'settings.fastComputerDiceHint': 'Würfel des Computers rollen kürzer. Gilt für alle am Tisch.',
   'settings.hostOnly': 'Nur der Host kann das ändern.',
-  'computerName.heading': 'Computernamen',
   'computerName.label': '{name} umbenennen',
-  'computerName.save': 'Umbenennen',
+  'computerName.regenerate': 'Neuen Namen würfeln',
   'computerName.invalid':
     'Der Name muss 2-20 Zeichen haben: Buchstaben, Ziffern, Leerzeichen, _ oder -.',
   'computerName.taken':

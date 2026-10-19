@@ -149,7 +149,7 @@ export interface Intents {
     { seat: number; mode: 'open' | 'locked' | 'computer'; difficulty?: Difficulty; risk?: Risk },
     object,
   ];
-  'seat:rename': [{ seat: number; name: string }, object];
+  'seat:rename': [{ seat: number; name?: string }, object];
   'seat:ready': [{ ready: boolean }, object];
   'game:start': [undefined, object];
   'game:rejoin': [{ gameId: string }, { game: GameView }];

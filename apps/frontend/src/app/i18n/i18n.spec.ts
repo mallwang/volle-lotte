@@ -42,9 +42,8 @@ describe('dictionaries', () => {
 
 describe('computer name texts', () => {
   const keys = [
-    'computerName.heading',
+    'computerName.regenerate',
     'computerName.label',
-    'computerName.save',
     'computerName.invalid',
     'computerName.taken',
     'log.renamed',

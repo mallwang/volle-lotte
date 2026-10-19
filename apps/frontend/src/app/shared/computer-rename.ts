@@ -2,18 +2,18 @@ import { Component, computed, effect, inject, input, signal } from '@angular/cor
 import { FormsModule } from '@angular/forms';
 import type { ErrorAck } from 'game-rules';
 import { ButtonModule } from 'primeng/button';
+import { TooltipModule } from 'primeng/tooltip';
 import { errorMessage, type Msg } from '../core/error-message';
 import { I18nService } from '../core/i18n.service';
 import { SocketService } from '../core/socket.service';
 import { TranslatePipe } from '../core/translate.pipe';
 
-/** Host-only form to rename one computer seat; the server validates and the new name arrives with the next game state. */
+/** Host-only inline field to rename one computer seat or roll a new name; the server validates and the new name arrives with the next game state. */
 @Component({
   selector: 'app-computer-rename',
-  imports: [ButtonModule, FormsModule, TranslatePipe],
+  imports: [ButtonModule, FormsModule, TooltipModule, TranslatePipe],
   template: `
     <form class="vl-rename" (ngSubmit)="save()">
-      <label [for]="inputId()">{{ 'computerName.label' | t: { name: name() } }}</label>
       <div class="vl-rename-row">
         <input
           type="text"
@@ -21,16 +21,22 @@ import { TranslatePipe } from '../core/translate.pipe';
           name="computerName"
           maxlength="20"
           autocomplete="off"
+          [attr.aria-label]="'computerName.label' | t: { name: name() }"
           [ngModel]="draft()"
           (ngModelChange)="draft.set($event)"
+          (blur)="save()"
           [attr.aria-invalid]="error() ? 'true' : null"
           [attr.aria-describedby]="error() ? errorId() : null"
         />
         <p-button
-          type="submit"
+          type="button"
+          icon="pi pi-refresh"
           severity="secondary"
-          [label]="'computerName.save' | t"
-          [disabled]="!changed()"
+          size="small"
+          [text]="true"
+          [ariaLabel]="'computerName.regenerate' | t"
+          [pTooltip]="'computerName.regenerate' | t"
+          (onClick)="regenerate()"
         />
       </div>
       @if (error()) {
@@ -63,12 +69,17 @@ export class ComputerRename {
     });
   }
 
-  protected async save(): Promise<void> {
-    if (!this.changed()) return;
-    const ack = await this.socket.send('seat:rename', {
-      seat: this.seat(),
-      name: this.draft().trim(),
-    });
+  protected save(): Promise<void> {
+    if (!this.changed()) return Promise.resolve();
+    return this.rename(this.draft().trim());
+  }
+
+  protected regenerate(): Promise<void> {
+    return this.rename(undefined);
+  }
+
+  private async rename(name: string | undefined): Promise<void> {
+    const ack = await this.socket.send('seat:rename', { seat: this.seat(), name });
     this.error.set(ack.ok ? null : () => this.errorText(ack));
   }
 

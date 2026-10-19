@@ -10,6 +10,7 @@ import { isHost, seatName } from '../core/game-view';
 import { LeaveGame } from '../core/leave-game';
 import { I18nService } from '../core/i18n.service';
 import { SocketService } from '../core/socket.service';
+import { ComputerRename } from '../shared/computer-rename';
 import { HostSettings } from '../shared/host-settings';
 import { TranslatePipe } from '../core/translate.pipe';
 
@@ -23,6 +24,7 @@ const RISKS: Risk[] = ['none', 'medium', 'high', 'random'];
     FormsModule,
     AvatarModule,
     ButtonModule,
+    ComputerRename,
     HostSettings,
     MessageModule,
     TagModule,
@@ -81,7 +83,11 @@ const RISKS: Risk[] = ['none', 'medium', 'high', 'random'];
                 }
               }
               @case ('computer') {
-                <strong>{{ s.name }}</strong>
+                @if (host()) {
+                  <app-computer-rename [seat]="$index" [name]="s.name ?? ''" />
+                } @else {
+                  <strong>{{ s.name }}</strong>
+                }
                 <p-tag
                   [value]="
                     'gameLobby.computer'
@@ -92,41 +98,47 @@ const RISKS: Risk[] = ['none', 'medium', 'high', 'random'];
                           }
                   "
                   icon="pi pi-desktop"
+                  [severity]="severity[s.difficulty ?? 'random']"
                 />
                 @if (host()) {
-                  <label>
-                    <select
-                      [attr.aria-label]="'gameLobby.difficultySeat' | t: { n: $index + 1 }"
-                      (change)="
-                        setSeat($index, 'computer', $any($event.target).value, s.risk ?? 'medium')
-                      "
-                    >
-                      @for (o of difficulties; track o) {
-                        <option [value]="o" [selected]="o === s.difficulty">
-                          {{ 'difficulty.' + o | t }}
-                        </option>
-                      }
-                    </select>
-                  </label>
-                  <label>
-                    <select
-                      [attr.aria-label]="'gameLobby.riskSeat' | t: { n: $index + 1 }"
-                      (change)="
-                        setSeat($index, 'computer', s.difficulty, $any($event.target).value)
-                      "
-                    >
-                      @for (o of risks; track o) {
-                        <option [value]="o" [selected]="o === (s.risk ?? 'medium')">
-                          {{ 'risk.' + o | t }}
-                        </option>
-                      }
-                    </select>
-                  </label>
-                  <p-button
-                    [label]="'gameLobby.removeComputer' | t"
-                    severity="secondary"
-                    (onClick)="setSeat($index, 'open')"
-                  />
+                  <div class="vl-seat-row">
+                    <label>
+                      <select
+                        [attr.aria-label]="'gameLobby.difficultySeat' | t: { n: $index + 1 }"
+                        (change)="
+                          setSeat($index, 'computer', $any($event.target).value, s.risk ?? 'medium')
+                        "
+                      >
+                        @for (o of difficulties; track o) {
+                          <option [value]="o" [selected]="o === s.difficulty">
+                            {{ 'difficulty.' + o | t }}
+                          </option>
+                        }
+                      </select>
+                    </label>
+                    <label>
+                      <select
+                        [attr.aria-label]="'gameLobby.riskSeat' | t: { n: $index + 1 }"
+                        (change)="
+                          setSeat($index, 'computer', s.difficulty, $any($event.target).value)
+                        "
+                      >
+                        @for (o of risks; track o) {
+                          <option [value]="o" [selected]="o === (s.risk ?? 'medium')">
+                            {{ 'risk.' + o | t }}
+                          </option>
+                        }
+                      </select>
+                    </label>
+                  </div>
+                  <div class="vl-seat-row">
+                    <p-button
+                      size="small"
+                      [label]="'gameLobby.removeComputer' | t"
+                      severity="secondary"
+                      (onClick)="setSeat($index, 'open')"
+                    />
+                  </div>
                 }
               }
               @case ('locked') {
@@ -137,26 +149,33 @@ const RISKS: Risk[] = ['none', 'medium', 'high', 'random'];
                   styleClass="vl-tag-locked"
                 />
                 @if (host()) {
-                  <p-button
-                    [label]="'gameLobby.unlock' | t"
-                    severity="secondary"
-                    (onClick)="setSeat($index, 'open')"
-                  />
+                  <div class="vl-seat-row">
+                    <p-button
+                      size="small"
+                      [label]="'gameLobby.unlock' | t"
+                      severity="secondary"
+                      (onClick)="setSeat($index, 'open')"
+                    />
+                  </div>
                 }
               }
               @default {
                 <p-tag [value]="'gameLobby.free' | t" icon="pi pi-user-plus" severity="success" />
                 @if (host()) {
-                  <p-button
-                    [label]="'gameLobby.lock' | t"
-                    severity="secondary"
-                    (onClick)="setSeat($index, 'locked')"
-                  />
-                  <p-button
-                    [label]="'gameLobby.addComputer' | t"
-                    severity="secondary"
-                    (onClick)="setSeat($index, 'computer', 'medium', 'medium')"
-                  />
+                  <div class="vl-seat-row">
+                    <p-button
+                      size="small"
+                      [label]="'gameLobby.lock' | t"
+                      severity="secondary"
+                      (onClick)="setSeat($index, 'locked')"
+                    />
+                    <p-button
+                      size="small"
+                      [label]="'gameLobby.addComputer' | t"
+                      severity="secondary"
+                      (onClick)="setSeat($index, 'computer', 'medium', 'medium')"
+                    />
+                  </div>
                 }
               }
             }
@@ -191,6 +210,12 @@ export class GameLobby {
   private readonly i18n = inject(I18nService);
   protected readonly leave = inject(LeaveGame);
   protected readonly difficulties = DIFFICULTIES;
+  protected readonly severity = {
+    easy: 'success',
+    medium: 'warn',
+    hard: 'danger',
+    random: 'secondary',
+  } as const;
   protected readonly risks = RISKS;
   protected readonly error = signal<Msg | null>(null);
   protected readonly host = computed(() => {
