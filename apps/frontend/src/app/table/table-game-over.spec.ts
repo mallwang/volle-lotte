@@ -50,7 +50,7 @@ const finished = (over: Partial<GameView> = {}) =>
 
 async function setup(game: GameView) {
   const socket = stubSocket(game);
-  const celebration = { start: vi.fn(), stop: vi.fn() };
+  const celebration = { preload: vi.fn(), start: vi.fn(), stop: vi.fn() };
   TestBed.configureTestingModule({
     imports: [Table],
     providers: [

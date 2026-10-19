@@ -26,7 +26,7 @@ Last updated: 2026-10-19. The Java -> web migration is finished (see [migration.
 | 010  | Computer speed setting: host slider 1-5 (default 3, faster than before) in lobby and table settings, one shared pacing table, toast on setting changes, protocol v5                                                                                                                            |
 | 011  | Computer AI rework: decisions by expected value from exact dice odds, skill (easy, medium, hard, random) and independent risk (none, medium, high, random) per computer seat, random resolved per decision, score situation shifts risk, protocol v6                                           |
 | 012  | Computer player names: random "adjective noun" names in English or German (own Nx library), host can rename inline or roll a new name, language follows the host                                                                                                                               |
-| 013  | Game-over modal over the finished table (no result page), finished games are not restored on reload, winner confetti (`party-js`, shared `Celebration` service, reduced motion respected)                                                                                                      |
+| 013  | Game-over modal over the finished table (no result page), finished games are not restored on reload, winner confetti (`party-js`, shared `Celebration` service, reduced motion respected) and a victory sound played once (preloaded at the table, blocked autoplay tolerated)                 |
 | N/A  | Connection state as toasts (lost, restored, failed with reload); the page is locked while offline                                                                                                                                                                                              |
 | N/A  | Host handover: a player rejoining a game with only computers becomes host; the last host can end such a game from the games list (protocol v9)                                                                                                                                                 |
 | N/A  | Playtest fix: one-card discard piles have no background card                                                                                                                                                                                                                                   |
@@ -107,7 +107,8 @@ Goal: a persisted, structured game log. The in-game log is shown below the table
 ### R11. Sounds (`idea`)
 
 - Goal: optional sound effects; the audio files are provided.
-- Sounds: a distinct sound (for example a double bell) when it becomes your turn after the previous player busted or finished; a beep every second during the last 10 seconds of the turn timer; applause on your own Volle Lotte; applause when you win the game.
+- Done already (spec 013): the victory sound when you win the game, played once together with the confetti.
+- Sounds still open: a game start sound; timer sounds during the running game, such as a beep every second during the last 10 seconds of the turn timer; a distinct sound (for example a double bell) when it becomes your turn after the previous player busted or finished; applause on your own Volle Lotte.
 - Constraints: one mute toggle in the menubar, remembered in `localStorage`; no autoplay before the first user interaction; assets stay small. Vibration on mobile is a possible addition (R3).
 
 ### R12. Statistics, history and highscore (`idea`, builds on R6 and R22)
@@ -187,6 +188,7 @@ Goal: a persisted, structured game log. The in-game log is shown below the table
 
 - Players earn credits per game (depending on the difficulty and number of opponents) and per tournament (depending on its settings).
 - A small store redeems credits for cosmetics only: card patterns, modern versus hand-drawn cards, other dice, special player cards, other backgrounds (water, sky, lava, and so on).
+- Sounds: for every sound type the game has or will have (victory, game start, timer), further sounds can be bought with credits in the store. Players pick them in their user settings, and the game plays the selected ones (R11 provides the sound types).
 - Constraint: gameplay is never affected (no pay to win, no credits to win).
 - Open: how cosmetics look to the other players at the table; assets must be provided.
 

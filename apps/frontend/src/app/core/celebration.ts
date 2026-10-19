@@ -4,29 +4,65 @@ import { Injectable } from '@angular/core';
 export const BURST_INTERVAL_MS = 3000;
 const BURSTS_PER_ROUND = 3;
 const CONFETTI_COUNT = 70;
+const VICTORY_SOUND = 'sounds/victory.mp3';
 
 const reducedMotion = (): boolean => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /**
  * Fireworks-style confetti over the whole screen, for screens that celebrate something (the
  * game-over modal today, the starting-player draw later). Based on the ReAIity Guesser confetti
- * (party-js), which is only loaded when a celebration actually starts.
+ * (party-js), which is only loaded when a celebration actually starts. The victory sound plays
+ * once per celebration, while the confetti repeats.
  */
 @Injectable({ providedIn: 'root' })
 export class Celebration {
   private timer?: ReturnType<typeof setInterval>;
+  private sound?: HTMLAudioElement;
+  private running = false;
 
-  /** Starts the repeating bursts; nothing happens if they run already or the system wants less motion. */
+  /**
+   * Fetches the victory sound and the confetti library ahead of time, so a slow network cannot
+   * delay the celebration once the game is won. Safe to call repeatedly.
+   */
+  preload(): void {
+    this.audio();
+    if (!reducedMotion()) import('party-js').catch(() => undefined);
+  }
+
+  /**
+   * Plays the victory sound once and starts the repeating bursts; nothing happens if a celebration
+   * runs already. Reduced motion only suppresses the confetti, not the sound.
+   */
   start(): void {
-    if (this.timer || reducedMotion()) return;
+    if (this.running) return;
+    this.running = true;
+    // the browser may refuse to play before any user interaction; the confetti still works then
+    this.audio()
+      .play()
+      .catch(() => undefined);
+    if (reducedMotion()) return;
     void this.burst();
     this.timer = setInterval(() => void this.burst(), BURST_INTERVAL_MS);
   }
 
-  /** Stops the bursts; particles already in the air fall down by themselves. */
+  /** Stops the sound and the bursts; particles already in the air fall down by themselves. */
   stop(): void {
+    this.running = false;
     clearInterval(this.timer);
     this.timer = undefined;
+    if (this.sound) {
+      this.sound.pause();
+      this.sound.currentTime = 0;
+    }
+  }
+
+  private audio(): HTMLAudioElement {
+    if (!this.sound) {
+      this.sound = new Audio(VICTORY_SOUND);
+      this.sound.preload = 'auto';
+      this.sound.load();
+    }
+    return this.sound;
   }
 
   private async burst(): Promise<void> {

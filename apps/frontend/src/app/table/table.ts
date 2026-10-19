@@ -568,6 +568,7 @@ export class Table {
     const tick = setInterval(() => this.now.set(Date.now()), 1000);
     const tableScale = inject(TableScale);
     tableScale.enable();
+    this.celebration.preload();
     inject(DestroyRef).onDestroy(() => {
       clearInterval(tick);
       tableScale.disable();
