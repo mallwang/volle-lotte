@@ -1,4 +1,5 @@
 import type { GameView, Rules, Turn } from 'game-rules';
+import { bustProbability, scoreDice } from 'game-rules';
 import { playerSeats } from './game-view';
 
 /** Grid area of a seat: side (l/r) and row from the top, e.g. `l1`, `r1`, `l2`. */
@@ -61,7 +62,36 @@ export function pileLevel(deckSize: number, total: number): PileLevel {
   return r <= 1 / 2 ? 'medium' : 'many';
 }
 
-export const discardLayers = (played: number): number => Math.min(8, Math.ceil(played / 6));
+export const discardLayers = (played: number): number =>
+  Math.min(8, Math.ceil(Math.max(0, played - 1) / 6));
+
+/** Next-throw odds, including a legal selection preview; no hint if there is no next throw. */
+export function nextThrowRisk(
+  turn: Turn,
+  selected: readonly number[],
+  rules: Rules,
+): number | null {
+  if (turn.phase === 'draw') return null;
+  let free = turn.free;
+  let street = turn.card === 'street' ? turn.street : undefined;
+  if (turn.phase === 'select') {
+    if (
+      selected.length === 0 ||
+      new Set(selected).size !== selected.length ||
+      selected.some((i) => !Number.isInteger(i) || i < 0 || i >= turn.dice.length)
+    )
+      return null;
+    const values = selected.map((i) => turn.dice[i]);
+    if (street) {
+      if (new Set(values).size !== values.length || values.some((v) => turn.street.includes(v)))
+        return null;
+      street = [...street, ...values];
+    } else if (scoreDice(values, rules) < 0) return null;
+    free -= values.length;
+    if (free === 0 && turn.card === 'clover' && turn.volleLottes === 0) free = 6;
+  }
+  return free > 0 ? bustProbability(free, rules.fourOfAKindDoubling, street) : null;
+}
 
 /** Stable untidy offset per layer (no randomness, so re-renders do not jump). */
 export const layerTransform = (i: number): { rot: number; x: number; y: number } => ({

@@ -61,6 +61,18 @@ describe('SocketService', () => {
     expect(socket.sent).toContainEqual({ event: 'game:settings', payload: { computerSpeed: 4 } });
   });
 
+  it('reports rejected host settings instead of silently ignoring them', async () => {
+    const { socket, service, add } = setup();
+    socket.replies['game:settings'] = { ok: false, reason: 'notHost' };
+    expect(await service.settings({ showBustProbability: true })).toEqual({
+      ok: false,
+      reason: 'notHost',
+    });
+    expect(add).toHaveBeenCalledWith(
+      expect.objectContaining({ severity: 'error', detail: 'Only the host can do this.' }),
+    );
+  });
+
   describe('game:settingsChanged', () => {
     it('shows one toast per change entry', () => {
       const { socket, add } = setup();
@@ -92,10 +104,27 @@ describe('SocketService', () => {
         by: 'Ann',
         changes: [{ setting: 'fastComputerDice', value: false }],
       });
+
       expect(add).toHaveBeenCalledWith(
         expect.objectContaining({ detail: 'Ann turned fast computer dice off.' }),
       );
     });
+
+    it.each([true, false])(
+      'announces bust probability %s without calling it fast dice',
+      (value) => {
+        const { socket, add } = setup();
+        socket.fire('game:settingsChanged', {
+          by: 'Ann',
+          changes: [{ setting: 'showBustProbability', value }],
+        });
+        expect(add).toHaveBeenCalledWith(
+          expect.objectContaining({
+            detail: `Ann turned bust probability ${value ? 'on' : 'off'}.`,
+          }),
+        );
+      },
+    );
 
     it('uses the current language', () => {
       const { socket, add } = setup();

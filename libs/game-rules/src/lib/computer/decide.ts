@@ -1,15 +1,9 @@
 import type { Action, GameState, RandomInt } from '../types.js';
 import { drawValue } from './cards.js';
-import {
-  CARRIED_CAP,
-  DRAW_SCALE_BASE,
-  DRAW_SCALE_FRACTION,
-  HIGH_DRAW_BIAS,
-  MEDIUM_TEMPERATURE,
-} from './constants.js';
+import { CARRIED_CAP, DRAW_SCALE_BASE, DRAW_SCALE_FRACTION, HIGH_DRAW_BIAS } from './constants.js';
 import { easyBank, easyDraw } from './easy.js';
 import type { ConcreteRisk, Skill } from './profile.js';
-import { argmaxIndex, softmaxIndex } from './select.js';
+import { argmaxIndex, mediumIndex } from './select.js';
 import { tableFor } from './value.js';
 
 type Kind<T extends Action['type']> = Extract<Action, { type: T }>;
@@ -37,8 +31,7 @@ export function chooseBankOrThrow(
     kappa,
   );
   const values = [table.bank(turn.run), table.throwValue(turn.free, turn.run)];
-  const i =
-    skill === 'hard' ? argmaxIndex(values, rng) : softmaxIndex(values, MEDIUM_TEMPERATURE, rng);
+  const i = skill === 'hard' ? argmaxIndex(values, rng) : mediumIndex(values, rng);
   return i === 0 ? bank : again;
 }
 

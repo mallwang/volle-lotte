@@ -11,7 +11,7 @@ import { discardLayers, layerTransform } from '../core/table-view';
   template: `
     <div
       class="vl-pile discard"
-      [class.empty]="!layers().length"
+      [class.empty]="played() === 0"
       role="img"
       [attr.aria-label]="label()"
     >

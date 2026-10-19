@@ -32,6 +32,9 @@ export function gameView(over: Partial<GameView> = {}, seats: SeatView[] = []): 
     seats: [...seats, ...Array.from({ length: 4 - seats.length }, () => open)],
     fastComputerDice: false,
     computerSpeed: 3,
+    showBustProbability: false,
+    paused: false,
+    logBase: 0,
     log: [],
     ...over,
   };

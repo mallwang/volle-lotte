@@ -1,7 +1,13 @@
 import { scoreDice } from '../scoring.js';
 import type { CardType, GameState, RandomInt } from '../types.js';
 import { averageBonus } from './cards.js';
-import { CARRIED_CAP, MEDIUM_SLIP, MEDIUM_TEMPERATURE } from './constants.js';
+import {
+  CARRIED_CAP,
+  MEDIUM_BEST_CHANCE,
+  MEDIUM_MAX_REGRET,
+  MEDIUM_SLIP,
+  MEDIUM_TEMPERATURE,
+} from './constants.js';
 import { easySelect, pickBy } from './easy.js';
 import type { Select } from './easy.js';
 import type { Skill } from './profile.js';
@@ -31,6 +37,17 @@ export function softmaxIndex(
     if (u < 0) return i;
   }
   return weights.length - 1;
+}
+
+/** Medium varies between close choices, but excludes clearly inferior moves. */
+export function mediumIndex(values: readonly number[], rng: RandomInt): number {
+  if (rng(1000) < MEDIUM_BEST_CHANCE * 1000) return argmaxIndex(values, rng);
+  const best = Math.max(...values);
+  return softmaxIndex(
+    values.map((v) => (best - v <= MEDIUM_MAX_REGRET ? v : -Infinity)),
+    MEDIUM_TEMPERATURE,
+    rng,
+  );
 }
 
 /** Index of the highest value; exact ties are broken by `rng`. */
@@ -75,6 +92,11 @@ export function chooseSelect(
     );
   if (ALL_DICE_CARDS.has(turn.card)) return chooseAllDice(legal, points, skill, rng);
   if (skill === 'easy') return easySelect(legal, points, rng);
+  // Equal faces create many equivalent index subsets; they must not bias Medium's probabilities.
+  const candidates =
+    skill === 'medium'
+      ? [...new Map(legal.map((a) => [`${points(a)}/${a.dice.length}`, a])).values()]
+      : legal;
   const table = tableFor(
     state.rules,
     'bonus',
@@ -82,10 +104,9 @@ export function chooseSelect(
     Number(turn.card.slice(5)) || averageBonus(state.rules.cardCounts),
     kappa,
   );
-  const values = legal.map((a) =>
+  const values = candidates.map((a) =>
     table.afterPick(turn.free, turn.run, { points: points(a), dice: a.dice.length }),
   );
-  const i =
-    skill === 'hard' ? argmaxIndex(values, rng) : softmaxIndex(values, MEDIUM_TEMPERATURE, rng);
-  return legal[i];
+  const i = skill === 'hard' ? argmaxIndex(values, rng) : mediumIndex(values, rng);
+  return candidates[i];
 }

@@ -8,6 +8,8 @@ import { drawValue } from './cards.js';
 import { drawProbability } from './decide.js';
 import { situation } from './testing.js';
 import { tableFor } from './value.js';
+import { MEDIUM_MAX_REGRET } from './constants.js';
+import { mediumIndex, chooseSelect } from './select.js';
 
 const hard: Profile = { difficulty: 'hard', risk: 'medium' };
 const rng = seededRandomInt(5);
@@ -95,12 +97,66 @@ describe('which dice (hard)', () => {
     }
   });
 
-  it('easy keeps the most dice free', () => {
+  it('easy takes all scoring dice', () => {
     const state = situation({ phase: 'select', dice: [1, 5, 2, 3, 4, 6], free: 6, run: 0 });
     expect(chooseAction(state, { difficulty: 'easy', risk: 'medium' }, rng)).toEqual({
       type: 'select',
-      dice: [1],
+      dice: [0, 1],
     });
+  });
+
+  it('medium only overlooks close selections, never a clearly better continuation', () => {
+    for (const dice of [
+      [1, 1, 1, 5, 5, 5],
+      [1, 1, 1, 5, 2, 3],
+      [4, 4, 4, 1, 2, 3],
+    ]) {
+      const state = situation({ phase: 'select', dice, free: 6, run: 0 });
+      const table = tableFor(state.rules, 'bonus', 0, 400, 0);
+      const value = (a: Extract<Action, { type: 'select' }>) =>
+        table.afterPick(6, 0, {
+          points: scoreDice(
+            a.dice.map((i) => dice[i]),
+            state.rules,
+          ),
+          dice: a.dice.length,
+        });
+      const best = Math.max(
+        ...legalActions(state)
+          .filter((a): a is Extract<Action, { type: 'select' }> => a.type === 'select')
+          .map(value),
+      );
+      for (let seed = 1; seed <= 100; seed++) {
+        const action = chooseAction(
+          state,
+          { difficulty: 'medium', risk: 'medium' },
+          seededRandomInt(seed),
+        );
+        if (action.type !== 'select') throw new Error('expected a selection');
+        expect(best - value(action)).toBeLessThanOrEqual(MEDIUM_MAX_REGRET + 1e-9);
+      }
+    }
+  });
+});
+
+describe('medium choices', () => {
+  it('ignores clearly inferior options but still varies among close ones', () => {
+    const random = seededRandomInt(14);
+    const picked = new Set(Array.from({ length: 1000 }, () => mediumIndex([0, 300, 250], random)));
+    expect(picked).toEqual(new Set([1, 2]));
+  });
+
+  it('does not weight equivalent dice subsets more than once', () => {
+    const state = situation({ phase: 'select', dice: [1, 1, 1, 5, 2, 3], free: 6, run: 0 });
+    const picks = legalActions(state).filter(
+      (a): a is Extract<Action, { type: 'select' }> => a.type === 'select',
+    );
+    const duplicated = [...picks, ...Array.from({ length: 50 }, () => picks[0])];
+    for (let seed = 1; seed <= 100; seed++) {
+      expect(chooseSelect(state, duplicated, 'medium', 0, seededRandomInt(seed))).toEqual(
+        chooseSelect(state, picks, 'medium', 0, seededRandomInt(seed)),
+      );
+    }
   });
 });
 

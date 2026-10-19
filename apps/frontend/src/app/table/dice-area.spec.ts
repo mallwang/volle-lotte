@@ -77,4 +77,16 @@ describe('DiceArea', () => {
     const { el } = make({ aside: [{ dice: [1, 1], points: 200 }] });
     expect(el.querySelector('.vl-aside-group')!.textContent).toContain('+200');
   });
+
+  it('shows a zero-percent risk and places it before the rolling status', () => {
+    const { el } = make({ bustPercent: '0.0' });
+    const hint = el.querySelector('.vl-bust-probability')!;
+    expect(hint.textContent).toContain('0.0%');
+    expect(hint.nextElementSibling?.classList.contains('vl-roll-status')).toBe(true);
+  });
+
+  it('hides the points of set-aside groups when they do not count', () => {
+    const { el } = make({ aside: [{ dice: [1], points: 100 }], showPoints: false });
+    expect(el.querySelector('.vl-aside-group')!.textContent).not.toContain('+100');
+  });
 });

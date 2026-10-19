@@ -26,6 +26,10 @@ export const MAX_STATS = 16;
 
 /** Medium skill: softmax temperature in points; the lower, the closer to hard. */
 export const MEDIUM_TEMPERATURE = 110;
+/** Medium can overlook a close choice, but never deliberately forgo this many expected points. */
+export const MEDIUM_MAX_REGRET = 150;
+/** Medium follows the best evaluation half the time, otherwise it weighs nearby alternatives. */
+export const MEDIUM_BEST_CHANCE = 0.5;
 /** Medium skill on special cards: chance to pick a random one among the all-dice selections. */
 export const MEDIUM_SLIP = 0.2;
 

@@ -120,7 +120,7 @@ function bankForbidden(turn: Turn): boolean {
     card === 'street' ||
     card === 'clover' ||
     card === 'plusMinus' ||
-    (turn.carried > 0 && card === 'doubleLotte')
+    card === 'doubleLotte'
   );
 }
 

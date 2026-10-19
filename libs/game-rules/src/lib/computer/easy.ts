@@ -11,13 +11,13 @@ export function pickBy<T>(items: readonly T[], cost: (item: T) => number, rng: R
   return ties[rng(ties.length)];
 }
 
-/** Rule of thumb: keep as many dice free as possible by setting aside as few as allowed. */
+/** Beginner rule of thumb: take every scoring die, preferring more points on ties. */
 export function easySelect(
   picks: readonly Select[],
   points: (a: Select) => number,
   rng: RandomInt,
 ): Select {
-  return pickBy(picks, (a) => a.dice.length * 10000 + points(a), rng);
+  return pickBy(picks, (a) => -a.dice.length * 10000 - points(a), rng);
 }
 
 /** Rule of thumb: bank from a fixed amount of points on, whatever the dice left. */

@@ -109,6 +109,42 @@ const allSix = { type: 'select', dice: [0, 1, 2, 3, 4, 5] } as const;
 const throwSix = (g: GameState) =>
   act(act(g, { type: 'draw' }), { type: 'throw' }, rolls(1, 1, 1, 5, 5, 5));
 
+describe('score posting', () => {
+  it.each(['star', 'doubleLotte'] as const)(
+    '%s never credits a partial selection or ends the game early',
+    (card) => {
+      let g = rigged(['A', 'B'], [card], { players: players(5900, 0) });
+      g = act(g, { type: 'draw' });
+      g = act(g, { type: 'throw' }, rolls(1, 1, 1, 2, 3, 4));
+      g = act(g, { type: 'select', dice: [0, 1, 2] });
+      expect(g.players).toEqual(players(5900, 0));
+      expect(g.result).toBeNull();
+      expect(g.turn).toMatchObject({ run: 1000, free: 3 });
+      expect(legalActions(g)).toEqual([{ type: 'throw' }]);
+      g = act(g, { type: 'throw' }, rolls(1, 2, 3));
+      g = act(g, { type: 'select', dice: [0] });
+      expect(g.players).toEqual(players(5900, 0));
+      expect(g.result).toBeNull();
+      g = act(g, { type: 'throw' }, rolls(2, 3));
+      expect(g.players).toEqual(players(card === 'star' ? 7000 : 5900, 0));
+      if (card === 'star') expect(g.result?.winner).toBe(0);
+      else expect(g.current).toBe(1);
+    },
+  );
+
+  it('Double Lotte credits the doubled run only on completion', () => {
+    let g = rigged(['A', 'B'], ['doubleLotte'], { players: players(0, 0) });
+    g = act(g, { type: 'draw' });
+    g = act(g, { type: 'throw' }, rolls(1, 1, 1, 2, 3, 4));
+    g = act(g, { type: 'select', dice: [0, 1, 2] });
+    expect(g.players).toEqual(players(0, 0));
+    g = act(g, { type: 'throw' }, rolls(5, 5, 5));
+    g = act(g, { type: 'select', dice: [0, 1, 2] });
+    expect(g.players).toEqual(players(3000, 0));
+    expect(g.current).toBe(1);
+  });
+});
+
 describe('Plus/Minus', () => {
   it('gives +1000 and takes 1000 from every tied leader, never below 0', () => {
     const g = rigged(['A', 'B', 'C', 'D'], ['plusMinus'], { players: players(500, 700, 700, 300) });

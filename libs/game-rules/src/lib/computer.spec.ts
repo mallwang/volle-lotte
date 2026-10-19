@@ -3,6 +3,7 @@ import type { Profile } from './computer.js';
 import { applyAction, createGame, legalActions } from './game.js';
 import { seededRandomInt } from './rng.js';
 import { defaultRules } from './types.js';
+import { situation } from './computer/testing.js';
 
 const profiles: Profile[] = [
   { difficulty: 'easy', risk: 'medium' },
@@ -14,6 +15,30 @@ const rng = seededRandomInt(1);
 const base = createGame(['a', 'b'], { ...defaultRules(), minimumPoints: 0 }, seededRandomInt(7));
 
 describe('chooseAction', () => {
+  it.each([
+    [
+      [1, 5, 2, 3, 4, 6],
+      [0, 1],
+    ],
+    [
+      [1, 5, 2, 2, 2, 6],
+      [0, 1, 2, 3, 4],
+    ],
+    [
+      [1, 1, 1, 5, 5, 5],
+      [0, 1, 2, 3, 4, 5],
+    ],
+    [[1, 2, 2, 3, 4, 6], [0]],
+  ])('easy takes all scoring dice from %j', (dice, picks) => {
+    const state = situation({ phase: 'select', dice, free: 6, run: 0 });
+    for (let seed = 1; seed <= 10; seed++) {
+      expect(chooseAction(state, profiles[0], seededRandomInt(seed))).toEqual({
+        type: 'select',
+        dice: picks,
+      });
+    }
+  });
+
   it('always returns a legal action and finishes whole games', () => {
     for (const profile of profiles) {
       for (let seed = 1; seed <= 10; seed++) {

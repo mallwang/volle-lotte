@@ -81,7 +81,7 @@ export class SocketService {
         step: String(c.value),
         name: this.i18n.t(`settings.computerSpeed.${c.value}`),
       });
-    return this.i18n.t(`toast.setting.fastComputerDice.${c.value ? 'on' : 'off'}`, { who });
+    return this.i18n.t(`toast.setting.${c.setting}.${c.value ? 'on' : 'off'}`, { who });
   }
 
   /** Tells the user (server restart, replaced session, closed game); info fades, the rest persists. */
@@ -145,8 +145,14 @@ export class SocketService {
     return ack;
   }
 
-  settings(patch: { fastComputerDice?: boolean; computerSpeed?: number }) {
-    return this.send('game:settings', patch);
+  async settings(patch: Intents['game:settings'][0]) {
+    const ack = await this.send('game:settings', patch);
+    if (!ack.ok) this.notify('error', errorMessage(ack, this.i18n));
+    return ack;
+  }
+
+  pause(paused: boolean) {
+    return this.send('game:pause', { paused });
   }
 
   /** Resolves true once the server accepted the leave; a rejection is shown as an error toast. */

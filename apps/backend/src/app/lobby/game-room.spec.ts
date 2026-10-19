@@ -226,6 +226,35 @@ describe('GameRoom settings and computer pacing', () => {
   beforeEach(() => jest.useFakeTimers());
   afterEach(() => jest.useRealTimers());
 
+  it('lets only the host share bust probability in lobby and running games, not after the end', () => {
+    const { room, changes } = make();
+    expect(toView(room, 'h').showBustProbability).toBe(false);
+    expect(room.setSettings('p', { showBustProbability: true })).toMatchObject({
+      reason: 'notHost',
+    });
+    const n = changes.length;
+    expect(room.setSettings('h', { showBustProbability: true })).toEqual({
+      ok: true,
+      changes: [{ setting: 'showBustProbability', value: true }],
+    });
+    expect(changes).toHaveLength(n + 1);
+    expect(toView(room, 'h').showBustProbability).toBe(true);
+    expect(room.setSettings('h', { showBustProbability: true })).toEqual({ ok: true, changes: [] });
+    expect(changes).toHaveLength(n + 1);
+    room.setSeat('h', 1, 'computer');
+    room.setReady('h', true);
+    room.start('h');
+    expect(room.setSettings('h', { showBustProbability: false })).toEqual({
+      ok: true,
+      changes: [{ setting: 'showBustProbability', value: false }],
+    });
+    room.phase = 'finished';
+    expect(room.setSettings('h', { showBustProbability: true })).toMatchObject({
+      reason: 'notInGame',
+    });
+    room.dispose();
+  });
+
   it('lets only the host change fast computer dice, and not after the game ended', () => {
     const { room, changes } = make();
     room.join('p', 'Pia');
@@ -266,6 +295,20 @@ describe('GameRoom settings and computer pacing', () => {
     expect(changes).toHaveLength(before + 1);
     room.phase = 'finished';
     expect(room.setSettings('h', { computerSpeed: 1 })).toMatchObject({ reason: 'notInGame' });
+  });
+
+  it('pauses and resumes computer play, host only', () => {
+    const { room } = untilComputer(false);
+    const before = room.log.length;
+    expect(room.setPaused('x', true)).toMatchObject({ reason: 'notHost' });
+    expect(room.setPaused('h', true)).toEqual({ ok: true });
+    expect(toView(room, 'h').paused).toBe(true);
+    jest.advanceTimersByTime(60_000);
+    expect(room.log).toHaveLength(before);
+    expect(room.setPaused('h', false)).toEqual({ ok: true });
+    jest.advanceTimersByTime(60_000);
+    expect(room.log.length).toBeGreaterThan(before);
+    room.dispose();
   });
 
   /** Host plays until a computer is up; returns the room and whether the last action was a throw. */

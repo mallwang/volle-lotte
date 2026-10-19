@@ -12,6 +12,7 @@ import {
   type Risk,
   type ErrorReason,
   type GameState,
+  type GameSettings,
   type GameSummary,
   type LogEntry,
   type LogKind,
@@ -99,6 +100,8 @@ export class GameRoom {
   phase: RoomPhase = 'lobby';
   game: GameState | null = null;
   log: LogEntry[] = [];
+  /** Number of entries dropped from the front of `log` (it is capped). */
+  logBase = 0;
   /** Players removed by the host; they may not join or rejoin. */
   readonly banned = new Set<string>();
   onChange?: (entries: LogEntry[]) => void;
@@ -111,6 +114,10 @@ export class GameRoom {
   fastComputerDice = false;
   /** Host setting: computer speed 1 (slow) to 5 (fast), see `pacing`. */
   computerSpeed = DEFAULT_SPEED;
+  showBustProbability = false;
+  /** Host pause of a running game; timers are stopped and their remaining time kept in `frozen`. */
+  paused = false;
+  private frozen?: { computerElapsed?: number; turnLeft?: number };
   private computerDelay: (p: Pacing) => number = (p) => p.pauseMs;
   /** The armed computer timer, kept so a speed change can re-arm it. */
   private pending?: { delayFor: (p: Pacing) => number; run: () => void; startedAt: number };
@@ -321,6 +328,7 @@ export class GameRoom {
     const seat = this.seatOf(playerId);
     if (seat < 0) return fail('notInGame');
     if (seat !== this.currentSeat()) return fail('notYourTurn');
+    if (this.paused) return fail('paused');
     const res = this.apply(action);
     const human = this.seats[seat];
     if (res.ok && human.state === 'human') human.timeouts = 0;
@@ -332,6 +340,7 @@ export class GameRoom {
     const seat = this.seatOf(playerId);
     if (seat < 0) return fail('notInGame');
     if (seat !== this.currentSeat()) return fail('notYourTurn');
+    if (this.paused) return fail('paused');
     const n = this.game.turn?.dice.length ?? 0;
     if (new Set(dice).size !== dice.length || dice.some((d) => d < 0 || d >= n))
       return fail('invalidRequest');
@@ -341,10 +350,7 @@ export class GameRoom {
   }
 
   /** Host only, lobby or running game. `changes` lists the values that really changed. */
-  setSettings(
-    playerId: string,
-    patch: { fastComputerDice?: boolean; computerSpeed?: number },
-  ): Res<{ changes: SettingChange[] }> {
+  setSettings(playerId: string, patch: GameSettings): Res<{ changes: SettingChange[] }> {
     if (playerId !== this.hostId) return fail('notHost');
     if (this.phase === 'finished') return fail('notInGame');
     if (patch.computerSpeed !== undefined && !isComputerSpeed(patch.computerSpeed))
@@ -359,8 +365,53 @@ export class GameRoom {
       this.fastComputerDice = patch.fastComputerDice;
       changes.push({ setting: 'fastComputerDice', value: patch.fastComputerDice });
     }
+    if (
+      patch.showBustProbability !== undefined &&
+      patch.showBustProbability !== this.showBustProbability
+    ) {
+      this.showBustProbability = patch.showBustProbability;
+      changes.push({ setting: 'showBustProbability', value: patch.showBustProbability });
+    }
     if (changes.length > 0) this.emit();
     return { ok: true, changes };
+  }
+
+  /** Host only: freezes or continues a running game, keeping what is left of every wait. */
+  setPaused(playerId: string, paused: boolean): Res {
+    if (playerId !== this.hostId) return fail('notHost');
+    if (this.phase !== 'running') return fail('notInGame');
+    if (paused === this.paused) return { ok: true };
+    this.paused = paused;
+    if (paused) this.freezeTimers();
+    else this.thawTimers();
+    this.emit();
+    return { ok: true };
+  }
+
+  private freezeTimers() {
+    const frozen: NonNullable<GameRoom['frozen']> = {};
+    if (this.computerTimer && this.pending) {
+      frozen.computerElapsed = this.now() - this.pending.startedAt;
+      clearTimeout(this.computerTimer);
+      this.computerTimer = undefined;
+    }
+    if (this.turnTimer && this.turnDeadline) {
+      frozen.turnLeft = Math.max(0, this.turnDeadline.at - this.now());
+      this.stopTurnTimer();
+    }
+    this.frozen = frozen;
+  }
+
+  private thawTimers() {
+    const { computerElapsed, turnLeft } = this.frozen ?? {};
+    this.frozen = undefined;
+    if (computerElapsed !== undefined && this.pending) {
+      const { delayFor, run } = this.pending;
+      this.pending.startedAt = this.now() - computerElapsed;
+      const wait = Math.max(0, delayFor(pacing(this.computerSpeed)) - computerElapsed);
+      this.computerTimer = setTimeout(run, wait);
+    }
+    if (turnLeft !== undefined) this.armTurnTimer(turnLeft);
   }
 
   /** `timeout`: the turn ends by a timeout, so its result notice is shown before this action's events. */
@@ -398,7 +449,7 @@ export class GameRoom {
   }
 
   private scheduleComputer() {
-    if (this.computerTimer || this.phase !== 'running' || !this.game) return;
+    if (this.computerTimer || this.paused || this.phase !== 'running' || !this.game) return;
     if (this.seats[this.currentSeat()]?.state !== 'computer') return;
     // nobody to play against: wait (a rejoin emits and resumes), cleanup closes the room
     if (this.humans().length === 0) return;
@@ -450,8 +501,13 @@ export class GameRoom {
     const phase = this.game?.turn?.phase;
     const human = this.phase === 'running' && this.seats[this.currentSeat()]?.state === 'human';
     if (!human || !phase) return this.stopTurnTimer();
-    if (this.turnTimer) return;
-    const ms = this.turnDelay + TURN_LIMIT_MS[phase];
+    if (this.turnTimer || this.paused) return;
+    this.armTurnTimer(this.turnDelay + TURN_LIMIT_MS[phase]);
+  }
+
+  private armTurnTimer(ms: number) {
+    const phase = this.game?.turn?.phase;
+    if (!phase) return;
     this.turnDeadline = { at: this.now() + ms, phase };
     this.turnTimer = setTimeout(() => this.turnExpired(), ms);
     this.turnTimer.unref(); // never keeps the process alive
@@ -577,7 +633,10 @@ export class GameRoom {
     if (seat !== undefined) entry.seat = seat;
     if (data !== undefined) entry.data = data;
     this.log.push(entry);
-    if (this.log.length > LOG_CAP) this.log.shift();
+    if (this.log.length > LOG_CAP) {
+      this.log.shift();
+      this.logBase++;
+    }
     this.fresh.push(entry);
   }
 

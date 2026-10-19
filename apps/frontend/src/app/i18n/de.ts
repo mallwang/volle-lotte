@@ -159,6 +159,9 @@ export const de: Record<keyof typeof en, string> = {
   'table.dice': 'Würfel',
   'table.players': 'Spieler',
   'table.log': 'Protokoll',
+  'table.pause': 'Spiel pausieren',
+  'table.resume': 'Spiel fortsetzen',
+  'table.paused': 'Spiel vom Gastgeber pausiert',
   'turn.timer': 'Zeitlimit für diesen Zug',
   'table.timedOutYou': 'Du hast die Zeit überschritten.',
   'table.timedOutWarn':
@@ -224,6 +227,10 @@ export const de: Record<keyof typeof en, string> = {
   'settings.fastComputerDice': 'Schnelle Computer-Würfel',
   'settings.fastComputerDiceHint': 'Würfel des Computers rollen kürzer. Gilt für alle am Tisch.',
   'settings.hostOnly': 'Nur der Host kann das ändern.',
+  'settings.showBustProbability': 'Fehlschlag-Wahrscheinlichkeit anzeigen',
+  'settings.showBustProbabilityHint':
+    'Für alle. Vorschau auf den nächsten Wurf nach Beiseitelegen der markierten Würfel.',
+  'table.bustProbability': 'Fehlschlag-Wahrscheinlichkeit beim nächsten Wurf: {percent}%',
   'settings.computerSpeed': 'Computer-Geschwindigkeit',
   'settings.computerSpeedHint':
     'Wie lange Computer zwischen ihren Aktionen warten. Gilt für alle am Tisch.',
@@ -241,6 +248,10 @@ export const de: Record<keyof typeof en, string> = {
     '{who} hat die Computer-Geschwindigkeit auf {step} ({name}) gestellt.',
   'toast.setting.fastComputerDice.on': '{who} hat die schnellen Computer-Würfel eingeschaltet.',
   'toast.setting.fastComputerDice.off': '{who} hat die schnellen Computer-Würfel ausgeschaltet.',
+  'toast.setting.showBustProbability.on':
+    '{who} hat die Anzeige der Fehlschlag-Wahrscheinlichkeit eingeschaltet.',
+  'toast.setting.showBustProbability.off':
+    '{who} hat die Anzeige der Fehlschlag-Wahrscheinlichkeit ausgeschaltet.',
   'player.human': 'Mensch',
   'player.active': 'Am Zug',
   'player.offline': 'Offline',
@@ -311,6 +322,7 @@ export const de: Record<keyof typeof en, string> = {
   'error.notReady': 'Nicht alle Spieler sind bereit.',
   'error.notEnoughPlayers': 'Es werden mindestens zwei Spieler benötigt.',
   'error.notYourTurn': 'Du bist nicht dran.',
+  'error.paused': 'Das Spiel ist pausiert.',
   'error.rejected': 'Dieser Zug ist nicht erlaubt.',
   'error.rejectedEngine': 'Dieser Zug ist nicht erlaubt: {engine}.',
 

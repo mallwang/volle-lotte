@@ -10,7 +10,7 @@ import { TranslatePipe } from '../core/translate.pipe';
 /** Quiet time after the last slider change before it is sent, so a drag is one intent and one toast. */
 const SEND_DELAY_MS = 300;
 
-/** Computer speed slider and fast-dice switch; only the host can change them (lobby panel, table dialog). */
+/** Shared host controls in the lobby panel and table dialog. */
 @Component({
   selector: 'app-host-settings',
   imports: [FormsModule, SliderModule, ToggleSwitchModule, TranslatePipe],
@@ -50,6 +50,18 @@ const SEND_DELAY_MS = 300;
           />
         </div>
         <small>{{ (host() ? 'settings.fastComputerDiceHint' : 'settings.hostOnly') | t }}</small>
+      </div>
+      <div class="vl-setting">
+        <div class="vl-setting-row">
+          <label for="show-bust-probability">{{ 'settings.showBustProbability' | t }}</label>
+          <p-toggleswitch
+            inputId="show-bust-probability"
+            [ngModel]="game.showBustProbability"
+            [disabled]="!host()"
+            (ngModelChange)="socket.settings({ showBustProbability: $event })"
+          />
+        </div>
+        <small>{{ (host() ? 'settings.showBustProbabilityHint' : 'settings.hostOnly') | t }}</small>
       </div>
     }
   `,

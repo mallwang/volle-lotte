@@ -548,6 +548,15 @@ a.vl-menu-link:hover {
 .vl-title-btns {
   display: flex;
 }
+.vl-paused {
+  margin: 0.25rem 0;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  font-weight: 600;
+  text-align: center;
+  background: var(--p-orange-100, #ffedd5);
+  color: var(--p-orange-900, #7c2d12);
+}
 .vl-game-clock {
   font-variant-numeric: tabular-nums;
   font-weight: 600;
@@ -605,6 +614,12 @@ a.vl-menu-link:hover {
 }
 .vl-roll-status {
   margin: 0;
+}
+.vl-bust-probability {
+  flex-basis: 100%;
+  margin: 0;
+  text-align: center;
+  font-size: 0.9rem;
 }
 .vl-roll-status:empty {
   display: none;
