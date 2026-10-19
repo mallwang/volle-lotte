@@ -74,7 +74,7 @@ Goal: a separate mobile frontend, so the desktop frontend stays desktop only. Id
 
 ### R8. Computer player names (`in progress`, spec 012)
 
-- Every computer seat gets a random "adjective noun" name (English or German, own Nx library, `unique-names-generator` has no German lists); the host can rename it in the lobby and in a running game.
+- Every computer seat gets a random "adjective noun" name (English or German, own Nx library, `unique-names-generator` has no German lists); the host can rename it inline in the lobby, with a button to roll a new name.
 - Language: the host's UI language; if the host leaves, the language of the host who left.
 
 ### Later, not for the next releases

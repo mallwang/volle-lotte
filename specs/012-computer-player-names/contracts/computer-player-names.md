@@ -18,14 +18,14 @@ This is the intended Socket.IO behavior contract. Concrete event names should fo
 
 ## Host rename intent
 
-The client intent carries a target seat and new name. The backend MUST:
+`seat:rename { seat, name? }`. An omitted name rolls a new unique name in the host language. The backend MUST:
 
 1. Require that the sender is current host.
 2. Require an occupied computer seat; humans, open/locked seats and finished games are not rename targets.
 3. Apply the same normalization, allowed-character and length rules as human nicknames.
 4. Reject blank or case-insensitive duplicate names without changing state.
-5. On success, update the room seat and active engine player's name immutably.
-6. Broadcast the updated room/game view to every client and append a rename log event.
+5. Only allow renaming in the lobby (not once the game has started).
+6. On success, update the room seat and broadcast the updated view to every client.
 
 The acknowledgement/rejection uses existing gateway result/error conventions. It must identify invalid/duplicate input with a localized UI message; authorization and state validation remain server-side.
 

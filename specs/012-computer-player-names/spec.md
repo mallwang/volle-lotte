@@ -12,7 +12,7 @@
 
 In scope: a name for every computer seat (random default, host can rename), random name generation in German and English, the language rule for names (current host, or the leaving host), showing the name everywhere a computer is shown today (lobby seats, table, log, results), keeping the name stable for the rest of the game, English and German user documentation.
 
-Out of scope: names for human players (they keep choosing their own nickname), more languages than the two UI languages, a "roll a new name" button (the host can rename or reset the seat), changing computer skill, risk or speed (features 010 and 011), saving favourite names.
+Out of scope: names for human players (they keep choosing their own nickname), more languages than the two UI languages, changing computer skill, risk or speed (features 010 and 011), saving favourite names.
 
 ## User Scenarios & Testing _(mandatory)_
 
@@ -36,16 +36,16 @@ The host sets a seat to "computer" in the lobby. Instead of an anonymous "Comput
 
 ### User Story 2 - Host renames a computer (Priority: P1)
 
-The host does not like a generated name, or wants a name that fits the group ("Oma", "Chef"). The host edits the name of a computer seat in the lobby, confirms it, and everyone sees the new name. The host can also rename a computer during a running game from the same place where other host settings live.
+The host does not like a generated name, or wants a name that fits the group ("Oma", "Chef"). The host edits the name of a computer seat in the lobby, confirms it, and everyone sees the new name. The name is edited inline in the seat's name field; a small button next to it rolls a new generated name. Renaming is only possible in the lobby.
 
 **Why this priority**: Naming by the host is the headline of the request; the random default only makes it effortless.
 
-**Independent Test**: As host, rename a computer in the lobby, start the game and verify the new name at all clients; rename it again in the running game and verify the change on all clients.
+**Independent Test**: As host, rename a computer in the lobby, roll a new name with the regenerate button, start the game and verify the new name at all clients.
 
 **Acceptance Scenarios**:
 
 1. **Given** a computer seat in the lobby, **When** the host enters a new valid name, **Then** all clients show the new name immediately.
-2. **Given** a running game, **When** the host renames a computer, **Then** all clients show the new name from then on (seat, table, later log entries, results).
+2. **Given** a computer seat in the lobby, **When** the host presses the regenerate button, **Then** a new unique name in the host's language is set and shown to all clients.
 3. **Given** a non-host player, **When** they look at a computer seat, **Then** they cannot rename it.
 4. **Given** the host enters a name that an existing player or computer already uses (ignoring upper/lower case), **When** they confirm, **Then** the change is rejected with a clear message and the old name stays.
 5. **Given** the host enters an empty name or one that is too long, **When** they confirm, **Then** the change is rejected with a clear message and the old name stays; the name rules are the same as for player nicknames.
@@ -109,7 +109,7 @@ The rename control, its messages and the how-to/user guide mention the feature i
 - **FR-005**: For a computer set by the host in the lobby, or by a takeover after a non-host player left, the language MUST be the UI language of the current host at that moment.
 - **FR-006**: For a takeover after the host left, the language MUST be the UI language of the host who left, not that of the newly elected host.
 - **FR-007**: A computer's name MUST stay the same for the rest of the game unless the host renames it. Changing the host or the host's UI language MUST NOT rename existing computers.
-- **FR-008**: The host MUST be able to rename any computer seat in the lobby and in a running game; other players MUST NOT be able to.
+- **FR-008**: The host MUST be able to rename any computer seat in the lobby; other players MUST NOT be able to.
 - **FR-009**: A name entered by the host MUST follow the same rules as player nicknames (not empty after trimming, same maximum length, same allowed characters) and MUST be unique among all players and computers in the game, ignoring upper/lower case. Invalid input MUST be rejected with a clear message and leave the old name untouched.
 - **FR-010**: Generated names MUST be unique among all players and computers in the game; on a collision the system MUST pick another name.
 - **FR-011**: A human joining MUST NOT be able to take a name that a computer in the game uses.
@@ -139,7 +139,7 @@ The rename control, its messages and the how-to/user guide mention the feature i
 
 ## Assumptions
 
-- Naming is a host-only setting, like skill, risk and speed; the host can rename in the lobby and in a running game.
+- Naming is a host-only setting, like skill, risk and speed; the host can rename in the lobby only.
 - The generated name is stored with the game, so it survives reconnects and is the same for everybody; it is not regenerated per client.
 - The word lists are small, curated and family-friendly (everyday adjectives and animals, in the spirit of the Docker name generator), with several thousand combinations per language, enough for eight seats without noticeable collisions.
 - The third-party package `unique-names-generator` (checked, v4.7.1) does **not** fit: its word lists are English only (adjectives, animals, colors, countries, languages, names, numbers, Star Wars); it has no German dictionaries (the only "German" hits are the words "German"/"Germany" in its country and language lists), and it cannot handle German gender agreement. Therefore the generator is built in a new own workspace library (the logic is a random pick from two lists), with English and German word lists, usable by frontend and backend.

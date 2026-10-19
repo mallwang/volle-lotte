@@ -43,13 +43,13 @@ The generator is pure: input is language, word lists and injected random indices
 
 ## Running game state
 
-The game engine's player at `seatOfEngine[seat]` must have the same `name` as the corresponding room seat. Renaming replaces the player record and containing game state immutably; scores, turn, deck, result ranking and previous logs remain unchanged. A rename event is appended to the existing room/game log stream.
+The game engine's player at `seatOfEngine[seat]` must have the same `name` as the corresponding room seat. Renaming is lobby-only, so the engine state is created from the final seat names at game start and is never renamed afterwards.
 
 ## Transitions
 
 1. **Open/locked -> computer (lobby)**: validate host intent; generate unique name in current host language; create computer seat with that name.
 2. **Human -> computer (running takeover)**: capture human name/language/player ID in former-seat data; resolve naming language from current host or departing host as applicable; generate unique name; preserve engine index and score; append replacement event.
-3. **Computer -> renamed computer**: validate host authority, normalized nickname constraints and uniqueness; update seat; if game active, immutably update corresponding engine player; broadcast and append rename event.
+3. **Computer -> renamed computer**: validate host authority, normalized nickname constraints and uniqueness; update seat and broadcast. Without a name in the intent, a new unique name is rolled in the host language. Lobby only.
 4. **Computer -> former human rejoin**: restore the former player's nickname and latest session language; release computer name and preserve the existing engine player/score continuity.
 5. **Computer -> open/locked/removed**: release its name from the game uniqueness set.
 6. **Host language changes**: update that player's session and active human seat; existing computer names are unchanged; subsequent generation uses the latest applicable host language.

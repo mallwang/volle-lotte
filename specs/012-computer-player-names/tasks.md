@@ -66,9 +66,9 @@ description: 'Task list for computer player names'
 
 ## Phase 4: User Story 2 - Host renames a computer (Priority: P1)
 
-**Goal**: The host can rename a computer in the lobby or active game; invalid, duplicate, or unauthorized changes do not alter authoritative state.
+**Goal**: The host can rename a computer in the lobby; invalid, duplicate, or unauthorized changes do not alter authoritative state.
 
-**Independent Test**: Rename a computer as host in the lobby and during a running game, verify all clients and future result views use the new name, and verify invalid and non-host requests leave it unchanged.
+**Independent Test**: Rename a computer as host in the lobby (inline, plus regenerate), verify all clients and future result views use the new name, and verify invalid and non-host requests leave it unchanged.
 
 ### Tests for User Story 2
 
@@ -84,10 +84,10 @@ description: 'Task list for computer player names'
 - [x] T025 [US2] Implement room-level rename authorization and validation: only the current host may rename an occupied computer in a lobby or running game; use the same trimmed non-empty, max-length, and allowed-character rules as player nicknames; reject case-insensitive duplicates among all occupied seats without mutation in `apps/backend/src/app/lobby/game-room.ts`
 - [x] T026 [US2] Update the corresponding engine player via the seat-to-engine mapping, publish the updated room/game view, and append a rename log event without rewriting earlier entries in `apps/backend/src/app/lobby/game-room.ts`
 - [x] T027 [US2] Handle the rename intent through the existing acknowledgement/error conventions and broadcast authoritative state in `apps/backend/src/app/lobby/lobby.gateway.ts`
-- [x] T028 [US2] Add a keyboard- and touch-operable host rename control for computer seats in the lobby and running-game settings in `apps/frontend/src/app/game-lobby/game-lobby.ts`, `apps/frontend/src/app/table/settings-dialog.ts`, and `apps/frontend/src/app/table/table.ts`
+- [x] T028 [US2] Add a keyboard- and touch-operable host rename control for computer seats inline in the lobby seat in `apps/frontend/src/app/game-lobby/game-lobby.ts`
 - [x] T029 [US2] Ensure renamed values feed active table and completed result displays while existing historical log entries remain unchanged in `apps/frontend/src/app/core/game-view.ts`, `apps/frontend/src/app/table/table.ts`, and `apps/frontend/src/app/table/game-log.ts`
 
-**Checkpoint**: Host rename works in lobby and active play; non-host, invalid, duplicate, wrong-target and finished-game requests are rejected without partial updates.
+**Checkpoint**: Host rename works in the lobby; non-host, invalid, duplicate, wrong-target and finished-game requests are rejected without partial updates.
 
 ---
 
@@ -204,7 +204,7 @@ After Phase 2:
 
 1. Shared generator and language-aware protocol/session foundation.
 2. US1: lobby-created computer names, propagated to game state.
-3. US2: host rename in lobby and running game.
+3. US2: host rename in the lobby.
 4. US3: correct-language replacement, host handover, and rejoin semantics.
 5. US4: translations and user documentation.
 6. Run cross-project validation and manual quickstart flows.
