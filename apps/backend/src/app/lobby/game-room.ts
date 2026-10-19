@@ -72,10 +72,28 @@ export type Seat =
       risk: Risk;
       /** Set only when the computer replaced a human, who may rejoin. */
       former?: { playerId: string; nickname: string };
+    }
+  | {
+      /** A rematch holds this seat for a player who is still in the game-over modal; not human, not ready. */
+      state: 'reserved';
+      playerId: string;
+      nickname: string;
+      language: UiLanguage;
     };
 
 type Human = Extract<Seat, { state: 'human' }>;
 type ComputerSeat = Extract<Seat, { state: 'computer' }>;
+type Reserved = Extract<Seat, { state: 'reserved' }>;
+
+/** The finished game as it was, kept for players who wait for the rematch and still look at its table. */
+export interface Archive {
+  round: number;
+  game: GameState;
+  seats: Seat[];
+  log: LogEntry[];
+  logBase: number;
+  hostId: string;
+}
 export type ReplaceReason = 'left' | 'disconnected' | 'timeouts';
 
 export type Fail = { ok: false; reason: ErrorReason; engine?: RejectionReason };
@@ -115,6 +133,12 @@ export class GameRoom {
   logBase = 0;
   /** Players removed by the host; they may not join or rejoin. */
   readonly banned = new Set<string>();
+  /** Game number in this room; each rematch adds one. */
+  round = 1;
+  /** Set by a rematch: the finished game that waiting players still see. */
+  archive?: Archive;
+  /** Players whose reserved seat the start of the next game dropped; they still see `archive`. */
+  readonly dropped = new Set<string>();
   onChange?: (entries: LogEntry[]) => void;
 
   private readonly now: () => number;
@@ -169,6 +193,17 @@ export class GameRoom {
     return this.seats.flatMap((s) => (s.state === 'human' ? [s] : []));
   }
 
+  /** Index of the seat reserved for the player, or -1. */
+  reservedSeat(playerId: string): number {
+    return this.seats.findIndex((s) => s.state === 'reserved' && s.playerId === playerId);
+  }
+
+  /** Players who wait for the rematch (reserved) or were dropped by its start; they see `archive`. */
+  watchers(): string[] {
+    const reserved = this.seats.flatMap((s) => (s.state === 'reserved' ? [s.playerId] : []));
+    return [...reserved, ...this.dropped];
+  }
+
   hasConnectedHuman(): boolean {
     return this.humans().some((h) => h.connected);
   }
@@ -184,7 +219,9 @@ export class GameRoom {
       name: this.name,
       host: this.host()?.nickname ?? '',
       targetScore: this.rules.targetScore,
-      seatsUsed: this.seats.filter((s) => s.state === 'human' || s.state === 'computer').length,
+      seatsUsed: this.seats.filter(
+        (s) => s.state === 'human' || s.state === 'computer' || s.state === 'reserved',
+      ).length,
       seatsTotal: this.seats.filter((s) => s.state !== 'locked').length,
       protected: this.passwordHash !== '',
       rejoinable: this.formerSeat(forPlayer) >= 0,
@@ -254,6 +291,71 @@ export class GameRoom {
     return { ok: true, seat };
   }
 
+  /**
+   * Host of a finished game: the same room becomes a lobby again. The host keeps their seat; the other
+   * humans get a reserved seat; computers the host set up stay; seats of players who left, and of
+   * humans a computer replaced, are freed. `round` is the finished game's round.
+   */
+  rematch(playerId: string, round: number): Res {
+    if (playerId !== this.hostId) return fail('notHost');
+    if (round !== this.round) return fail('staleRound');
+    if (this.phase !== 'finished' || !this.game) return fail('gameStarted');
+    this.archive = {
+      round: this.round,
+      game: this.game,
+      seats: structuredClone(this.seats),
+      log: this.log,
+      logBase: this.logBase,
+      hostId: this.hostId,
+    };
+    this.dropped.clear();
+    this.seats.forEach((seat, i) => {
+      if (seat.state === 'human' && seat.playerId === this.hostId) {
+        this.seats[i] = this.humanSeat(seat.playerId, seat.nickname, seat.language);
+      } else if (seat.state === 'human') {
+        this.seats[i] = {
+          state: 'reserved',
+          playerId: seat.playerId,
+          nickname: seat.nickname,
+          language: seat.language,
+        };
+      } else if (seat.state === 'computer' && seat.former) {
+        this.seats[i] = { state: 'open' };
+      }
+    });
+    this.clearTimers();
+    this.phase = 'lobby';
+    this.game = null;
+    this.seatOfEngine = [];
+    this.preview = [];
+    this.paused = false;
+    this.frozen = undefined;
+    this.pending = undefined;
+    this.computerDelay = (p) => p.pauseMs;
+    this.turnDelay = 0;
+    this.logBase += this.log.length;
+    this.log = [];
+    this.fresh = [];
+    this.round++;
+    this.add('rematch', this.seatOf(this.hostId));
+    this.emit();
+    return { ok: true };
+  }
+
+  /** A player waiting in the game-over modal takes their reserved seat; `round` is the finished game's round. */
+  rematchJoin(playerId: string, round: number, language?: UiLanguage): Res<{ seat: number }> {
+    if (this.banned.has(playerId)) return fail('banned');
+    if (round !== this.round - 1) return fail('staleRound');
+    const seat = this.reservedSeat(playerId);
+    if (this.phase !== 'lobby' || seat < 0) return fail('notRejoinable');
+    const reserved = this.seats[seat] as Reserved;
+    this.seats[seat] = this.humanSeat(playerId, reserved.nickname, language ?? reserved.language);
+    this.resetReady();
+    this.add('rejoined', seat);
+    this.emit();
+    return { ok: true, seat };
+  }
+
   /** Remembers the UI language of a seated player; computers are named in the host's. */
   setLanguage(playerId: string, language: UiLanguage): void {
     const seat = this.seats[this.seatOf(playerId)];
@@ -289,6 +391,16 @@ export class GameRoom {
 
   /** Deliberate leave. Returns whether the room has no human left. */
   leave(playerId: string): Res<{ empty: boolean }> {
+    const reserved = this.reservedSeat(playerId);
+    if (reserved >= 0) {
+      this.seats[reserved] = { state: 'open' };
+      this.resetReady();
+      this.add('left', reserved);
+      this.emit();
+      return { ok: true, empty: this.humans().length === 0 };
+    }
+    // dropped by the start of the next game: nothing to free, the player only dismisses the modal
+    if (this.dropped.delete(playerId)) return { ok: true, empty: this.humans().length === 0 };
     const seat = this.seatOf(playerId);
     // seatless: a computer already took over after timeouts; the player only dismisses the notice
     if (seat < 0) return { ok: true, empty: this.humans().length === 0 };
@@ -334,6 +446,7 @@ export class GameRoom {
     if (this.phase !== 'lobby') return fail('gameStarted');
     const current = this.seats[seat];
     if (!current) return fail('invalidRequest');
+    if (current.state === 'reserved') return fail('seatOccupied');
     let removed: string | undefined;
     if (mode === 'computer') {
       if (current.state === 'human') {
@@ -359,7 +472,11 @@ export class GameRoom {
     if (playerId !== this.hostId) return fail('notHost');
     if (this.phase !== 'lobby') return fail('gameStarted');
     const current = this.seats[seat];
-    if (current?.state !== 'human' || current.playerId === this.hostId) return fail('seatNotFree');
+    if (
+      (current?.state !== 'human' && current?.state !== 'reserved') ||
+      current.playerId === this.hostId
+    )
+      return fail('seatNotFree');
     this.banned.add(current.playerId);
     this.seats[seat] = { state: 'open' };
     this.resetReady();
@@ -394,6 +511,12 @@ export class GameRoom {
       this.rules,
       this.rng,
     );
+    // players who did not come back for the rematch lose their seat
+    this.seats.forEach((seat, i) => {
+      if (seat.state !== 'reserved') return;
+      this.dropped.add(seat.playerId);
+      this.seats[i] = { state: 'open' };
+    });
     this.phase = 'running';
     this.add('started');
     this.emit();
@@ -736,7 +859,7 @@ export class GameRoom {
   private takenNames(): Set<string> {
     const names = new Set<string>();
     for (const s of this.seats) {
-      if (s.state === 'human') names.add(s.nickname.toLowerCase());
+      if (s.state === 'human' || s.state === 'reserved') names.add(s.nickname.toLowerCase());
       else if (s.state === 'computer') {
         names.add(s.name.toLowerCase());
         if (s.former) names.add(s.former.nickname.toLowerCase());

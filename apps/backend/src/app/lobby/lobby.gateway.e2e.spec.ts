@@ -117,6 +117,27 @@ describe('integration flows', () => {
       await finish(all);
     }, 60_000);
 
+    it('plays a rematch with the players who come back', async () => {
+      const { host, guests, all } = await gameOf(['Rm0', 'Rm1', 'Rm2'], 3);
+      all.forEach(autoPlay);
+      await host.send('game:start');
+      await finish(all);
+      const [back, gone] = guests;
+      expect(await gone.send('game:leave')).toMatchObject({ ok: true });
+      expect(await host.send('rematch:start', { round: 1 })).toMatchObject({ ok: true });
+      await waitFor(() => lastState(back)?.rematch === 'open');
+      expect(await back.send('rematch:join', { round: 1 })).toMatchObject({ ok: true });
+      for (const c of [host, back]) await c.send('seat:ready', { ready: true });
+      expect(await host.send('game:start')).toEqual({ ok: true });
+      await waitFor(() => [host, back].every((c) => lastState(c)?.round === 2));
+      expect(lastState(host)?.game?.players.map((p) => p.name)).toEqual(['Rm0', 'Rm1']);
+      await finish([host, back]);
+      const list = await gone.send('lobby:list');
+      expect(list.games.find((g: Any) => g.id === lastState(host)?.id)).toMatchObject({
+        phase: 'finished',
+      });
+    }, 60_000);
+
     it('rejects out-of-turn and illegal actions without a push or state change', async () => {
       const { host, guests, all } = await gameOf(['Rej0', 'Rej1'], 2);
       await host.send('game:start');

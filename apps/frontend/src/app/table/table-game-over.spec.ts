@@ -134,6 +134,65 @@ describe('Table game-over modal', () => {
     expect(socket.leave).toHaveBeenCalled();
   });
 
+  describe('rematch', () => {
+    const buttons = (dialog: HTMLElement | null) =>
+      [...(dialog?.querySelectorAll('button') ?? [])].map((b) => b.textContent?.trim());
+    const guest = (over: Partial<GameView> = {}) =>
+      finished({ you: { playerId: 'p1', seat: 1, timeoutWarning: false }, ...over });
+
+    it('offers the host "Rematch" next to "Back to the lobby"', async () => {
+      const { dialog, socket } = await setup(finished());
+      expect(buttons(dialog())).toEqual(['Rematch', 'Back to the lobby']);
+      expect(dialog()?.textContent).toContain('A rematch reopens this game as a lobby');
+      [...dialog()!.querySelectorAll('button')]
+        .find((b) => b.textContent?.includes('Rematch'))!
+        .click();
+      expect(socket.rematch).toHaveBeenCalled();
+    });
+
+    it('shows a guest a disabled "Rejoin" until the host decided', async () => {
+      const { dialog, socket } = await setup(guest());
+      expect(buttons(dialog())).toEqual(['Rejoin', 'Back to the lobby']);
+      const rejoin = dialog()!.querySelector('button') as HTMLButtonElement;
+      expect(rejoin.disabled).toBe(true);
+      expect(dialog()?.textContent).toContain('Waiting for Ann to decide about a rematch.');
+      rejoin.click();
+      expect(socket.rejoinRematch).not.toHaveBeenCalled();
+    });
+
+    it('activates "Rejoin" when the seat is reserved and sends it', async () => {
+      const { dialog, socket, fixture } = await setup(guest());
+      socket.game.set(
+        guest({
+          rematch: 'open',
+          you: { playerId: 'p1', seat: 1, timeoutWarning: false, reserved: 1 },
+        }),
+      );
+      fixture.detectChanges();
+      const rejoin = dialog()!.querySelector('button') as HTMLButtonElement;
+      expect(rejoin.disabled).toBe(false);
+      expect(dialog()?.textContent).toContain(
+        'Ann started a rematch. Your seat 2 is reserved for you.',
+      );
+      rejoin.click();
+      expect(socket.rejoinRematch).toHaveBeenCalled();
+    });
+
+    it('disables "Rejoin" again once the next game started without the player', async () => {
+      const { dialog } = await setup(guest({ rematch: 'closed' }));
+      expect((dialog()!.querySelector('button') as HTMLButtonElement).disabled).toBe(true);
+      expect(dialog()?.textContent).toContain('The next game has already started without you.');
+    });
+
+    it('lets a guest go back at any time', async () => {
+      const { dialog, socket } = await setup(guest());
+      [...dialog()!.querySelectorAll('button')]
+        .find((b) => b.textContent?.includes('Back'))!
+        .click();
+      expect(socket.leave).toHaveBeenCalled();
+    });
+  });
+
   it('waits for the last dice and stops celebrating when the game goes away', async () => {
     localStorage.setItem('vl-skip-dice', 'false');
     const running = gameView({ phase: 'running', game: engine({ result: null }) }, seats);

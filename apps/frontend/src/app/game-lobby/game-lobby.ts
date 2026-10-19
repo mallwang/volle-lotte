@@ -32,7 +32,16 @@ const RISKS: Risk[] = ['none', 'medium', 'high', 'random'];
   ],
   template: `
     @if (socket.game(); as game) {
-      <h2>{{ game.name }}</h2>
+      <h2>
+        {{ game.name }}
+        @if (game.round > 1) {
+          <p-tag
+            [value]="'gameLobby.rematchRound' | t: { round: game.round }"
+            icon="pi pi-replay"
+            severity="warn"
+          />
+        }
+      </h2>
       <p>
         {{
           'gameLobby.summary'
@@ -47,7 +56,11 @@ const RISKS: Risk[] = ['none', 'medium', 'high', 'random'];
       <p>{{ 'gameLobby.cards' | t: { list: cardList() } }}</p>
       <ul class="vl-cards">
         @for (s of game.seats; track $index) {
-          <li class="vl-seat" [class.vl-seat-locked]="s.state === 'locked'">
+          <li
+            class="vl-seat"
+            [class.vl-seat-locked]="s.state === 'locked'"
+            [class.vl-seat-reserved]="s.state === 'reserved'"
+          >
             <p-avatar [label]="'' + ($index + 1)" shape="circle" aria-hidden="true" />
             <span class="vl-seat-name">{{ 'gameLobby.seat' | t: { n: $index + 1 } }}</span>
             @switch (s.state) {
@@ -159,6 +172,17 @@ const RISKS: Risk[] = ['none', 'medium', 'high', 'random'];
                   </div>
                 }
               }
+              @case ('reserved') {
+                <strong>{{ s.nickname }}</strong>
+                <p-tag [value]="'gameLobby.reserved' | t" icon="pi pi-clock" severity="warn" />
+                @if (host()) {
+                  <p-button
+                    [label]="'gameLobby.removePlayer' | t"
+                    severity="secondary"
+                    (onClick)="removeSeat($index)"
+                  />
+                }
+              }
               @default {
                 <p-tag [value]="'gameLobby.free' | t" icon="pi pi-user-plus" severity="success" />
                 @if (host()) {
@@ -188,6 +212,9 @@ const RISKS: Risk[] = ['none', 'medium', 'high', 'random'];
       </section>
       @if (!host()) {
         <p>{{ 'gameLobby.waiting' | t: { name: hostName() } }}</p>
+      }
+      @if (host() && reservedNames()) {
+        <p class="vl-hint">{{ 'gameLobby.startDrops' | t: { names: reservedNames() } }}</p>
       }
       <div class="vl-actions">
         <p-button
@@ -232,6 +259,13 @@ export class GameLobby {
       .map((c) => counts?.[c] + '× ' + this.i18n.t(`card.${c}`))
       .join(', ');
   });
+  /** Nicknames of the seats held for the rematch, which a start would drop. */
+  protected readonly reservedNames = computed(() =>
+    (this.socket.game()?.seats ?? [])
+      .filter((s) => s.state === 'reserved')
+      .map((s) => s.nickname)
+      .join(', '),
+  );
   protected readonly canStart = computed(() => {
     const seats = this.socket.game()?.seats ?? [];
     const occupied = seats.filter((s) => s.state === 'human' || s.state === 'computer');

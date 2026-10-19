@@ -501,3 +501,127 @@ describe('finished game', () => {
     expect(state.game.phase).toBe('finished');
   });
 });
+
+describe('rematch', () => {
+  /** Three humans played; the game is finished and everybody still looks at the modal. */
+  const finishedTable = async () => {
+    const host = await Client.start('Rehost');
+    const { game } = await create(host, 3);
+    const p = await Client.start('Repia');
+    const q = await Client.start('Requin');
+    for (const c of [p, q]) await c.send('game:join', { gameId: game.id, password: 'secret' });
+    for (const c of [host, p, q]) await c.send('seat:ready', { ready: true });
+    await host.send('game:start');
+    const room = registry().get(game.id);
+    if (!room) throw new Error('no room');
+    room.phase = 'finished';
+    return { host, p, q, room, id: game.id as string };
+  };
+
+  it('validates the request and refuses non-hosts and stale rounds', async () => {
+    const { host, p } = await finishedTable();
+    expect(await host.send('rematch:start', { round: 'x' })).toMatchObject({
+      reason: 'invalidRequest',
+    });
+    expect(await host.send('rematch:start')).toMatchObject({ reason: 'invalidRequest' });
+    expect(await p.send('rematch:start', { round: 1 })).toMatchObject({ reason: 'notHost' });
+    expect(await host.send('rematch:start', { round: 2 })).toMatchObject({ reason: 'staleRound' });
+    expect(await p.send('rematch:join', { round: 0 })).toMatchObject({ reason: 'invalidRequest' });
+    const anon = await Client.connect();
+    expect(await anon.send('rematch:start', { round: 1 })).toMatchObject({ reason: 'noSession' });
+    expect(await anon.send('rematch:join', { round: 1 })).toMatchObject({ reason: 'noSession' });
+    const lone = await Client.start('Relone');
+    expect(await lone.send('rematch:start', { round: 1 })).toMatchObject({ reason: 'notInGame' });
+    expect(await lone.send('rematch:join', { round: 1 })).toMatchObject({ reason: 'notInGame' });
+  });
+
+  it('reopens the room for the host, keeps the others on the finished table and lets them rejoin', async () => {
+    const { host, p, id } = await finishedTable();
+    expect(await host.send('rematch:start', { round: 1 })).toMatchObject({ ok: true });
+    const lobby = await host.until(
+      'game:state',
+      (s) => s.game.phase === 'lobby' && s.game.round === 2,
+    );
+    expect(lobby.game).toMatchObject({ round: 2, you: { seat: 0 } });
+    expect(lobby.game.seats.map((s: Any) => s.state).slice(0, 3)).toEqual([
+      'human',
+      'reserved',
+      'reserved',
+    ]);
+    const waiting = await p.until('game:state', (s) => s.game.rematch === 'open');
+    expect(waiting.game).toMatchObject({ phase: 'finished', round: 1, you: { reserved: 1 } });
+    expect(JSON.stringify(waiting.game)).not.toContain('"deck"');
+    expect(
+      p.pushes.some((x) => x.event === 'game:log' && x.payload.entries[0]?.kind === 'rematch'),
+    ).toBe(false);
+
+    expect(await p.send('rematch:join', { round: 2 })).toMatchObject({ reason: 'staleRound' });
+    const ack = await p.send('rematch:join', { round: 1 });
+    expect(ack).toMatchObject({ ok: true, game: { phase: 'lobby', round: 2, you: { seat: 1 } } });
+    const seen = await host.until(
+      'game:state',
+      (s) => s.game.round === 2 && s.game.seats[1].state === 'human',
+    );
+    expect(seen.game.seats[2].state).toBe('reserved');
+    expect(await p.send('rematch:join', { round: 1 })).toMatchObject({ reason: 'notRejoinable' });
+    expect((await host.send('lobby:list')).games.find((g: Any) => g.id === id)).toMatchObject({
+      phase: 'lobby',
+      seatsUsed: 3,
+    });
+  });
+
+  it('starts without the absent player and tells them once', async () => {
+    const { host, p, q, room } = await finishedTable();
+    await host.send('rematch:start', { round: 1 });
+    await p.send('rematch:join', { round: 1 });
+    await host.send('seat:ready', { ready: true });
+    await p.send('seat:ready', { ready: true });
+    expect(await host.send('game:start')).toEqual({ ok: true });
+    const closed = await q.until('game:state', (s) => s.game.rematch === 'closed');
+    expect(closed.game).toMatchObject({ phase: 'finished', round: 1 });
+    expect(room.dropped.size).toBe(0);
+    expect(await q.send('rematch:join', { round: 1 })).toMatchObject({ reason: 'notRejoinable' });
+    expect(await q.send('game:leave')).toMatchObject({ ok: true });
+    expect(await create(q)).toMatchObject({ ok: true });
+  });
+
+  it('gives up a reservation on reload and on leave', async () => {
+    const { host, p, q, room } = await finishedTable();
+    await host.send('rematch:start', { round: 1 });
+    const back = await Client.start('ignored', q.token);
+    const ack = await back.send('session:start', {
+      token: q.token,
+      nickname: 'x',
+      protocolVersion: PROTOCOL_VERSION,
+    });
+    expect(ack.game).toBeUndefined();
+    expect(room.seats[2]).toEqual({ state: 'open' });
+    expect(await p.send('game:leave')).toMatchObject({ ok: true });
+    expect(room.seats[1]).toEqual({ state: 'open' });
+    expect(await p.send('rematch:join', { round: 1 })).toMatchObject({ reason: 'notInGame' });
+  });
+
+  it('lets the host remove a waiting player', async () => {
+    const { host, q, room } = await finishedTable();
+    await host.send('rematch:start', { round: 1 });
+    expect(await host.send('seat:remove', { seat: 2 })).toMatchObject({ ok: true });
+    expect(room.seats[2]).toEqual({ state: 'open' });
+    expect(await q.until('game:closed')).toEqual({ reason: 'banned' });
+    expect(await q.send('rematch:join', { round: 1 })).toMatchObject({ reason: 'notInGame' });
+  });
+
+  it('releases waiting players when the room closes', async () => {
+    const { host, p } = await finishedTable();
+    await host.send('rematch:start', { round: 1 });
+    expect(await host.send('game:leave')).toMatchObject({ ok: true });
+    expect(await p.until('game:closed')).toEqual({ reason: 'cleanup' });
+    expect(await create(p)).toMatchObject({ ok: true });
+  });
+
+  it('turns away a client of the old protocol version', async () => {
+    const c = await Client.connect();
+    expect(await c.send('session:start', { nickname: 'Oldie', protocolVersion: 9 })).toMatchObject({
+      reason: 'versionMismatch',
+    });
+  });
+});

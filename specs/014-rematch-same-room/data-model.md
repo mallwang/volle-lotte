@@ -2,11 +2,11 @@
 
 ## Room (backend, extended)
 
-| Field     | Type                 | Meaning                                                                                                  |
-| --------- | -------------------- | -------------------------------------------------------------------------------------------------------- |
-| `round`   | integer, starts at 1 | The number of the current or last played game in this room; each rematch adds 1                          |
-| `archive` | snapshot or none     | Set by a rematch: `{ round, game, seats, log, logBase, hostId }` of the finished game, read-only         |
-| `dropped` | set of player ids    | Players whose reservation was dropped by the start; they still see the snapshot with `rematch: 'closed'` |
+| Field     | Type                 | Meaning                                                                                                                        |
+| --------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `round`   | integer, starts at 1 | The number of the current or last played game in this room; each rematch adds 1                                                |
+| `archive` | snapshot or none     | Set by a rematch: `{ round, game, seats, log, logBase, hostId }` of the finished game, read-only                               |
+| `dropped` | set of player ids    | Players whose reservation the start dropped; told once with `rematch: 'closed'`, then forgotten (they leave with `game:leave`) |
 
 `phase` stays `lobby | running | finished`. A rematch moves `finished` to `lobby`; no other transition is added.
 

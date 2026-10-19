@@ -23,5 +23,5 @@ The Java reference lives as a copy in `tmp/java/` (git-ignored, read-only).
 
 <!-- SPECKIT START -->
 
-Current feature plan: [specs/013-game-over-modal/plan.md](specs/013-game-over-modal/plan.md)
+Current feature plan: [specs/014-rematch-same-room/plan.md](specs/014-rematch-same-room/plan.md)
 <!-- SPECKIT END -->

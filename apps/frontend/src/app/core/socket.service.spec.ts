@@ -177,6 +177,55 @@ describe('SocketService', () => {
     expect(add).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
   });
 
+  describe('rematch', () => {
+    const view = (round: number) => ({ ...game, round });
+
+    it('rematch() sends the round of the shown game', async () => {
+      const { socket, service } = setup();
+      socket.replies['session:start'] = { ...started, game: view(3) };
+      await service.start('Ann');
+      expect(await service.rematch()).toBe(true);
+      expect(socket.sent).toContainEqual({ event: 'rematch:start', payload: { round: 3 } });
+    });
+
+    it('rematch() reports a stale round and keeps the game', async () => {
+      const { socket, add, service } = setup();
+      socket.replies['session:start'] = { ...started, game: view(1) };
+      await service.start('Ann');
+      socket.replies['rematch:start'] = { ok: false, reason: 'staleRound' };
+      expect(await service.rematch()).toBe(false);
+      expect(service.game()).not.toBeNull();
+      expect(add).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
+    });
+
+    it('rematch() does nothing without a game', async () => {
+      const { socket, service } = setup();
+      expect(await service.rematch()).toBe(false);
+      expect(await service.rejoinRematch()).toBe(false);
+      expect(socket.sent).toEqual([]);
+    });
+
+    it('rejoinRematch() applies the lobby view of the ack', async () => {
+      const { socket, service } = setup();
+      socket.replies['session:start'] = { ...started, game: view(1) };
+      await service.start('Ann');
+      socket.replies['rematch:join'] = { ok: true, game: { ...game, round: 2, phase: 'lobby' } };
+      expect(await service.rejoinRematch()).toBe(true);
+      expect(socket.sent).toContainEqual({ event: 'rematch:join', payload: { round: 1 } });
+      expect(service.game()).toMatchObject({ round: 2, phase: 'lobby' });
+    });
+
+    it('rejoinRematch() reports a rejection and keeps the finished view', async () => {
+      const { socket, add, service } = setup();
+      socket.replies['session:start'] = { ...started, game: view(1) };
+      await service.start('Ann');
+      socket.replies['rematch:join'] = { ok: false, reason: 'notRejoinable' };
+      expect(await service.rejoinRematch()).toBe(false);
+      expect(service.game()).toMatchObject({ round: 1 });
+      expect(add).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
+    });
+  });
+
   it('end() sends the game id and passes the ack on', async () => {
     const { socket, service } = setup();
     socket.replies['game:end'] = { ok: false, reason: 'notHost' };

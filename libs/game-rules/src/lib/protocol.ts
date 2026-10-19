@@ -1,6 +1,6 @@
 import type { Action, Event, GameState, RejectionReason, Rules } from './types.js';
 
-export const PROTOCOL_VERSION = 9;
+export const PROTOCOL_VERSION = 10;
 
 /** UI language a player reports; the server names computers in the host's language. */
 export type UiLanguage = 'en' | 'de';
@@ -35,6 +35,8 @@ export type ErrorReason =
   | 'notYourTurn'
   | 'paused'
   | 'rejected'
+  /** A rematch request refers to an earlier round of the room. */
+  | 'staleRound'
   /** Client-side only: the intent was not sent because the connection is down. */
   | 'offline';
 
@@ -65,7 +67,8 @@ export type LogKind =
   | 'rejoined'
   | 'timedOut'
   | 'removed'
-  | 'renamed';
+  | 'renamed'
+  | 'rematch';
 
 export interface LogEntry {
   at: number;
@@ -75,7 +78,7 @@ export interface LogEntry {
 }
 
 export interface SeatView {
-  state: 'open' | 'locked' | 'human' | 'computer';
+  state: 'open' | 'locked' | 'human' | 'computer' | 'reserved';
   playerId?: string;
   nickname?: string;
   /** Computer seat: authoritative display name. */
@@ -97,7 +100,15 @@ export interface GameView {
   phase: RoomPhase;
   rules: Rules;
   hostId: string;
-  you: { playerId: string; seat: number; timeoutWarning: boolean };
+  /**
+   * `seat` is -1 without a seat. A player who waits for the rematch gets the finished game
+   * (`phase: 'finished'`, `rematch` set) with their seat of that game and `reserved` = the seat held for them.
+   */
+  you: { playerId: string; seat: number; timeoutWarning: boolean; reserved?: number };
+  /** Game number in this room, starting at 1; each rematch adds one. A waiting player's view has the finished game's round. */
+  round: number;
+  /** Only for a player waiting after a rematch: `open` = a reserved seat to rejoin, `closed` = the next game started without them. */
+  rematch?: 'open' | 'closed';
   seats: SeatView[];
   game?: GameStateView;
   /** Dice indices the active player has ticked so far (not yet confirmed). */
@@ -164,6 +175,10 @@ export interface Intents {
   'turn:preview': [{ dice: number[] }, object];
   'game:settings': [GameSettings, object];
   'game:pause': [{ paused: boolean }, object];
+  /** Host of a finished game reopens the room as a lobby; `round` is the finished game's round. */
+  'rematch:start': [{ round: number }, object];
+  /** A player waiting in the game-over modal takes their reserved seat; `round` is the finished game's round. */
+  'rematch:join': [{ round: number }, { game: GameView }];
 }
 
 export interface GameSettings {

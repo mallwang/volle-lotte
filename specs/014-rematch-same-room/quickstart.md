@@ -20,7 +20,7 @@ Expected: all pass. New or changed tests:
 - Backend `view.spec.ts` (new or existing view tests): snapshot view for reserved (`finished`, `rematch: 'open'`, old `you.seat`, old `round`) and dropped players (`rematch: 'closed'`); normal views carry `round`; `reserved` seats are visible to everybody.
 - Backend `lobby.gateway.spec.ts`: payload validation, host-only `rematch:start`, `staleRound` for a late start and a late join (no push), pushes reach reserved players, `session:start` releases a reservation, `game:closed` for reserved players when the room closes, `seat:remove` of a reserved seat bans and notifies.
 - Backend `lobby.gateway.e2e.spec.ts`: full flow with two clients: finish, rematch, rejoin, ready, start.
-- Frontend `game-over.spec.ts`: host sees Rematch; guest sees disabled Rejoin; active with `rematch: 'open'`; disabled again with `'closed'`; each button calls the matching socket method.
+- Frontend `table-game-over.spec.ts`: host sees Rematch; guest sees disabled Rejoin; active with `rematch: 'open'`; disabled again with `'closed'`; each button calls the matching socket method.
 - Frontend `socket.service.spec.ts`: `rematch()` and `rejoinRematch()` send the round of the shown game and apply the returned view.
 - Frontend `game-lobby.spec.ts`: reserved seat row with tag and host-only remove; round tag.
 - Frontend `i18n.spec.ts`: every new key exists in English and German.

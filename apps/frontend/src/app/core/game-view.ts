@@ -14,6 +14,10 @@ export function youWon(g: GameView): boolean {
   return winner !== undefined && g.you.seat >= 0 && playerSeats(g)[winner] === g.you.seat;
 }
 
+/** What a player who sees the finished game can do about a rematch (see `GameView.rematch`). */
+export type RematchState = 'waiting' | 'open' | 'closed';
+export const rematchState = (g: GameView): RematchState => g.rematch ?? 'waiting';
+
 /** Players show their nickname, computers the name the server gave them. */
 export const seatName = (s: SeatView | undefined): string => s?.nickname ?? s?.name ?? '';
 

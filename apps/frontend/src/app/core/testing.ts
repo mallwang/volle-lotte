@@ -19,6 +19,8 @@ export function stubSocket(game: GameView | null = null) {
     end: vi.fn(),
     refreshLobby: vi.fn().mockResolvedValue(undefined),
     leave: vi.fn(),
+    rematch: vi.fn().mockResolvedValue(true),
+    rejoinRematch: vi.fn().mockResolvedValue(true),
     settings: vi.fn().mockResolvedValue({ ok: true }),
   };
 }
@@ -32,6 +34,7 @@ export function gameView(over: Partial<GameView> = {}, seats: SeatView[] = []): 
     rules: defaultRules(),
     hostId: 'p0',
     you: { playerId: 'p0', seat: 0, timeoutWarning: false },
+    round: 1,
     seats: [...seats, ...Array.from({ length: 4 - seats.length }, () => open)],
     fastComputerDice: false,
     computerSpeed: 3,

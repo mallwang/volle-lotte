@@ -63,6 +63,45 @@ describe('GameLobby', () => {
     expect(socket.send).toHaveBeenCalledWith('seat:remove', { seat: 1 });
   });
 
+  describe('after a rematch', () => {
+    const reserved: SeatView = { state: 'reserved', nickname: 'Bob' };
+
+    it('shows a reserved seat with a tag and the round', async () => {
+      const { el } = await setup(gameView({ round: 2 }, [me(true), reserved]));
+      expect(el.textContent).toContain('Rematch · round 2');
+      expect(el.textContent).toContain('Bob');
+      expect(el.textContent).toContain('Reserved, not back yet');
+      expect(el.querySelector('.vl-seat-reserved')).not.toBeNull();
+    });
+
+    it('does not show the round tag in the first game', async () => {
+      const { el } = await setup(gameView({}, [me(true), other(true)]));
+      expect(el.textContent).not.toContain('Rematch · round');
+    });
+
+    it('lets the host remove a reserved player and start without them', async () => {
+      const { socket, button, el } = await setup(
+        gameView({ round: 2 }, [me(true), reserved, other(true)]),
+      );
+      socket.send.mockResolvedValue({ ok: true });
+      expect((button('Start game') as HTMLButtonElement).disabled).toBe(false);
+      expect(el.textContent).toContain('Starting now drops the seat of Bob.');
+      button('Remove this player')!.click();
+      expect(socket.send).toHaveBeenCalledWith('seat:remove', { seat: 1 });
+    });
+
+    it('does not offer removal to a guest and shows no start hint', async () => {
+      const { button, el } = await setup(
+        gameView(
+          { round: 2, hostId: 'p1', you: { playerId: 'p0', seat: 0, timeoutWarning: false } },
+          [me(true), other(true), reserved],
+        ),
+      );
+      expect(button('Remove this player')).toBeUndefined();
+      expect(el.textContent).not.toContain('Starting now drops');
+    });
+  });
+
   it('counts computers as ready', async () => {
     const { button } = await setup(
       gameView({}, [me(true), { state: 'computer', difficulty: 'easy', risk: 'medium' }]),

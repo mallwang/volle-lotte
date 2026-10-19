@@ -27,6 +27,7 @@ Last updated: 2026-10-19. The Java -> web migration is finished (see [migration.
 | 011  | Computer AI rework: decisions by expected value from exact dice odds, skill (easy, medium, hard, random) and independent risk (none, medium, high, random) per computer seat, random resolved per decision, score situation shifts risk, protocol v6                                           |
 | 012  | Computer player names: random "adjective noun" names in English or German (own Nx library), host can rename inline or roll a new name, language follows the host                                                                                                                               |
 | 013  | Game-over modal over the finished table (no result page), finished games are not restored on reload, winner confetti (`party-js`, shared `Celebration` service, reduced motion respected) and a victory sound played once (preloaded at the table, blocked autoplay tolerated)                 |
+| 014  | Rematch in the same room: the host reopens the finished room as a lobby (same settings, computers and seat order), other players rejoin their reserved seat from the game-over modal, a start drops missing players, rounds reject stale requests, protocol v10                                |
 | N/A  | Connection state as toasts (lost, restored, failed with reload); the page is locked while offline                                                                                                                                                                                              |
 | N/A  | Host handover: a player rejoining a game with only computers becomes host; the last host can end such a game from the games list (protocol v9)                                                                                                                                                 |
 | N/A  | Playtest fix: one-card discard piles have no background card                                                                                                                                                                                                                                   |
@@ -77,12 +78,6 @@ Goal: a persisted, structured game log. The in-game log is shown below the table
 - Throw events: round number, time since game start, player name, card name, dice result, chosen dice, final dice, turn result, dice points, total points.
 - First step: check which data is needed for a replay (R13): seating order, the global dice animation setting, card order if the engine is seeded.
 - Saved games keep their log assigned to the saving players (R15).
-
-### R7. Rematch (`idea`)
-
-- Goal: after a game ends, the host starts a new round with the same players, computers and settings in one click instead of recreating the game.
-- Why: today everybody leaves and joins again, which is the most frequent friction after a game.
-- Open: reuse the same game id (back to the lobby, all humans press "Ready" again) or create a new one and invite everybody; what happens to players who left. The game-over modal (spec 013) leads back to the lobby and releases the player from the finished game, so a rematch needs its own way to keep the room.
 
 ### R8. Spectators (`idea`)
 
