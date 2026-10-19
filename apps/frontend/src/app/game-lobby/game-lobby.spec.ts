@@ -156,6 +156,19 @@ describe('GameLobby', () => {
     expect(el.querySelectorAll('p-tag .pi').length).toBeGreaterThanOrEqual(4);
   });
 
+  it('shows the name the server gave each computer, never a numbered label', async () => {
+    const { el } = await setup(
+      gameView({}, [
+        me(true),
+        { state: 'computer', name: 'Brave Fox', difficulty: 'easy', risk: 'medium' },
+        { state: 'computer', name: 'Mutiges Kaninchen', difficulty: 'hard', risk: 'none' },
+      ]),
+    );
+    expect(el.textContent).toContain('Brave Fox');
+    expect(el.textContent).toContain('Mutiges Kaninchen');
+    expect(el.textContent).not.toMatch(/Computer \d/);
+  });
+
   it('host withdraw and guest leave go through the shared confirmation', async () => {
     const host = await setup(gameView({}, [me(true), other(true)]));
     host.button('Withdraw')!.click();

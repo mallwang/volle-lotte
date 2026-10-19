@@ -593,6 +593,26 @@ a.vl-menu-link:hover {
 .vl-settings-panel {
   margin-block: 1rem;
 }
+.vl-setting-heading {
+  margin: 0;
+  font-size: 0.95rem;
+}
+.vl-rename {
+  display: grid;
+  gap: 0.25rem;
+}
+.vl-rename-row {
+  display: flex;
+  gap: 0.5rem;
+}
+.vl-rename-row input {
+  flex: 1;
+  min-width: 0;
+}
+.vl-rename-error {
+  color: var(--p-text-color);
+  font-weight: 600;
+}
 .vl-settings-panel h3 {
   margin: 0;
   font-size: 1rem;

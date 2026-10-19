@@ -1,4 +1,4 @@
-import { Injectable, InjectionToken, inject, signal } from '@angular/core';
+import { Injectable, InjectionToken, effect, inject, signal } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { io } from 'socket.io-client';
 import {
@@ -51,6 +51,11 @@ export class SocketService {
   private readonly i18n = inject(I18nService);
 
   constructor() {
+    // the server names new computers in the host's language, so it must follow every switch
+    effect(() => {
+      const language = this.i18n.lang();
+      if (this.active && this.socket.connected) void this.send('session:language', { language });
+    });
     this.socket.on('connect', () => {
       this.connection.set('connected');
       if (this.active && this.stored) void this.replay(this.stored);
@@ -104,6 +109,7 @@ export class SocketService {
       nickname,
       token: this.stored?.token,
       protocolVersion: PROTOCOL_VERSION,
+      language: this.i18n.lang(),
     });
     if (ack.ok) {
       this.stored = { token: ack.token, nickname: ack.nickname };
@@ -174,6 +180,7 @@ export class SocketService {
       nickname: stored.nickname,
       token: stored.token,
       protocolVersion: PROTOCOL_VERSION,
+      language: this.i18n.lang(),
     });
     if (!ack.ok) {
       this.active = false;

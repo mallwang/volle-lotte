@@ -122,3 +122,9 @@ export function skipTurn(state: GameState): GameState {
   if (state.result || !state.turn) return state;
   return { ...state, current: (state.current + 1) % state.players.length, turn: newTurn() };
 }
+
+/** Same game with one player's display name replaced; scores, turn, deck and result stay as they are. */
+export function renamePlayer(state: GameState, index: number, name: string): GameState {
+  if (!state.players[index]) return state;
+  return { ...state, players: state.players.map((p, i) => (i === index ? { ...p, name } : p)) };
+}

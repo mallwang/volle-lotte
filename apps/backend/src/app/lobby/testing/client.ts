@@ -1,6 +1,6 @@
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { defaultRules, PROTOCOL_VERSION, type Ack } from 'game-rules';
+import { defaultRules, PROTOCOL_VERSION, type Ack, type UiLanguage } from 'game-rules';
 import { io, type Socket } from 'socket.io-client';
 import { LobbyModule } from '../lobby.module';
 
@@ -39,12 +39,17 @@ export class Client {
     await new Promise<void>((resolve) => socket.on('connect', () => resolve()));
     return new Client(socket);
   }
-  static async start(nickname: string, token?: string): Promise<Client> {
+  static async start(
+    nickname: string,
+    token?: string,
+    language: UiLanguage = 'en',
+  ): Promise<Client> {
     const c = await Client.connect();
     const ack = await c.send('session:start', {
       nickname,
       token,
       protocolVersion: PROTOCOL_VERSION,
+      language,
     });
     c.token = ack.token;
     return c;

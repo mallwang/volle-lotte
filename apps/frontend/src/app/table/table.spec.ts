@@ -79,6 +79,21 @@ describe('Table', () => {
     expect(el.querySelector('[aria-current=true]')?.textContent).toContain('Ann');
   });
 
+  it('shows computer names from the game state and the renamed log entry', async () => {
+    const view = state(0);
+    const { el } = await setup(0, {
+      game: { ...view, players: [view.players[0], { name: 'Rex', score: 200 }] },
+      seats: [
+        human('p0', 'Ann'),
+        { state: 'computer', name: 'Rex', difficulty: 'easy', risk: 'medium' },
+      ],
+      log: [{ at: 1, kind: 'renamed', seat: 1, data: 'Brave Fox' }],
+    });
+    expect(el.textContent).toContain('Rex');
+    expect(el.textContent).toContain('Brave Fox is now called Rex');
+    expect(el.textContent).not.toMatch(/Computer \d/);
+  });
+
   it('hides the log until toggled', async () => {
     const { el } = await setup(0, {}, false);
     expect(el.querySelector('.vl-log')).toBeNull();

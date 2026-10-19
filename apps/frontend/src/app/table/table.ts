@@ -701,8 +701,8 @@ export class Table {
     lost = 0,
   ): boolean {
     const text = this.i18n.t(`table.${e.seat === g.you.seat ? you : other}`, {
-      who: seatName(g.seats[e.seat ?? -1], this.i18n),
-      next: seatName(g.seats[this.seats()[g.game?.current ?? -1]], this.i18n),
+      who: seatName(g.seats[e.seat ?? -1]),
+      next: seatName(g.seats[this.seats()[g.game?.current ?? -1]]),
       points,
       lost,
     });

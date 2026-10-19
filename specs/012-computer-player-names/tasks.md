@@ -16,7 +16,7 @@ description: 'Task list for computer player names'
 
 **Purpose**: Create the shared library structure required by the feature.
 
-- [ ] T001 Create the `computer-names` Nx workspace library with `scope:shared` and package entry points in `libs/computer-names/project.json`, `libs/computer-names/package.json`, `libs/computer-names/tsconfig.lib.json`, and `libs/computer-names/src/index.ts`
+- [x] T001 Create the `computer-names` Nx workspace library with `scope:shared` and package entry points in `libs/computer-names/project.json`, `libs/computer-names/package.json`, `libs/computer-names/tsconfig.lib.json`, and `libs/computer-names/src/index.ts`
 
 ---
 
@@ -26,14 +26,14 @@ description: 'Task list for computer player names'
 
 **⚠️ CRITICAL**: Complete this phase before starting user-story work.
 
-- [ ] T002 [P] Add typed English and German word entries and pure adjective+noun selection with injectable random indices in `libs/computer-names/src/lib/english.ts`, `libs/computer-names/src/lib/german.ts`, and `libs/computer-names/src/lib/generate-name.ts`; German noun entries MUST carry grammatical gender and adjectives MUST provide matching masculine, feminine, and neuter forms
-- [ ] T003 [P] Add generator unit tests in `libs/computer-names/src/lib/generate-name.spec.ts` covering English and German word membership, gender agreement, deterministic injected randomness, and exhaustive combination traversal
-- [ ] T004 Add the supported `'en' | 'de'` language type, language-bearing `session:start` and language-update intent, computer-seat `name` field, and incremented `PROTOCOL_VERSION` in `libs/game-rules/src/lib/protocol.ts`
-- [ ] T005 Add protocol type/contract tests for accepted language values, named computer seat views, and protocol version behavior in `libs/game-rules/src/lib/protocol.spec.ts`
-- [ ] T006 Retain validated UI language on session creation/resume and synchronize language updates to a player's active human seat in `apps/backend/src/app/lobby/sessions.service.ts`, `apps/backend/src/app/lobby/lobby.gateway.ts`, and `apps/backend/src/app/lobby/game-room.ts`; unknown or missing language MUST use English
-- [ ] T007 Send the active UI language on initial session start, token resume, and language changes in `apps/frontend/src/app/core/socket.service.ts` and `apps/frontend/src/app/core/i18n.service.ts`
-- [ ] T008 Add backend tests for session language validation, resume retention, live updates, and synchronization to an active room seat in `apps/backend/src/app/lobby/sessions.service.spec.ts` and `apps/backend/src/app/lobby/lobby.gateway.spec.ts`
-- [ ] T009 Add frontend socket tests verifying initial start, reconnect/resume, and live language changes in `apps/frontend/src/app/core/socket.service.spec.ts`
+- [x] T002 [P] Add typed English and German word entries and pure adjective+noun selection with injectable random indices in `libs/computer-names/src/lib/english.ts`, `libs/computer-names/src/lib/german.ts`, and `libs/computer-names/src/lib/generate-name.ts`; German noun entries MUST carry grammatical gender and adjectives MUST provide matching masculine, feminine, and neuter forms
+- [x] T003 [P] Add generator unit tests in `libs/computer-names/src/lib/generate-name.spec.ts` covering English and German word membership, gender agreement, deterministic injected randomness, and exhaustive combination traversal
+- [x] T004 Add the supported `'en' | 'de'` language type, language-bearing `session:start` and language-update intent, computer-seat `name` field, and incremented `PROTOCOL_VERSION` in `libs/game-rules/src/lib/protocol.ts`
+- [x] T005 Add protocol type/contract tests for accepted language values, named computer seat views, and protocol version behavior in `libs/game-rules/src/lib/protocol.spec.ts`
+- [x] T006 Retain validated UI language on session creation/resume and synchronize language updates to a player's active human seat in `apps/backend/src/app/lobby/sessions.service.ts`, `apps/backend/src/app/lobby/lobby.gateway.ts`, and `apps/backend/src/app/lobby/game-room.ts`; unknown or missing language MUST use English
+- [x] T007 Send the active UI language on initial session start, token resume, and language changes in `apps/frontend/src/app/core/socket.service.ts` and `apps/frontend/src/app/core/i18n.service.ts`
+- [x] T008 Add backend tests for session language validation, resume retention, live updates, and synchronization to an active room seat in `apps/backend/src/app/lobby/sessions.service.spec.ts` and `apps/backend/src/app/lobby/lobby.gateway.spec.ts`
+- [x] T009 Add frontend socket tests verifying initial start, reconnect/resume, and live language changes in `apps/frontend/src/app/core/socket.service.spec.ts`
 
 **Checkpoint**: The shared generator and language-aware session/protocol foundation are ready; no user-story tasks should begin until this phase is complete.
 
@@ -47,18 +47,18 @@ description: 'Task list for computer player names'
 
 ### Tests for User Story 1
 
-- [ ] T010 [P] [US1] Add `GameRoom` tests for generated computer names, case-insensitive uniqueness against occupied human/computer names, and fresh names after reopening a seat in `apps/backend/src/app/lobby/game-room.spec.ts`
-- [ ] T011 [P] [US1] Add game-state tests verifying that names passed to game creation are retained through turns and final results in `libs/game-rules/src/lib/game.spec.ts`
-- [ ] T012 [P] [US1] Add frontend lobby/table view tests verifying the authoritative named computer seat is displayed instead of a synthesized `Computer N` label in `apps/frontend/src/app/game-lobby/game-lobby.spec.ts` and `apps/frontend/src/app/table/table.spec.ts`
+- [x] T010 [P] [US1] Add `GameRoom` tests for generated computer names, case-insensitive uniqueness against occupied human/computer names, and fresh names after reopening a seat in `apps/backend/src/app/lobby/game-room.spec.ts`
+- [x] T011 [P] [US1] Add game-state tests verifying that names passed to game creation are retained through turns and final results in `libs/game-rules/src/lib/game.spec.ts`
+- [x] T012 [P] [US1] Add frontend lobby/table view tests verifying the authoritative named computer seat is displayed instead of a synthesized `Computer N` label in `apps/frontend/src/app/game-lobby/game-lobby.spec.ts` and `apps/frontend/src/app/table/table.spec.ts`
 
 ### Implementation for User Story 1
 
-- [ ] T013 [US1] Add a server-side injected random-index source backed by `crypto.randomInt` and a unique-name picker that retries collisions against occupied names and adds a distinguishing suffix only if combinations are exhausted in `apps/backend/src/app/lobby/game-room.ts`
-- [ ] T014 [US1] Add a required name to computer seat state and assign a generated name when the host changes an open/locked lobby seat to computer in `apps/backend/src/app/lobby/game-room.ts`
-- [ ] T015 [US1] Include the computer name in every lobby and running-game seat view in `apps/backend/src/app/lobby/view.ts` and `apps/backend/src/app/lobby/game-room.ts`
-- [ ] T016 [US1] Use the room seat's computer name when constructing engine players at game start, removing the `Computer ${i + 1}` fallback in `apps/backend/src/app/lobby/game-room.ts`
-- [ ] T017 [P] [US1] Render computer seat names in the lobby, active table, player log labels, and result views; remove client-side `Computer N` substitutions in `apps/frontend/src/app/game-lobby/game-lobby.ts`, `apps/frontend/src/app/table/player-seat.ts`, `apps/frontend/src/app/table/game-log.ts`, `apps/frontend/src/app/table/table.ts`, and `apps/frontend/src/app/core/game-view.ts`
-- [ ] T018 [US1] Verify generated-name collisions, multiple computer seats, reconnect snapshots and name consistency between room seats and engine players with focused tests in `apps/backend/src/app/lobby/game-room.spec.ts` and `apps/backend/src/app/lobby/lobby.gateway.e2e.spec.ts`
+- [x] T013 [US1] Add a server-side injected random-index source backed by `crypto.randomInt` and a unique-name picker that retries collisions against occupied names and adds a distinguishing suffix only if combinations are exhausted in `apps/backend/src/app/lobby/game-room.ts`
+- [x] T014 [US1] Add a required name to computer seat state and assign a generated name when the host changes an open/locked lobby seat to computer in `apps/backend/src/app/lobby/game-room.ts`
+- [x] T015 [US1] Include the computer name in every lobby and running-game seat view in `apps/backend/src/app/lobby/view.ts` and `apps/backend/src/app/lobby/game-room.ts`
+- [x] T016 [US1] Use the room seat's computer name when constructing engine players at game start, removing the `Computer ${i + 1}` fallback in `apps/backend/src/app/lobby/game-room.ts`
+- [x] T017 [P] [US1] Render computer seat names in the lobby, active table, player log labels, and result views; remove client-side `Computer N` substitutions in `apps/frontend/src/app/game-lobby/game-lobby.ts`, `apps/frontend/src/app/table/player-seat.ts`, `apps/frontend/src/app/table/game-log.ts`, `apps/frontend/src/app/table/table.ts`, and `apps/frontend/src/app/core/game-view.ts`
+- [x] T018 [US1] Verify generated-name collisions, multiple computer seats, reconnect snapshots and name consistency between room seats and engine players with focused tests in `apps/backend/src/app/lobby/game-room.spec.ts` and `apps/backend/src/app/lobby/lobby.gateway.e2e.spec.ts`
 
 **Checkpoint**: Lobby-created computer players have unique localized names visible consistently through a full game.
 
@@ -72,20 +72,20 @@ description: 'Task list for computer player names'
 
 ### Tests for User Story 2
 
-- [ ] T019 [P] [US2] Add game-state tests for immutable player-name replacement that preserves score, turn, deck, ranking and other player data in `libs/game-rules/src/lib/game.spec.ts`
-- [ ] T020 [P] [US2] Add `GameRoom` tests for host-only rename, computer-seat-only targets, existing nickname validation, case-insensitive uniqueness, lobby/running phase behavior, and state/log update in `apps/backend/src/app/lobby/game-room.spec.ts`
-- [ ] T021 [P] [US2] Add gateway socket tests for rename acknowledgement, rejection, and broadcast to all clients in `apps/backend/src/app/lobby/lobby.gateway.e2e.spec.ts`
-- [ ] T022 [P] [US2] Add frontend tests for host-only rename affordances and error/success handling in `apps/frontend/src/app/game-lobby/game-lobby.spec.ts` and `apps/frontend/src/app/table/table.spec.ts`
+- [x] T019 [P] [US2] Add game-state tests for immutable player-name replacement that preserves score, turn, deck, ranking and other player data in `libs/game-rules/src/lib/game.spec.ts`
+- [x] T020 [P] [US2] Add `GameRoom` tests for host-only rename, computer-seat-only targets, existing nickname validation, case-insensitive uniqueness, lobby/running phase behavior, and state/log update in `apps/backend/src/app/lobby/game-room.spec.ts`
+- [x] T021 [P] [US2] Add gateway socket tests for rename acknowledgement, rejection, and broadcast to all clients in `apps/backend/src/app/lobby/lobby.gateway.e2e.spec.ts`
+- [x] T022 [P] [US2] Add frontend tests for host-only rename affordances and error/success handling in `apps/frontend/src/app/game-lobby/game-lobby.spec.ts` and `apps/frontend/src/app/table/table.spec.ts`
 
 ### Implementation for User Story 2
 
-- [ ] T023 [US2] Add a validated host rename intent carrying the target seat and proposed name to `libs/game-rules/src/lib/protocol.ts`
-- [ ] T024 [US2] Add an immutable game-rules operation that replaces one engine player's display name without changing scores, turn state, deck or result ranking in `libs/game-rules/src/lib/game.ts` and export it from `libs/game-rules/src/index.ts`
-- [ ] T025 [US2] Implement room-level rename authorization and validation: only the current host may rename an occupied computer in a lobby or running game; use the same trimmed non-empty, max-length, and allowed-character rules as player nicknames; reject case-insensitive duplicates among all occupied seats without mutation in `apps/backend/src/app/lobby/game-room.ts`
-- [ ] T026 [US2] Update the corresponding engine player via the seat-to-engine mapping, publish the updated room/game view, and append a rename log event without rewriting earlier entries in `apps/backend/src/app/lobby/game-room.ts`
-- [ ] T027 [US2] Handle the rename intent through the existing acknowledgement/error conventions and broadcast authoritative state in `apps/backend/src/app/lobby/lobby.gateway.ts`
-- [ ] T028 [US2] Add a keyboard- and touch-operable host rename control for computer seats in the lobby and running-game settings in `apps/frontend/src/app/game-lobby/game-lobby.ts`, `apps/frontend/src/app/table/settings-dialog.ts`, and `apps/frontend/src/app/table/table.ts`
-- [ ] T029 [US2] Ensure renamed values feed active table and completed result displays while existing historical log entries remain unchanged in `apps/frontend/src/app/core/game-view.ts`, `apps/frontend/src/app/table/table.ts`, and `apps/frontend/src/app/table/game-log.ts`
+- [x] T023 [US2] Add a validated host rename intent carrying the target seat and proposed name to `libs/game-rules/src/lib/protocol.ts`
+- [x] T024 [US2] Add an immutable game-rules operation that replaces one engine player's display name without changing scores, turn state, deck or result ranking in `libs/game-rules/src/lib/game.ts` and export it from `libs/game-rules/src/index.ts`
+- [x] T025 [US2] Implement room-level rename authorization and validation: only the current host may rename an occupied computer in a lobby or running game; use the same trimmed non-empty, max-length, and allowed-character rules as player nicknames; reject case-insensitive duplicates among all occupied seats without mutation in `apps/backend/src/app/lobby/game-room.ts`
+- [x] T026 [US2] Update the corresponding engine player via the seat-to-engine mapping, publish the updated room/game view, and append a rename log event without rewriting earlier entries in `apps/backend/src/app/lobby/game-room.ts`
+- [x] T027 [US2] Handle the rename intent through the existing acknowledgement/error conventions and broadcast authoritative state in `apps/backend/src/app/lobby/lobby.gateway.ts`
+- [x] T028 [US2] Add a keyboard- and touch-operable host rename control for computer seats in the lobby and running-game settings in `apps/frontend/src/app/game-lobby/game-lobby.ts`, `apps/frontend/src/app/table/settings-dialog.ts`, and `apps/frontend/src/app/table/table.ts`
+- [x] T029 [US2] Ensure renamed values feed active table and completed result displays while existing historical log entries remain unchanged in `apps/frontend/src/app/core/game-view.ts`, `apps/frontend/src/app/table/table.ts`, and `apps/frontend/src/app/table/game-log.ts`
 
 **Checkpoint**: Host rename works in lobby and active play; non-host, invalid, duplicate, wrong-target and finished-game requests are rejected without partial updates.
 
@@ -99,16 +99,16 @@ description: 'Task list for computer player names'
 
 ### Tests for User Story 3
 
-- [ ] T030 [P] [US3] Add `GameRoom` tests for manual leave and disconnect-grace host takeovers, checking the departing host language is used before/after host election as appropriate in `apps/backend/src/app/lobby/game-room.spec.ts`
-- [ ] T031 [P] [US3] Add room and gateway tests for simultaneous takeovers producing unique names and former-player rejoin restoring nickname while retaining score and engine-seat mapping in `apps/backend/src/app/lobby/game-room.spec.ts` and `apps/backend/src/app/lobby/lobby.gateway.e2e.spec.ts`
-- [ ] T032 [P] [US3] Add a frontend reconnect/language test verifying existing computer names remain stable when the host changes language and later takeovers use the updated language in `apps/frontend/src/app/core/socket.service.spec.ts`
+- [x] T030 [P] [US3] Add `GameRoom` tests for manual leave and disconnect-grace host takeovers, checking the departing host language is used before/after host election as appropriate in `apps/backend/src/app/lobby/game-room.spec.ts`
+- [x] T031 [P] [US3] Add room and gateway tests for simultaneous takeovers producing unique names and former-player rejoin restoring nickname while retaining score and engine-seat mapping in `apps/backend/src/app/lobby/game-room.spec.ts` and `apps/backend/src/app/lobby/lobby.gateway.e2e.spec.ts`
+- [x] T032 [P] [US3] Add a frontend reconnect/language test verifying existing computer names remain stable when the host changes language and later takeovers use the updated language in `apps/frontend/src/app/core/socket.service.spec.ts`
 
 ### Implementation for User Story 3
 
-- [ ] T033 [US3] Generate a unique localized computer name during running-game player replacement, preserving former-player rejoin metadata and engine seat/score continuity in `apps/backend/src/app/lobby/game-room.ts`
-- [ ] T034 [US3] Resolve takeover language from the current host for a non-host departure and capture the departing host's retained locale before deliberate leave or disconnect grace host election can change the host in `apps/backend/src/app/lobby/game-room.ts` and `apps/backend/src/app/lobby/lobby.gateway.ts`
-- [ ] T035 [US3] Preserve generated computer identity through reconnect snapshots and host changes; restore the former human nickname and release the computer name when that player reclaims the seat in `apps/backend/src/app/lobby/game-room.ts` and `apps/backend/src/app/lobby/view.ts`
-- [ ] T036 [US3] Verify repeated alternating German/English host departures, abrupt disconnect grace expiry, uniqueness, rejoin, and unchanged scoring/timers in `apps/backend/src/app/lobby/game-room.spec.ts` and `apps/backend/src/app/lobby/lobby.gateway.e2e.spec.ts`
+- [x] T033 [US3] Generate a unique localized computer name during running-game player replacement, preserving former-player rejoin metadata and engine seat/score continuity in `apps/backend/src/app/lobby/game-room.ts`
+- [x] T034 [US3] Resolve takeover language from the current host for a non-host departure and capture the departing host's retained locale before deliberate leave or disconnect grace host election can change the host in `apps/backend/src/app/lobby/game-room.ts` and `apps/backend/src/app/lobby/lobby.gateway.ts`
+- [x] T035 [US3] Preserve generated computer identity through reconnect snapshots and host changes; restore the former human nickname and release the computer name when that player reclaims the seat in `apps/backend/src/app/lobby/game-room.ts` and `apps/backend/src/app/lobby/view.ts`
+- [x] T036 [US3] Verify repeated alternating German/English host departures, abrupt disconnect grace expiry, uniqueness, rejoin, and unchanged scoring/timers in `apps/backend/src/app/lobby/game-room.spec.ts` and `apps/backend/src/app/lobby/lobby.gateway.e2e.spec.ts`
 
 **Checkpoint**: All manual leave, timeout and delayed-disconnect takeovers use the correct host language, and rejoin behavior remains intact.
 
@@ -122,14 +122,14 @@ description: 'Task list for computer player names'
 
 ### Tests for User Story 4
 
-- [ ] T037 [P] [US4] Add translation coverage tests for every new computer-name, rename, validation, and error string in `apps/frontend/src/app/i18n/i18n.spec.ts`
+- [x] T037 [P] [US4] Add translation coverage tests for every new computer-name, rename, validation, and error string in `apps/frontend/src/app/i18n/i18n.spec.ts`
 
 ### Implementation for User Story 4
 
-- [ ] T038 [P] [US4] Add English UI strings for computer naming and rename controls/errors in `apps/frontend/src/app/i18n/en.ts`
-- [ ] T039 [P] [US4] Add German UI strings for computer naming and rename controls/errors in `apps/frontend/src/app/i18n/de.ts`
-- [ ] T040 [P] [US4] Document computer names, host rename behavior, and generated-name language selection in `docs/user-guide.md`
-- [ ] T041 [P] [US4] Add the corresponding German explanation in `docs/user-guide.de.md`
+- [x] T038 [P] [US4] Add English UI strings for computer naming and rename controls/errors in `apps/frontend/src/app/i18n/en.ts`
+- [x] T039 [P] [US4] Add German UI strings for computer naming and rename controls/errors in `apps/frontend/src/app/i18n/de.ts`
+- [x] T040 [P] [US4] Document computer names, host rename behavior, and generated-name language selection in `docs/user-guide.md`
+- [x] T041 [P] [US4] Add the corresponding German explanation in `docs/user-guide.de.md`
 
 **Checkpoint**: The full feature is understandable and usable in both supported UI languages.
 
@@ -139,9 +139,9 @@ description: 'Task list for computer player names'
 
 **Purpose**: Validate the complete feature, workspace boundaries, responsive behavior, and regression guarantees.
 
-- [ ] T042 [P] Verify long and umlaut-containing computer names remain legible in seat columns and the full value is available to keyboard and pointer users in `apps/frontend/src/app/table/player-seat.ts`, `apps/frontend/src/app/table/player-seat.spec.ts`, and `apps/frontend/src/app/game-lobby/game-lobby.ts`
-- [ ] T043 Run all validation scenarios from `specs/012-computer-player-names/quickstart.md` and record any required fixes in the affected tests and implementation files
-- [ ] T044 Run `npm run lint`, `npm run typecheck`, `npm run test`, and `npm run build` from the repository root and resolve feature-related failures
+- [x] T042 [P] Verify long and umlaut-containing computer names remain legible in seat columns and the full value is available to keyboard and pointer users in `apps/frontend/src/app/table/player-seat.ts`, `apps/frontend/src/app/table/player-seat.spec.ts`, and `apps/frontend/src/app/game-lobby/game-lobby.ts`
+- [x] T043 Run all validation scenarios from `specs/012-computer-player-names/quickstart.md` and record any required fixes in the affected tests and implementation files
+- [x] T044 Run `npm run lint`, `npm run typecheck`, `npm run test`, and `npm run build` from the repository root and resolve feature-related failures
 
 ---
 

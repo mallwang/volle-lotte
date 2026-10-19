@@ -1,6 +1,11 @@
 import type { Action, Event, GameState, RejectionReason, Rules } from './types.js';
 
-export const PROTOCOL_VERSION = 7;
+export const PROTOCOL_VERSION = 8;
+
+/** UI language a player reports; the server names computers in the host's language. */
+export type UiLanguage = 'en' | 'de';
+export const UI_LANGUAGES: readonly UiLanguage[] = ['en', 'de'];
+export const isUiLanguage = (x: unknown): x is UiLanguage => UI_LANGUAGES.includes(x as UiLanguage);
 
 export type Difficulty = 'easy' | 'medium' | 'hard' | 'random';
 export type Risk = 'none' | 'medium' | 'high' | 'random';
@@ -57,7 +62,8 @@ export type LogKind =
   | 'replaced'
   | 'rejoined'
   | 'timedOut'
-  | 'removed';
+  | 'removed'
+  | 'renamed';
 
 export interface LogEntry {
   at: number;
@@ -70,6 +76,8 @@ export interface SeatView {
   state: 'open' | 'locked' | 'human' | 'computer';
   playerId?: string;
   nickname?: string;
+  /** Computer seat: authoritative display name. */
+  name?: string;
   connected?: boolean;
   ready?: boolean;
   difficulty?: Difficulty;
@@ -126,9 +134,10 @@ export interface GameSummary {
 /** Client to server: event name -> [payload, ack data]. */
 export interface Intents {
   'session:start': [
-    { nickname: string; token?: string; protocolVersion: number },
+    { nickname: string; token?: string; protocolVersion: number; language: UiLanguage },
     { token: string; playerId: string; nickname: string; protocolVersion: number; game?: GameView },
   ];
+  'session:language': [{ language: UiLanguage }, object];
   'lobby:list': [undefined, { games: GameSummary[] }];
   'game:create': [
     { name: string; password: string; seats: number; rules: Rules },
@@ -140,6 +149,7 @@ export interface Intents {
     { seat: number; mode: 'open' | 'locked' | 'computer'; difficulty?: Difficulty; risk?: Risk },
     object,
   ];
+  'seat:rename': [{ seat: number; name: string }, object];
   'seat:ready': [{ ready: boolean }, object];
   'game:start': [undefined, object];
   'game:rejoin': [{ gameId: string }, { game: GameView }];

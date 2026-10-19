@@ -218,6 +218,11 @@ export const en = {
   'settings.fastComputerDiceHint':
     'Computer dice roll for a shorter time. Applies to everyone at the table.',
   'settings.hostOnly': 'Only the host can change this.',
+  'computerName.heading': 'Computer names',
+  'computerName.label': 'Rename {name}',
+  'computerName.save': 'Rename',
+  'computerName.invalid': 'The name must have 2-20 characters: letters, digits, space, _ or -.',
+  'computerName.taken': 'This name is already used by another player or computer in the game.',
   'settings.showBustProbability': 'Show bust probability',
   'settings.showBustProbabilityHint':
     'For everyone. Previews the next throw with the selected dice set aside.',
@@ -273,6 +278,7 @@ export const en = {
   'log.gameOver': 'The game is over',
   'log.joined': '{who} joined',
   'log.rejoined': '{who} is back',
+  'log.renamed': '{old} is now called {who}',
   'log.left': '{who} left',
   'log.disconnected': '{who} disconnected',
   'log.reconnected': '{who} reconnected',

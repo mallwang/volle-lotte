@@ -288,3 +288,119 @@ describe('game:rejoin', () => {
     });
   });
 });
+
+const nameOf = (g: GameView, seat: number) => g.seats[seat].name as string;
+
+describe('session language', () => {
+  it('validates the language and defaults unknown ones to English', async () => {
+    const c = await Client.connect();
+    const ack = await c.send('session:start', {
+      nickname: 'Lang',
+      protocolVersion: PROTOCOL_VERSION,
+      language: 'klingon',
+    });
+    expect(ack).toMatchObject({ ok: true });
+    expect(await c.send('session:language', { language: 'fr' })).toMatchObject({
+      reason: 'invalidRequest',
+    });
+    expect(await c.send('session:language', undefined)).toMatchObject({ reason: 'invalidRequest' });
+    expect(await c.send('session:language', { language: 'de' })).toEqual({ ok: true });
+    const anon = await Client.connect();
+    expect(await anon.send('session:language', { language: 'de' })).toMatchObject({
+      reason: 'noSession',
+    });
+  });
+
+  it("names a computer in the host's current language, also after a language change", async () => {
+    const host = await Client.start('Germanhost', undefined, 'de');
+    await create(host, 4);
+    const german = (name: string) => /^[A-ZÄÖÜ][a-zäöüß]+(er|e|es) /.test(name);
+    await host.send('seat:set', { seat: 1, mode: 'computer' });
+    const first = (await host.until('game:state', (s) => s.game.seats[1].state === 'computer'))
+      .game;
+    expect(german(nameOf(first, 1))).toBe(true);
+
+    expect(await host.send('session:language', { language: 'en' })).toEqual({ ok: true });
+    await host.send('seat:set', { seat: 2, mode: 'computer' });
+    const second = (await host.until('game:state', (s) => s.game.seats[2].state === 'computer'))
+      .game;
+    expect(nameOf(second, 1)).toBe(nameOf(first, 1));
+    expect(nameOf(second, 2).split(' ')).toHaveLength(2);
+  });
+
+  it('keeps the language through a token resume', async () => {
+    const host = await Client.start('Resumehost', undefined, 'de');
+    await create(host, 4);
+    const again = await Client.connect();
+    await again.send('session:start', {
+      token: host.token,
+      nickname: 'x',
+      protocolVersion: PROTOCOL_VERSION,
+      language: 'en',
+    });
+    await again.send('seat:set', { seat: 1, mode: 'computer' });
+    const view = (await again.until('game:state', (s) => s.game.seats[1].state === 'computer'))
+      .game;
+    expect(nameOf(view, 1)).toMatch(/^[A-Z][a-z]+ [A-Z][a-z]+$/);
+  });
+});
+
+describe('seat:rename', () => {
+  it('renames for everyone, rejects the rest and never mutates on errors', async () => {
+    const host = await Client.start('Renamehost');
+    const { game } = await create(host, 4, '');
+    const guest = await Client.start('Renameguest');
+    await guest.send('game:join', { gameId: game.id });
+    await host.send('seat:set', { seat: 2, mode: 'computer' });
+    const before = (await guest.until('game:state', (s) => s.game.seats[2].state === 'computer'))
+      .game;
+
+    expect(await guest.send('seat:rename', { seat: 2, name: 'Rex' })).toMatchObject({
+      reason: 'notHost',
+    });
+    expect(await host.send('seat:rename', { seat: 1, name: 'Rex' })).toMatchObject({
+      reason: 'invalidRequest',
+    });
+    expect(await host.send('seat:rename', { seat: 2, name: '<b>' })).toMatchObject({
+      reason: 'invalidNickname',
+    });
+    expect(await host.send('seat:rename', { seat: 2, name: 'renameguest' })).toMatchObject({
+      reason: 'nicknameTaken',
+    });
+    expect(await host.send('seat:rename', { seat: 9, name: 'Rex' })).toMatchObject({
+      reason: 'invalidRequest',
+    });
+    expect(await host.send('seat:rename', { seat: 2 })).toMatchObject({ reason: 'invalidRequest' });
+    expect(await host.send('seat:rename', { seat: 2, name: 'Rex' })).toEqual({ ok: true });
+
+    for (const c of [host, guest]) {
+      const state = (await c.until('game:state', (s) => s.game.seats[2].name === 'Rex')).game;
+      expect(state.seats[2].name).toBe('Rex');
+    }
+    expect(nameOf(before, 2)).not.toBe('Rex');
+    expect(await Client.connect().then((c) => c.send('seat:rename', {}))).toMatchObject({
+      reason: 'noSession',
+    });
+  });
+
+  it('renames in a running game, in the engine state and for a reconnecting client', async () => {
+    const host = await Client.start('Livehost');
+    await create(host, 2, '');
+    await host.send('seat:set', { seat: 1, mode: 'computer' });
+    await host.send('seat:ready', { ready: true });
+    expect(await host.send('game:start')).toEqual({ ok: true });
+    expect(await host.send('seat:rename', { seat: 1, name: 'Rex' })).toEqual({ ok: true });
+    const live = (await host.until('game:state', (s) => s.game.game?.players[1].name === 'Rex'))
+      .game;
+    expect(live.seats[1].name).toBe('Rex');
+    const back = await Client.connect();
+    const ack = await back.send('session:start', {
+      token: host.token,
+      nickname: 'x',
+      protocolVersion: PROTOCOL_VERSION,
+      language: 'en',
+    });
+    expect(ack.game.seats[1].name).toBe('Rex');
+    expect(ack.game.game.players[1].name).toBe('Rex');
+  });
+});

@@ -81,6 +81,7 @@ const RISKS: Risk[] = ['none', 'medium', 'high', 'random'];
                 }
               }
               @case ('computer') {
+                <strong>{{ s.name }}</strong>
                 <p-tag
                   [value]="
                     'gameLobby.computer'
@@ -198,10 +199,7 @@ export class GameLobby {
   });
   protected readonly hostName = computed(() => {
     const g = this.socket.game();
-    return seatName(
-      g?.seats.find((s) => s.playerId === g.hostId),
-      this.i18n,
-    );
+    return seatName(g?.seats.find((s) => s.playerId === g.hostId));
   });
   protected readonly cardList = computed(() => {
     const counts = this.socket.game()?.rules.cardCounts;
