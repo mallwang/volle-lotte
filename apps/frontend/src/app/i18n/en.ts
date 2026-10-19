@@ -13,10 +13,11 @@ export const en = {
   'nav.main': 'Main',
   'nav.games': 'Lobby',
   'nav.create': 'Create game',
-  'connection.status': 'Connection: {state}. Trying to reconnect.',
-  'connection.connecting': 'connecting',
-  'connection.disconnected': 'disconnected',
-  'connection.connected': 'connected',
+  'connection.lost': 'Connection to the game server lost. Reconnecting…',
+  'connection.failed':
+    'Could not connect to the game server. Please reload the page or try again later.',
+  'connection.restored': 'Connection to the game server restored.',
+  'connection.reload': 'Reload page',
   'server.restarted': 'The server was restarted and your game is gone.',
   'server.replaced': 'Your session was opened in another window or tab.',
   'server.banned': 'The host removed you from this game.',
@@ -324,6 +325,7 @@ export const en = {
   'error.notYourTurn': 'It is not your turn.',
   'error.paused': 'The game is paused.',
   'error.rejected': 'That move is not allowed.',
+  'error.offline': 'No connection to the game server.',
   'error.rejectedEngine': 'That move is not allowed: {engine}.',
 
   'rules.notObject': 'The rules are invalid.',

@@ -26,10 +26,10 @@ beforeEach(() => {
   });
 });
 
-function setup(connection = 'connected') {
+function setup(online = true) {
   const theme = { mode: signal('light'), toggle: vi.fn() };
   const socket = {
-    connection: signal(connection),
+    online: signal(online),
     session: signal<unknown>({ playerId: 'p0', nickname: 'Ann' }),
     game: signal<unknown>(null),
   };
@@ -126,12 +126,18 @@ describe('App', () => {
     });
   });
 
-  it('shows the offline notice only while not connected', () => {
-    const { fixture, socket, el } = setup('connecting');
-    expect(el.querySelector('p-message')?.textContent).toContain('connecting');
-    socket.connection.set('connected');
+  it('locks the page content only while a signed-in user is offline', () => {
+    const { fixture, socket, el } = setup(false);
+    const main = el.querySelector('main')!;
+    expect(main.hasAttribute('inert')).toBe(true);
+    expect(main.classList).toContain('vl-offline');
+    socket.online.set(true);
     fixture.detectChanges();
-    expect(el.querySelector('p-message')).toBeNull();
+    expect(main.hasAttribute('inert')).toBe(false);
+    socket.online.set(false);
+    socket.session.set(null);
+    fixture.detectChanges();
+    expect(main.hasAttribute('inert')).toBe(false);
   });
 
   it('switches the visible text without reload and names the language select', async () => {
@@ -149,7 +155,7 @@ describe('App', () => {
   });
 
   it('has no axe violations in light and dark', async () => {
-    const { fixture } = setup('disconnected');
+    const { fixture } = setup(false);
     await inBothModes(fixture, () => expectNoA11yViolations(fixture));
   });
 

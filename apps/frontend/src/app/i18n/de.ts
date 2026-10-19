@@ -14,10 +14,11 @@ export const de: Record<keyof typeof en, string> = {
   'nav.main': 'Hauptmenü',
   'nav.games': 'Lobby',
   'nav.create': 'Spiel erstellen',
-  'connection.status': 'Verbindung: {state}. Verbindung wird neu aufgebaut.',
-  'connection.connecting': 'verbinde',
-  'connection.disconnected': 'getrennt',
-  'connection.connected': 'verbunden',
+  'connection.lost': 'Verbindung zum Spielserver verloren. Verbindung wird wiederhergestellt…',
+  'connection.failed':
+    'Verbindung zum Spielserver konnte nicht hergestellt werden. Bitte lade die Seite neu oder versuche es zu einem späteren Zeitpunkt erneut.',
+  'connection.restored': 'Verbindung zum Spielserver wurde hergestellt.',
+  'connection.reload': 'Seite neu laden',
   'server.replaced': 'Deine Sitzung wurde in einem anderen Fenster oder Tab geöffnet.',
   'server.banned': 'Der Gastgeber hat dich aus diesem Spiel entfernt.',
   'server.closed': 'Das Spiel wurde geschlossen.',
@@ -339,6 +340,7 @@ export const de: Record<keyof typeof en, string> = {
   'error.notYourTurn': 'Du bist nicht dran.',
   'error.paused': 'Das Spiel ist pausiert.',
   'error.rejected': 'Dieser Zug ist nicht erlaubt.',
+  'error.offline': 'Keine Verbindung zum Spielserver.',
   'error.rejectedEngine': 'Dieser Zug ist nicht erlaubt: {engine}.',
 
   'rules.notObject': 'Die Regeln sind ungültig.',

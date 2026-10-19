@@ -64,6 +64,8 @@ Buttons that are not available show the reason (for example "Not your turn"). Th
 
 When a player reaches the target score, the result screen ranks everyone. **Back to lobby** returns to the games list.
 
+If the connection to the game server drops for more than a moment, a notice at the bottom says it is reconnecting and the page content is greyed out and cannot be used until the connection is back (nothing you click while offline is sent later). When it returns you see "Connection to the game server restored." for a few seconds. If it does not come back within 20 seconds, the notice turns red and offers **Reload page**; reconnecting continues in the background.
+
 ## 4. Language and Theme
 
 The menu bar at the top is on every screen. It shows the **Lobby** and **Create game** pages (the open page is highlighted; both are disabled until you have chosen a nickname) and, while you are in a lobby or a running game, a **Current game** entry with a tag for the phase. On the right are two controls:

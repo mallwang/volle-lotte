@@ -2,7 +2,17 @@ import { TestBed } from '@angular/core/testing';
 import { MessageService } from 'primeng/api';
 import { vi } from 'vitest';
 import { I18nService } from './i18n.service';
-import { SOCKET, STORAGE_KEY, SocketService, TOAST_MS, type SocketLike } from './socket.service';
+import {
+  CONNECTION_KEY,
+  FAIL_AFTER_MS,
+  LOST_DELAY_MS,
+  RESTORED_MS,
+  SOCKET,
+  STORAGE_KEY,
+  SocketService,
+  TOAST_MS,
+  type SocketLike,
+} from './socket.service';
 
 class FakeSocket implements SocketLike {
   connected = true;
@@ -242,7 +252,7 @@ describe('SocketService', () => {
     await service.start('Ann');
     socket.sent.length = 0;
     socket.fire('disconnect');
-    expect(service.connection()).toBe('disconnected');
+    expect(service.connection()).toBe('reconnecting');
     socket.fire('connect');
     expect(socket.sent[0]).toMatchObject({
       event: 'session:start',
@@ -309,5 +319,105 @@ describe('SocketService', () => {
     socket.replies['session:start'] = { ...started, nickname: 'Bob' };
     expect(await service.resume()).toBe(true);
     expect(socket.sent[0].payload).toMatchObject({ token: 'old', nickname: 'Bob' });
+  });
+
+  describe('connection', () => {
+    beforeEach(() => vi.useFakeTimers());
+    afterEach(() => vi.useRealTimers());
+
+    const connectionToasts = (add: { mock: { calls: unknown[][] } }) =>
+      add.mock.calls
+        .map((c) => c[0] as { severity: string; detail: string })
+        .filter((m) => (m as { key?: string }).key === CONNECTION_KEY);
+
+    async function signedIn() {
+      const ctx = setup();
+      ctx.socket.replies['session:start'] = { ...started, game };
+      await ctx.service.start('Ann');
+      return ctx;
+    }
+
+    it('does not announce a drop that heals quickly', async () => {
+      const { socket, add, service } = await signedIn();
+      socket.fire('disconnect', 'transport close');
+      vi.advanceTimersByTime(LOST_DELAY_MS - 1);
+      socket.fire('connect');
+      vi.advanceTimersByTime(FAIL_AFTER_MS);
+      expect(connectionToasts(add)).toEqual([]);
+      expect(service.connection()).toBe('connected');
+    });
+
+    it('announces the loss, then replaces it by the restored notice', async () => {
+      const { socket, add, service } = await signedIn();
+      const clear = vi.spyOn(TestBed.inject(MessageService), 'clear');
+      socket.fire('disconnect', 'transport close');
+      vi.advanceTimersByTime(LOST_DELAY_MS);
+      expect(connectionToasts(add)).toEqual([
+        expect.objectContaining({ severity: 'warn', sticky: true, detail: expect.any(String) }),
+      ]);
+      socket.fire('connect');
+      expect(clear).toHaveBeenLastCalledWith(CONNECTION_KEY);
+      expect(connectionToasts(add).at(-1)).toMatchObject({
+        severity: 'success',
+        life: RESTORED_MS,
+      });
+      expect(service.connection()).toBe('connected');
+    });
+
+    it('asks for a reload when the server stays away, and still recovers', async () => {
+      const { socket, add, service } = await signedIn();
+      socket.fire('disconnect', 'transport close');
+      vi.advanceTimersByTime(FAIL_AFTER_MS);
+      expect(service.connection()).toBe('failed');
+      expect(connectionToasts(add).at(-1)).toMatchObject({
+        severity: 'error',
+        sticky: true,
+        data: { reload: true },
+      });
+      socket.fire('connect');
+      expect(service.connection()).toBe('connected');
+      expect(connectionToasts(add).at(-1)).toMatchObject({ severity: 'success' });
+    });
+
+    it('also gives up on a first connect that never succeeds', () => {
+      const { socket, add, service } = setup();
+      socket.connected = false;
+      const fresh = TestBed.runInInjectionContext(() => new SocketService());
+      expect(fresh.connection()).toBe('connecting');
+      vi.advanceTimersByTime(FAIL_AFTER_MS);
+      expect(fresh.connection()).toBe('failed');
+      expect(connectionToasts(add)).toHaveLength(1);
+      expect(service.connection()).toBe('connected');
+    });
+
+    it('reconnects itself after the server closed the socket', async () => {
+      const { socket } = await signedIn();
+      const connect = vi.spyOn(socket, 'connect');
+      socket.fire('disconnect', 'transport close');
+      expect(connect).not.toHaveBeenCalled();
+      socket.fire('disconnect', 'io server disconnect');
+      expect(connect).toHaveBeenCalled();
+    });
+
+    it('refuses intents until the session is replayed, instead of queueing them', async () => {
+      const { socket, service } = await signedIn();
+      socket.fire('disconnect', 'transport close');
+      socket.sent.length = 0;
+      expect(await service.send('game:start')).toEqual({ ok: false, reason: 'offline' });
+      expect(await service.leave()).toBe(false);
+      expect(socket.sent).toEqual([]);
+
+      let finish!: (r: unknown) => void;
+      socket.emit = (event: string, payload: unknown, ack: (r: unknown) => void) => {
+        socket.sent.push({ event, payload });
+        if (event === 'session:start') finish = ack;
+      };
+      socket.fire('connect');
+      expect(service.online()).toBe(false);
+      expect(await service.send('game:start')).toEqual({ ok: false, reason: 'offline' });
+      finish({ ...started, game });
+      await vi.waitFor(() => expect(service.online()).toBe(true));
+      expect(socket.sent.map((s) => s.event)).toEqual(['session:start', 'lobby:list']);
+    });
   });
 });

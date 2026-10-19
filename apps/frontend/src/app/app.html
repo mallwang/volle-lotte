@@ -2,6 +2,24 @@
 <app-window-too-small />
 }
 <p-toast position="top-center" mode="expanded" />
+<p-toast key="connection" position="bottom-center" mode="expanded">
+  <ng-template #message let-message>
+    <div
+      class="vl-connection-toast"
+      [attr.role]="message.severity === 'error' ? 'alert' : 'status'"
+    >
+      <span>{{ message.detail }}</span>
+      @if (message.data?.reload) {
+      <p-button
+        size="small"
+        severity="secondary"
+        [label]="'connection.reload' | t"
+        (onClick)="reload()"
+      />
+      }
+    </div>
+  </ng-template>
+</p-toast>
 <p-confirmdialog [style]="{ width: '28rem', maxWidth: '95vw' }" />
 <div
   class="vl-stage"
@@ -71,12 +89,9 @@
         </ng-template>
       </p-menubar>
     </div>
-    @if (socket.connection() !== 'connected') {
-    <p-message severity="warn" role="status">
-      {{ 'connection.status' | t: { state: ('connection.' + socket.connection()) | t } }}
-    </p-message>
-    }
-    <main class="vl-main"><router-outlet /></main>
+    <main class="vl-main" [class.vl-offline]="locked()" [attr.inert]="locked() ? '' : null">
+      <router-outlet />
+    </main>
   </div>
 </div>
 @if (tableScale.mode() === 'scaled' && !tableScale.dismissed()) {

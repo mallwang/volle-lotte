@@ -7,6 +7,7 @@ import { defaultRules } from 'game-rules';
 export function stubSocket(game: GameView | null = null) {
   return {
     session: signal({ playerId: 'p0', nickname: 'Ann' }),
+    online: signal(true),
     games: signal([]),
     game: signal(game),
     storedNickname: '',

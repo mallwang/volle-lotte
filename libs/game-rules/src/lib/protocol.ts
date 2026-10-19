@@ -34,7 +34,9 @@ export type ErrorReason =
   | 'notEnoughPlayers'
   | 'notYourTurn'
   | 'paused'
-  | 'rejected';
+  | 'rejected'
+  /** Client-side only: the intent was not sent because the connection is down. */
+  | 'offline';
 
 export interface ErrorAck {
   ok: false;
