@@ -6,6 +6,8 @@
 
 **Status**: Draft
 
+**Design**: [design.md](design.md)
+
 **Input**: User description: "Implement roadmap item R7. After a game ends, the host clicks 'Rematch' in the game-over modal. The same room (game id, password, seats, computers with skill, risk and speed, host settings) goes from finished back to the lobby immediately and the host sits in the lobby right away. The other humans still in the game-over modal get a 'Rejoin' button (disabled with 'waiting for host' until the host decided) that re-seats them on their previous seat; the seat stays reserved until the host starts. 'Back to the lobby' stays for everybody who does not want to continue. Seating order is kept. Players who left the finished game before the rematch get no Rejoin. A rematch must not be confused with the identical finished game: stale rejoin or reconnect requests of the finished round are rejected without side effects. New protocol events and a protocol version bump are accepted."
 
 ## Scope
