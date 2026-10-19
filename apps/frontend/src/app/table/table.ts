@@ -13,12 +13,13 @@ import type { Action, CardType, Event as GameEvent, GameView, LogEntry } from 'g
 import { ButtonModule } from 'primeng/button';
 import { MessageService } from 'primeng/api';
 import { DialogModule } from 'primeng/dialog';
+import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { DicePrefs } from '../core/dice-prefs';
 import { Celebration } from '../core/celebration';
 import { DiceRollService } from '../core/dice-roll';
 import { errorMessage } from '../core/error-message';
-import { isHost, logText, playerSeats, seatName, youWon } from '../core/game-view';
+import { isHost, isSpectator, logText, playerSeats, seatName, youWon } from '../core/game-view';
 import { I18nService } from '../core/i18n.service';
 import { SocketService, TOAST_MS } from '../core/socket.service';
 import { TableScale } from '../core/table-scale';
@@ -85,6 +86,7 @@ const logEnd = (g: GameView | null | undefined): number => (g?.logBase ?? 0) + (
     PlayerSeat,
     TableLayout,
     SettingsDialog,
+    TagModule,
     TooltipModule,
     TranslatePipe,
   ],
@@ -92,6 +94,9 @@ const logEnd = (g: GameView | null | undefined): number => (g?.logBase ?? 0) + (
     @if (socket.game(); as view) {
       <div class="vl-title-row">
         <h2>{{ view.name }}</h2>
+        @if (spectator()) {
+          <p-tag [value]="'table.watching' | t" icon="pi pi-eye" severity="info" />
+        }
         @if (view.game; as state) {
           <span class="vl-game-clock" role="timer">
             {{ 'table.round' | t: { round: round() } }} · {{ elapsed() }}
@@ -104,6 +109,17 @@ const logEnd = (g: GameView | null | undefined): number => (g?.logBase ?? 0) + (
           </span>
           <span class="vl-game-clock">
             {{ 'table.volleLottes' | t: { count: volleLottes() } }}
+          </span>
+        }
+        @if (view.spectating) {
+          <span
+            class="vl-spectators"
+            [class.vl-spectators-none]="view.spectators === 0"
+            role="status"
+            [attr.aria-label]="'table.spectatorsLabel' | t: { count: view.spectators }"
+          >
+            <i class="pi pi-eye" aria-hidden="true"></i>
+            {{ spectatorsText() }}
           </span>
         }
         <span class="vl-title-btns">
@@ -139,6 +155,11 @@ const logEnd = (g: GameView | null | undefined): number => (g?.logBase ?? 0) + (
           />
         </span>
       </div>
+      @if (spectator()) {
+        <p class="vl-watching" role="status">
+          <i class="pi pi-eye" aria-hidden="true"></i> {{ 'table.watchingBanner' | t }}
+        </p>
+      }
       @if (view.paused) {
         <p class="vl-paused" role="status"><i class="pi pi-pause"></i> {{ 'table.paused' | t }}</p>
       }
@@ -254,14 +275,25 @@ export class Table {
   protected readonly leave = inject(LeaveGame);
   protected readonly logOpen = signal(false);
   /** A computer took over my seat (timeouts); nothing here is playable anymore. */
-  protected readonly removed = computed(() => (this.socket.game()?.you.seat ?? 0) < 0);
+  protected readonly removed = computed(() => {
+    const g = this.socket.game();
+    return !!g && g.you.seat < 0 && !isSpectator(g);
+  });
+  protected readonly spectator = computed(() => {
+    const g = this.socket.game();
+    return !!g && isSpectator(g);
+  });
+  protected readonly spectatorsText = computed(() => {
+    const count = this.socket.game()?.spectators ?? 0;
+    return this.i18n.t(count === 1 ? 'table.spectators.one' : 'table.spectators.many', { count });
+  });
   /** The result is shown once the last roll and notice are over and the whole log is revealed. */
   /** Everything of the finished game is on screen: the last roll, its notice and every log entry. */
   private readonly gameOverReady = computed(() => {
     const g = this.socket.game();
     return (
       g?.phase === 'finished' &&
-      g.you.seat >= 0 &&
+      (g.you.seat >= 0 || isSpectator(g)) &&
       !this.roll.rolling() &&
       !this.notice() &&
       this.revealed() >= logEnd(g)
@@ -277,7 +309,7 @@ export class Table {
       source: () => {
         const g = this.socket.game();
         return {
-          finished: g?.phase === 'finished' && g.you.seat >= 0,
+          finished: g?.phase === 'finished' && (g.you.seat >= 0 || isSpectator(g)),
           ready: this.gameOverReady(),
         };
       },

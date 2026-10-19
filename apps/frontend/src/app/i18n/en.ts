@@ -23,6 +23,7 @@ export const en = {
   'server.banned': 'The host removed you from this game.',
   'server.closed': 'The game was closed.',
   'server.ended': 'The game was ended by its host.',
+  'server.spectatingOff': 'The host turned spectators off. You are back in the lobby.',
 
   'nickname.title': 'Nickname',
   'nickname.continue': 'Continue',
@@ -41,6 +42,8 @@ export const en = {
   'lobby.join': 'Join',
   'lobby.rejoin': 'Rejoin',
   'lobby.running': 'Running',
+  'lobby.watch': 'Watch',
+  'lobby.watchTitle': 'Watch {name}',
   'lobby.noHost': 'No host, only computers left',
   'lobby.end': 'End game',
   'lobby.endTitle': 'End the game?',
@@ -213,6 +216,12 @@ export const en = {
   'table.pause': 'Pause game',
   'table.resume': 'Resume game',
   'table.paused': 'Game paused by the host',
+  'table.watching': 'Watching',
+  'table.watchingBanner':
+    'You are watching this game. You cannot play, but you see everything the players see.',
+  'table.spectators.one': '{count} spectator',
+  'table.spectators.many': '{count} spectators',
+  'table.spectatorsLabel': 'Spectators: {count}',
   'turn.timer': 'Time limit for this move',
   'table.timedOutYou': 'You ran out of time.',
   'table.timedOutWarn':
@@ -279,6 +288,9 @@ export const en = {
   'settings.showBustProbability': 'Show bust probability',
   'settings.showBustProbabilityHint':
     'For everyone. Previews the next throw with the selected dice set aside.',
+  'settings.spectating': 'Allow spectators',
+  'settings.spectatingHint':
+    'Anyone may watch the running game without playing. Turning it off sends all spectators back to the lobby.',
   'table.bustProbability': 'Bust probability on the next throw: {percent}%',
   'settings.computerSpeed': 'Computer speed',
   'settings.computerSpeedHint':
@@ -298,6 +310,8 @@ export const en = {
   'toast.setting.fastComputerDice.off': '{who} turned fast computer dice off.',
   'toast.setting.showBustProbability.on': '{who} turned bust probability on.',
   'toast.setting.showBustProbability.off': '{who} turned bust probability off.',
+  'toast.setting.spectating.on': '{who} allowed spectators.',
+  'toast.setting.spectating.off': '{who} turned spectators off.',
   'player.human': 'Human',
   'player.active': 'Active',
   'player.offline': 'Offline',
@@ -328,6 +342,7 @@ export const en = {
   'gameOver.waitingForHost': 'Waiting for {name} to decide about a rematch.',
   'gameOver.seatReserved': '{name} started a rematch. Your seat {n} is reserved for you.',
   'gameOver.startedWithoutYou': 'The next game has already started without you.',
+  'gameOver.spectatorHint': 'You were watching. Rematches are for the players.',
 
   'log.drew': '{who} drew {card}',
   'log.threw': '{who} threw {dice}',
@@ -372,6 +387,7 @@ export const en = {
   'error.gameStarted': 'The game has already started.',
   'error.gameFull': 'The game is full.',
   'error.banned': 'The host removed you from this game.',
+  'error.notSpectatable': 'This game cannot be watched right now.',
   'error.seatNotFree': 'This seat is not free.',
   'error.seatOccupied': 'An occupied seat cannot be locked.',
   'error.staleRound': 'That rematch is out of date.',

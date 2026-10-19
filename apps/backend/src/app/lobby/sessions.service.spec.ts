@@ -55,4 +55,16 @@ describe('SessionsService', () => {
     expect(sessions.byTokenValue(seated.token)).toBe(seated);
     expect(sessions.byTokenValue(online.token)).toBe(online);
   });
+
+  it('keeps the spectated room across a disconnect and does not sweep such a session', () => {
+    const s = sessions.create('Anna');
+    sessions.attach(s, 'sock');
+    s.spectating = 'room';
+    sessions.detach('sock');
+    expect(s.spectating).toBe('room');
+    t = 25 * 3_600_000;
+    expect(sessions.sweep()).toBe(0);
+    s.spectating = undefined;
+    expect(sessions.sweep()).toBe(1);
+  });
 });

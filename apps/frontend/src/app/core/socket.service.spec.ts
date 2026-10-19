@@ -158,6 +158,59 @@ describe('SocketService', () => {
     });
   });
 
+  it('spectate() sends the intent and shows the spectator view on success', async () => {
+    const { socket, service } = setup();
+    await service.start('Ann');
+    socket.replies['game:spectate'] = { ok: true, game: { id: 'g1', spectators: 1 } };
+    expect(await service.spectate({ gameId: 'g1', password: '' })).toMatchObject({ ok: true });
+    expect(socket.sent.at(-1)).toEqual({
+      event: 'game:spectate',
+      payload: { gameId: 'g1', password: '' },
+    });
+    expect(service.game()).toMatchObject({ id: 'g1' });
+  });
+
+  it('spectate() keeps no game when the server refuses', async () => {
+    const { socket, service } = setup();
+    await service.start('Ann');
+    socket.replies['game:spectate'] = { ok: false, reason: 'notSpectatable' };
+    expect(await service.spectate({ gameId: 'g1', password: '' })).toMatchObject({ ok: false });
+    expect(service.game()).toBeNull();
+  });
+
+  it('tells a spectator the host turned spectating off', async () => {
+    const { socket, add, service } = setup();
+    socket.replies['session:start'] = { ...started, game };
+    await service.start('Ann');
+    socket.fire('game:closed', { reason: 'spectatingOff' });
+    expect(service.game()).toBeNull();
+    expect(add).toHaveBeenCalledWith({
+      severity: 'info',
+      detail: expect.stringContaining('turned spectators off'),
+      life: TOAST_MS,
+    });
+  });
+
+  it('shows no toast when a game:state only changes the spectator count', async () => {
+    const { socket, add, service } = setup();
+    await service.start('Ann');
+    add.mockClear();
+    socket.fire('game:state', { game: { id: 'g1', spectators: 3 } });
+    expect(service.game()).toMatchObject({ spectators: 3 });
+    expect(add).not.toHaveBeenCalled();
+  });
+
+  it('says what the spectating switch did', () => {
+    const { socket, add } = setup();
+    socket.fire('game:settingsChanged', {
+      by: 'Ann',
+      changes: [{ setting: 'spectating', value: false }],
+    });
+    expect(add).toHaveBeenCalledWith(
+      expect.objectContaining({ detail: 'Ann turned spectators off.' }),
+    );
+  });
+
   it('leave() clears the game and resolves true when the server accepts', async () => {
     const { socket, service } = setup();
     socket.replies['session:start'] = { ...started, game };

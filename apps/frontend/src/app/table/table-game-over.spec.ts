@@ -231,4 +231,18 @@ describe('Table game-over modal', () => {
       localStorage.removeItem('vl-skip-dice');
     }
   });
+
+  it('offers a spectator only the way back, with a hint and no celebration', async () => {
+    const { dialog, celebration } = await setup(
+      finished({
+        you: { playerId: 'v1', seat: -1, timeoutWarning: false, spectator: true },
+      }),
+    );
+    const text = dialog()?.textContent ?? '';
+    expect(text).toContain('Ann won.');
+    expect(text).toContain('Rematches are for the players');
+    const buttons = [...dialog()!.querySelectorAll('button')].map((b) => b.textContent?.trim());
+    expect(buttons).toEqual(['Back to the lobby']);
+    expect(celebration.start).not.toHaveBeenCalled();
+  });
 });

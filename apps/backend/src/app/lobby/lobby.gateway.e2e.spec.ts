@@ -117,6 +117,21 @@ describe('integration flows', () => {
       await finish(all);
     }, 60_000);
 
+    it('lets a spectator watch a whole game and see the same result', async () => {
+      const { host, all, id } = await gameOf(['Sp0', 'Sp1'], 2);
+      all.forEach(autoPlay);
+      await host.send('game:start');
+      const spec = await Client.start('Spectator');
+      expect(await spec.send('game:spectate', { gameId: id, password: 'secret' })).toMatchObject({
+        ok: true,
+        game: { you: { spectator: true, seat: -1 } },
+      });
+      await finish([...all, spec]);
+      expect(lastState(spec)?.you.spectator).toBe(true);
+      expect(spec.pushes.some((p) => p.event === 'game:log')).toBe(false);
+      expect(await spec.send('game:leave')).toEqual({ ok: true });
+    }, 60_000);
+
     it('plays a rematch with the players who come back', async () => {
       const { host, guests, all } = await gameOf(['Rm0', 'Rm1', 'Rm2'], 3);
       all.forEach(autoPlay);

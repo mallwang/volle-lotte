@@ -23,6 +23,7 @@ export const de: Record<keyof typeof en, string> = {
   'server.banned': 'Der Gastgeber hat dich aus diesem Spiel entfernt.',
   'server.closed': 'Das Spiel wurde geschlossen.',
   'server.ended': 'Das Spiel wurde vom Gastgeber beendet.',
+  'server.spectatingOff': 'Der Gastgeber hat Zuschauer ausgeschaltet. Du bist zurück in der Lobby.',
   'server.restarted': 'Der Server wurde neu gestartet und dein Spiel ist weg.',
 
   'nickname.title': 'Spitzname',
@@ -43,6 +44,8 @@ export const de: Record<keyof typeof en, string> = {
   'lobby.join': 'Beitreten',
   'lobby.rejoin': 'Zurückkehren',
   'lobby.running': 'Läuft',
+  'lobby.watch': 'Zuschauen',
+  'lobby.watchTitle': '{name} zuschauen',
   'lobby.noHost': 'Kein Gastgeber, nur noch Computer',
   'lobby.end': 'Spiel beenden',
   'lobby.endTitle': 'Spiel beenden?',
@@ -218,6 +221,12 @@ export const de: Record<keyof typeof en, string> = {
   'table.pause': 'Spiel pausieren',
   'table.resume': 'Spiel fortsetzen',
   'table.paused': 'Spiel vom Gastgeber pausiert',
+  'table.watching': 'Zuschauermodus',
+  'table.watchingBanner':
+    'Du schaust diesem Spiel zu. Du kannst nicht mitspielen, siehst aber alles, was die Spieler sehen.',
+  'table.spectators.one': '{count} Zuschauer',
+  'table.spectators.many': '{count} Zuschauer',
+  'table.spectatorsLabel': 'Zuschauer: {count}',
   'turn.timer': 'Zeitlimit für diesen Zug',
   'table.timedOutYou': 'Du hast die Zeit überschritten.',
   'table.timedOutWarn':
@@ -292,6 +301,9 @@ export const de: Record<keyof typeof en, string> = {
   'settings.showBustProbability': 'Fehlschlag-Wahrscheinlichkeit anzeigen',
   'settings.showBustProbabilityHint':
     'Für alle. Vorschau auf den nächsten Wurf nach Beiseitelegen der markierten Würfel.',
+  'settings.spectating': 'Zuschauer erlauben',
+  'settings.spectatingHint':
+    'Jeder darf dem laufenden Spiel zuschauen, ohne mitzuspielen. Beim Ausschalten kommen alle Zuschauer zurück in die Lobby.',
   'table.bustProbability': 'Fehlschlag-Wahrscheinlichkeit beim nächsten Wurf: {percent}%',
   'settings.computerSpeed': 'Computer-Geschwindigkeit',
   'settings.computerSpeedHint':
@@ -314,6 +326,8 @@ export const de: Record<keyof typeof en, string> = {
     '{who} hat die Anzeige der Fehlschlag-Wahrscheinlichkeit eingeschaltet.',
   'toast.setting.showBustProbability.off':
     '{who} hat die Anzeige der Fehlschlag-Wahrscheinlichkeit ausgeschaltet.',
+  'toast.setting.spectating.on': '{who} hat Zuschauer erlaubt.',
+  'toast.setting.spectating.off': '{who} hat Zuschauer ausgeschaltet.',
   'player.human': 'Mensch',
   'player.active': 'Am Zug',
   'player.offline': 'Offline',
@@ -345,6 +359,7 @@ export const de: Record<keyof typeof en, string> = {
   'gameOver.seatReserved':
     '{name} hat eine Revanche gestartet. Dein Platz {n} ist für dich reserviert.',
   'gameOver.startedWithoutYou': 'Das nächste Spiel hat schon ohne dich begonnen.',
+  'gameOver.spectatorHint': 'Du hast zugeschaut. Revanchen sind für die Spieler.',
 
   'log.drew': '{who} zog {card}',
   'log.threw': '{who} würfelte {dice}',
@@ -388,6 +403,7 @@ export const de: Record<keyof typeof en, string> = {
   'error.lockedRetry': 'Zu viele Versuche. Versuche es in {seconds} s erneut.',
   'error.gameNotFound': 'Das Spiel existiert nicht mehr.',
   'error.banned': 'Der Gastgeber hat dich aus diesem Spiel entfernt.',
+  'error.notSpectatable': 'Diesem Spiel kann gerade nicht zugeschaut werden.',
   'error.gameStarted': 'Das Spiel hat bereits begonnen.',
   'error.gameFull': 'Das Spiel ist voll.',
   'error.seatNotFree': 'Dieser Platz ist nicht frei.',

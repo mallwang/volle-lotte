@@ -549,3 +549,61 @@ describe('Table', () => {
     await inBothModes(fixture, () => expectNoA11yViolations(fixture));
   });
 });
+
+describe('Table for spectators', () => {
+  const watching = {
+    you: { playerId: 'v1', seat: -1, timeoutWarning: false, spectator: true },
+    hostId: 'p0',
+  };
+
+  it('is read-only: banner, tag, scores and log, no play controls, no removed notice', async () => {
+    const { el, button, socket } = await setup(0, watching);
+    expect(el.textContent).toContain('You are watching this game');
+    expect(el.textContent).toContain('Watching');
+    expect(el.textContent).toContain('Ann');
+    expect(el.textContent).toContain('Bob');
+    expect(button('Set aside')).toBeUndefined();
+    expect(button('Throw')).toBeUndefined();
+    expect(button('Bank')).toBeUndefined();
+    expect(button('Pause')).toBeUndefined();
+    expect(document.body.textContent).not.toContain('took over');
+    const dice = el.querySelectorAll<HTMLButtonElement>('[aria-label=Dice] button');
+    dice.forEach((d) => d.click());
+    expect(socket.send).not.toHaveBeenCalled();
+  });
+
+  it('leaves through the shared leave request without a confirmation of its own', async () => {
+    const { el, leave } = await setup(0, watching);
+    (el.querySelector('[aria-label="Leave game"]') as HTMLButtonElement).click();
+    expect(leave.request).toHaveBeenCalled();
+  });
+
+  it('shows the counter to players and spectators, muted at 0, with singular and plural', async () => {
+    const zero = await setup(0, { spectators: 0 });
+    const chip = () => zero.el.querySelector<HTMLElement>('.vl-spectators')!;
+    expect(chip().textContent).toContain('0 spectators');
+    expect(chip().classList.contains('vl-spectators-none')).toBe(true);
+    expect(chip().getAttribute('aria-label')).toBe('Spectators: 0');
+    zero.socket.game.update((g) => ({ ...g!, spectators: 1 }));
+    zero.fixture.detectChanges();
+    expect(chip().textContent).toContain('1 spectator');
+    expect(chip().textContent).not.toContain('1 spectators');
+    zero.socket.game.update((g) => ({ ...g!, spectators: 3 }));
+    zero.fixture.detectChanges();
+    expect(chip().textContent).toContain('3 spectators');
+    expect(zero.el.textContent).not.toContain('You are watching');
+  });
+
+  it('hides the counter when the host turned spectating off', async () => {
+    const { el } = await setup(0, { spectating: false, spectators: 0 });
+    expect(el.querySelector('.vl-spectators')).toBeNull();
+  });
+
+  it('raises no toast when only the spectator count changes', async () => {
+    const { socket, toasts, fixture } = await setup(0);
+    socket.game.update((g) => ({ ...g!, spectators: 2 }));
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(toasts).not.toHaveBeenCalled();
+  });
+});

@@ -630,6 +630,25 @@ a.vl-menu-link:hover {
   background: var(--p-orange-100, #ffedd5);
   color: var(--p-orange-900, #7c2d12);
 }
+.vl-watching {
+  margin: 0.25rem 0;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  text-align: center;
+  background: var(--p-content-hover-background, #f1f5f9);
+  color: var(--p-text-color);
+}
+.vl-spectators {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.vl-spectators-none {
+  color: var(--p-text-muted-color);
+  font-weight: 400;
+}
 .vl-game-clock {
   font-variant-numeric: tabular-nums;
   font-weight: 600;

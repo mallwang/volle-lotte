@@ -13,6 +13,8 @@ export interface Session {
   language: UiLanguage;
   socketId?: string;
   gameId?: string;
+  /** Room id this session watches (exclusive with `gameId`); kept across a disconnect for a reload. */
+  spectating?: string;
   lastSeen: number;
 }
 
@@ -83,7 +85,7 @@ export class SessionsService {
   sweep(): number {
     let removed = 0;
     for (const s of this.byToken.values()) {
-      if (!s.gameId && !s.socketId && this.now() - s.lastSeen >= IDLE_MS) {
+      if (!s.gameId && !s.spectating && !s.socketId && this.now() - s.lastSeen >= IDLE_MS) {
         this.byToken.delete(s.token);
         this.byPlayer.delete(s.playerId);
         removed++;

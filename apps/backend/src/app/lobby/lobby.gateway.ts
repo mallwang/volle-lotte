@@ -70,6 +70,9 @@ export class LobbyGateway implements OnGatewayDisconnect {
     const session = this.sessions.detach(client.id);
     const room = session?.gameId ? this.registry.get(session.gameId) : undefined;
     room?.setConnected(session?.playerId ?? '', false);
+    // a spectator leaves the count but keeps `session.spectating` so a reload resumes watching
+    if (session?.spectating)
+      this.registry.get(session.spectating)?.removeSpectator(session.playerId);
   }
 
   // ---- session and lobby
@@ -94,7 +97,11 @@ export class LobbyGateway implements OnGatewayDisconnect {
     this.dropReplacedSocket(this.sessions.attach(session, client.id));
     let game;
     const room = this.resumableRoom(session);
-    if (room && room.seatOf(session.playerId) >= 0) {
+    const watched = this.resumeSpectator(session);
+    if (watched) {
+      void client.leave(LOBBY);
+      game = toView(watched, session.playerId);
+    } else if (room && room.seatOf(session.playerId) >= 0) {
       void client.leave(LOBBY);
       room.setLanguage(session.playerId, session.language);
       room.setConnected(session.playerId, true);
@@ -141,7 +148,7 @@ export class LobbyGateway implements OnGatewayDisconnect {
   ): Ack<Intents['game:create'][1]> {
     const session = this.session(client);
     if (!session) return bad('noSession');
-    if (this.roomOf(session)) return bad('alreadyInGame');
+    if (this.busy(session)) return bad('alreadyInGame');
     if (!isObj(b)) return bad('invalidRequest');
     const name = typeof b['name'] === 'string' ? b['name'].trim() : '';
     if (name.length < 1 || name.length > 40 || !isInt(b['seats'], 2, 8) || !isObj(b['rules'])) {
@@ -169,25 +176,13 @@ export class LobbyGateway implements OnGatewayDisconnect {
   join(@ConnectedSocket() client: Socket, @MessageBody() b: unknown): Ack<Intents['game:join'][1]> {
     const session = this.session(client);
     if (!session) return bad('noSession');
-    if (this.roomOf(session)) return bad('alreadyInGame');
+    if (this.busy(session)) return bad('alreadyInGame');
     if (!isObj(b) || typeof b['gameId'] !== 'string') return bad('invalidRequest');
     if (b['seat'] !== undefined && !isInt(b['seat'], 0, 7)) return bad('invalidRequest');
     const room = this.registry.get(b['gameId']);
     if (!room) return bad('gameNotFound');
-    if (room.passwordHash !== '') {
-      if (!isPassword(b['password'])) return bad('invalidPassword');
-      const key = this.clientKey(client);
-      const wait = this.limiter.retryAfterMs(key, room.id);
-      if (wait > 0) return { ok: false, reason: 'locked', retryAfterMs: wait };
-      if (!verifyPassword(b['password'], room.passwordHash)) {
-        return {
-          ok: false,
-          reason: 'wrongPassword',
-          attemptsLeft: this.limiter.fail(key, room.id),
-        };
-      }
-      this.limiter.succeed(key, room.id);
-    }
+    const denied = this.checkPassword(client, room, b['password']);
+    if (denied) return denied;
     const joined = room.join(
       session.playerId,
       session.nickname,
@@ -200,6 +195,27 @@ export class LobbyGateway implements OnGatewayDisconnect {
     return { ok: true, game: toView(room, session.playerId) };
   }
 
+  @SubscribeMessage('game:spectate')
+  spectate(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() b: unknown,
+  ): Ack<Intents['game:spectate'][1]> {
+    const session = this.session(client);
+    if (!session) return bad('noSession');
+    if (this.busy(session)) return bad('alreadyInGame');
+    if (!isObj(b) || typeof b['gameId'] !== 'string') return bad('invalidRequest');
+    const room = this.registry.get(b['gameId']);
+    if (!room) return bad('gameNotFound');
+    if (room.banned.has(session.playerId)) return bad('banned');
+    const denied = this.checkPassword(client, room, b['password']);
+    if (denied) return denied;
+    const res = room.addSpectator(session.playerId);
+    if (!res.ok) return done(res) as Ack<never>;
+    session.spectating = room.id;
+    void client.leave(LOBBY);
+    return { ok: true, game: toView(room, session.playerId) };
+  }
+
   @SubscribeMessage('game:rejoin')
   rejoin(
     @ConnectedSocket() client: Socket,
@@ -207,7 +223,7 @@ export class LobbyGateway implements OnGatewayDisconnect {
   ): Ack<Intents['game:rejoin'][1]> {
     const session = this.session(client);
     if (!session) return bad('noSession');
-    if (this.roomOf(session)) return bad('alreadyInGame');
+    if (this.busy(session)) return bad('alreadyInGame');
     if (!isObj(b) || typeof b['gameId'] !== 'string') return bad('invalidRequest');
     const room = this.registry.get(b['gameId']);
     if (!room) return bad('gameNotFound');
@@ -232,6 +248,12 @@ export class LobbyGateway implements OnGatewayDisconnect {
 
   @SubscribeMessage('game:leave')
   leave(@ConnectedSocket() client: Socket): Ack {
+    const watcher = this.session(client);
+    if (watcher?.spectating) {
+      this.registry.get(watcher.spectating)?.removeSpectator(watcher.playerId);
+      this.exit(watcher);
+      return { ok: true };
+    }
     return this.inRoom(client, (room, session) => {
       const left = room.leave(session.playerId);
       if (left.ok) this.exit(session);
@@ -244,7 +266,12 @@ export class LobbyGateway implements OnGatewayDisconnect {
     if (!isObj(b) || !isInt(b['round'], 1, 1e6))
       return this.session(client) ? bad('invalidRequest') : bad('noSession');
     const round = b['round'];
-    return this.inRoom(client, (room, session) => room.rematch(session.playerId, round));
+    return this.inRoom(client, (room, session) => {
+      const res = room.rematch(session.playerId, round);
+      if (!res.ok) return res;
+      this.evict(room, res.evicted, 'ended');
+      return { ok: true };
+    });
   }
 
   @SubscribeMessage('rematch:join')
@@ -345,18 +372,25 @@ export class LobbyGateway implements OnGatewayDisconnect {
     const fast = isObj(b) ? b['fastComputerDice'] : undefined;
     const speed = isObj(b) ? b['computerSpeed'] : undefined;
     const showOdds = isObj(b) ? b['showBustProbability'] : undefined;
+    const spectating = isObj(b) ? b['spectating'] : undefined;
     const valid =
       (fast === undefined || typeof fast === 'boolean') &&
       (speed === undefined || isInt(speed, 1, 5)) &&
       (showOdds === undefined || typeof showOdds === 'boolean') &&
-      (fast !== undefined || speed !== undefined || showOdds !== undefined);
+      (spectating === undefined || typeof spectating === 'boolean') &&
+      (fast !== undefined ||
+        speed !== undefined ||
+        showOdds !== undefined ||
+        spectating !== undefined);
     if (!valid) return this.session(client) ? bad('invalidRequest') : bad('noSession');
     return this.inRoom(client, (room, session) => {
       const res = room.setSettings(session.playerId, {
         ...(fast !== undefined && { fastComputerDice: fast as boolean }),
         ...(speed !== undefined && { computerSpeed: speed as number }),
         ...(typeof showOdds === 'boolean' && { showBustProbability: showOdds }),
+        ...(typeof spectating === 'boolean' && { spectating }),
       });
+      if (res.ok) this.evict(room, res.evicted, 'spectatingOff');
       if (res.ok && res.changes.length > 0) {
         for (const h of room.humans())
           this.emitTo(this.sessions.byPlayerId(h.playerId)?.socketId, 'game:settingsChanged', {
@@ -364,7 +398,7 @@ export class LobbyGateway implements OnGatewayDisconnect {
             changes: res.changes,
           });
       }
-      return res.ok ? { ok: true } : res; // `changes` is for the push only
+      return res.ok ? { ok: true } : res; // `changes` and `evicted` are for the pushes only
     });
   }
 
@@ -394,6 +428,54 @@ export class LobbyGateway implements OnGatewayDisconnect {
     if (room?.phase !== 'finished') return room;
     session.gameId = undefined;
     room.leave(session.playerId);
+    return undefined;
+  }
+
+  /** The room a spectator watches, if it still exists; a stale marker is cleared. */
+  private spectatedRoom(session: Session): GameRoom | undefined {
+    const room = session.spectating ? this.registry.get(session.spectating) : undefined;
+    if (!room) session.spectating = undefined;
+    return room;
+  }
+
+  /** Seated, waiting for a rematch or spectating: no second game at the same time. */
+  private busy(session: Session): boolean {
+    return !!this.roomOf(session) || !!this.spectatedRoom(session);
+  }
+
+  /** A reload or reconnect puts a spectator back, as long as the room still allows it. */
+  private resumeSpectator(session: Session): GameRoom | undefined {
+    const room = this.spectatedRoom(session);
+    if (room && room.addSpectator(session.playerId, true).ok) return room;
+    session.spectating = undefined;
+    return undefined;
+  }
+
+  /** Sends spectators the room dropped back to the lobby. */
+  private evict(
+    room: GameRoom,
+    ids: string[],
+    reason: 'ended' | 'spectatingOff' | 'cleanup',
+  ): void {
+    for (const id of ids) {
+      const session = this.sessions.byPlayerId(id);
+      if (session?.spectating !== room.id) continue;
+      this.exit(session);
+      this.emitTo(session.socketId, 'game:closed', { reason });
+    }
+  }
+
+  /** Password check and rate limit shared by join and spectate; undefined when allowed. */
+  private checkPassword(client: Socket, room: GameRoom, password: unknown): Ack<never> | undefined {
+    if (room.passwordHash === '') return undefined;
+    if (!isPassword(password)) return bad('invalidPassword');
+    const key = this.clientKey(client);
+    const wait = this.limiter.retryAfterMs(key, room.id);
+    if (wait > 0) return { ok: false, reason: 'locked', retryAfterMs: wait };
+    if (!verifyPassword(password, room.passwordHash)) {
+      return { ok: false, reason: 'wrongPassword', attemptsLeft: this.limiter.fail(key, room.id) };
+    }
+    this.limiter.succeed(key, room.id);
     return undefined;
   }
 
@@ -430,6 +512,7 @@ export class LobbyGateway implements OnGatewayDisconnect {
 
   private exit(session: Session): void {
     session.gameId = undefined;
+    session.spectating = undefined;
     if (session.socketId) {
       void this.server.sockets.sockets.get(session.socketId)?.join(LOBBY);
       this.emitTo(session.socketId, 'lobby:games', {
@@ -467,6 +550,9 @@ export class LobbyGateway implements OnGatewayDisconnect {
       const socketId = this.sessions.byPlayerId(playerId)?.socketId;
       this.emitTo(socketId, 'game:state', { game: toView(room, playerId) });
       if (entries.length && !waiting.has(playerId)) this.emitTo(socketId, 'game:log', { entries });
+    }
+    for (const id of room.spectators) {
+      this.emitTo(this.sessions.byPlayerId(id)?.socketId, 'game:state', { game: toView(room, id) });
     }
     // dropped players are told once; they leave the room when they press "Back to the lobby"
     room.dropped.clear();
@@ -512,6 +598,7 @@ export class LobbyGateway implements OnGatewayDisconnect {
       this.exit(session);
       this.emitTo(session.socketId, 'game:closed', { reason: 'cleanup' });
     }
+    this.evict(room, [...room.spectators], reason === 'cleanup' ? 'cleanup' : 'ended');
     if (reason === 'ended') this.releaseFormerPlayers(room);
     this.pushLobby();
   }

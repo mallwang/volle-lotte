@@ -296,10 +296,15 @@ describe('GameRoom settings and computer pacing', () => {
     expect(room.setSettings('h', { showBustProbability: true })).toEqual({
       ok: true,
       changes: [{ setting: 'showBustProbability', value: true }],
+      evicted: [],
     });
     expect(changes).toHaveLength(n + 1);
     expect(toView(room, 'h').showBustProbability).toBe(true);
-    expect(room.setSettings('h', { showBustProbability: true })).toEqual({ ok: true, changes: [] });
+    expect(room.setSettings('h', { showBustProbability: true })).toEqual({
+      ok: true,
+      changes: [],
+      evicted: [],
+    });
     expect(changes).toHaveLength(n + 1);
     room.setSeat('h', 1, 'computer');
     room.setReady('h', true);
@@ -307,6 +312,7 @@ describe('GameRoom settings and computer pacing', () => {
     expect(room.setSettings('h', { showBustProbability: false })).toEqual({
       ok: true,
       changes: [{ setting: 'showBustProbability', value: false }],
+      evicted: [],
     });
     room.phase = 'finished';
     expect(room.setSettings('h', { showBustProbability: true })).toMatchObject({
@@ -324,6 +330,7 @@ describe('GameRoom settings and computer pacing', () => {
     expect(room.setSettings('h', { fastComputerDice: true })).toEqual({
       ok: true,
       changes: [{ setting: 'fastComputerDice', value: true }],
+      evicted: [],
     });
     expect(room.fastComputerDice).toBe(true);
     expect(changes).toHaveLength(before + 1);
@@ -348,10 +355,15 @@ describe('GameRoom settings and computer pacing', () => {
     expect(room.setSettings('h', { computerSpeed: 5 })).toEqual({
       ok: true,
       changes: [{ setting: 'computerSpeed', value: 5 }],
+      evicted: [],
     });
     expect(toView(room, 'p').computerSpeed).toBe(5);
     expect(changes).toHaveLength(before + 1);
-    expect(room.setSettings('h', { computerSpeed: 5 })).toEqual({ ok: true, changes: [] });
+    expect(room.setSettings('h', { computerSpeed: 5 })).toEqual({
+      ok: true,
+      changes: [],
+      evicted: [],
+    });
     expect(changes).toHaveLength(before + 1);
     room.phase = 'finished';
     expect(room.setSettings('h', { computerSpeed: 1 })).toMatchObject({ reason: 'notInGame' });
@@ -834,7 +846,7 @@ describe('GameRoom rematch', () => {
   it('reopens the room as a lobby with the same settings and seat order', () => {
     const { room } = finishedRoom();
     const computer = room.seats[3];
-    expect(room.rematch('h', 1)).toEqual({ ok: true });
+    expect(room.rematch('h', 1)).toEqual({ ok: true, evicted: [] });
     expect(room.phase).toBe('lobby');
     expect(room.game).toBeNull();
     expect(room.round).toBe(2);
@@ -1012,7 +1024,7 @@ describe('GameRoom rematch', () => {
     room.start('h');
     room.phase = 'finished';
     expect(room.rematch('h', 1)).toMatchObject({ reason: 'staleRound' });
-    expect(room.rematch('h', 2)).toEqual({ ok: true });
+    expect(room.rematch('h', 2)).toEqual({ ok: true, evicted: [] });
     expect(room.round).toBe(3);
     expect(room.rematchJoin('p', 1)).toMatchObject({ reason: 'staleRound' });
     expect(room.rematchJoin('p', 2)).toEqual({ ok: true, seat: 1 });
@@ -1030,6 +1042,80 @@ describe('GameRoom rematch', () => {
     expect(changes).toHaveLength(calls);
     expect(JSON.stringify(room.seats)).toBe(seats);
     expect(room.round).toBe(2);
+    room.dispose();
+  });
+});
+
+describe('GameRoom spectators', () => {
+  it('lets visitors watch only a running game with spectating on', () => {
+    const { room, changes } = make();
+    expect(room.addSpectator('v')).toMatchObject({ reason: 'notSpectatable' });
+    expect(room.summary().spectatable).toBe(false);
+    room.join('p', 'Pia');
+    room.setReady('h', true);
+    room.setReady('p', true);
+    room.start('h');
+    expect(room.summary().spectatable).toBe(true);
+    expect(room.addSpectator('h')).toMatchObject({ reason: 'alreadyInGame' });
+    const n = changes.length;
+    const logLength = room.log.length;
+    expect(room.addSpectator('v')).toEqual({ ok: true });
+    expect(room.addSpectator('v')).toEqual({ ok: true });
+    expect(changes).toHaveLength(n + 1);
+    expect(changes.at(-1)).toBe(0);
+    expect(room.log).toHaveLength(logLength);
+    expect(room.removeSpectator('v')).toBe(true);
+    expect(room.removeSpectator('v')).toBe(false);
+    expect(changes).toHaveLength(n + 2);
+    room.phase = 'finished';
+    expect(room.addSpectator('v')).toMatchObject({ reason: 'notSpectatable' });
+    expect(room.addSpectator('v', true)).toEqual({ ok: true });
+    room.dispose();
+  });
+
+  it('clears spectators when the host switches spectating off and counts the change', () => {
+    const room = started();
+    room.addSpectator('v');
+    expect(room.setSettings('p', { spectating: false })).toMatchObject({ reason: 'notHost' });
+    expect(room.setSettings('h', { spectating: false })).toEqual({
+      ok: true,
+      changes: [{ setting: 'spectating', value: false }],
+      evicted: ['v'],
+    });
+    expect(room.spectators.size).toBe(0);
+    expect(room.summary().spectatable).toBe(false);
+    expect(room.addSpectator('v')).toMatchObject({ reason: 'notSpectatable' });
+    expect(room.setSettings('h', { spectating: false })).toMatchObject({ changes: [] });
+    room.setSettings('h', { spectating: true });
+    expect(toView(room, 'h').spectators).toBe(0);
+    room.dispose();
+  });
+
+  it('does not change timers, connection or turn handling', () => {
+    jest.useFakeTimers();
+    try {
+      const room = started();
+      room.addSpectator('v');
+      expect(room.hasConnectedHuman()).toBe(true);
+      expect(room.humans()).toHaveLength(2);
+      const first = room.seats[room.game?.current === 0 ? 0 : 1] as Human;
+      jest.advanceTimersByTime(TURN_LIMIT_MS.draw);
+      expect(first.timeouts).toBe(1);
+      room.setConnected('h', false);
+      room.setConnected('p', false);
+      expect(room.hasConnectedHuman()).toBe(false);
+      room.dispose();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('drops spectators when a rematch reopens the room', () => {
+    const room = started();
+    room.phase = 'finished';
+    room.addSpectator('v', true);
+    expect(room.rematch('h', 1)).toEqual({ ok: true, evicted: ['v'] });
+    expect(room.spectators.size).toBe(0);
     room.dispose();
   });
 });

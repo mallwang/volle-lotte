@@ -115,6 +115,8 @@ export class SocketService {
       this.game.set(null);
       if (p?.reason === 'banned') this.notify('warn', this.i18n.t('server.banned'));
       else if (p?.reason === 'ended') this.notify('info', this.i18n.t('server.ended'));
+      else if (p?.reason === 'spectatingOff')
+        this.notify('info', this.i18n.t('server.spectatingOff'));
       else this.notify('info', this.i18n.t('server.closed'));
     }) as never);
   }
@@ -232,6 +234,12 @@ export class SocketService {
 
   async join(payload: Intents['game:join'][0]): Promise<Ack<Intents['game:join'][1]>> {
     const ack = await this.send('game:join', payload);
+    if (ack.ok) this.game.set(ack.game);
+    return ack;
+  }
+
+  async spectate(payload: Intents['game:spectate'][0]): Promise<Ack<Intents['game:spectate'][1]>> {
+    const ack = await this.send('game:spectate', payload);
     if (ack.ok) this.game.set(ack.game);
     return ack;
   }

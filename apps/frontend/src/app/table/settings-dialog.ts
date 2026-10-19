@@ -1,8 +1,10 @@
-import { Component, inject, model } from '@angular/core';
+import { Component, computed, inject, model } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { DicePrefs } from '../core/dice-prefs';
+import { isSpectator } from '../core/game-view';
+import { SocketService } from '../core/socket.service';
 import { TranslatePipe } from '../core/translate.pipe';
 import { HostSettings } from '../shared/host-settings';
 
@@ -18,7 +20,9 @@ import { HostSettings } from '../shared/host-settings';
       [modal]="true"
       [draggable]="false"
     >
-      <p class="vl-setting-subtitle">{{ 'settings.subtitle' | t }}</p>
+      @if (!spectator()) {
+        <p class="vl-setting-subtitle">{{ 'settings.subtitle' | t }}</p>
+      }
       <div class="vl-setting">
         <div class="vl-setting-row">
           <label for="skip-dice">{{ 'settings.skipDice' | t }}</label>
@@ -37,4 +41,9 @@ import { HostSettings } from '../shared/host-settings';
 export class SettingsDialog {
   readonly visible = model(false);
   protected readonly prefs = inject(DicePrefs);
+  private readonly socket = inject(SocketService);
+  protected readonly spectator = computed(() => {
+    const g = this.socket.game();
+    return !!g && isSpectator(g);
+  });
 }

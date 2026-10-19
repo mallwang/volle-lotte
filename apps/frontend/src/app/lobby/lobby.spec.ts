@@ -20,6 +20,7 @@ const summary: GameSummary = {
   banned: false,
   closable: false,
   phase: 'lobby',
+  spectatable: false,
 };
 
 async function setup() {
@@ -214,5 +215,47 @@ describe('Lobby', () => {
     await tryJoin();
     expect(el.querySelector('[role=status]')?.textContent).toContain('30 s');
     expect(el.querySelector<HTMLButtonElement>('form button')!.disabled).toBe(true);
+  });
+});
+
+describe('Lobby watching', () => {
+  const running = { ...summary, phase: 'running', spectatable: true };
+  const watchButton = (el: HTMLElement) =>
+    [...el.querySelectorAll('button')].find((b) => b.textContent?.includes('Watch'));
+
+  it('offers Watch only for a spectatable running game', async () => {
+    const { socket, el, settle } = await setup();
+    expect(watchButton(el)).toBeUndefined();
+    socket.games.set([{ ...running, spectatable: false }] as never);
+    await settle();
+    expect(watchButton(el)).toBeUndefined();
+    socket.games.set([running] as never);
+    await settle();
+    expect(watchButton(el)).toBeDefined();
+  });
+
+  it('asks a protected game for the password, then spectates', async () => {
+    const { socket, el, settle } = await setup();
+    socket.games.set([running] as never);
+    socket.spectate.mockResolvedValue({ ok: true, game: { id: 'g1' } });
+    await settle();
+    watchButton(el)!.click();
+    await settle();
+    expect(el.querySelector('[role=dialog]')?.textContent).toContain('Watch Table One');
+    el.querySelector('form')!.dispatchEvent(new Event('submit'));
+    await settle();
+    expect(socket.spectate).toHaveBeenCalledWith({ gameId: 'g1', password: '' });
+    expect(socket.join).not.toHaveBeenCalled();
+  });
+
+  it('watches an open game with one tap and reports a refusal', async () => {
+    const { socket, el, settle } = await setup();
+    socket.games.set([{ ...running, protected: false }] as never);
+    socket.spectate.mockResolvedValue({ ok: false, reason: 'notSpectatable' });
+    await settle();
+    watchButton(el)!.click();
+    await settle();
+    expect(socket.spectate).toHaveBeenCalledWith({ gameId: 'g1', password: '' });
+    expect(el.textContent).toContain('cannot be watched');
   });
 });

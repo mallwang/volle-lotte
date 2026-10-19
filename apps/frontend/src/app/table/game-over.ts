@@ -3,7 +3,14 @@ import type { GameView } from 'game-rules';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { TagModule } from 'primeng/tag';
-import { isHost, playerSeats, rematchState, seatName, youWon } from '../core/game-view';
+import {
+  isHost,
+  isSpectator,
+  playerSeats,
+  rematchState,
+  seatName,
+  youWon,
+} from '../core/game-view';
 import { SocketService } from '../core/socket.service';
 import { TranslatePipe } from '../core/translate.pipe';
 
@@ -45,7 +52,9 @@ import { TranslatePipe } from '../core/translate.pipe';
           }
         </ol>
       }
-      @if (host()) {
+      @if (spectator()) {
+        <p class="vl-hint">{{ 'gameOver.spectatorHint' | t }}</p>
+      } @else if (host()) {
         <p class="vl-hint">{{ 'gameOver.rematchHint' | t }}</p>
       } @else {
         @switch (state()) {
@@ -67,7 +76,9 @@ import { TranslatePipe } from '../core/translate.pipe';
         }
       }
       <div class="vl-actions">
-        @if (host()) {
+        @if (spectator()) {
+          <!-- spectators only go back: rematches are for the players -->
+        } @else if (host()) {
           <p-button [label]="'gameOver.rematch' | t" (onClick)="socket.rematch()" />
         } @else {
           <p-button
@@ -108,6 +119,7 @@ export class GameOver {
   readonly visible = input(false);
   protected readonly socket = inject(SocketService);
 
+  protected readonly spectator = computed(() => isSpectator(this.view()));
   protected readonly won = computed(() => youWon(this.view()));
   /** The host decides about the rematch; everybody else waits for it. */
   protected readonly host = computed(() => isHost(this.view()));
