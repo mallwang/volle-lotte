@@ -31,6 +31,22 @@ async function setup() {
 }
 
 describe('Nickname', () => {
+  it('shows the nickname of the last visit', async () => {
+    const socket = stubSocket();
+    socket.storedNickname = 'Ann';
+    TestBed.configureTestingModule({
+      imports: [Nickname],
+      providers: [
+        provideRouter([{ path: '**', children: [] }]),
+        providePrimeNG(),
+        { provide: SocketService, useValue: socket },
+      ],
+    });
+    const fixture = TestBed.createComponent(Nickname);
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('input').value).toBe('Ann');
+  });
+
   it('rejects an invalid nickname locally', async () => {
     const { socket, el, submit } = await setup();
     await submit('a');

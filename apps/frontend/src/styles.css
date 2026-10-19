@@ -501,6 +501,49 @@ a.vl-menu-link:hover {
 .vl-seat-reserved {
   border-style: dashed;
 }
+.vl-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.625rem 0.75rem;
+  border: 1px dashed var(--p-content-border-color);
+  border-radius: var(--p-content-border-radius);
+}
+.vl-presets-text {
+  flex: 1 1 12rem;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.vl-presets-list {
+  list-style: none;
+  margin: 0.5rem 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+.vl-preset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: var(--p-content-border-radius);
+}
+.vl-preset-confirm {
+  border-color: var(--p-red-500);
+}
+.vl-preset-text {
+  flex: 1 1 9rem;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.vl-preset-text small {
+  color: var(--p-text-muted-color);
+}
 .vl-hint {
   color: var(--p-text-muted-color);
   font-size: 0.875rem;
@@ -1070,4 +1113,9 @@ a.vl-menu-link:hover {
 /* centre the icon on the first text line (title) */
 .p-toast-message-icon {
   margin-top: 0.25rem;
+}
+.vl-start-question-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }

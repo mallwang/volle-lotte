@@ -9,7 +9,13 @@ import { errorMessage, type Msg } from '../core/error-message';
 import { isHost, seatName } from '../core/game-view';
 import { LeaveGame } from '../core/leave-game';
 import { I18nService } from '../core/i18n.service';
+import { SetupStore } from '../core/setup-store';
+import { applySetup } from '../core/setup-apply';
+import { defaultSetup, setupFromGame, setupsEqual, type Preset, type Setup } from '../core/setup';
 import { SocketService } from '../core/socket.service';
+import { StartQuestionDialog } from './start-question-dialog';
+import { PresetSaveDialog } from '../shared/preset-save-dialog';
+import { PresetBar } from '../shared/preset-bar';
 import { ComputerRename } from '../shared/computer-rename';
 import { HostSettings } from '../shared/host-settings';
 import { TranslatePipe } from '../core/translate.pipe';
@@ -27,6 +33,9 @@ const RISKS: Risk[] = ['none', 'medium', 'high', 'random'];
     ComputerRename,
     HostSettings,
     MessageModule,
+    PresetBar,
+    PresetSaveDialog,
+    StartQuestionDialog,
     TagModule,
     TranslatePipe,
   ],
@@ -54,6 +63,20 @@ const RISKS: Risk[] = ['none', 'medium', 'high', 'random'];
         }}
       </p>
       <p>{{ 'gameLobby.cards' | t: { list: cardList() } }}</p>
+      @if (host() && game.phase === 'lobby') {
+        <app-preset-bar
+          mode="lobby"
+          [current]="currentSetup"
+          [title]="'preset.group' | t"
+          [hint]="'preset.lobbyHint' | t"
+          (loaded)="applyPreset($event)"
+        />
+        @if (presetMessage(); as m) {
+          <p-message [severity]="m.skipped > 0 ? 'warn' : 'success'" size="small" role="status">{{
+            (m.skipped > 0 ? 'preset.appliedSkipped' : 'preset.applied') | t: m
+          }}</p-message>
+        }
+      }
       <ul class="vl-cards">
         @for (s of game.seats; track $index) {
           <li
@@ -229,12 +252,27 @@ const RISKS: Risk[] = ['none', 'medium', 'high', 'random'];
       @if (error()) {
         <p-message severity="error" role="alert">{{ error()?.() }}</p-message>
       }
+      @if (host()) {
+        <app-start-question-dialog
+          [(visible)]="questionOpen"
+          [setup]="currentSetup()"
+          (startAnyway)="startAnyway()"
+          (saveFirst)="saveFirst()"
+        />
+        <app-preset-save-dialog
+          [visible]="saveOpen()"
+          (visibleChange)="saveClosed($event)"
+          [setup]="currentSetup()"
+          (saved)="savedForStart($event)"
+        />
+      }
     }
   `,
 })
 export class GameLobby {
   protected readonly socket = inject(SocketService);
   private readonly i18n = inject(I18nService);
+  private readonly store = inject(SetupStore);
   protected readonly leave = inject(LeaveGame);
   protected readonly difficulties = DIFFICULTIES;
   protected readonly severity = {
@@ -245,6 +283,17 @@ export class GameLobby {
   } as const;
   protected readonly risks = RISKS;
   protected readonly error = signal<Msg | null>(null);
+  protected readonly questionOpen = signal(false);
+  protected readonly saveOpen = signal(false);
+  protected readonly presetMessage = signal<{
+    name: string;
+    placed: number;
+    skipped: number;
+  } | null>(null);
+  protected readonly currentSetup = (): Setup => {
+    const game = this.socket.game();
+    return game ? setupFromGame(game) : defaultSetup();
+  };
   protected readonly host = computed(() => {
     const g = this.socket.game();
     return !!g && isHost(g);
@@ -294,7 +343,62 @@ export class GameLobby {
     return this.run(this.socket.send('seat:remove', { seat }));
   }
 
+  protected async applyPreset(preset: Preset): Promise<void> {
+    const game = this.socket.game();
+    if (!game) return;
+    const result = await applySetup(this.socket, game, preset.setup.computers, preset.setup.speed);
+    if (!result.ok) {
+      this.error.set(() => errorMessage(result.ack, this.i18n));
+      return;
+    }
+    this.error.set(null);
+    this.store.setReference(preset.setup);
+    this.presetMessage.set({ name: preset.name, placed: result.placed, skipped: result.skipped });
+  }
+
   protected start(): Promise<void> {
-    return this.run(this.socket.send('game:start'));
+    const game = this.socket.game();
+    if (game) {
+      const current = setupFromGame(game);
+      const known =
+        setupsEqual(current, this.store.reference()) || setupsEqual(current, this.store.last());
+      if (this.store.available() && !known) {
+        this.questionOpen.set(true);
+        return Promise.resolve();
+      }
+    }
+    return this.begin();
+  }
+
+  protected startAnyway(): Promise<void> {
+    this.questionOpen.set(false);
+    const game = this.socket.game();
+    if (game) this.store.setReference(setupFromGame(game));
+    return this.begin();
+  }
+
+  protected saveFirst(): void {
+    this.questionOpen.set(false);
+    this.saveOpen.set(true);
+  }
+
+  protected savedForStart(preset: Preset): void {
+    this.store.setReference(preset.setup);
+    this.saveOpen.set(false);
+    void this.begin();
+  }
+
+  /** Cancelling the save dialog goes back to the question. */
+  protected saveClosed(open: boolean): void {
+    if (open || !this.saveOpen()) return;
+    this.saveOpen.set(false);
+    this.questionOpen.set(true);
+  }
+
+  private async begin(): Promise<void> {
+    const game = this.socket.game();
+    const ack = await this.socket.send('game:start');
+    this.error.set(ack.ok ? null : () => errorMessage(ack, this.i18n));
+    if (ack.ok && game && isHost(game)) this.store.saveLast(setupFromGame(game));
   }
 }

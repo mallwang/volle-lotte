@@ -1,5 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import type { SeatView } from 'game-rules';
+import { defaultSetup, setupFromGame, type Setup } from '../core/setup';
+import { SetupStore } from '../core/setup-store';
 import { LeaveGame } from '../core/leave-game';
 import { SocketService } from '../core/socket.service';
 import { providePrimeNG } from 'primeng/config';
@@ -21,7 +23,11 @@ const other = (ready: boolean): SeatView => ({
   ready,
 });
 
-async function setup(game: ReturnType<typeof gameView>) {
+/** `known` makes the setup of `game` count as already saved, so Start asks nothing. */
+async function setup(
+  game: ReturnType<typeof gameView>,
+  known?: (g: ReturnType<typeof gameView>) => Setup,
+) {
   const socket = stubSocket(game);
   TestBed.configureTestingModule({
     imports: [GameLobby],
@@ -31,6 +37,7 @@ async function setup(game: ReturnType<typeof gameView>) {
       { provide: LeaveGame, useValue: { request: vi.fn() } },
     ],
   });
+  if (known) TestBed.inject(SetupStore).setReference(known(game));
   const fixture = TestBed.createComponent(GameLobby);
   await fixture.whenStable();
   const el = fixture.nativeElement as HTMLElement;
@@ -40,6 +47,8 @@ async function setup(game: ReturnType<typeof gameView>) {
 }
 
 describe('GameLobby', () => {
+  beforeEach(() => localStorage.clear());
+
   it('shows host controls and gates Start until all humans are ready', async () => {
     const { button } = await setup(gameView({}, [me(true), other(false)]));
     expect((button('Start game') as HTMLButtonElement).disabled).toBe(true);
@@ -48,12 +57,252 @@ describe('GameLobby', () => {
   });
 
   it('enables Start when ready and sends it', async () => {
-    const { socket, button } = await setup(gameView({}, [me(true), other(true)]));
+    const game = gameView({}, [me(true), other(true)]);
+    const { socket, button } = await setup(game, setupFromGame);
     socket.send.mockResolvedValue({ ok: true });
     const start = button('Start game') as HTMLButtonElement;
     expect(start.disabled).toBe(false);
     start.click();
     expect(socket.send).toHaveBeenCalledWith('game:start');
+  });
+
+  describe('last setup', () => {
+    const lastSetup = () => JSON.parse(localStorage.getItem('vl-last-setup') ?? 'null');
+    const computerSeat: SeatView = {
+      state: 'computer',
+      difficulty: 'hard',
+      risk: 'high',
+      name: 'Fox',
+    };
+
+    it('is saved when the host starts, without computer names', async () => {
+      const game = gameView({ computerSpeed: 5 }, [me(true), computerSeat]);
+      const { socket, button, fixture } = await setup(game, setupFromGame);
+      socket.send.mockResolvedValue({ ok: true });
+      (button('Start game') as HTMLButtonElement).click();
+      await fixture.whenStable();
+      const saved = lastSetup();
+      expect(saved.v).toBe(1);
+      expect(saved.setup.seats).toBe(4);
+      expect(saved.setup.speed).toBe(5);
+      expect(saved.setup.computers).toEqual([{ seat: 1, difficulty: 'hard', risk: 'high' }]);
+      expect(JSON.stringify(saved)).not.toContain('Fox');
+    });
+
+    it('is not saved when the start fails', async () => {
+      const { socket, button, fixture } = await setup(
+        gameView({}, [me(true), computerSeat]),
+        setupFromGame,
+      );
+      socket.send.mockResolvedValue({ ok: false, reason: 'notEveryoneReady' });
+      (button('Start game') as HTMLButtonElement).click();
+      await fixture.whenStable();
+      expect(lastSetup()).toBeNull();
+    });
+
+    it('is never saved by a guest', async () => {
+      const game = gameView({ hostId: 'p1' }, [other(true), me(true)]);
+      const { button } = await setup(game);
+      expect(button('Start game')).toBeUndefined();
+      expect(lastSetup()).toBeNull();
+    });
+  });
+
+  describe('presets', () => {
+    const preset = {
+      ...defaultSetup(),
+      computers: [
+        { seat: 1, difficulty: 'hard', risk: 'high' },
+        { seat: 2, difficulty: 'easy', risk: 'none' },
+        { seat: 3, difficulty: 'medium', risk: 'none' },
+      ],
+      speed: 5,
+    };
+    const openList = async (fixture: { whenStable(): Promise<unknown> }, el: HTMLElement) => {
+      [...el.querySelectorAll('button')]
+        .find((b) => b.textContent?.includes('Load preset'))!
+        .click();
+      await fixture.whenStable();
+    };
+    const clickApply = async (fixture: { whenStable(): Promise<unknown> }) => {
+      [...document.querySelectorAll<HTMLButtonElement>('.vl-preset button')]
+        .find((b) => b.textContent?.includes('Apply'))!
+        .click();
+      await fixture.whenStable();
+    };
+
+    it('applies computers and speed, keeps seated humans and warns about computers that do not fit', async () => {
+      const { socket, el, fixture } = await setup(gameView({}, [me(true), other(true)]));
+      TestBed.inject(SetupStore).savePreset('Friday', preset as never);
+      socket.send.mockResolvedValue({ ok: true });
+      await openList(fixture, el);
+      await clickApply(fixture);
+      fixture.detectChanges();
+      expect(socket.send.mock.calls.map((c) => c[1])).toEqual([
+        { seat: 2, mode: 'computer', difficulty: 'easy', risk: 'none' },
+        { seat: 3, mode: 'computer', difficulty: 'medium', risk: 'none' },
+        { computerSpeed: 5 },
+      ]);
+      expect(el.querySelector('p-message[role=status]')?.textContent).toContain(
+        'skipped because no seat was free: 1',
+      );
+      expect(TestBed.inject(SetupStore).reference()).toEqual(preset);
+    });
+
+    it('shows the success message without a warning when everything fits', async () => {
+      const { socket, el, fixture } = await setup(gameView({}, [me(true)]));
+      TestBed.inject(SetupStore).savePreset('Friday', preset as never);
+      socket.send.mockResolvedValue({ ok: true });
+      await openList(fixture, el);
+      await clickApply(fixture);
+      fixture.detectChanges();
+      const message = el.querySelector('p-message[role=status]')?.textContent;
+      expect(message).toContain('Computers added: 3');
+      expect(message).not.toContain('skipped');
+    });
+
+    it('shows the error and keeps the reference when a step fails', async () => {
+      const { socket, el, fixture } = await setup(gameView({}, [me(true)]));
+      TestBed.inject(SetupStore).savePreset('Friday', preset as never);
+      socket.send.mockResolvedValue({ ok: false, reason: 'notHost' });
+      await openList(fixture, el);
+      await clickApply(fixture);
+      fixture.detectChanges();
+      expect(el.querySelector('[role=alert]')).toBeTruthy();
+      expect(TestBed.inject(SetupStore).reference()).toBeNull();
+    });
+
+    it('is hidden for guests and outside the lobby phase', async () => {
+      const guest = await setup(gameView({ hostId: 'p1' }, [other(true), me(true)]));
+      expect(guest.el.textContent).not.toContain('Load preset');
+      TestBed.resetTestingModule();
+      const running = await setup(gameView({ phase: 'running' }, [me(true), other(true)]));
+      expect(running.el.textContent).not.toContain('Load preset');
+    });
+  });
+
+  describe('start question', () => {
+    const base = () => gameView({}, [me(true), other(true)]);
+    const withComputer = (risk: 'none' | 'high' = 'none') =>
+      gameView({}, [
+        me(true),
+        { state: 'computer', difficulty: 'easy', risk, name: 'Fox' } as SeatView,
+      ]);
+    const clickStart = async (
+      button: (t: string) => HTMLElement | undefined,
+      fixture: { whenStable(): Promise<unknown> },
+    ) => {
+      button('Start game')!.click();
+      await fixture.whenStable();
+    };
+    const dialogButton = (text: string) =>
+      [...document.querySelectorAll<HTMLButtonElement>('p-dialog button')].find(
+        (b) => b.textContent?.trim() === text,
+      )!;
+    const asked = () => document.body.textContent?.includes('Save this setup as a preset?');
+
+    it('asks when the setup is neither a loaded preset nor the last setup', async () => {
+      const { socket, button, fixture } = await setup(base());
+      await clickStart(button, fixture);
+      expect(asked()).toBe(true);
+      expect(socket.send).not.toHaveBeenCalled();
+    });
+
+    it('does not ask for an unchanged loaded preset', async () => {
+      const { socket, button, fixture } = await setup(base(), setupFromGame);
+      socket.send.mockResolvedValue({ ok: true });
+      await clickStart(button, fixture);
+      expect(asked()).toBeFalsy();
+      expect(socket.send).toHaveBeenCalledWith('game:start');
+    });
+
+    it('does not ask when the setup equals the last setup', async () => {
+      const game = base();
+      const { socket, button, fixture } = await setup(game);
+      TestBed.inject(SetupStore).saveLast(setupFromGame(game));
+      socket.send.mockResolvedValue({ ok: true });
+      await clickStart(button, fixture);
+      expect(asked()).toBeFalsy();
+      expect(socket.send).toHaveBeenCalledWith('game:start');
+    });
+
+    it('does not ask when storage is unavailable', async () => {
+      vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+        throw new Error('blocked');
+      });
+      const { socket, button, fixture } = await setup(base());
+      vi.restoreAllMocks();
+      socket.send.mockResolvedValue({ ok: true });
+      await clickStart(button, fixture);
+      expect(asked()).toBeFalsy();
+      expect(socket.send).toHaveBeenCalledWith('game:start');
+    });
+
+    it('asks again when something changed after the preset was loaded', async () => {
+      const { socket, button, fixture } = await setup(withComputer('high'));
+      TestBed.inject(SetupStore).setReference(setupFromGame(withComputer('none')));
+      await clickStart(button, fixture);
+      expect(asked()).toBe(true);
+      expect(socket.send).not.toHaveBeenCalled();
+    });
+
+    it('starts as usual on "No, start the game" and does not ask again for the same setup', async () => {
+      const { socket, button, fixture } = await setup(base());
+      socket.send.mockResolvedValue({ ok: true });
+      await clickStart(button, fixture);
+      dialogButton('No, start the game').click();
+      await fixture.whenStable();
+      expect(socket.send).toHaveBeenCalledWith('game:start');
+      expect(TestBed.inject(SetupStore).reference()).toEqual(setupFromGame(base()));
+      socket.send.mockClear();
+      await clickStart(button, fixture);
+      expect(socket.send).toHaveBeenCalledWith('game:start');
+    });
+
+    it('saves the preset and then starts', async () => {
+      const { socket, button, fixture } = await setup(base());
+      socket.send.mockResolvedValue({ ok: true });
+      await clickStart(button, fixture);
+      dialogButton('Save as preset').click();
+      await fixture.whenStable();
+      const input = document.querySelector<HTMLInputElement>('#preset-name')!;
+      input.value = 'Friday';
+      input.dispatchEvent(new Event('input'));
+      [...document.querySelectorAll('form')].at(-1)!.dispatchEvent(new Event('submit'));
+      await fixture.whenStable();
+      const store = TestBed.inject(SetupStore);
+      expect(store.presets().map((p) => p.name)).toEqual(['Friday']);
+      expect(store.reference()).toEqual(setupFromGame(base()));
+      expect(socket.send).toHaveBeenCalledWith('game:start');
+    });
+
+    it('returns to the question when the save dialog is cancelled', async () => {
+      const { socket, button, fixture } = await setup(base());
+      await clickStart(button, fixture);
+      dialogButton('Save as preset').click();
+      await fixture.whenStable();
+      dialogButton('Cancel').click();
+      await fixture.whenStable();
+      expect(asked()).toBe(true);
+      expect(socket.send).not.toHaveBeenCalled();
+    });
+
+    it('does not start on "Back to lobby" and keeps asking next time', async () => {
+      const { socket, button, fixture } = await setup(base());
+      await clickStart(button, fixture);
+      dialogButton('Back to lobby').click();
+      await fixture.whenStable();
+      expect(socket.send).not.toHaveBeenCalled();
+      expect(TestBed.inject(SetupStore).reference()).toBeNull();
+      await clickStart(button, fixture);
+      expect(asked()).toBe(true);
+    });
+
+    it('never asks a guest', async () => {
+      const { button } = await setup(gameView({ hostId: 'p1' }, [other(true), me(true)]));
+      expect(button('Start game')).toBeUndefined();
+      expect(document.body.textContent).not.toContain('Save this setup as a preset?');
+    });
   });
 
   it('lets the host remove another player', async () => {
