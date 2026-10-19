@@ -1,0 +1,1299 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Remembered Settings Mockup</title>
+    <style>
+      :root {
+        color-scheme: light;
+
+        /* App tokens: terracotta theme (specs/003-ui-foundation-primeng/design.md), light + dark below */
+        --bg: #fbf1ea;
+        --surface: #fffaf6;
+        --surface-2: #f3dccd;
+        --line: #e6c3ad;
+        --text: #3a241b;
+        --muted: #7b5a4c;
+        --primary: #a8431f;
+        --on-primary: #fff;
+        --mint: #d3e8d6;
+        --on-mint: #1f4a2c;
+        --lavender: #e6dcef;
+        --on-lavender: #44305f;
+        --butter: #f6e3a8;
+        --on-butter: #5a4300;
+
+        /* Review-tool-only tokens */
+        --review-bg: #f3f2ee;
+        --review-ink: #2c2a25;
+        --review-muted: #7a7669;
+        --review-line: #ddd9d0;
+        --review-accent: #b45f2c;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--review-bg);
+        color: var(--review-ink);
+        font-family:
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        text-wrap: balance;
+      }
+
+      /* ============ Review-tool chrome (reusable as-is) ============ */
+
+      .review-header {
+        padding: 1.5rem 2rem 1rem;
+        border-bottom: 1px solid var(--review-line);
+      }
+      .review-eyebrow {
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--review-accent);
+        font-weight: 700;
+        margin: 0 0 0.25rem;
+      }
+      .review-header h1 {
+        margin: 0 0 0.35rem;
+        font-size: 1.35rem;
+        font-weight: 800;
+      }
+      .review-header p {
+        margin: 0;
+        color: var(--review-muted);
+        font-size: 0.9rem;
+        max-width: 68ch;
+        line-height: 1.5;
+      }
+
+      .review-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.25rem;
+        align-items: center;
+        padding: 0.85rem 2rem;
+        background: #fff;
+        border-bottom: 1px solid var(--review-line);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+      .control-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .control-group span.label {
+        font-size: 0.72rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--review-muted);
+        font-weight: 700;
+      }
+
+      .segmented {
+        display: inline-flex;
+        border: 1px solid var(--review-line);
+        border-radius: 8px;
+        overflow: hidden;
+        flex-wrap: wrap;
+      }
+      .segmented button {
+        appearance: none;
+        border: none;
+        background: #fff;
+        color: var(--review-ink);
+        font: inherit;
+        font-size: 0.83rem;
+        font-weight: 600;
+        padding: 0.4rem 0.75rem;
+        cursor: pointer;
+        border-right: 1px solid var(--review-line);
+      }
+      .segmented button:last-child {
+        border-right: none;
+      }
+      .segmented button:hover {
+        background: #f1efe9;
+      }
+      .segmented button:focus-visible {
+        outline: 2px solid var(--review-accent);
+        outline-offset: -2px;
+      }
+      .segmented button[aria-pressed='true'] {
+        background: var(--review-accent);
+        color: #fff;
+      }
+
+      .review-stage {
+        padding: 2rem;
+        display: flex;
+        justify-content: center;
+      }
+
+      .stage-frame {
+        width: 100%;
+        max-width: 1180px;
+        background: #d9d4c8;
+        border-radius: 14px;
+        padding: 1.25rem;
+        transition: max-width 0.2s ease;
+      }
+      .stage-frame[data-viewport='mobile'] {
+        max-width: 400px;
+      }
+
+      .stage-frame-label {
+        font-size: 0.72rem;
+        color: var(--review-muted);
+        text-align: center;
+        margin: 0 0 0.5rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .canvas {
+        background: var(--bg, #fff);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+        color: var(--text, #1a1a1a);
+      }
+
+      .review-footer {
+        padding: 0 2rem 2rem;
+        max-width: 1180px;
+        margin: 0 auto;
+        font-size: 0.85rem;
+        color: var(--review-muted);
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+      }
+      .review-footer code {
+        background: #fff;
+        border: 1px solid var(--review-line);
+        border-radius: 4px;
+        padding: 0.1em 0.4em;
+        font-size: 0.8em;
+      }
+      .review-footer h3 {
+        margin: 0.5rem 0 0;
+        font-size: 0.8rem;
+        color: var(--review-ink);
+      }
+      .review-footer ul {
+        margin: 0.25rem 0 0.5rem;
+        padding-left: 1.1rem;
+      }
+
+      /* ============ generic state-visibility mechanism (reusable as-is) ============ */
+
+      /* state visibility: JS toggles [hidden] from data-show tokens, e.g. data-show="select rolling" ("all" = always) */
+      [hidden] {
+        display: none !important;
+      }
+
+      /* ============ app shell: mirrors apps/frontend (.vl-header, .vl-main, .vl-table, .vl-players, .vl-log, ...) ============ */
+      .canvas.dark {
+        --bg: #1c1411;
+        --surface: #2a1d18;
+        --surface-2: #3b2a22;
+        --line: #52382c;
+        --text: #f5e6dc;
+        --muted: #cbaa98;
+        --primary: #f08a5d;
+        --on-primary: #2a1008;
+        --mint: #244a38;
+        --on-mint: #c9f1db;
+        --lavender: #3a3159;
+        --on-lavender: #e0d8fa;
+        --butter: #4d4018;
+        --on-butter: #ffefb0;
+      }
+      .canvas {
+        font-size: 16px;
+        position: relative;
+        min-height: 640px;
+      }
+      .canvas h1,
+      .canvas h2,
+      .canvas h3 {
+        text-wrap: wrap;
+      }
+      .vl-header {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.75rem 1rem;
+      }
+      .vl-header h1 {
+        margin: 0;
+        font-size: 1.5rem;
+      }
+      .vl-hdr-r {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        margin-left: auto;
+      }
+      .ibtn {
+        min-width: 44px;
+        min-height: 44px;
+        border: 1px solid transparent;
+        background: transparent;
+        color: var(--text);
+        border-radius: 8px;
+        font: inherit;
+        font-size: 1.2rem;
+        cursor: pointer;
+      }
+      .ibtn:hover {
+        background: var(--surface-2);
+      }
+      .lang {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        min-height: 44px;
+        padding: 0 0.5rem;
+        color: var(--text);
+      }
+      .flag {
+        width: 1.75rem;
+        height: 1.17rem;
+        border-radius: 2px;
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
+        background: linear-gradient(#000 33%, #d00 33% 66%, #fc0 66%);
+      }
+      .vl-main {
+        max-width: 64rem;
+        margin: 0 auto;
+        padding: 0 1rem 1rem;
+      }
+      .vl-title-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+      }
+      .vl-main h2 {
+        margin: 0.5rem 0;
+        font-size: 1.4rem;
+      }
+      .vl-main p {
+        margin: 0.35rem 0;
+      }
+      .vl-table {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: 1fr;
+      }
+      @media (min-width: 900px) {
+        .canvas[data-vp='desktop'] .vl-table {
+          grid-template-columns: 1fr 18rem;
+        }
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .vl-status {
+        display: inline-block;
+        border-radius: 999px;
+        padding: 0.1rem 0.6rem;
+        font-size: 0.82rem;
+      }
+      .mint {
+        background: var(--mint);
+        color: var(--on-mint);
+      }
+      .lav {
+        background: var(--lavender);
+        color: var(--on-lavender);
+      }
+      .butter {
+        background: var(--butter);
+        color: var(--on-butter);
+      }
+      .vl-card {
+        display: inline-block;
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.5rem;
+        border: 1px solid var(--line);
+        background: var(--surface);
+      }
+      .vl-dice {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin: 1.25rem 0;
+        position: relative;
+      }
+      .vl-turn-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+        gap: 0.75rem;
+      }
+      .vl-turn-actions small {
+        display: block;
+        min-height: 1.25rem;
+        color: var(--muted);
+      }
+      .btn {
+        width: 100%;
+        border: 0;
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        font: inherit;
+        font-weight: 700;
+        min-height: 44px;
+        background: var(--primary);
+        color: var(--on-primary);
+      }
+      .btn[disabled] {
+        opacity: 0.45;
+      }
+      .btn.sec {
+        background: transparent;
+        color: var(--primary);
+        border: 1px solid var(--primary);
+        width: auto;
+      }
+      .vl-players {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+        padding: 0;
+        margin: 0;
+        list-style: none;
+      }
+      .vl-player {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--line);
+        border-radius: 0.5rem;
+        background: var(--surface);
+      }
+      .vl-player.cur {
+        border: 2px solid var(--primary);
+      }
+      .vl-log {
+        max-height: 14rem;
+        font-size: 0.8125rem;
+        line-height: 1.3;
+        overflow-y: auto;
+        margin: 0;
+        padding-left: 1.5rem;
+      }
+      .vl-log li {
+        padding: 0.2rem 0;
+      }
+      /* dialog (overlays the canvas) */
+      .scrim {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 4rem 1rem;
+        z-index: 5;
+      }
+      .dlg {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        width: 100%;
+        max-width: 26rem;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+      }
+      .dlg h3 {
+        margin: 0 0 0.5rem;
+        font-size: 1.1rem;
+      }
+      .set {
+        display: flex;
+        gap: 0.8rem;
+        align-items: flex-start;
+        padding: 0.7rem 0;
+        border-top: 1px solid var(--line);
+      }
+      .set small {
+        display: block;
+        color: var(--muted);
+        margin-top: 0.15rem;
+      }
+      .set.ro {
+        opacity: 0.6;
+      }
+      .sw {
+        width: 44px;
+        height: 26px;
+        border-radius: 99px;
+        background: var(--line);
+        position: relative;
+        flex: none;
+        margin-top: 2px;
+      }
+      .sw::after {
+        content: '';
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #fff;
+      }
+      .sw.on {
+        background: var(--primary);
+      }
+      .sw.on::after {
+        left: 21px;
+      }
+
+      /* ============ feature styles (authored fresh per feature) ============ */
+
+      .vl-form {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        max-width: 44rem;
+      }
+      .vl-field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        min-width: 0;
+      }
+      .vl-field label,
+      .vl-field .lbl {
+        font-weight: 600;
+      }
+      .vl-row {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+      .canvas[data-vp='desktop'] .vl-row {
+        grid-template-columns: 1fr 1fr;
+      }
+      .inp {
+        min-height: 44px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+        color: var(--text);
+        padding: 0.4rem 0.7rem;
+        font: inherit;
+        width: 100%;
+      }
+      .seg {
+        display: inline-flex;
+        flex-wrap: wrap;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: hidden;
+        align-self: flex-start;
+      }
+      .seg span {
+        min-width: 44px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-right: 1px solid var(--line);
+        background: var(--surface);
+      }
+      .seg span:last-child {
+        border-right: 0;
+      }
+      .seg .on {
+        background: var(--primary);
+        color: var(--on-primary);
+        font-weight: 700;
+      }
+      details.rules {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+        padding: 0.6rem 0.9rem;
+      }
+      details.rules summary {
+        cursor: pointer;
+        font-weight: 600;
+        min-height: 32px;
+        display: flex;
+        align-items: center;
+      }
+      details.rules .vl-row {
+        margin-top: 0.75rem;
+      }
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+      }
+      .cards div {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+        font-size: 0.85rem;
+      }
+      .pbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+        padding: 0.6rem 0.75rem;
+        border: 1px dashed var(--line);
+        border-radius: 10px;
+        background: var(--surface);
+      }
+      .pbar .grow {
+        flex: 1 1 12rem;
+        min-width: 0;
+        font-size: 0.9rem;
+      }
+      .pbar .grow b {
+        display: block;
+      }
+      .btn.s {
+        width: auto;
+      }
+      .btn.txt {
+        background: transparent;
+        color: var(--primary);
+        width: auto;
+        padding: 0.5rem 0.6rem;
+        text-decoration: underline;
+      }
+      .btn.dng {
+        background: #a32a1f;
+        color: #fff;
+        width: auto;
+      }
+      .acts {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: center;
+        justify-content: flex-end;
+      }
+      .msg {
+        border-radius: 8px;
+        padding: 0.6rem 0.85rem;
+        font-size: 0.9rem;
+        display: flex;
+        gap: 0.6rem;
+        align-items: flex-start;
+      }
+      .msg.info {
+        background: var(--lavender);
+        color: var(--on-lavender);
+      }
+      .msg.warn {
+        background: var(--butter);
+        color: var(--on-butter);
+      }
+      .msg.ok {
+        background: var(--mint);
+        color: var(--on-mint);
+      }
+      .seats {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 0.5rem;
+      }
+      .seat {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem 0.75rem;
+        align-items: center;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+      }
+      .seat.free {
+        border-style: dashed;
+        color: var(--muted);
+      }
+      .seat .n {
+        width: 1.6rem;
+        color: var(--muted);
+        font-variant-numeric: tabular-nums;
+      }
+      .seat .who {
+        flex: 1 1 8rem;
+        min-width: 0;
+        font-weight: 600;
+      }
+      .seat select,
+      .seat .sel {
+        min-height: 44px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+        color: var(--text);
+        padding: 0 0.5rem;
+        font: inherit;
+      }
+      .range {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+      }
+      .track {
+        position: relative;
+        flex: 1 1 10rem;
+        max-width: 18rem;
+        height: 6px;
+        background: var(--line);
+        border-radius: 9px;
+      }
+      .track i {
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 60%;
+        background: var(--primary);
+        border-radius: 9px;
+      }
+      .track b {
+        position: absolute;
+        left: 60%;
+        top: -8px;
+        width: 22px;
+        height: 22px;
+        margin-left: -11px;
+        border-radius: 50%;
+        background: var(--primary);
+      }
+      .plist {
+        list-style: none;
+        margin: 0.5rem 0;
+        padding: 0;
+        display: grid;
+        gap: 0.5rem;
+      }
+      .pitem {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+        padding: 0.6rem 0.75rem;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--bg);
+      }
+      .pitem .t {
+        flex: 1 1 9rem;
+        min-width: 0;
+      }
+      .pitem .t b {
+        display: block;
+      }
+      .pitem .t small {
+        color: var(--muted);
+      }
+      .pitem.confirm {
+        border-color: #a32a1f;
+      }
+      .dlg.wide {
+        max-width: 30rem;
+      }
+      .dlg .foot {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 0.75rem;
+      }
+      .toast {
+        position: absolute;
+        right: 1rem;
+        bottom: 1rem;
+        left: 1rem;
+        max-width: 26rem;
+        margin-left: auto;
+        z-index: 6;
+      }
+      .tag {
+        display: inline-block;
+        border-radius: 999px;
+        padding: 0.1rem 0.6rem;
+        font-size: 0.82rem;
+        border: 1px solid var(--line);
+      }
+      @media (max-width: 520px) {
+        .canvas[data-vp='mobile'] .scrim {
+          padding: 1rem 0.5rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="review-header">
+      <p class="review-eyebrow">Non-functional review mockup</p>
+      <h1>Remembered settings and presets (spec 015)</h1>
+      <p>
+        Create-game page and game lobby with remembered values, "Load preset", "Save as preset" and
+        "Reset to defaults". Switch the screen and viewport above. Static; none of the buttons does
+        anything except the screen links.
+      </p>
+    </header>
+
+    <div class="review-controls">
+      <div class="control-group">
+        <span class="label">Viewport</span>
+        <div class="segmented" id="viewport-toggle">
+          <button type="button" data-viewport="desktop" aria-pressed="true">Desktop</button>
+          <button type="button" data-viewport="mobile" aria-pressed="false">Mobile</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <span class="label">Screen</span>
+        <div class="segmented" id="screen-toggle">
+          <button type="button" data-screen="create" aria-pressed="true">
+            1 Create, prefilled
+          </button>
+          <button type="button" data-screen="load" aria-pressed="false">2 Load preset</button>
+          <button type="button" data-screen="loaddel" aria-pressed="false">3 Delete preset</button>
+          <button type="button" data-screen="save" aria-pressed="false">4 Save preset</button>
+          <button type="button" data-screen="overwrite" aria-pressed="false">5 Overwrite</button>
+          <button type="button" data-screen="full" aria-pressed="false">6 Limit reached</button>
+          <button type="button" data-screen="nostore" aria-pressed="false">
+            7 Storage blocked
+          </button>
+          <button type="button" data-screen="lobby" aria-pressed="false">8 Lobby, prefilled</button>
+          <button type="button" data-screen="lobbyload" aria-pressed="false">
+            9 Lobby, load preset
+          </button>
+          <button type="button" data-screen="lobbyfit" aria-pressed="false">
+            10 Lobby, not all fit
+          </button>
+          <button type="button" data-screen="startask" aria-pressed="false">
+            11 Start question
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="review-stage">
+      <div class="stage-frame" id="stage-frame" data-viewport="desktop">
+        <p class="stage-frame-label" id="stage-frame-label">Desktop (about 1100px)</p>
+        <div class="canvas" data-screen="create" data-vp="desktop" id="canvas">
+          <header class="vl-header">
+            <h1>Volle Lotte</h1>
+            <div class="vl-hdr-r">
+              <span class="lang"><span class="flag"></span> ▾</span>
+              <button class="ibtn" type="button" aria-label="Toggle theme" id="theme">◐</button>
+            </div>
+          </header>
+
+          <!-- ================= CREATE-GAME PAGE ================= -->
+          <main class="vl-main" data-show="create load loaddel save overwrite full nostore">
+            <div class="vl-title-row"><h2>Create game</h2></div>
+            <form class="vl-form" onsubmit="return false;">
+              <div class="pbar" role="group" aria-label="Presets">
+                <div class="grow">
+                  <b data-show="create load loaddel save overwrite full"
+                    >Prefilled from your last game</b
+                  >
+                  <b data-show="nostore">Settings cannot be saved on this device</b>
+                  <span class="muted" data-show="create load loaddel save overwrite full"
+                    >Seats, rules and computers. Game name and password are never remembered.</span
+                  >
+                  <span class="muted" data-show="nostore"
+                    >Your browser blocks storage (private mode?). Everything still works, but
+                    nothing is remembered or can be saved as a preset.</span
+                  >
+                </div>
+                <button
+                  class="btn sec s"
+                  type="button"
+                  data-open="load"
+                  data-show="create load loaddel save overwrite full"
+                >
+                  Load preset
+                </button>
+                <button
+                  class="btn sec s"
+                  type="button"
+                  data-open="save"
+                  data-show="create load loaddel save overwrite full"
+                >
+                  Save as preset
+                </button>
+                <button class="btn txt" type="button">Reset to defaults</button>
+              </div>
+              <div class="msg warn" data-show="nostore" role="status">
+                <span aria-hidden="true">⚠</span>
+                <span
+                  ><b>Presets are unavailable.</b> "Load preset" and "Save as preset" are disabled
+                  until storage works.</span
+                >
+              </div>
+              <div class="pbar" data-show="nostore" style="border-style: solid">
+                <span class="grow muted">Disabled in this state:</span>
+                <button class="btn sec s" type="button" disabled>Load preset</button>
+                <button class="btn sec s" type="button" disabled>Save as preset</button>
+              </div>
+
+              <div class="vl-row">
+                <div class="vl-field">
+                  <label for="gn">Game name</label>
+                  <input class="inp" id="gn" value="Markus' game" />
+                </div>
+                <div class="vl-field">
+                  <label for="gp">Password (optional)</label>
+                  <input class="inp" id="gp" type="password" value="" />
+                  <small class="muted">Empty = open game.</small>
+                </div>
+              </div>
+              <div class="vl-field">
+                <span class="lbl" id="seats-l">Seats</span>
+                <div class="seg" aria-labelledby="seats-l">
+                  <span>2</span><span>3</span><span>4</span><span>5</span><span class="on">6</span
+                  ><span>7</span><span>8</span>
+                </div>
+              </div>
+              <details class="rules" open>
+                <summary>
+                  Rules <small class="muted">&nbsp;(changed from the defaults)</small>
+                </summary>
+                <div class="vl-row">
+                  <div class="vl-field">
+                    <label for="tg">Target score</label>
+                    <input class="inp" id="tg" value="4000" />
+                  </div>
+                  <div class="vl-field">
+                    <label for="mp">Minimum points to bank</label>
+                    <input class="inp" id="mp" value="350" />
+                  </div>
+                </div>
+                <p>
+                  <label><input type="checkbox" checked /> Four of a kind doubles</label>
+                </p>
+                <div class="cards">
+                  <div><label>+200</label><input class="inp" value="5" /></div>
+                  <div><label>Stop</label><input class="inp" value="10" /></div>
+                  <div><label>Clover</label><input class="inp" value="1" /></div>
+                  <div class="muted">… all 11 card types</div>
+                </div>
+              </details>
+              <div class="msg info">
+                <span aria-hidden="true">ℹ</span>
+                <span
+                  >Remembered computers are added to the lobby after you create the game: 2
+                  computers (medium, careful) · (hard, bold) · computer speed 3.</span
+                >
+              </div>
+              <div class="acts">
+                <a href="#" onclick="return false;">Cancel</a>
+                <button class="btn s" type="button">Create game</button>
+              </div>
+            </form>
+          </main>
+
+          <!-- ================= GAME LOBBY (host) ================= -->
+          <main class="vl-main" data-show="lobby lobbyload lobbyfit startask">
+            <div class="vl-title-row">
+              <h2>Markus' game <span class="tag">Lobby</span></h2>
+            </div>
+            <p class="muted">
+              You are the host · 6 seats · target 4000 · minimum 350 · doubling on
+            </p>
+
+            <div class="pbar" role="group" aria-label="Presets" style="margin: 0.75rem 0">
+              <div class="grow">
+                <b>Presets</b>
+                <span class="muted">In the lobby a preset sets computers and speed only.</span>
+              </div>
+              <button class="btn sec s" type="button" data-open="lobbyload">Load preset</button>
+              <button class="btn sec s" type="button" data-open="save">Save as preset</button>
+            </div>
+
+            <div class="msg ok" data-show="lobby" role="status" style="margin-bottom: 0.75rem">
+              <span aria-hidden="true">✓</span>
+              <span>Computers and speed from your last game were added.</span>
+            </div>
+            <div class="msg warn" data-show="lobbyfit" role="status" style="margin-bottom: 0.75rem">
+              <span aria-hidden="true">⚠</span>
+              <span
+                ><b>Preset "Friday round" applied.</b> 3 computers were added to free seats, 1 did
+                not fit and was skipped. Seated players were not changed.</span
+              >
+            </div>
+
+            <ul class="seats">
+              <li class="seat">
+                <span class="n">1</span
+                ><span class="who">Markus <span class="vl-status mint">Host · ready</span></span>
+              </li>
+              <li class="seat">
+                <span class="n">2</span
+                ><span class="who">Anna <span class="vl-status mint">Ready</span></span
+                ><button class="btn sec s" type="button">Remove</button>
+              </li>
+              <li class="seat" data-show="lobby lobbyload startask">
+                <span class="n">3</span
+                ><span class="who">Computer 1 <span class="vl-status lav">Computer</span></span>
+                <span class="sel">Medium ▾</span><span class="sel">Careful ▾</span
+                ><button class="btn sec s" type="button">Remove</button>
+              </li>
+              <li class="seat" data-show="lobby lobbyload startask">
+                <span class="n">4</span
+                ><span class="who">Computer 2 <span class="vl-status lav">Computer</span></span>
+                <span class="sel">Hard ▾</span><span class="sel">Bold ▾</span
+                ><button class="btn sec s" type="button">Remove</button>
+              </li>
+              <li class="seat" data-show="lobbyfit">
+                <span class="n">3</span
+                ><span class="who">Computer 1 <span class="vl-status lav">Computer</span></span>
+                <span class="sel">Easy ▾</span><span class="sel">Careful ▾</span
+                ><button class="btn sec s" type="button">Remove</button>
+              </li>
+              <li class="seat" data-show="lobbyfit">
+                <span class="n">4</span
+                ><span class="who">Computer 2 <span class="vl-status lav">Computer</span></span>
+                <span class="sel">Medium ▾</span><span class="sel">Random ▾</span
+                ><button class="btn sec s" type="button">Remove</button>
+              </li>
+              <li class="seat" data-show="lobbyfit">
+                <span class="n">5</span
+                ><span class="who">Computer 3 <span class="vl-status lav">Computer</span></span>
+                <span class="sel">Hard ▾</span><span class="sel">Bold ▾</span
+                ><button class="btn sec s" type="button">Remove</button>
+              </li>
+              <li class="seat free" data-show="lobby lobbyload startask">
+                <span class="n">5</span><span class="who">Free seat</span
+                ><button class="btn sec s" type="button">Add computer</button>
+              </li>
+              <li class="seat free" data-show="lobby lobbyload startask">
+                <span class="n">6</span><span class="who">Free seat</span
+                ><button class="btn sec s" type="button">Add computer</button>
+              </li>
+              <li class="seat free" data-show="lobbyfit">
+                <span class="n">6</span><span class="who">Free seat</span
+                ><button class="btn sec s" type="button">Add computer</button>
+              </li>
+            </ul>
+            <div class="vl-field" style="margin-top: 1rem">
+              <span class="lbl" id="spd">Computer speed</span>
+              <div class="range" aria-labelledby="spd">
+                <span class="muted">Slow</span><span class="track"><i></i><b></b></span
+                ><span class="muted">Fast</span>
+                <span class="tag">3</span>
+              </div>
+            </div>
+            <div class="acts" style="margin-top: 1rem">
+              <button class="btn sec s" type="button">Cancel game</button>
+              <button class="btn s" type="button" data-open="startask">Start game</button>
+            </div>
+          </main>
+
+          <!-- ================= DIALOGS ================= -->
+          <!-- Load preset (create page) -->
+          <div
+            class="scrim"
+            data-show="load loaddel"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="d-load"
+          >
+            <div class="dlg wide">
+              <h3 id="d-load">Load preset</h3>
+              <p class="muted">Replaces seats, rules, computers and speed in this form.</p>
+              <ul class="plist">
+                <li class="pitem">
+                  <span class="t"
+                    ><b>Friday round</b
+                    ><small>8 seats · target 6000 · 3 computers · speed 4</small></span
+                  >
+                  <button class="btn s" type="button">Load</button>
+                  <button
+                    class="ibtn"
+                    type="button"
+                    aria-label="Delete preset Friday round"
+                    data-open="loaddel"
+                  >
+                    🗑
+                  </button>
+                </li>
+                <li class="pitem" data-show="load">
+                  <span class="t"
+                    ><b>Family</b
+                    ><small>4 seats · target 4000 · 2 computers (easy) · speed 2</small></span
+                  >
+                  <button class="btn s" type="button">Load</button>
+                  <button
+                    class="ibtn"
+                    type="button"
+                    aria-label="Delete preset Family"
+                    data-open="loaddel"
+                  >
+                    🗑
+                  </button>
+                </li>
+                <li class="pitem confirm" data-show="loaddel">
+                  <span class="t"
+                    ><b>Family</b><small>Delete this preset? This cannot be undone.</small></span
+                  >
+                  <button class="btn dng" type="button">Delete</button>
+                  <button class="btn sec s" type="button" data-open="load">Keep</button>
+                </li>
+                <li class="pitem">
+                  <span class="t"
+                    ><b>House rules</b
+                    ><small>6 seats · target 3000 · no computers · speed 3</small></span
+                  >
+                  <button class="btn s" type="button">Load</button>
+                  <button
+                    class="ibtn"
+                    type="button"
+                    aria-label="Delete preset House rules"
+                    data-open="loaddel"
+                  >
+                    🗑
+                  </button>
+                </li>
+              </ul>
+              <div class="foot">
+                <small class="muted">3 of 10 presets</small>
+                <button class="btn sec s" type="button" data-open="ret">Close</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Load preset (lobby) -->
+          <div
+            class="scrim"
+            data-show="lobbyload"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="d-lload"
+          >
+            <div class="dlg wide">
+              <h3 id="d-lload">Load preset</h3>
+              <p class="muted">
+                Applies computers and speed to free seats. Seated players, seats and rules stay as
+                they are.
+              </p>
+              <ul class="plist">
+                <li class="pitem">
+                  <span class="t"
+                    ><b>Friday round</b
+                    ><small>4 computers · speed 4 · (8 seats, target 6000 not applied)</small></span
+                  >
+                  <button class="btn s" type="button" data-open="lobbyfit">Apply</button>
+                  <button class="ibtn" type="button" aria-label="Delete preset Friday round">
+                    🗑
+                  </button>
+                </li>
+                <li class="pitem">
+                  <span class="t"><b>Family</b><small>2 computers (easy) · speed 2</small></span>
+                  <button class="btn s" type="button">Apply</button>
+                  <button class="ibtn" type="button" aria-label="Delete preset Family">🗑</button>
+                </li>
+                <li class="pitem">
+                  <span class="t"><b>House rules</b><small>no computers · speed 3</small></span>
+                  <button class="btn s" type="button">Apply</button>
+                  <button class="ibtn" type="button" aria-label="Delete preset House rules">
+                    🗑
+                  </button>
+                </li>
+              </ul>
+              <div class="foot">
+                <small class="muted">3 of 10 presets</small>
+                <button class="btn sec s" type="button" data-open="ret">Close</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Start question (lobby, only when the setup is neither a loaded preset nor the last setup) -->
+          <div
+            class="scrim"
+            data-show="startask"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="d-start"
+          >
+            <div class="dlg wide">
+              <h3 id="d-start">Save this setup as a preset?</h3>
+              <p>You have not saved this setup yet. Next time you can load it with one click.</p>
+              <p class="muted">6 seats · target 4000 · 2 computers · speed 3</p>
+              <div class="foot">
+                <button class="btn sec s" type="button" data-open="ret">Back to lobby</button>
+                <span class="acts">
+                  <button class="btn sec s" type="button">No, start the game</button>
+                  <button class="btn s" type="button" data-open="save" data-ret="startask">
+                    Save as preset
+                  </button>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Save preset -->
+          <div
+            class="scrim"
+            data-show="save overwrite full"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="d-save"
+          >
+            <div class="dlg wide">
+              <h3 id="d-save">Save as preset</h3>
+              <p class="muted">
+                Saves seats, rules, computers and speed. Not the game name or password.
+              </p>
+              <div class="vl-field">
+                <label for="pn">Preset name</label>
+                <input class="inp" id="pn" value="Friday round" maxlength="30" />
+                <small class="muted" data-show="save">12 of 30 characters</small>
+              </div>
+              <div class="msg warn" data-show="overwrite" role="alert" style="margin-top: 0.75rem">
+                <span aria-hidden="true">⚠</span>
+                <span><b>"Friday round" already exists.</b> Saving replaces its settings.</span>
+              </div>
+              <div class="msg warn" data-show="full" role="alert" style="margin-top: 0.75rem">
+                <span aria-hidden="true">⚠</span>
+                <span
+                  ><b>10 of 10 presets used.</b> Delete one in "Load preset" first, or save under
+                  the name of an existing preset to replace it.</span
+                >
+              </div>
+              <div class="foot">
+                <button class="btn sec s" type="button" data-open="ret">Cancel</button>
+                <span data-show="save"
+                  ><button class="btn s" type="button" data-open="ret">Save</button></span
+                >
+                <span data-show="overwrite"
+                  ><button class="btn s" type="button" data-open="ret">Replace preset</button></span
+                >
+                <span data-show="full"
+                  ><button class="btn s" type="button" disabled>Save</button></span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="review-footer">
+      <h3>What to check</h3>
+      <ul>
+        <li>
+          Create-game page: preset bar on top, "Reset to defaults" next to it; rules open and marked
+          as changed.
+        </li>
+        <li>
+          The line about remembered computers explains why the computers appear later, in the lobby.
+        </li>
+        <li>
+          Lobby: the same two preset buttons for the host only; a preset applies computers and speed
+          only, and a message names how many did not fit.
+        </li>
+        <li>
+          Start question (screen 11): only when the setup is neither an unchanged loaded preset nor
+          the unchanged last setup. "No, start the game" starts as usual; "Save as preset" opens the
+          normal dialog and then starts.
+        </li>
+        <li>
+          Presets are one dialog list with Load/Apply and delete (inline confirmation). No rename.
+        </li>
+      </ul>
+      <h3>Not in this mockup</h3>
+      <ul>
+        <li>
+          German texts, focus handling and keyboard behaviour, the nickname page (only a prefilled
+          field, unchanged look), toasts.
+        </li>
+        <li>
+          Real PrimeNG components: the dialog, buttons and tags will follow the existing look.
+        </li>
+      </ul>
+    </footer>
+
+    <script>
+      const canvas = document.getElementById('canvas');
+      const stageFrame = document.getElementById('stage-frame');
+      const stageLabel = document.getElementById('stage-frame-label');
+      const show = () => {
+        const v = canvas.dataset.screen;
+        canvas.querySelectorAll('[data-show]').forEach((e) => {
+          const t = e.dataset.show.split(' ');
+          e.hidden = !(t.includes('all') || t.includes(v));
+        });
+      };
+      const dialogs = ['load', 'loaddel', 'save', 'overwrite', 'full', 'lobbyload', 'startask'];
+      let ret = 'create';
+      const setScreen = (v, backTo) => {
+        if (v === 'ret') v = ret;
+        else if (!dialogs.includes(canvas.dataset.screen) || backTo)
+          ret = backTo || canvas.dataset.screen;
+        canvas.dataset.screen = v;
+        show();
+        document
+          .querySelectorAll('#screen-toggle button[data-screen]')
+          .forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.screen === v)));
+      };
+      document.getElementById('screen-toggle').addEventListener('click', (e) => {
+        const b = e.target.closest('button[data-screen]');
+        if (b) setScreen(b.dataset.screen);
+      });
+      document
+        .querySelectorAll('[data-open]')
+        .forEach((b) =>
+          b.addEventListener('click', () => setScreen(b.dataset.open, b.dataset.ret)),
+        );
+      document.getElementById('viewport-toggle').addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-viewport]');
+        if (!btn) return;
+        const value = btn.dataset.viewport;
+        stageFrame.dataset.viewport = value;
+        canvas.dataset.vp = value;
+        stageLabel.textContent =
+          value === 'mobile' ? 'Mobile (about 400px)' : 'Desktop (about 1100px)';
+        document
+          .querySelectorAll('#viewport-toggle button')
+          .forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+      });
+      document
+        .getElementById('theme')
+        .addEventListener('click', () => canvas.classList.toggle('dark'));
+      show();
+    </script>
+  </body>
+</html>

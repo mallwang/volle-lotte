@@ -6,11 +6,13 @@
 
 **Status**: Draft
 
+**Design**: [design.md](design.md)
+
 **Input**: User description: "Implement roadmap item R10. The lobby form remembers the last nickname, player count, computer seats (skill, risk, speed) and game options on the device. The host can save the current game settings under a name as a preset, in the lobby or on the create-game page, and later load all of them at once with a 'Load preset' button. Details (storage, limits, rename and delete) are not yet specified; open question: whether a 'reset to defaults' button is needed."
 
 ## Scope
 
-In scope: remembering the last used setup on the device and pre-filling the next new game with it; named presets that the host saves, loads and deletes, available on the create-game page and in the game lobby; a "Reset to defaults" action on the create-game page; English and German texts, user documentation and roadmap update.
+In scope: remembering the last used setup on the device and pre-filling the next new game with it; named presets that the host saves, loads and deletes, available on the create-game page and in the game lobby; a "Reset to defaults" action on the create-game page; a question when the host starts a game with a setup that is not saved yet, offering to save it as a preset; English and German texts, user documentation and roadmap update.
 
 Out of scope: accounts or syncing across devices or browsers (the data stays on the device), remembering the game name or the game password, renaming presets, exporting or importing presets, sharing presets with other players, new game options (R9 and R20 add options later and must be picked up by this feature without redesign), any change to game rules or computer behaviour, remembering per-game settings of a game that is already running.
 
@@ -70,6 +72,26 @@ After experimenting with many options, the host wants the standard setup back. A
 
 ---
 
+### User Story 4 - Offer to save a new setup when starting (Priority: P3)
+
+A host who tweaked the setup for tonight presses "Start game". Because this setup is neither a preset they loaded nor the one they played last, a question appears: "Save this setup as a preset?". "Save as preset" opens the normal save dialog and the game starts afterwards. "No, start the game" starts the game right away, as without this feature. Hosts who replay their last setup or an unchanged preset are never asked.
+
+**Why this priority**: Most hosts only discover presets when they are prompted at the moment they have a setup worth keeping.
+
+**Independent Test**: Create a game with changed rules, press "Start game": the question appears. Choose "No, start the game": the game starts. Next game, load a preset and start without changes: no question. Change one computer, start: the question appears.
+
+**Acceptance Scenarios**:
+
+1. **Given** a setup that was not loaded from a preset and differs from the last setup, **When** the host presses "Start game", **Then** the question appears and the game has not started yet.
+2. **Given** the question, **When** the host chooses "No, start the game", **Then** the game starts as usual.
+3. **Given** the question, **When** the host chooses "Save as preset" and saves, **Then** the game starts; **When** they cancel the save dialog, **Then** they return to the question.
+4. **Given** a preset was loaded and nothing changed since, **When** the host presses "Start game", **Then** the game starts without a question.
+5. **Given** a preset was loaded and a computer, the speed, the seats or a rule was changed afterwards, **When** the host presses "Start game", **Then** the question appears.
+6. **Given** the setup equals the last setup of this device, **When** the host presses "Start game", **Then** the game starts without a question.
+7. **Given** the question, **When** the host chooses "Back to lobby", **Then** the question closes and the game does not start.
+
+---
+
 ### Edge Cases
 
 - Storage is blocked, full or cleared (private mode, browser setting): the pages still work with the defaults, presets cannot be saved, and the host is told once that saving is not possible here; nothing is shown as saved when it was not.
@@ -90,8 +112,8 @@ After experimenting with many options, the host wants the standard setup back. A
 - **FR-003**: The create-game page MUST pre-fill player count and game options from the last setup, and a newly created game MUST start with the remembered computer seats and computer speed, as far as the player count allows.
 - **FR-004**: Without a remembered setup, every value MUST be the existing default; defaults MUST NOT change by this feature.
 - **FR-005**: The game name and the game password MUST NOT be remembered or stored in presets.
-- **FR-006**: The host MUST be able to save the current settings under a name as a preset, on the create-game page and in the game lobby.
-- **FR-007**: A preset MUST contain player count, game options, computer seats (skill, risk, seat position) and computer speed.
+- **FR-006**: The host MUST be able to save the current settings under a name as a preset, on the create-game page and in the game lobby. There is one shared list of presets per device: a preset saved in one place MUST appear in the other, and saving in one place MUST NOT change any preset other than the one with the same name.
+- **FR-007**: A preset MUST contain player count, game options, computer seats (skill, risk, seat position) and computer speed. A preset is a snapshot taken at the moment of saving; later edits of the form or lobby MUST NOT change it. Saving on the create-game page MUST store the form values together with the computer seats and speed that are currently pending for the new game (from the last setup or a loaded preset, as shown on the page). Saving in the game lobby MUST store the complete setup of that room, including its fixed player count and game options, so a lobby preset can be loaded on the create-game page in full.
 - **FR-008**: The host MUST be able to open a "Load preset" list on the create-game page and in the game lobby and apply a preset to the current form or lobby in one action.
 - **FR-009**: Applying a preset on the create-game page MUST replace all values of the form at once; applying it in the game lobby MUST apply the computer seats and computer speed only, because the player count and the game options of an existing room are fixed.
 - **FR-010**: Applying computer seats in the lobby MUST only use free seats, MUST NOT change or remove seated humans or their order, and MUST tell the host when not all computers fit.
@@ -106,6 +128,12 @@ After experimenting with many options, the host wants the standard setup back. A
 - **FR-019**: Only the host MUST see the preset controls in the game lobby; no preset control MUST appear in a running game.
 - **FR-020**: All new user-visible texts MUST exist in English and German.
 - **FR-021**: The user documentation and the roadmap MUST describe remembered settings and presets and mark R10 as delivered.
+- **FR-022**: When the host starts a game, the system MUST ask whether to save the current setup as a preset, with the choices "Save as preset", "No, start the game" and "Back to lobby", if the setup is not known to be saved (FR-023).
+- **FR-023**: The question MUST NOT appear when the setup was loaded from a preset and nothing in it (player count, game options, computer seats, speed) changed since, or when the setup equals the last setup of this device. The system compares only with the one loaded preset and the last setup, never with the whole preset list.
+- **FR-024**: A setup that was saved as a preset in this lobby (by the question or the "Save as preset" button) MUST count as known and MUST NOT trigger the question again while it is unchanged.
+- **FR-025**: "No, start the game" MUST start the game exactly as without the question; "Save as preset" MUST open the normal save dialog and start the game after a successful save, and cancelling it MUST return to the question.
+- **FR-026**: After "No, start the game", the same unchanged setup MUST NOT trigger the question again in this lobby, including after a rematch.
+- **FR-027**: The question MUST be shown to the host only and MUST NOT appear when storage is unavailable (FR-017).
 
 ### Key Entities
 
@@ -130,7 +158,10 @@ After experimenting with many options, the host wants the standard setup back. A
 - Computer seats and the computer speed are set in the game lobby after the game exists; remembering them therefore means pre-filling a newly created game's lobby, and they are captured when a game is started, not on every change.
 - The last setup is captured at game start, not on creation, so abandoned games do not overwrite a good setup.
 - "Reset to defaults" is included because remembered values need a clear way back; it is offered on the create-game page only, where the full set of options is edited.
+- The create-game page has no computer controls of its own; it only shows the pending computers and speed (from the last setup or a loaded preset) that the lobby will get. They can be changed in the lobby only, and "Reset to defaults" clears them.
+- Presets and the last setup are separate: saving or loading a preset never changes the last setup, and the last setup is never listed as a preset.
 - Presets are limited to 10 and can be deleted but not renamed; a rename is covered by saving under a new name and deleting the old one. This keeps the interface small (Constitution VII).
 - Everything is stored in the browser of the device, which fits the anonymous play model (Constitution V); no server change and no protocol change are needed.
+- The question is asked in the lobby when the game is started, because that is the only place where "Start game" exists. "Known" is tracked only for the current lobby: after a reload of the lobby page the reference to a loaded preset is gone, so one extra question may appear; this is accepted to keep the feature simple.
 - Settings of the host who joins someone else's game are not remembered; only a game the person hosted and started counts.
 - Computer names are not part of remembered setups and presets; computers get new names as usual.
