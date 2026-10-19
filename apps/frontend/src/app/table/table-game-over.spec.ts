@@ -106,6 +106,21 @@ describe('Table game-over modal', () => {
     expect(celebration.stop).toHaveBeenCalled();
   });
 
+  it('keeps the modal and plays the celebration once when a player leaves afterwards', async () => {
+    const { socket, dialog, fixture, celebration } = await setup(finished());
+    expect(dialog()).not.toBeNull();
+    expect(celebration.start).toHaveBeenCalledTimes(1);
+    celebration.stop.mockClear();
+    const left = { at: 3, kind: 'left', seat: 1 };
+    socket.game.set(finished({ log: [...endLog, left] as never }));
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(dialog()).not.toBeNull();
+    expect(celebration.stop).not.toHaveBeenCalled();
+    expect(celebration.start).toHaveBeenCalledTimes(1);
+  });
+
   it('names a Clover win', async () => {
     const clover = { ...result, reason: 'clover' } as const;
     const { dialog } = await setup(finished({ game: engine({ result: clover }) }));

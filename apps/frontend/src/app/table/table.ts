@@ -256,7 +256,8 @@ export class Table {
   /** A computer took over my seat (timeouts); nothing here is playable anymore. */
   protected readonly removed = computed(() => (this.socket.game()?.you.seat ?? 0) < 0);
   /** The result is shown once the last roll and notice are over and the whole log is revealed. */
-  protected readonly gameOverVisible = computed(() => {
+  /** Everything of the finished game is on screen: the last roll, its notice and every log entry. */
+  private readonly gameOverReady = computed(() => {
     const g = this.socket.game();
     return (
       g?.phase === 'finished' &&
@@ -266,6 +267,23 @@ export class Table {
       this.revealed() >= logEnd(g)
     );
   });
+  /**
+   * The modal opens once the game is over on screen and stays until the finished game goes away. A
+   * later log entry (a player leaving, a rematch) must neither hide it for a moment nor restart the
+   * celebration and its sound.
+   */
+  protected readonly gameOverVisible = linkedSignal<{ finished: boolean; ready: boolean }, boolean>(
+    {
+      source: () => {
+        const g = this.socket.game();
+        return {
+          finished: g?.phase === 'finished' && g.you.seat >= 0,
+          ready: this.gameOverReady(),
+        };
+      },
+      computation: (s, previous) => s.finished && (s.ready || !!previous?.value),
+    },
+  );
   /**
    * How long a turn's result (bust, bank, Stop, timeout) stays on the table before the next turn
    * starts. The server waits as long (`pacing` in game-rules) before the next player's move.
@@ -574,10 +592,14 @@ export class Table {
       tableScale.disable();
       this.celebration.stop();
     });
-    effect(() => {
+    // a computed, so only a change of the verdict (not every new game state) reaches the effect
+    const celebrate = computed(() => {
       const g = this.socket.game();
-      const celebrate = this.gameOverVisible() && !!g && youWon(g);
-      untracked(() => (celebrate ? this.celebration.start() : this.celebration.stop()));
+      return this.gameOverVisible() && !!g && youWon(g);
+    });
+    effect(() => {
+      const on = celebrate();
+      untracked(() => (on ? this.celebration.start() : this.celebration.stop()));
     });
     effect(() => {
       const paused = this.paused();
