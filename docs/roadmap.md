@@ -102,6 +102,7 @@ Goal: a persisted, structured game log. The in-game log is shown below the table
 
 - Goal: the lobby form remembers the last nickname, player count, computer seats (skill, risk, speed) and game options in `localStorage`.
 - Why: spec 010 explicitly left "remember settings between games" out; hosts re-enter the same setup each game.
+- Presets: the host can save the current game settings under a name as a template, in the lobby or on the create-game page, and later load all of them at once with a "Load preset" button. Only the idea is recorded here; details (storage, limits, rename and delete) are not specified yet.
 - Open: whether a "reset to defaults" button is needed.
 
 ### R11. Sounds (`idea`)
