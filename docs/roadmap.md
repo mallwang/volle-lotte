@@ -12,7 +12,7 @@ Last updated: 2026-10-19. The Java -> web migration is finished (see [migration.
 
 ## Done
 
-Post-playtest fixes: one-card discard piles have no background card; easy computers take all scoring dice; hosts can share a next-throw bust probability preview (off by default, protocol v7); Star score updates wait for the final roll animation, and Double Lotte always requires a Volle Lotte.
+Host handover: a player rejoining a game with only computers becomes host; the last host can end such a game from the games list (protocol v9). Post-playtest fixes: one-card discard piles have no background card; easy computers take all scoring dice; hosts can share a next-throw bust probability preview (off by default, protocol v7); Star score updates wait for the final roll animation, and Double Lotte always requires a Volle Lotte.
 
 | Spec | Feature                                                                                                                                                                                                                                                                                        |
 | ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

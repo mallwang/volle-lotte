@@ -21,6 +21,7 @@ export const en = {
   'server.replaced': 'Your session was opened in another window or tab.',
   'server.banned': 'The host removed you from this game.',
   'server.closed': 'The game was closed.',
+  'server.ended': 'The game was ended by its host.',
 
   'nickname.title': 'Nickname',
   'nickname.continue': 'Continue',
@@ -39,6 +40,13 @@ export const en = {
   'lobby.join': 'Join',
   'lobby.rejoin': 'Rejoin',
   'lobby.running': 'Running',
+  'lobby.noHost': 'No host, only computers left',
+  'lobby.end': 'End game',
+  'lobby.endTitle': 'End the game?',
+  'lobby.endBody': 'Only computers are left in "{game}". Ending it deletes the game for good.',
+  'lobby.endKeep': 'Keep game',
+  'lobby.hostChanged':
+    'You are no longer the host of "{game}": {host} rejoined and is the new host. You cannot end the game any more.',
   'lobby.joinTitle': 'Join {name}',
   'lobby.passwordFor': 'Password for {name}',
   'lobby.locked': 'Locked. Try again in {n} s.',

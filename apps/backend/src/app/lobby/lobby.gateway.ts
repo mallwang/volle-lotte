@@ -216,6 +216,16 @@ export class LobbyGateway implements OnGatewayDisconnect {
     return { ok: true, game: toView(room, session.playerId) };
   }
 
+  @SubscribeMessage('game:end')
+  end(@ConnectedSocket() client: Socket, @MessageBody() b: unknown): Ack {
+    const session = this.session(client);
+    if (!session) return bad('noSession');
+    if (!isObj(b) || typeof b['gameId'] !== 'string') return bad('invalidRequest');
+    const room = this.registry.get(b['gameId']);
+    if (!room) return bad('gameNotFound');
+    return this.registry.end(room, session.playerId) ? { ok: true } : bad('notHost');
+  }
+
   // ---- inside a game
 
   @SubscribeMessage('game:leave')
@@ -425,6 +435,17 @@ export class LobbyGateway implements OnGatewayDisconnect {
     }
   }
 
+  /** Players a computer took over from may still look at the table: send them back to the lobby. */
+  private releaseFormerPlayers(room: GameRoom): void {
+    for (const s of room.seats) {
+      if (s.state !== 'computer' || !s.former) continue;
+      const session = this.sessions.byPlayerId(s.former.playerId);
+      if (session?.gameId !== room.id) continue;
+      this.exit(session);
+      this.emitTo(session.socketId, 'game:closed', { reason: 'ended' });
+    }
+  }
+
   private pushLobby(): void {
     // rejoinable differs per player, so every lobby socket gets its own list
     for (const id of this.server.sockets.adapter.rooms.get(LOBBY) ?? []) {
@@ -433,7 +454,7 @@ export class LobbyGateway implements OnGatewayDisconnect {
     }
   }
 
-  private closed(room: GameRoom, reason: 'cleanup' | 'empty'): void {
+  private closed(room: GameRoom, reason: 'cleanup' | 'empty' | 'ended'): void {
     this.summaries.delete(room.id);
     this.limiter.forgetGame(room.id);
     for (const human of room.humans()) {
@@ -442,6 +463,7 @@ export class LobbyGateway implements OnGatewayDisconnect {
       this.exit(session);
       if (reason === 'cleanup') this.emitTo(session.socketId, 'game:closed', { reason });
     }
+    if (reason === 'ended') this.releaseFormerPlayers(room);
     this.pushLobby();
   }
 }

@@ -15,6 +15,8 @@ export function stubSocket(game: GameView | null = null) {
     create: vi.fn(),
     join: vi.fn(),
     rejoin: vi.fn(),
+    end: vi.fn(),
+    refreshLobby: vi.fn().mockResolvedValue(undefined),
     leave: vi.fn(),
     settings: vi.fn().mockResolvedValue({ ok: true }),
   };

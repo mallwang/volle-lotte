@@ -78,6 +78,7 @@ export class SocketService {
     this.socket.on('game:closed', ((p: Pushes['game:closed']) => {
       this.game.set(null);
       if (p?.reason === 'banned') this.notify('warn', this.i18n.t('server.banned'));
+      else if (p?.reason === 'ended') this.notify('info', this.i18n.t('server.ended'));
       else this.notify('info', this.i18n.t('server.closed'));
     }) as never);
   }
@@ -152,6 +153,11 @@ export class SocketService {
     const ack = await this.send('game:rejoin', { gameId });
     if (ack.ok) this.game.set(ack.game);
     return ack;
+  }
+
+  /** The last host ends a game that only has computers left; a failure is up to the caller. */
+  end(gameId: string): Promise<Ack> {
+    return this.send('game:end', { gameId });
   }
 
   async settings(patch: Intents['game:settings'][0]) {

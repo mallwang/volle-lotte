@@ -21,6 +21,7 @@ export const de: Record<keyof typeof en, string> = {
   'server.replaced': 'Deine Sitzung wurde in einem anderen Fenster oder Tab geöffnet.',
   'server.banned': 'Der Gastgeber hat dich aus diesem Spiel entfernt.',
   'server.closed': 'Das Spiel wurde geschlossen.',
+  'server.ended': 'Das Spiel wurde vom Gastgeber beendet.',
   'server.restarted': 'Der Server wurde neu gestartet und dein Spiel ist weg.',
 
   'nickname.title': 'Spitzname',
@@ -41,6 +42,13 @@ export const de: Record<keyof typeof en, string> = {
   'lobby.join': 'Beitreten',
   'lobby.rejoin': 'Zurückkehren',
   'lobby.running': 'Läuft',
+  'lobby.noHost': 'Kein Gastgeber, nur noch Computer',
+  'lobby.end': 'Spiel beenden',
+  'lobby.endTitle': 'Spiel beenden?',
+  'lobby.endBody': 'In „{game}“ spielen nur noch Computer. Das Spiel wird endgültig gelöscht.',
+  'lobby.endKeep': 'Spiel behalten',
+  'lobby.hostChanged':
+    'Du bist nicht mehr Gastgeber von „{game}“: {host} ist wieder beigetreten und jetzt Gastgeber. Du kannst das Spiel nicht mehr beenden.',
   'lobby.joinTitle': '{name} beitreten',
   'lobby.passwordFor': 'Passwort für {name}',
   'lobby.locked': 'Gesperrt. Versuche es in {n} s erneut.',

@@ -24,6 +24,7 @@ Open the app and enter a nickname (2-20 characters: letters, digits, space, `_` 
 - **Create**: press **Create game**, then choose name, optional password, number of seats (2-8) and the rules (target score, minimum points to bank, whether four of a kind doubles, cards per type). The rules cannot be changed once the game is created.
 - **Game lobby**: the host can add or remove computer players (each with a skill and a risk, see below), lock seats, remove a human player (who cannot rejoin that game and sees a notice in the games list) and start the game. Everyone else waits for the host to start.
 - **Leaving**: leaving a lobby or a running game (the table or lobby button, a link in the menu bar or the browser's back button) always asks for confirmation first; **Stay** keeps you where you are. A finished game is left without a question. Closing or reloading the browser tab while in a lobby or running game shows the browser's own warning (its text cannot be changed).
+- **Host changes**: if the host leaves or stays offline, the next human player becomes host. A player who comes back does not get the role back. If only computers are left, nobody hosts; the first player who rejoins becomes host. The last host can instead **End game** in the games list (after a confirmation) while only computers are left. If someone rejoined in the meantime, the games list shows the new host and the end button is gone, with a notice that you are no longer the host.
 
 ## 3. Playing
 

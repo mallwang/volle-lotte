@@ -167,6 +167,13 @@ describe('SocketService', () => {
     expect(add).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
   });
 
+  it('end() sends the game id and passes the ack on', async () => {
+    const { socket, service } = setup();
+    socket.replies['game:end'] = { ok: false, reason: 'notHost' };
+    expect(await service.end('g9')).toEqual({ ok: false, reason: 'notHost' });
+    expect(socket.sent).toContainEqual(expect.objectContaining({ event: 'game:end' }));
+  });
+
   it('keeps the session empty on an error ack', async () => {
     const { socket, service } = setup();
     socket.replies['session:start'] = { ok: false, reason: 'nicknameTaken' };
@@ -273,6 +280,12 @@ describe('SocketService', () => {
     expect(add).toHaveBeenCalledWith(
       expect.objectContaining({ severity: 'warn', detail: expect.stringContaining('removed you') }),
     );
+    socket.fire('game:closed', { reason: 'ended' });
+    expect(add).toHaveBeenCalledWith({
+      severity: 'info',
+      detail: 'The game was ended by its host.',
+      life: TOAST_MS,
+    });
     socket.fire('session:replaced');
     expect(service.session()).toBeNull();
     expect(add).toHaveBeenCalledWith(

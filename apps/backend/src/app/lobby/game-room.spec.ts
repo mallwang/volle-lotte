@@ -161,6 +161,58 @@ describe('GameRoom rejoin', () => {
     room.dispose();
   });
 
+  it('keeps the current host when the old host comes back', () => {
+    const room = started();
+    room.leave('h');
+    expect(room.hostId).toBe('p');
+    expect(room.rejoin('h')).toEqual({ ok: true, seat: 0 });
+    expect(room.hostId).toBe('p');
+    expect(room.summary().host).toBe('Pia');
+    room.dispose();
+  });
+
+  it('makes the first player back the host once only computers are left', () => {
+    const room = started();
+    room.leave('h');
+    room.leave('p');
+    expect(room.hostId).toBe('p');
+    expect(room.summary('x').host).toBe('');
+    expect(room.rejoin('h')).toEqual({ ok: true, seat: 0 });
+    expect(room.hostId).toBe('h');
+    expect(room.log.at(-1)).toMatchObject({ kind: 'hostChanged', seat: 0 });
+    expect(room.summary().host).toBe('Host');
+    expect(room.rejoin('p')).toEqual({ ok: true, seat: 1 });
+    expect(room.hostId).toBe('h');
+    room.dispose();
+  });
+
+  it('gives the host back to the last host who returns first', () => {
+    const room = started();
+    room.leave('h');
+    room.leave('p');
+    expect(room.rejoin('p')).toEqual({ ok: true, seat: 1 });
+    expect(room.hostId).toBe('p');
+    expect(room.log.at(-1)).not.toMatchObject({ kind: 'hostChanged' });
+    room.dispose();
+  });
+
+  it('lets only the last host end a game without humans', () => {
+    const room = started();
+    expect(room.canEnd('p')).toBe(false);
+    room.leave('h');
+    expect(room.canEnd('p')).toBe(false);
+    room.leave('p');
+    expect(room.canEnd('p')).toBe(true);
+    expect(room.summary('p').closable).toBe(true);
+    expect(room.canEnd('h')).toBe(false);
+    expect(room.summary('h').closable).toBe(false);
+    expect(room.canEnd(undefined)).toBe(false);
+    room.rejoin('h');
+    expect(room.canEnd('p')).toBe(false);
+    expect(room.summary('p').closable).toBe(false);
+    room.dispose();
+  });
+
   it('rejects banned players and lobby games', () => {
     const { room } = make();
     room.join('p', 'Pia');
