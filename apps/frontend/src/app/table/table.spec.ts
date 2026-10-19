@@ -4,6 +4,7 @@ import { LeaveGame } from '../core/leave-game';
 import { SocketService, TOAST_MS } from '../core/socket.service';
 import { MessageService } from 'primeng/api';
 import { providePrimeNG } from 'primeng/config';
+import { Celebration } from '../core/celebration';
 import { expectNoA11yViolations, gameView, inBothModes, stubSocket } from '../core/testing';
 import { Table } from './table';
 
@@ -52,6 +53,7 @@ async function setup(current: number, over = {}, showLog = true) {
       MessageService,
       { provide: SocketService, useValue: socket },
       { provide: LeaveGame, useValue: { request: vi.fn() } },
+      { provide: Celebration, useValue: { preload: vi.fn(), start: vi.fn(), stop: vi.fn() } },
     ],
   });
   const fixture = TestBed.createComponent(Table);

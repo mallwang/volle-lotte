@@ -282,9 +282,14 @@ export const de: Record<keyof typeof en, string> = {
   'pile.discarded': 'Abgelegt: {count}',
   'pile.discard': 'Ablagestapel: {count} Karten',
 
-  'result.title': 'Ergebnis',
-  'result.rank': 'Platz {rank}',
-  'result.back': 'Zurück zur Lobby',
+  'gameOver.title': 'Spiel vorbei',
+  'gameOver.won': 'Du hast gewonnen!',
+  'gameOver.winner': '{name} hat gewonnen.',
+  'gameOver.reason.targetScore': 'Die Zielpunktzahl wurde erreicht.',
+  'gameOver.reason.clover': 'Das Spiel wurde mit der Kleeblatt-Karte gewonnen.',
+  'gameOver.rank': 'Platz {rank}',
+  'gameOver.you': 'du',
+  'gameOver.back': 'Zurück zur Lobby',
 
   'log.drew': '{who} zog {card}',
   'log.threw': '{who} würfelte {dice}',

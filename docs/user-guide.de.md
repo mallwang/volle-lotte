@@ -59,7 +59,7 @@ Egal bei welchen Einstellungen: Kann ein Computer durch Sichern den Zielstand er
 
 Nicht verfügbare Schaltflächen nennen den Grund (zum Beispiel „Du bist nicht dran“). Das Protokoll listet, was passiert ist; wer ein laufendes Spiel verlässt (nach Rückfrage), 30 Sekunden offline ist oder dreimal in Folge nicht reagiert, wird durch einen Computer ersetzt. Ein Timer zeigt die Restzeit: 10 Sekunden zum Ziehen oder Würfeln, 15 zum Auswählen, 20 zum Sichern oder Weiterwürfeln. Läuft die Zeit ab, wird für dich gehandelt (übersprungenes Ziehen oder Auswählen beendet deinen Zug). Nach dem dritten Ablauf siehst du einen Hinweis und kannst nur in die Lobby zurück. Computer pausieren, solange kein Mensch am Tisch sitzt.
 
-Erreicht jemand die Zielpunktzahl, zeigt der Ergebnisbildschirm die Rangliste. **Zurück zur Lobby** führt zur Spieleliste.
+Erreicht jemand die Zielpunktzahl (oder gewinnt mit der Kleeblatt-Karte), öffnet sich über dem Tisch das Fenster **Spiel vorbei**, sobald die letzten Würfel stehen. Es nennt die Gewinnerin oder den Gewinner, zeigt, wie das Spiel endete, und ordnet alle nach Rang (gleiche Punktzahlen teilen sich einen Rang); die Endstände bleiben dahinter sichtbar. Das Fenster lässt sich weder durch einen Klick daneben noch mit Escape schließen, sondern nur mit **Zurück zur Lobby**, das zur Spieleliste führt. Ein beendetes Spiel wird nicht wiederhergestellt: Lädst du die Seite neu oder verbindest dich danach neu, landest du in der Spieleliste. Hast du gewonnen, regnet Konfetti über den Bildschirm, solange das Fenster offen ist; ist dein System auf reduzierte Bewegung eingestellt, bleibt es aus (das Fenster sagt trotzdem, dass du gewonnen hast).
 
 ## 4. Sprache und Farbschema
 

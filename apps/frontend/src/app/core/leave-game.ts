@@ -94,7 +94,9 @@ export const leaveGameGuard: CanDeactivateFn<Game> = async () => {
   const socket = inject(SocketService);
   const router = inject(Router); // inject before the first await
   if (!(await leave.confirm())) return false;
-  if (leave.situation() === 'none') return true;
+  // a finished game needs no confirmation, but navigating away must not strand the player in it
+  const finished = socket.game()?.phase === 'finished';
+  if (leave.situation() === 'none' && !finished) return true;
   leave.leaving.set(true);
   const left = await socket.leave();
   if (!left) leave.leaving.set(false);

@@ -2,6 +2,7 @@ import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { defaultRules, PROTOCOL_VERSION, type Ack, type UiLanguage } from 'game-rules';
 import { io, type Socket } from 'socket.io-client';
+import { GameRegistryService } from '../game-registry.service';
 import { LobbyModule } from '../lobby.module';
 
 /** Test helpers shared by the gateway integration tests and the e2e flows. */
@@ -16,6 +17,9 @@ export async function startApp(): Promise<void> {
   await app.listen(0);
   url = await app.getUrl();
 }
+
+/** The rooms of the running app, for tests that need a state sockets cannot reach quickly. */
+export const registry = (): GameRegistryService => app.get(GameRegistryService);
 
 export async function stopApp(): Promise<void> {
   sockets.forEach((s) => s.close());

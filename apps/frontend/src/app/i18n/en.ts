@@ -268,9 +268,14 @@ export const en = {
   'pile.discarded': 'Discarded: {count}',
   'pile.discard': 'Discard pile: {count} cards',
 
-  'result.title': 'Result',
-  'result.rank': 'Rank {rank}',
-  'result.back': 'Back to lobby',
+  'gameOver.title': 'Game over',
+  'gameOver.won': 'You won!',
+  'gameOver.winner': '{name} won.',
+  'gameOver.reason.targetScore': 'The target score was reached.',
+  'gameOver.reason.clover': 'The game was won with the Clover card.',
+  'gameOver.rank': 'Rank {rank}',
+  'gameOver.you': 'you',
+  'gameOver.back': 'Back to the lobby',
 
   'log.drew': '{who} drew {card}',
   'log.threw': '{who} threw {dice}',

@@ -93,7 +93,7 @@ export class LobbyGateway implements OnGatewayDisconnect {
     }
     this.dropReplacedSocket(this.sessions.attach(session, client.id));
     let game;
-    const room = session.gameId ? this.registry.get(session.gameId) : undefined;
+    const room = this.resumableRoom(session);
     if (room && room.seatOf(session.playerId) >= 0) {
       void client.leave(LOBBY);
       room.setLanguage(session.playerId, session.language);
@@ -358,6 +358,15 @@ export class LobbyGateway implements OnGatewayDisconnect {
 
   private session(client: Socket): Session | undefined {
     return this.sessions.bySocketId(client.id);
+  }
+
+  /** The room a returning player continues in; a finished game is never restored, they leave it. */
+  private resumableRoom(session: Session): GameRoom | undefined {
+    const room = session.gameId ? this.registry.get(session.gameId) : undefined;
+    if (room?.phase !== 'finished') return room;
+    session.gameId = undefined;
+    room.leave(session.playerId);
+    return undefined;
   }
 
   private roomOf(session: Session): GameRoom | undefined {

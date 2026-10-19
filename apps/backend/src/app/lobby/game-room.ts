@@ -295,6 +295,8 @@ export class GameRoom {
     this.clearGrace(seat);
     if (this.phase === 'running') {
       this.replaceByBot(seat, 'left');
+    } else if (this.phase === 'finished') {
+      this.depart(seat);
     } else {
       this.add('left', seat);
       this.seats[seat] = { state: 'open' };
@@ -303,6 +305,22 @@ export class GameRoom {
     if (this.hostId === playerId) this.electHost(playerId);
     this.emit();
     return { ok: true, empty: this.humans().length === 0 };
+  }
+
+  /**
+   * A player leaves a finished game. The seat stays, with the same name, so the table the others
+   * still look at keeps its engine player order, names and scores.
+   */
+  private depart(seat: number) {
+    const human = this.seats[seat] as Human;
+    this.seats[seat] = {
+      state: 'computer',
+      name: human.nickname,
+      difficulty: 'random',
+      risk: 'random',
+      former: { playerId: human.playerId, nickname: human.nickname },
+    };
+    this.add('left', seat);
   }
 
   setSeat(
@@ -611,6 +629,11 @@ export class GameRoom {
   setConnected(playerId: string, connected: boolean): void {
     const seat = this.seatOf(playerId);
     if (seat < 0) return;
+    // nobody comes back to a finished game: a lost connection is a leave
+    if (this.phase === 'finished' && !connected) {
+      this.leave(playerId);
+      return;
+    }
     const human = this.seats[seat] as Extract<Seat, { state: 'human' }>;
     if (human.connected === connected) return;
     human.connected = connected;

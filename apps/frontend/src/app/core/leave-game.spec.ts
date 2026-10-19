@@ -180,6 +180,14 @@ describe('leaveGameGuard', () => {
     expect(socket.leave).not.toHaveBeenCalled();
   });
 
+  it('leaves a finished game without a dialog', async () => {
+    const { socket, confirmation, leave } = setup(gameView({ phase: 'finished' }));
+    expect(await guard()).toBe(true);
+    expect(confirmation.confirm).not.toHaveBeenCalled();
+    expect(socket.leave).toHaveBeenCalledTimes(1);
+    expect(leave.leaving()).toBe(true);
+  });
+
   it('blocks the navigation when the server rejects the leave', async () => {
     const { socket, leave, opened } = setup();
     socket.leave.mockResolvedValue(false);
