@@ -6,6 +6,8 @@
 
 **Status**: Draft
 
+**Design**: [design.md](design.md)
+
 **Input**: User description: "R8. Spectators (docs/roadmap.md): other players can join a running game as read-only spectators. They see the table with scores and the current action of the active players, the log, the leave button and the 'skip dice animation' setting; no play buttons. A counter shows the number of real spectators (players do not count). Joining or leaving only changes the counter: no log entry, toast or message for the players. Spectators are separate from the 2-8 player limit, never block timers or the game end; the host can disable spectating."
 
 ## User Scenarios & Testing _(mandatory)_
