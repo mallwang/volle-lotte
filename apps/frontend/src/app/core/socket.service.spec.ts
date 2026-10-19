@@ -275,6 +275,17 @@ describe('SocketService', () => {
     expect(service.game()).toBeNull();
   });
 
+  it('drops a finished game on reconnect without a warning', async () => {
+    const { socket, add, service } = setup();
+    socket.replies['session:start'] = { ...started, game: { ...game, phase: 'finished' } };
+    await service.start('Ann');
+    add.mockClear();
+    socket.replies['session:start'] = started;
+    socket.fire('connect');
+    await vi.waitFor(() => expect(service.game()).toBeNull());
+    expect(add).not.toHaveBeenCalled();
+  });
+
   it('handles session:replaced and game:closed', async () => {
     const { socket, add, service } = setup();
     socket.replies['session:start'] = { ...started, game };

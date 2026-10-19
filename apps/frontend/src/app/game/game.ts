@@ -3,25 +3,18 @@ import { Router } from '@angular/router';
 import { LeaveGame } from '../core/leave-game';
 import { SocketService } from '../core/socket.service';
 import { GameLobby } from '../game-lobby/game-lobby';
-import { Result } from '../result/result';
 import { Table } from '../table/table';
 
-/** Route `game/:id`: shows the lobby, table or result view depending on the phase. */
+/** Route `game/:id`: shows the lobby before the start, the table (with the result modal at the end) after it. */
 @Component({
   selector: 'app-game',
-  imports: [GameLobby, Table, Result],
+  imports: [GameLobby, Table],
   template: `
     @if (socket.game(); as game) {
-      @switch (game.phase) {
-        @case ('lobby') {
-          <app-game-lobby />
-        }
-        @case ('running') {
-          <app-table />
-        }
-        @default {
-          <app-result />
-        }
+      @if (game.phase === 'lobby') {
+        <app-game-lobby />
+      } @else {
+        <app-table />
       }
     }
   `,

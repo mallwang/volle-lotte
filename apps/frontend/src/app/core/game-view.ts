@@ -8,6 +8,12 @@ export function playerSeats(g: GameView): number[] {
   return g.seats.flatMap((s, i) => (s.state === 'human' || s.state === 'computer' ? [i] : []));
 }
 
+/** The player this view belongs to is the one the finished game names as winner. */
+export function youWon(g: GameView): boolean {
+  const winner = g.game?.result?.winner;
+  return winner !== undefined && g.you.seat >= 0 && playerSeats(g)[winner] === g.you.seat;
+}
+
 /** Players show their nickname, computers the name the server gave them. */
 export const seatName = (s: SeatView | undefined): string => s?.nickname ?? s?.name ?? '';
 

@@ -760,3 +760,58 @@ describe('takeover names', () => {
     room.dispose();
   });
 });
+
+describe('GameRoom finished', () => {
+  const finished = () => {
+    const room = started();
+    room.phase = 'finished';
+    return room;
+  };
+
+  it('keeps seat order, names and scores when a player leaves', () => {
+    const room = finished();
+    const scores = room.game?.players.map((p) => p.score);
+    expect(room.leave('p')).toMatchObject({ ok: true, empty: false });
+    expect(room.seats).toHaveLength(8);
+    expect(room.seats[1]).toMatchObject({
+      state: 'computer',
+      name: 'Pia',
+      former: { playerId: 'p', nickname: 'Pia' },
+    });
+    expect(room.game?.players.map((p) => p.name)).toEqual(['Host', 'Pia']);
+    expect(room.game?.players.map((p) => p.score)).toEqual(scores);
+    expect(room.log.filter((e) => e.kind === 'left')).toHaveLength(1);
+    expect(room.log.at(-1)).toMatchObject({ kind: 'left', seat: 1 });
+    expect(room.rejoin('p')).toMatchObject({ reason: 'notRejoinable' });
+    room.dispose();
+  });
+
+  it('elects a host when the host leaves and reports an empty room last', () => {
+    const room = finished();
+    expect(room.leave('h')).toMatchObject({ ok: true, empty: false });
+    expect(room.hostId).toBe('p');
+    expect(room.leave('p')).toMatchObject({ ok: true, empty: true });
+    expect(room.humans()).toHaveLength(0);
+    room.dispose();
+  });
+
+  it('treats a lost connection like a leave, without a grace period', () => {
+    const room = finished();
+    room.setConnected('p', false);
+    expect(room.seats[1]).toMatchObject({ state: 'computer', name: 'Pia' });
+    expect(room.log.some((e) => e.kind === 'disconnected')).toBe(false);
+    expect(room.log.at(-1)).toMatchObject({ kind: 'left', seat: 1 });
+    room.setConnected('p', true);
+    expect(room.seats[1]).toMatchObject({ state: 'computer' });
+    room.dispose();
+  });
+
+  it('does not touch a seat twice', () => {
+    const room = finished();
+    room.leave('p');
+    const entries = room.log.length;
+    expect(room.leave('p')).toMatchObject({ ok: true });
+    expect(room.log).toHaveLength(entries);
+    room.dispose();
+  });
+});

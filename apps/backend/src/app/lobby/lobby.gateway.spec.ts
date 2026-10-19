@@ -1,5 +1,5 @@
 import { PROTOCOL_VERSION, type GameView } from 'game-rules';
-import { Client, create, startApp, stopApp, type Any } from './testing/client';
+import { Client, create, registry, startApp, stopApp, type Any } from './testing/client';
 
 beforeAll(startApp);
 afterAll(stopApp);
@@ -456,5 +456,48 @@ describe('seat:rename', () => {
     });
     expect(ack.game.seats[1].name).toBe('Rex');
     expect(ack.game.game.players[1].name).toBe('Rex');
+  });
+});
+
+describe('finished game', () => {
+  const finishedGame = async () => {
+    const host = await Client.start('Finhost');
+    const { game } = await create(host, 2);
+    const p = await Client.start('Finguest');
+    await p.send('game:join', { gameId: game.id, password: 'secret' });
+    await host.send('seat:ready', { ready: true });
+    await p.send('seat:ready', { ready: true });
+    await host.send('game:start');
+    const room = registry().get(game.id);
+    if (!room) throw new Error('no room');
+    room.phase = 'finished';
+    return { host, p, room, id: game.id as string };
+  };
+
+  it('is not restored on session:start and the player can start another game', async () => {
+    const { host, p, room, id } = await finishedGame();
+    const back = await Client.start('ignored', p.token);
+    const ack = await back.send('session:start', {
+      token: p.token,
+      nickname: 'x',
+      protocolVersion: PROTOCOL_VERSION,
+    });
+    expect(ack).toMatchObject({ ok: true, nickname: 'Finguest' });
+    expect(ack.game).toBeUndefined();
+    expect(room.seats[1]).toMatchObject({ state: 'computer', name: 'Finguest' });
+    expect(await back.send('game:leave')).toMatchObject({ reason: 'notInGame' });
+    expect(await create(back)).toMatchObject({ ok: true });
+    expect(await host.send('game:leave')).toMatchObject({ ok: true });
+    const list = await host.send('lobby:list');
+    expect(list.games.find((g: Any) => g.id === id)).toBeUndefined();
+  });
+
+  it('keeps the table of the others intact when a player leaves', async () => {
+    const { host, p } = await finishedGame();
+    expect(await p.send('game:leave')).toMatchObject({ ok: true });
+    const state = await host.until('game:state', (s) => s.game.seats[1].state === 'computer');
+    expect(state.game.seats).toHaveLength(8);
+    expect(state.game.seats[1]).toMatchObject({ name: 'Finguest' });
+    expect(state.game.phase).toBe('finished');
   });
 });

@@ -15,9 +15,10 @@ import { MessageService } from 'primeng/api';
 import { DialogModule } from 'primeng/dialog';
 import { TooltipModule } from 'primeng/tooltip';
 import { DicePrefs } from '../core/dice-prefs';
+import { Celebration } from '../core/celebration';
 import { DiceRollService } from '../core/dice-roll';
 import { errorMessage } from '../core/error-message';
-import { isHost, logText, playerSeats, seatName } from '../core/game-view';
+import { isHost, logText, playerSeats, seatName, youWon } from '../core/game-view';
 import { I18nService } from '../core/i18n.service';
 import { SocketService, TOAST_MS } from '../core/socket.service';
 import { TableScale } from '../core/table-scale';
@@ -37,6 +38,7 @@ import { CardDeck } from './card-deck';
 import { DiceArea } from './dice-area';
 import { GameLog } from './game-log';
 import { DiscardPile } from './discard-pile';
+import { GameOver } from './game-over';
 import { PlayerSeat } from './player-seat';
 import { TableLayout } from './table-layout';
 import { LeaveGame } from '../core/leave-game';
@@ -79,6 +81,7 @@ const logEnd = (g: GameView | null | undefined): number => (g?.logBase ?? 0) + (
     DiceArea,
     DialogModule,
     GameLog,
+    GameOver,
     PlayerSeat,
     TableLayout,
     SettingsDialog,
@@ -231,6 +234,7 @@ const logEnd = (g: GameView | null | undefined): number => (g?.logBase ?? 0) + (
           <p-button [label]="'removed.confirm' | t" (onClick)="socket.leave()" />
         </div>
       </p-dialog>
+      <app-game-over [view]="view" [visible]="gameOverVisible()" />
     }
   `,
 })
@@ -243,6 +247,7 @@ export class Table {
     this.mine() ? this.chosen() : (this.socket.game()?.preview ?? []),
   );
   private readonly messages = inject(MessageService);
+  private readonly celebration = inject(Celebration);
   protected readonly roll = inject(DiceRollService);
   private readonly prefs = inject(DicePrefs);
   protected readonly settingsOpen = signal(false);
@@ -250,6 +255,17 @@ export class Table {
   protected readonly logOpen = signal(false);
   /** A computer took over my seat (timeouts); nothing here is playable anymore. */
   protected readonly removed = computed(() => (this.socket.game()?.you.seat ?? 0) < 0);
+  /** The result is shown once the last roll and notice are over and the whole log is revealed. */
+  protected readonly gameOverVisible = computed(() => {
+    const g = this.socket.game();
+    return (
+      g?.phase === 'finished' &&
+      g.you.seat >= 0 &&
+      !this.roll.rolling() &&
+      !this.notice() &&
+      this.revealed() >= logEnd(g)
+    );
+  });
   /**
    * How long a turn's result (bust, bank, Stop, timeout) stays on the table before the next turn
    * starts. The server waits as long (`pacing` in game-rules) before the next player's move.
@@ -555,6 +571,12 @@ export class Table {
     inject(DestroyRef).onDestroy(() => {
       clearInterval(tick);
       tableScale.disable();
+      this.celebration.stop();
+    });
+    effect(() => {
+      const g = this.socket.game();
+      const celebrate = this.gameOverVisible() && !!g && youWon(g);
+      untracked(() => (celebrate ? this.celebration.start() : this.celebration.stop()));
     });
     effect(() => {
       const paused = this.paused();

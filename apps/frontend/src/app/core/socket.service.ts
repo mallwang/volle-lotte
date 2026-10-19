@@ -271,7 +271,8 @@ export class SocketService {
 
   /** Replays session:start after a reconnect; tells the user if the game is gone. */
   private async replay(stored: Stored): Promise<void> {
-    const hadGame = this.game() !== null;
+    // a finished game is not restored on purpose, so losing it is no news
+    const hadGame = this.game() !== null && this.game()?.phase !== 'finished';
     const ack = await this.emit('session:start', {
       nickname: stored.nickname,
       token: stored.token,
