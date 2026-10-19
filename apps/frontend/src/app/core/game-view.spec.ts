@@ -25,6 +25,16 @@ describe('game view names', () => {
     expect(logText(game, renamed, i18n())).toBe('Sly Owl is now called Brave Fox');
   });
 
+  it('names the player who lost points, not the one on turn', () => {
+    const e: LogEntry = {
+      at: 0,
+      kind: 'turn',
+      seat: 1,
+      data: { type: 'penalty', player: 0, lost: 1000 },
+    };
+    expect(logText(game, e, i18n())).toBe('Ann lost 1000 points');
+  });
+
   it('names the human a computer replaced', () => {
     const replaced = gameView({}, [
       { state: 'human', playerId: 'p0', nickname: 'Ann', connected: true },

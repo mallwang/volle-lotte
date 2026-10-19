@@ -40,7 +40,11 @@ export function logText(g: GameView, e: LogEntry, i18n: I18nService): string {
       case 'deckReshuffled':
         return t('deckReshuffled');
       case 'penalty':
-        return t('penalty', { lost: ev.lost });
+        // the loser is not the player whose turn it is
+        return t('penalty', {
+          lost: ev.lost,
+          who: seatName(g.seats[playerSeats(g)[ev.player]]),
+        });
       case 'gameOver':
         return t('gameOver');
     }
