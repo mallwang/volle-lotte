@@ -6,7 +6,7 @@
 
 > This README is also available in English: [README.md](README.md)
 
-Online-Multiplayer-Web-App (PWA) für das Würfelspiel _Volle Lotte_, 2-8 Spielende, Computergegner.
+Online-Multiplayer-Web-App (PWA) für das Würfelspiel _Volle Lotte_, 2-8 Spieler, Computergegner.
 Hosting: https://volle-lotte.allwang.family. Ein einzelner Docker-Container (NestJS liefert API, WebSocket und den Angular-Build aus), SQLite auf einem Volume.
 
 Spielanleitung: [docs/how-to-play.de.md](docs/how-to-play.de.md). Technische Regelreferenz: [docs/rules.de.md](docs/rules.de.md) ([englisch](docs/rules.md)).

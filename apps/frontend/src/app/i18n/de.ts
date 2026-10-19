@@ -95,7 +95,7 @@ export const de: Record<keyof typeof en, string> = {
   'card.info.street':
     'Straße: Sammle über mehrere Würfe je einen Würfel pro Wert 1-6. Bei Erfolg gibt es genau 2.000 Punkte; ein Wurf ohne fehlenden Wert ist ein Fehlwurf.',
   'card.info.plusMinus':
-    'Plus/Minus: Sichern ist nicht möglich. Mit einer Vollen Lotte gibt es +1.000 Punkte; jeder Führende verliert 1.000.',
+    'Plus/Minus: Sichern ist nicht möglich. Mit einer Vollen Lotte gibt es +1.000 Punkte; jeder führende Spieler verliert 1.000.',
   'card.info.clover':
     'Kleeblatt: Zwei neue Volle Lotten hintereinander gewinnen das Spiel sofort. Ein Fehlwurf verliert alle Zugpunkte.',
 
