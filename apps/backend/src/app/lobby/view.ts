@@ -33,6 +33,9 @@ export function toView(room: GameRoom, playerId: string): GameView {
     seats,
     fastComputerDice: room.fastComputerDice,
     computerSpeed: room.computerSpeed,
+    showBustProbability: room.showBustProbability,
+    paused: room.paused,
+    logBase: room.logBase,
     log: room.log,
   };
   if (room.game) {

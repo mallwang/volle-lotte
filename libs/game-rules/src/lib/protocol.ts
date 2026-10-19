@@ -1,6 +1,6 @@
 import type { Action, Event, GameState, RejectionReason, Rules } from './types.js';
 
-export const PROTOCOL_VERSION = 6;
+export const PROTOCOL_VERSION = 7;
 
 export type Difficulty = 'easy' | 'medium' | 'hard' | 'random';
 export type Risk = 'none' | 'medium' | 'high' | 'random';
@@ -28,6 +28,7 @@ export type ErrorReason =
   | 'notRejoinable'
   | 'notEnoughPlayers'
   | 'notYourTurn'
+  | 'paused'
   | 'rejected';
 
 export interface ErrorAck {
@@ -97,6 +98,12 @@ export interface GameView {
   fastComputerDice: boolean;
   /** Host setting: computer speed 1 (slow) to 5 (fast); see `pacing`. */
   computerSpeed: number;
+  /** Host setting: show next-throw bust odds to everyone at the table. */
+  showBustProbability: boolean;
+  /** Host paused the running game: no computer move, no turn limit, no action. */
+  paused: boolean;
+  /** Entries dropped from the front of `log` so far; `logBase + i` is the stable index of `log[i]`. */
+  logBase: number;
   log: LogEntry[];
 }
 
@@ -139,11 +146,18 @@ export interface Intents {
   'seat:remove': [{ seat: number }, object];
   'turn:action': [{ action: Action }, object];
   'turn:preview': [{ dice: number[] }, object];
-  'game:settings': [{ fastComputerDice?: boolean; computerSpeed?: number }, object];
+  'game:settings': [GameSettings, object];
+  'game:pause': [{ paused: boolean }, object];
+}
+
+export interface GameSettings {
+  fastComputerDice?: boolean;
+  computerSpeed?: number;
+  showBustProbability?: boolean;
 }
 
 export interface SettingChange {
-  setting: 'computerSpeed' | 'fastComputerDice';
+  setting: keyof GameSettings;
   value: number | boolean;
 }
 

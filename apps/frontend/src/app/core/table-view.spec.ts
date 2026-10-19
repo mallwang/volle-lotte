@@ -3,6 +3,7 @@ import { defaultRules } from 'game-rules';
 import {
   discardLayers,
   layerTransform,
+  nextThrowRisk,
   pileLevel,
   playedCards,
   safeLabel,
@@ -32,6 +33,51 @@ describe('table-view', () => {
     expect(seatAreas(0)).toEqual([]);
     expect(seatAreas(9)).toHaveLength(8);
     expect(seatRows(5)).toBe(3);
+  });
+
+  describe('nextThrowRisk', () => {
+    const rules = defaultRules();
+    const turn = (over: Partial<Turn> = {}): Turn => ({
+      phase: 'select',
+      card: 'bonus200',
+      dice: [1, 5, 2, 3, 4, 6],
+      free: 6,
+      run: 0,
+      carried: 0,
+      street: [],
+      volleLottes: 0,
+      ...over,
+    });
+
+    it('previews the free dice after a valid selection', () => {
+      expect(nextThrowRisk(turn(), [0], rules)).toBeCloseTo(0.07716, 4);
+      expect(nextThrowRisk(turn(), [0, 1], rules)).toBeCloseTo(0.157407, 5);
+      expect(nextThrowRisk(turn({ phase: 'decide', free: 1 }), [], rules)).toBeCloseTo(2 / 3);
+    });
+
+    it.each([[], [2], [0, 2], [-1], [6], [0, 0], [0.5]])(
+      'hides the hint for an empty or invalid selection %j',
+      (...selected) => {
+        expect(nextThrowRisk(turn(), selected, rules)).toBeNull();
+      },
+    );
+
+    it('previews the still-missing Street faces', () => {
+      const street = turn({ card: 'street', free: 4, street: [1, 6], dice: [2, 2, 4, 6] });
+      expect(nextThrowRisk(street, [0, 2], rules)).toBeCloseTo((4 / 6) ** 2, 12);
+      expect(nextThrowRisk(street, [0, 1], rules)).toBeNull();
+      expect(nextThrowRisk(street, [3], rules)).toBeNull();
+    });
+
+    it('has no next throw after a Volle Lotte, except the first Clover pass', () => {
+      const all = turn({ dice: [1, 1, 1, 5, 5, 5] });
+      const selected = [0, 1, 2, 3, 4, 5];
+      expect(nextThrowRisk(all, selected, rules)).toBeNull();
+      expect(nextThrowRisk({ ...all, card: 'clover' }, selected, rules)).toBeCloseTo(0.030864, 5);
+      expect(nextThrowRisk({ ...all, card: 'clover', volleLottes: 1 }, selected, rules)).toBeNull();
+      expect(nextThrowRisk(turn({ phase: 'draw', free: 0 }), [], rules)).toBeNull();
+      expect(nextThrowRisk(turn({ phase: 'decide', free: 0 }), [], rules)).toBeNull();
+    });
   });
 
   it.each([0, 1, 2, 3])('rotates so that seat %i is first', (me) => {
@@ -71,7 +117,7 @@ describe('table-view', () => {
   });
 
   it('derives discard layers and a stable jitter', () => {
-    expect([0, 1, 6, 7, 48, 200].map(discardLayers)).toEqual([0, 1, 1, 2, 8, 8]);
+    expect([0, 1, 2, 6, 7, 48, 200].map(discardLayers)).toEqual([0, 0, 1, 1, 1, 8, 8]);
     expect(layerTransform(3)).toEqual(layerTransform(3));
     expect(layerTransform(0).rot).toBeCloseTo(-12.1);
     expect(layerTransform(0)).toMatchObject({ x: -4, y: -3 });

@@ -14,7 +14,7 @@ import { Lru } from './lru.js';
 import { outcomes } from './odds.js';
 import type { Pick } from './odds.js';
 
-/** Which card the run is played on: a Bonus card (Volle Lotte adds the bonus and banks) or a Double Lotte without carried points. */
+/** Which card the run is played on: Bonus (may bank) or Double Lotte (must complete). */
 export type Mode = 'bonus' | 'double';
 
 export interface TableKey {
@@ -55,8 +55,7 @@ export class ValueTable {
 
   /** Points received by banking a run, or -Infinity when banking is not allowed. */
   bank(run: number): number {
-    const allowed =
-      run > 0 && run >= this.key.minimumPoints && (this.key.mode === 'bonus' || this.carried === 0);
+    const allowed = run > 0 && run >= this.key.minimumPoints && this.key.mode === 'bonus';
     return allowed ? this.carried + run : -Infinity;
   }
 
@@ -65,7 +64,7 @@ export class ValueTable {
     const { mode, bonus, minimumPoints, kappa } = this.key;
     if (mode === 'double') {
       const doubled = run * 2;
-      return doubled >= minimumPoints ? doubled : -kappa * run;
+      return doubled >= minimumPoints ? this.carried + doubled : -kappa * (this.carried + run);
     }
     const total = this.carried + run + bonus;
     return run + bonus >= minimumPoints ? total : total * FORCED_DRAW_FACTOR;
@@ -103,7 +102,10 @@ export class ValueTable {
 
   /** Best of banking and throwing. */
   value(free: number, run: number): number {
-    if (run > RUN_CAP) return this.bank(run) > -Infinity ? this.bank(run) : this.carried + run;
+    if (run > RUN_CAP) {
+      if (this.key.mode === 'double') return this.throwValue(free, run);
+      return this.bank(run) > -Infinity ? this.bank(run) : this.carried + run;
+    }
     const slot = this.values[free];
     const index = run / RUN_STEP;
     const cached = slot[index];

@@ -2,7 +2,7 @@
 
 Living list of what is done, what is next and what is only an idea. New ideas go here first; a spec is created when an item is picked up. Every spec is compared against this file, and agents read it to know what is still open.
 
-Last updated: 2026-10-18. The Java -> web migration is finished (see [migration.md](migration.md)); everything below is extension work.
+Last updated: 2026-10-19. The Java -> web migration is finished (see [migration.md](migration.md)); everything below is extension work.
 
 ## How to use
 
@@ -11,6 +11,8 @@ Last updated: 2026-10-18. The Java -> web migration is finished (see [migration.
 - Keep items short: goal, why, constraints, open questions. Details belong in the spec.
 
 ## Done
+
+Post-playtest fixes: one-card discard piles have no background card; easy computers take all scoring dice; hosts can share a next-throw bust probability preview (off by default, protocol v7); Star score updates wait for the final roll animation, and Double Lotte always requires a Volle Lotte.
 
 | Spec | Feature                                                                                                                                                                                                                                                                                        |
 | ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

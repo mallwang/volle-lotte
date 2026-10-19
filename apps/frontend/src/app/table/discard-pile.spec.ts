@@ -19,9 +19,21 @@ describe('DiscardPile', () => {
   });
 
   it('grows with played cards and caps at 8 layers', () => {
-    expect(layers(make(1))).toHaveLength(1);
-    expect(layers(make(13))).toHaveLength(3);
+    expect(layers(make(1))).toHaveLength(0);
+    expect(layers(make(2))).toHaveLength(1);
+    expect(layers(make(13))).toHaveLength(2);
     expect(layers(make(500))).toHaveLength(8);
+  });
+
+  it('shows the first discarded card without a background card', () => {
+    const f = TestBed.createComponent(DiscardPile);
+    f.componentRef.setInput('played', 1);
+    f.componentRef.setInput('previous', 'bonus200');
+    f.detectChanges();
+    const el = f.nativeElement as HTMLElement;
+    expect(el.querySelector('app-game-card')).not.toBeNull();
+    expect(el.querySelector('.discard.empty')).toBeNull();
+    expect(layers(el)).toHaveLength(0);
   });
 
   it('keeps earlier layer transforms when the pile grows', () => {

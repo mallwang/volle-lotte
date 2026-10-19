@@ -62,6 +62,11 @@ const STREET_VALUES = [1, 2, 3, 4, 5, 6];
           }
         </div>
         <div class="vl-turn-actions">
+          @if (bustPercent(); as percent) {
+            <p class="vl-bust-probability" role="status">
+              {{ 'table.bustProbability' | t: { percent } }}
+            </p>
+          }
           <p class="vl-roll-status" role="status">
             @if (roll.rolling()) {
               {{ 'dice.rolling' | t }}
@@ -104,7 +109,7 @@ const STREET_VALUES = [1, 2, 3, 4, 5, 6];
                     >
                   }
                 </span>
-                @if (g.points > 0) {
+                @if (showPoints() && g.points > 0) {
                   <small>+{{ g.points }}</small>
                 }
               </span>
@@ -134,6 +139,9 @@ export class DiceArea {
   /** Values collected on a Street (null = not a Street). */
   readonly street = input<readonly number[] | null>(null);
   readonly aside = input<readonly AsideGroup[]>([]);
+  /** Show the points next to each secured group. */
+  readonly showPoints = input(true);
+  readonly bustPercent = input<string | null>(null);
   /** Heading of the secured area: points, or progress towards the goal of the card. */
   readonly safeText = input('');
   /** Minimum to bank, set only while the collected points are still below it. */

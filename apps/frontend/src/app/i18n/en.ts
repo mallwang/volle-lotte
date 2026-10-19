@@ -156,6 +156,9 @@ export const en = {
   'table.dice': 'Dice',
   'table.players': 'Players',
   'table.log': 'Log',
+  'table.pause': 'Pause game',
+  'table.resume': 'Resume game',
+  'table.paused': 'Game paused by the host',
   'turn.timer': 'Time limit for this move',
   'table.timedOutYou': 'You ran out of time.',
   'table.timedOutWarn':
@@ -215,6 +218,10 @@ export const en = {
   'settings.fastComputerDiceHint':
     'Computer dice roll for a shorter time. Applies to everyone at the table.',
   'settings.hostOnly': 'Only the host can change this.',
+  'settings.showBustProbability': 'Show bust probability',
+  'settings.showBustProbabilityHint':
+    'For everyone. Previews the next throw with the selected dice set aside.',
+  'table.bustProbability': 'Bust probability on the next throw: {percent}%',
   'settings.computerSpeed': 'Computer speed',
   'settings.computerSpeedHint':
     'How long computers wait between their actions. Applies to everyone at the table.',
@@ -231,6 +238,8 @@ export const en = {
   'toast.setting.computerSpeed': '{who} set the computer speed to {step} ({name}).',
   'toast.setting.fastComputerDice.on': '{who} turned fast computer dice on.',
   'toast.setting.fastComputerDice.off': '{who} turned fast computer dice off.',
+  'toast.setting.showBustProbability.on': '{who} turned bust probability on.',
+  'toast.setting.showBustProbability.off': '{who} turned bust probability off.',
   'player.human': 'Human',
   'player.active': 'Active',
   'player.offline': 'Offline',
@@ -300,6 +309,7 @@ export const en = {
   'error.notReady': 'Not all players are ready.',
   'error.notEnoughPlayers': 'At least two players are needed.',
   'error.notYourTurn': 'It is not your turn.',
+  'error.paused': 'The game is paused.',
   'error.rejected': 'That move is not allowed.',
   'error.rejectedEngine': 'That move is not allowed: {engine}.',
 

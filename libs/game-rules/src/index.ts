@@ -8,3 +8,4 @@ export * from './lib/serialize.js';
 export * from './lib/protocol.js';
 export * from './lib/computer.js';
 export * from './lib/pacing.js';
+export { bustProbability } from './lib/computer/odds.js';

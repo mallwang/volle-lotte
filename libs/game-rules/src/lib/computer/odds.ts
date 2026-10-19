@@ -85,7 +85,9 @@ export function outcomes(n: number, doubling: boolean): readonly Outcome[] {
 }
 
 /** Probability that a throw of `n` dice has no scoring die. */
-export function bustProbability(n: number, doubling: boolean): number {
+export function bustProbability(n: number, doubling: boolean, street?: readonly number[]): number {
+  if (!Number.isInteger(n) || n < 1 || n > 6) throw new RangeError('1 to 6 dice required');
+  if (street) return (new Set(street).size / 6) ** n;
   return outcomes(n, doubling)
     .filter((o) => o.picks.length === 0)
     .reduce((sum, o) => sum + o.prob, 0);

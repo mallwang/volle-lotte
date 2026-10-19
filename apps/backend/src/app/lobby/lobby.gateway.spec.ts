@@ -177,6 +177,9 @@ describe('game settings', () => {
     expect(await p.send('game:settings', { computerSpeed: 4 })).toMatchObject({
       reason: 'notHost',
     });
+    expect(await p.send('game:settings', { showBustProbability: true })).toMatchObject({
+      reason: 'notHost',
+    });
     for (const body of [
       {},
       { fastComputerDice: 'yes' },
@@ -184,12 +187,27 @@ describe('game settings', () => {
       { computerSpeed: 6 },
       { computerSpeed: '3' },
       { computerSpeed: 2.5 },
+      { showBustProbability: 'true' },
+      { showBustProbability: 1 },
+      { showBustProbability: null },
     ])
       expect(await host.send('game:settings', body)).toMatchObject({ reason: 'invalidRequest' });
     expect(await host.send('game:settings', { fastComputerDice: true })).toEqual({ ok: true });
     const state = await p.until('game:state', (s) => s.game.fastComputerDice === true);
     expect(state.game.fastComputerDice).toBe(true);
     expect(state.game.computerSpeed).toBe(3);
+    expect(state.game.showBustProbability).toBe(false);
+    const seen = p.until(
+      'game:settingsChanged',
+      (s) => s.changes[0]?.setting === 'showBustProbability',
+    );
+    expect(await host.send('game:settings', { showBustProbability: true })).toEqual({ ok: true });
+    expect(await seen).toEqual({
+      by: 'Settingshost',
+      changes: [{ setting: 'showBustProbability', value: true }],
+    });
+    const odds = await p.until('game:state', (s) => s.game.showBustProbability === true);
+    expect(odds.game.showBustProbability).toBe(true);
   });
 
   it('pushes one game:settingsChanged per accepted change, to host and guest', async () => {

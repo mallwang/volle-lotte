@@ -39,6 +39,13 @@ describe('ValueTable', () => {
     expect(table.bank(1500)).toBeGreaterThan(table.throwValue(1, 1500));
   });
 
+  it.each([0, 500])('never values early banking on Double Lotte with %i carried', (carried) => {
+    const table = tableFor(rules, 'double', carried, 0, 0);
+    expect(table.bank(1000)).toBe(-Infinity);
+    expect(table.value(1, 1000)).toBeCloseTo((2 * carried + 2200 + 2100) / 6, 9);
+    expect(table.value(1, 5000)).toBeCloseTo((2 * carried + 10200 + 10100) / 6, 9);
+  });
+
   it('shares tables and stays bounded under many distinct minimum points', () => {
     expect(tableFor(rules, 'bonus', 0, 400, 0)).toBe(tableFor(rules, 'bonus', 100, 400, 0.01));
     for (let minimumPoints = 0; minimumPoints < 3 * MAX_TABLES; minimumPoints += 1) {

@@ -50,6 +50,7 @@ describe('HostSettings', () => {
     const { el, slider } = await setup('p9');
     expect(slider().classList.contains('p-disabled')).toBe(true);
     expect((el.querySelector('#fast-computer-dice') as HTMLInputElement).disabled).toBe(true);
+    expect((el.querySelector('#show-bust-probability') as HTMLInputElement).disabled).toBe(true);
     expect(el.textContent).toContain('Only the host can change this.');
   });
 
@@ -70,6 +71,17 @@ describe('HostSettings', () => {
     const { socket, el } = await setup();
     (el.querySelector('#fast-computer-dice') as HTMLInputElement).click();
     expect(socket.settings).toHaveBeenCalledWith({ fastComputerDice: true });
+  });
+
+  it('sends the bust probability switch and follows the shared server setting', async () => {
+    const { socket, el, fixture } = await setup();
+    const toggle = el.querySelector<HTMLInputElement>('#show-bust-probability')!;
+    expect(toggle.checked).toBe(false);
+    toggle.click();
+    expect(socket.settings).toHaveBeenCalledWith({ showBustProbability: true });
+    socket.game.set({ ...socket.game()!, showBustProbability: true });
+    fixture.detectChanges();
+    expect(toggle.checked).toBe(true);
   });
 
   it('follows a changed server value', async () => {

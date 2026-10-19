@@ -41,16 +41,19 @@ Open **Settings** on the table to change:
 - **Skip dice animation** - only on your device; dice and log show immediately.
 - **Fast computer dice** - the host only, others see it read-only. Computer throws take 0.5-1.5 seconds instead of 1-3.
 - **Computer speed** - the host only, others see it read-only. A slider from 1 (slow) to 5 (fast); every game starts at 3 (Medium). It sets how long computers wait between their actions and how long a turn's result stays on the table, for everyone at the table. It is also shown in the game lobby, where the host can set it before starting. Whenever the host changes a setting, every player sees a short notice naming the host and the new value; players who join later do not.
+- **Show bust probability** - off by default; the host can enable it in the lobby or during play for everyone. Below the dice, above the rolling status, it shows the chance of having no valid selection on the next throw. Marking a valid selection previews the risk with those dice set aside; empty or invalid selections show no hint. Street uses the still-missing values rather than normal scoring. No hint appears when the card is complete; the first Clover Volle Lotte previews its next six dice. On Star, a failed throw still ends the turn safely: this is the probability of no scoring dice, not of losing points.
 
 ### Computer players
 
 Every computer seat has two independent settings, both chosen by the host in the game lobby (default: medium skill, medium risk):
 
-- **Skill** - _easy_ plays by a simple rule of thumb and makes visible mistakes, _medium_ usually picks a good move but sometimes a worse one, _hard_ always picks the move with the best expected result (it knows the exact dice odds and the share of each card type in the deck, but never looks at the real card order).
+- **Skill** - _easy_ always takes all scoring dice, then uses simple point thresholds to stop or continue; _medium_ follows the best evaluation half the time and otherwise weighs nearby alternatives, ignoring clearly inferior moves and treating equivalent dice selections equally; _hard_ always picks the move with the best expected result (it knows the exact dice odds and the share of each card type in the deck, but never looks at the real card order).
 - **Risk** - how willing the computer is to lose points for a chance of more. _No risk_ banks early and never draws another card after a Volle Lotte on a Bonus card. _Medium_ weighs chances and losses evenly and draws about half of the time when drawing and banking are equally good. _High_ leans strongly towards throwing on and drawing, but not blindly: with very many carried points and many Stop and Plus/Minus cards it holds back.
 - **Random** - for either setting the computer picks a new concrete value for every single decision, so it plays erratically. A computer that replaces a leaving player has random skill and random risk.
 
 Whatever the settings: a computer that can bank to reach the target score does so, and on Street, Double Lotte, Plus/Minus, Clover and Star it always sets aside all dice it can. Behind the leader it takes more risk, close to the target it plays safer.
+
+The player's score changes only when the turn ends, not when dice are set aside. In particular, Star collects pending points until a bust or Volle Lotte. Double Lotte can never be banked early; a bust loses its pending points.
 
 Buttons that are not available show the reason (for example "Not your turn"). The log lists what happened; players who leave a running game (after a confirmation), lose their connection for 30 seconds or miss three turns in a row are replaced by a computer. A timer shows how long you have left: 10 seconds to draw or roll, 15 to choose dice, 20 to secure or continue. If time runs out the action is taken for you (a skipped draw or selection ends your turn). After the third timeout you see a notice and can only go back to the lobby. Computers pause while no human is seated.
 

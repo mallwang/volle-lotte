@@ -6,8 +6,9 @@ import {
   inject,
   linkedSignal,
   signal,
+  untracked,
 } from '@angular/core';
-import { pacing } from 'game-rules';
+import { bustProbability, pacing } from 'game-rules';
 import type { Action, CardType, Event as GameEvent, GameView, LogEntry } from 'game-rules';
 import { ButtonModule } from 'primeng/button';
 import { MessageService } from 'primeng/api';
@@ -16,13 +17,20 @@ import { TooltipModule } from 'primeng/tooltip';
 import { DicePrefs } from '../core/dice-prefs';
 import { DiceRollService } from '../core/dice-roll';
 import { errorMessage } from '../core/error-message';
-import { logText, playerSeats, seatName } from '../core/game-view';
+import { isHost, logText, playerSeats, seatName } from '../core/game-view';
 import { I18nService } from '../core/i18n.service';
 import { SocketService } from '../core/socket.service';
 import { TableScale } from '../core/table-scale';
 import { TranslatePipe } from '../core/translate.pipe';
 import { GameCard } from '../shared/game-card';
-import { playedCards, safeLabel, seatRows, seatViews, totalCards } from '../core/table-view';
+import {
+  nextThrowRisk,
+  playedCards,
+  safeLabel,
+  seatRows,
+  seatViews,
+  totalCards,
+} from '../core/table-view';
 import { CardDeck } from './card-deck';
 import { DiceArea } from './dice-area';
 import { GameLog } from './game-log';
@@ -55,6 +63,9 @@ const NOTICE_SEVERITY: Record<string, 'success' | 'warn'> = {
   stop: 'warn',
   timedOut: 'warn',
 };
+
+/** Absolute index one past the last log entry. */
+const logEnd = (g: GameView | null | undefined): number => (g?.logBase ?? 0) + (g?.log.length ?? 0);
 
 @Component({
   selector: 'app-table',
@@ -91,6 +102,18 @@ const NOTICE_SEVERITY: Record<string, 'success' | 'warn'> = {
           </span>
         }
         <span class="vl-title-btns">
+          @if (view.game && !view.game.result && host()) {
+            <p-button
+              [icon]="view.paused ? 'pi pi-play' : 'pi pi-pause'"
+              [rounded]="true"
+              [text]="true"
+              severity="secondary"
+              [ariaLabel]="(view.paused ? 'table.resume' : 'table.pause') | t"
+              [pTooltip]="(view.paused ? 'table.resume' : 'table.pause') | t"
+              tooltipPosition="bottom"
+              (onClick)="socket.pause(!view.paused)"
+            />
+          }
           <p-button
             icon="pi pi-sign-out"
             [rounded]="true"
@@ -111,6 +134,9 @@ const NOTICE_SEVERITY: Record<string, 'success' | 'warn'> = {
           />
         </span>
       </div>
+      @if (view.paused) {
+        <p class="vl-paused" role="status"><i class="pi pi-pause"></i> {{ 'table.paused' | t }}</p>
+      }
       @if (view.game; as state) {
         <div class="vl-table">
           <section [attr.aria-label]="'table.table' | t">
@@ -165,6 +191,8 @@ const NOTICE_SEVERITY: Record<string, 'success' | 'warn'> = {
                   [next]="next()"
                   [street]="street()"
                   [aside]="aside()"
+                  [showPoints]="showPoints()"
+                  [bustPercent]="bustPercent()"
                   [safeText]="safeText()"
                   [minimum]="belowMinimum() ? state.rules.minimumPoints : null"
                   (toggled)="toggle($event)"
@@ -234,6 +262,14 @@ export class Table {
     /** Card kept in the card slot until the notice is over (undefined = follow the turn state). */
     card?: CardType | null;
   } | null>(null);
+  private noticeTimer?: ReturnType<typeof setTimeout>;
+  private noticeStarted = 0;
+  private noticeLeft = 0;
+  protected readonly paused = computed(() => !!this.socket.game()?.paused);
+  protected readonly host = computed(() => {
+    const g = this.socket.game();
+    return !!g && isHost(g);
+  });
   private readonly lastThrow = signal<readonly number[]>([]);
   /** Dice on the table: the busting throw, the rolling throw, else the latest throw. */
   protected readonly diceShown = computed((): readonly (number | null)[] => {
@@ -252,17 +288,43 @@ export class Table {
     const g = this.socket.game()?.game;
     return !!g?.turn && g.turn.run > 0 && g.turn.run < g.rules.minimumPoints && this.canBank();
   });
+  /** Plus/Minus and Clover are about reaching the goal, so points of the secured dice mean nothing there. */
+  protected readonly showPoints = computed(() => {
+    const card = this.activeCard();
+    return card !== 'plusMinus' && card !== 'clover';
+  });
+  protected readonly bustPercent = computed(() => {
+    const g = this.socket.game();
+    if (!g?.showBustProbability || !g.game?.turn || this.notice()) return null;
+    const probability = this.roll.rolling()
+      ? bustProbability(
+          this.lastThrow().length,
+          g.rules.fourOfAKindDoubling,
+          this.street() ?? undefined,
+        )
+      : nextThrowRisk(g.game.turn, this.shown(), g.rules);
+    if (probability === null) return null;
+    return new Intl.NumberFormat(this.i18n.lang(), {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    }).format(probability * 100);
+  });
   /** Dice set aside since the card was drawn, rebuilt from the revealed log. */
   protected readonly aside = computed(() => {
-    const log = (this.socket.game()?.log ?? []).slice(0, this.revealed());
+    const log = this.revealedLog();
     const out: { dice: readonly number[]; points: number }[] = [];
-    // a Volle Lotte on a Bonus card keeps the collected dice for the bank-or-draw decision
-    const keep = this.socket.game()?.game?.turn?.phase === 'decide';
+    // selections made after the newest Volle Lotte; a Clover starts over with 6 fresh dice after it
+    let sinceLotte: number | null = null;
     for (let i = log.length - 1; i >= 0; i--) {
       const e = log[i];
       const d = e.kind === 'turn' && typeof e.data === 'object' ? e.data : null;
       if (d?.type === 'selected') out.unshift({ dice: d.dice, points: d.points });
-      else if (d && d.type !== 'thrown' && !(keep && d.type === 'volleLotte')) break;
+      else if (d?.type === 'volleLotte') sinceLotte ??= out.length;
+      else if (d?.type === 'cardDrawn') {
+        return d.card === 'clover' && sinceLotte !== null
+          ? out.slice(out.length - sinceLotte)
+          : out;
+      } else if (d && d.type !== 'thrown') break;
     }
     return out;
   });
@@ -271,7 +333,7 @@ export class Table {
    * on the table while a bust is shown, when the turn state already belongs to the next player.
    */
   protected readonly street = computed((): number[] | null => {
-    const log = (this.socket.game()?.log ?? []).slice(0, this.revealed());
+    const log = this.revealedLog();
     const picked: number[] = [];
     for (let i = log.length - 1; i >= 0; i--) {
       const e = log[i];
@@ -285,11 +347,9 @@ export class Table {
   /** Volle Lotte scored in this game, from the revealed log. */
   protected readonly volleLottes = computed(
     () =>
-      (this.socket.game()?.log ?? [])
-        .slice(0, this.revealed())
-        .filter(
-          (e) => e.kind === 'turn' && typeof e.data === 'object' && e.data.type === 'volleLotte',
-        ).length,
+      this.revealedLog().filter(
+        (e) => e.kind === 'turn' && typeof e.data === 'object' && e.data.type === 'volleLotte',
+      ).length,
   );
   /**
    * The card on the table. While a notice is shown it keeps the card of the finished turn; while
@@ -301,7 +361,7 @@ export class Table {
     if (notice?.card !== undefined) return notice.card;
     const turnCard = this.socket.game()?.game?.turn?.card ?? null;
     if (!this.roll.rolling()) return turnCard;
-    const log = (this.socket.game()?.log ?? []).slice(0, this.revealed());
+    const log = this.revealedLog();
     for (let i = log.length - 1; i >= 0; i--) {
       const e = log[i];
       const d = e.kind === 'turn' && typeof e.data === 'object' ? e.data : null;
@@ -338,7 +398,7 @@ export class Table {
   );
   /** Cards drawn so far, from the revealed log; a new entry makes the card fly in from the deck. */
   protected readonly drawnCards = computed(() =>
-    (this.socket.game()?.log ?? []).slice(0, this.revealed()).flatMap((e) => {
+    this.revealedLog().flatMap((e) => {
       const d = e.kind === 'turn' && typeof e.data === 'object' ? e.data : null;
       return d?.type === 'cardDrawn' ? [d.card] : [];
     }),
@@ -346,18 +406,29 @@ export class Table {
   protected readonly totalCards = totalCards;
   protected readonly playedCards = playedCards;
   protected readonly rows = computed(() => seatRows(this.tableSeats().length));
+  /** The server may already have ended the turn; do not spoil its result during the last roll. */
+  private readonly displayedScores = linkedSignal<{ scores: number[]; rolling: boolean }, number[]>(
+    {
+      source: () => {
+        const g = this.socket.game();
+        return { scores: g ? seatViews(g).map((p) => p.score) : [], rolling: this.roll.rolling() };
+      },
+      computation: ({ scores, rolling }, previous) =>
+        rolling && previous ? previous.value : scores,
+    },
+  );
   protected readonly tableSeats = computed(() => {
     const g = this.socket.game();
     if (!g) return [];
-    const views = seatViews(g);
+    const scores = this.displayedScores();
+    const views = seatViews(g).map((p, i) => ({ ...p, score: scores[i] ?? p.score }));
     const notice = this.notice();
     if (!this.roll.rolling() && !notice) return views;
     // while dice roll or a notice shows, the state is already past that turn: keep its player active
     const roller = notice
       ? notice.seat
       : this.seats().indexOf(
-          (g.log ?? [])
-            .slice(0, this.revealed())
+          this.revealedLog()
             .filter((e) => e.kind === 'turn')
             .at(-1)?.seat ?? -1,
         );
@@ -367,14 +438,17 @@ export class Table {
   protected readonly deadlineAt = computed(() =>
     this.roll.rolling() || this.notice() ? null : (this.socket.game()?.turnDeadline?.at ?? null),
   );
-  /** Log entries already processed; the server log keeps growing, so the length is a stable cursor. */
-  private seen = this.socket.game()?.log.length ?? 0;
+  /** Absolute index of the next log entry to process (the server's log is capped, see `logBase`). */
+  private seen = logEnd(this.socket.game());
   /** Entries shown: a throw's entry stays hidden until its dice have stopped (FR-010). */
   private readonly revealed = signal(this.seen);
+  /** The revealed entries still held by the server (it drops the oldest ones past a cap). */
+  private readonly revealedLog = computed(() => {
+    const g = this.socket.game();
+    return (g?.log ?? []).slice(0, Math.max(0, this.revealed() - (g?.logBase ?? 0)));
+  });
   /** Newest entry on top, so nobody has to scroll to see what just happened. */
-  protected readonly newestFirst = computed(() =>
-    [...(this.socket.game()?.log ?? []).slice(0, this.revealed())].reverse(),
-  );
+  protected readonly newestFirst = computed(() => [...this.revealedLog()].reverse());
   protected readonly seats = computed(() => {
     const g = this.socket.game();
     return g ? playerSeats(g) : [];
@@ -480,12 +554,23 @@ export class Table {
       tableScale.disable();
     });
     effect(() => {
+      const paused = this.paused();
+      untracked(() => {
+        if (!this.notice()) return;
+        if (paused) {
+          clearTimeout(this.noticeTimer);
+          this.noticeLeft = Math.max(0, this.noticeLeft - (Date.now() - this.noticeStarted));
+        } else this.armNotice();
+      });
+    });
+    effect(() => {
       const g = this.socket.game();
       if (!g || this.roll.rolling() || this.notice()) return;
       // roll over: reveal what was held back, then continue with the rest
       this.revealed.set(this.seen);
-      while (this.seen < g.log.length) {
-        if (this.process(g, g.log[this.seen++])) return;
+      this.seen = Math.max(this.seen, g.logBase);
+      while (this.seen < logEnd(g)) {
+        if (this.process(g, g.log[this.seen++ - g.logBase])) return;
       }
       this.revealed.set(this.seen);
     });
@@ -544,7 +629,7 @@ export class Table {
         0,
         lost,
       );
-      this.revealed.set(i + 1);
+      this.revealed.set(g.logBase + i + 1);
       return shown;
     }
     const bust = data.type === 'bust';
@@ -569,7 +654,10 @@ export class Table {
       const d = g.log[j].kind === 'turn' ? g.log[j].data : null;
       if (!d || typeof d !== 'object' || d.type === 'thrown') break;
       if (d.type === 'selected') {
-        for (const v of d.dice) rest.splice(rest.indexOf(v), 1);
+        for (const v of d.dice) {
+          const at = rest.indexOf(v);
+          if (at >= 0) rest.splice(at, 1);
+        }
         break;
       }
     }
@@ -629,8 +717,17 @@ export class Table {
       life: this.noticeMs(),
     });
     this.notice.set({ dice, safe: points, seat: this.seats().indexOf(e.seat ?? -1), card });
-    setTimeout(() => this.notice.set(null), this.noticeMs());
+    this.noticeLeft = this.noticeMs();
+    this.armNotice();
     return true;
+  }
+
+  /** Ends the notice after what is left of it; stands still while the host has paused the game. */
+  private armNotice(): void {
+    clearTimeout(this.noticeTimer);
+    this.noticeStarted = Date.now();
+    if (this.paused()) return;
+    this.noticeTimer = setTimeout(() => this.notice.set(null), this.noticeLeft);
   }
 
   private startRoll(g: GameView, dice: readonly number[]): void {
@@ -666,6 +763,7 @@ export class Table {
     return (
       this.can('decide') &&
       card !== 'star' &&
+      card !== 'doubleLotte' &&
       card !== 'street' &&
       card !== 'clover' &&
       card !== 'plusMinus' &&

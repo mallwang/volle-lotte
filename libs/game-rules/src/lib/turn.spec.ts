@@ -143,6 +143,22 @@ describe('cards', () => {
   });
 
   describe('Double Lotte', () => {
+    it.each([0, 500])(
+      'forbids banking with %i carried points, even above the minimum',
+      (carried) => {
+        const t = turnOf('doubleLotte', { phase: 'decide', free: 3, run: 1000, carried });
+        expect(reason(t, { type: 'bank' })).toBe('wrongPhase');
+        expect(run(t, { type: 'throw' }, rolls(2, 3, 4))).toMatchObject({
+          turn: null,
+          credit: 0,
+          events: [
+            { type: 'thrown', dice: [2, 3, 4] },
+            { type: 'bust', lost: 1000 + carried },
+          ],
+        });
+      },
+    );
+
     it('doubles only the run, earlier points count once', () => {
       const r = throwAndSelect(turnOf('doubleLotte', { carried: 500 }), allSix, [0, 1, 2, 3, 4, 5]);
       expect(r).toMatchObject({ turn: null, credit: 500 + 3000 });

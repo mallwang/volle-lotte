@@ -181,6 +181,39 @@ describe('Table', () => {
       },
     });
 
+    it('never offers banking on Double Lotte, even above the minimum without carried points', async () => {
+      const { button } = await setup(0, {
+        game: {
+          ...state(0),
+          turn: { ...state(0).turn!, card: 'doubleLotte', phase: 'decide', free: 3, run: 1000 },
+        },
+        log: [
+          { kind: 'turn', seat: 0, data: { type: 'cardDrawn', card: 'doubleLotte' } },
+          { kind: 'turn', seat: 0, data: { type: 'selected', dice: [1, 1, 1], points: 1000 } },
+        ],
+      });
+      expect(button('Bank')).toBeUndefined();
+      expect(button('Throw')).toBeDefined();
+    });
+
+    it('previews bust odds between the dice and roll status, only when enabled', async () => {
+      const { socket, fixture, el } = await setup(0);
+      expect(el.querySelector('.vl-bust-probability')).toBeNull();
+      socket.game.set({ ...socket.game()!, showBustProbability: true });
+      fixture.detectChanges();
+      expect(el.querySelector('.vl-bust-probability')).toBeNull();
+      const dice = el.querySelectorAll<HTMLButtonElement>('[aria-label=Dice] button');
+      dice[0].click();
+      dice[1].click();
+      fixture.detectChanges();
+      const hint = el.querySelector('.vl-bust-probability')!;
+      expect(hint.textContent).toContain('66.7%');
+      expect(hint.nextElementSibling?.classList.contains('vl-roll-status')).toBe(true);
+      socket.game.set({ ...socket.game()!, showBustProbability: false });
+      fixture.detectChanges();
+      expect(el.querySelector('.vl-bust-probability')).toBeNull();
+    });
+
     it('lets the player draw the next card instead of banking', async () => {
       const { button } = await setup(0, decide({ free: 0, run: 700 }));
       expect(button('Draw')!.disabled).toBe(false);
@@ -294,6 +327,41 @@ describe('Table', () => {
       const { el } = await setup(0, { log: [thrown] });
       expect(logLen(el)).toBe(1);
       expect(el.querySelector('.vl-roll-status')?.textContent?.trim()).toBe('');
+    });
+
+    it('keeps the Star score unchanged until the final throw has stopped', async () => {
+      localStorage.setItem('vl-skip-dice', 'false');
+      const t = await setup(0, {
+        game: {
+          ...state(0),
+          turn: { ...state(0).turn!, card: 'star', phase: 'decide', dice: [], free: 2, run: 300 },
+        },
+        log: [{ kind: 'turn', seat: 0, data: { type: 'cardDrawn', card: 'star' } }],
+      });
+      expect(t.el.querySelector('.vl-pseat-score')?.textContent).toContain('100');
+      vi.useFakeTimers();
+      t.socket.game.set({
+        ...t.socket.game()!,
+        game: {
+          ...state(1),
+          players: [
+            { name: 'Ann', score: 400 },
+            { name: 'Bob', score: 200 },
+          ],
+        },
+        log: [
+          { kind: 'turn', seat: 0, data: { type: 'cardDrawn', card: 'star' } },
+          thrown,
+          { kind: 'turn', seat: 0, data: { type: 'bust', lost: 0 } },
+          { kind: 'turn', seat: 0, data: { type: 'banked', points: 300 } },
+        ],
+      } as never);
+      t.fixture.detectChanges();
+      expect(t.el.querySelector('.vl-roll-status')?.textContent).toContain('rolling');
+      expect(t.el.querySelector('.vl-pseat-score')?.textContent).toContain('100');
+      vi.advanceTimersByTime(3001);
+      t.fixture.detectChanges();
+      expect(t.el.querySelector('.vl-pseat-score')?.textContent).toContain('400');
     });
   });
 

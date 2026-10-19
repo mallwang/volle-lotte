@@ -20,6 +20,17 @@ describe('outcomes', () => {
     expected.forEach((p, i) => expect(bustProbability(i + 1, true)).toBeCloseTo(p, 3));
   });
 
+  it('uses missing Street faces rather than scoring combinations', () => {
+    expect(bustProbability(6, true, [])).toBe(0);
+    expect(bustProbability(4, true, [1, 2])).toBeCloseTo((2 / 6) ** 4, 12);
+    expect(bustProbability(1, true, [1, 2, 3, 4, 5])).toBeCloseTo(5 / 6, 12);
+    expect(bustProbability(1, false, [1, 2, 3, 4, 5])).toBeCloseTo(5 / 6, 12);
+  });
+
+  it.each([0, 7, -1, 1.5])('rejects an invalid dice count %i', (n) => {
+    expect(() => bustProbability(n, true)).toThrow(RangeError);
+  });
+
   it('agrees with scoreDice for picks and marks the all-dice pick', () => {
     // 1,1,1,1,5,5: all six dice score in both variants
     for (const doubling of [true, false]) {

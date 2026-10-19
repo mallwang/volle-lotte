@@ -272,15 +272,18 @@ export class LobbyGateway implements OnGatewayDisconnect {
   settings(@ConnectedSocket() client: Socket, @MessageBody() b: unknown): Ack {
     const fast = isObj(b) ? b['fastComputerDice'] : undefined;
     const speed = isObj(b) ? b['computerSpeed'] : undefined;
+    const showOdds = isObj(b) ? b['showBustProbability'] : undefined;
     const valid =
       (fast === undefined || typeof fast === 'boolean') &&
       (speed === undefined || isInt(speed, 1, 5)) &&
-      (fast !== undefined || speed !== undefined);
+      (showOdds === undefined || typeof showOdds === 'boolean') &&
+      (fast !== undefined || speed !== undefined || showOdds !== undefined);
     if (!valid) return this.session(client) ? bad('invalidRequest') : bad('noSession');
     return this.inRoom(client, (room, session) => {
       const res = room.setSettings(session.playerId, {
         ...(fast !== undefined && { fastComputerDice: fast as boolean }),
         ...(speed !== undefined && { computerSpeed: speed as number }),
+        ...(typeof showOdds === 'boolean' && { showBustProbability: showOdds }),
       });
       if (res.ok && res.changes.length > 0) {
         for (const h of room.humans())
@@ -291,6 +294,14 @@ export class LobbyGateway implements OnGatewayDisconnect {
       }
       return res.ok ? { ok: true } : res; // `changes` is for the push only
     });
+  }
+
+  @SubscribeMessage('game:pause')
+  pause(@ConnectedSocket() client: Socket, @MessageBody() b: unknown): Ack {
+    const paused = isObj(b) ? b['paused'] : undefined;
+    if (typeof paused !== 'boolean')
+      return this.session(client) ? bad('invalidRequest') : bad('noSession');
+    return this.inRoom(client, (room, session) => room.setPaused(session.playerId, paused));
   }
 
   // ---- helpers
