@@ -58,7 +58,7 @@ describe('create and join', () => {
     expect(await p.send('game:join', { gameId: game.id, password: 'topsecret' })).toMatchObject({
       ok: true,
     });
-    const view = await host.until('game:state', (s) => s.game.seats[1].state === 'human');
+    const view = await host.untilView((s) => s.seats[1].state === 'human');
     expect(JSON.stringify(view)).not.toMatch(/topsecret|token|passwordHash/);
 
     const q = await Client.start('pia');
@@ -119,21 +119,19 @@ describe('game lobby and play', () => {
     expect(
       await host.send('seat:set', { seat: 2, mode: 'computer', difficulty: 'hard', risk: 'high' }),
     ).toMatchObject({ ok: true });
-    expect(await host.until('game:state', (s) => s.game.seats[2].risk === 'high')).toBeTruthy();
+    expect(await host.untilView((s) => s.seats[2].risk === 'high')).toBeTruthy();
     expect(await host.send('game:start')).toMatchObject({ reason: 'notReady' });
     await host.send('seat:ready', { ready: true });
     await p.send('seat:ready', { ready: true });
     expect(await p.send('game:start')).toMatchObject({ reason: 'notHost' });
     expect(await host.send('game:start')).toEqual({ ok: true });
 
-    const state = await p.until('game:state', (s) => s.game.phase === 'running');
-    expect(state.game.game.deck).toBeUndefined();
-    const current = state.game.game.current;
+    const state = await p.untilView((s) => s.phase === 'running');
+    expect((state.game as Any).deck).toBeUndefined();
+    const current = state.game?.current ?? 0;
     const humans = [host, p];
-    const seatPlayers = state.game.seats.filter(
-      (s: Any) => s.state !== 'open' && s.state !== 'locked',
-    );
-    const mover = seatPlayers[current]?.playerId === state.game.you.playerId ? p : host;
+    const seatPlayers = state.seats.filter((s: Any) => s.state !== 'open' && s.state !== 'locked');
+    const mover = seatPlayers[current]?.playerId === state.you.playerId ? p : host;
     const waiter = mover === p ? host : p;
     if (seatPlayers[current]?.state === 'human') {
       const before = waiter.pushes.length;
@@ -151,10 +149,10 @@ describe('game lobby and play', () => {
     expect(await p.send('game:leave')).toMatchObject({ ok: true });
     expect(await p.send('game:start')).toMatchObject({ reason: 'notInGame' });
     // the leaver's seat is now a computer that remembers who it replaced
-    const after = await host.until('game:state', (s) =>
-      s.game.seats.some((x: Any) => x.former?.nickname === 'Lobbyguest'),
+    const after = await host.untilView((s) =>
+      s.seats.some((x: Any) => x.former?.nickname === 'Lobbyguest'),
     );
-    expect(after.game.seats.filter((x: Any) => x.state === 'human')).toHaveLength(1);
+    expect(after.seats.filter((x: Any) => x.state === 'human')).toHaveLength(1);
   });
 });
 
@@ -193,10 +191,10 @@ describe('game settings', () => {
     ])
       expect(await host.send('game:settings', body)).toMatchObject({ reason: 'invalidRequest' });
     expect(await host.send('game:settings', { fastComputerDice: true })).toEqual({ ok: true });
-    const state = await p.until('game:state', (s) => s.game.fastComputerDice === true);
-    expect(state.game.fastComputerDice).toBe(true);
-    expect(state.game.computerSpeed).toBe(3);
-    expect(state.game.showBustProbability).toBe(false);
+    const state = await p.untilView((s) => s.fastComputerDice === true);
+    expect(state.fastComputerDice).toBe(true);
+    expect(state.computerSpeed).toBe(3);
+    expect(state.showBustProbability).toBe(false);
     const seen = p.until(
       'game:settingsChanged',
       (s) => s.changes[0]?.setting === 'showBustProbability',
@@ -206,8 +204,8 @@ describe('game settings', () => {
       by: 'Settingshost',
       changes: [{ setting: 'showBustProbability', value: true }],
     });
-    const odds = await p.until('game:state', (s) => s.game.showBustProbability === true);
-    expect(odds.game.showBustProbability).toBe(true);
+    const odds = await p.untilView((s) => s.showBustProbability === true);
+    expect(odds.showBustProbability).toBe(true);
   });
 
   it('pushes one game:settingsChanged per accepted change, to host and guest', async () => {
@@ -221,8 +219,8 @@ describe('game settings', () => {
     expect(await host.send('game:settings', { computerSpeed: 5 })).toEqual({ ok: true });
     expect(await seenByGuest).toEqual(expected);
     expect(await seenByHost).toEqual(expected);
-    const view = await p.until('game:state', (s) => s.game.computerSpeed === 5);
-    expect(view.game.computerSpeed).toBe(5);
+    const view = await p.untilView((s) => s.computerSpeed === 5);
+    expect(view.computerSpeed).toBe(5);
     // a no-op change sends no push; a late joiner gets none either
     const quiet = noPush(p);
     expect(await host.send('game:settings', { computerSpeed: 5 })).toEqual({ ok: true });
@@ -249,8 +247,8 @@ describe('seat:remove', () => {
     expect(await p.send('game:join', { gameId: game.id, password: 'secret' })).toMatchObject({
       reason: 'banned',
     });
-    const state = await host.until('game:state', (s) => s.game.seats[1].state === 'open');
-    expect(state.game.seats[1]).toEqual({ state: 'open' });
+    const state = await host.untilView((s) => s.seats[1].state === 'open');
+    expect(state.seats[1]).toEqual({ state: 'open' });
   });
 
   it('does not ban a player who leaves voluntarily', async () => {
@@ -351,14 +349,12 @@ describe('session language', () => {
     await create(host, 4);
     const german = (name: string) => /^[A-ZÄÖÜ][a-zäöüß]+(er|e|es) /.test(name);
     await host.send('seat:set', { seat: 1, mode: 'computer' });
-    const first = (await host.until('game:state', (s) => s.game.seats[1].state === 'computer'))
-      .game;
+    const first = await host.untilView((s) => s.seats[1].state === 'computer');
     expect(german(nameOf(first, 1))).toBe(true);
 
     expect(await host.send('session:language', { language: 'en' })).toEqual({ ok: true });
     await host.send('seat:set', { seat: 2, mode: 'computer' });
-    const second = (await host.until('game:state', (s) => s.game.seats[2].state === 'computer'))
-      .game;
+    const second = await host.untilView((s) => s.seats[2].state === 'computer');
     expect(nameOf(second, 1)).toBe(nameOf(first, 1));
     expect(nameOf(second, 2).split(' ')).toHaveLength(2);
   });
@@ -374,8 +370,7 @@ describe('session language', () => {
       language: 'en',
     });
     await again.send('seat:set', { seat: 1, mode: 'computer' });
-    const view = (await again.until('game:state', (s) => s.game.seats[1].state === 'computer'))
-      .game;
+    const view = await again.untilView((s) => s.seats[1].state === 'computer');
     expect(nameOf(view, 1)).toMatch(/^[A-Z][a-z]+ [A-Z][a-z]+$/);
   });
 });
@@ -385,15 +380,14 @@ describe('seat:rename', () => {
     const host = await Client.start('Rollhost');
     const { game } = await create(host, 4, '');
     await host.send('seat:set', { seat: 1, mode: 'computer' });
-    const name = (await host.until('game:state', (s) => s.game.seats[1].state === 'computer')).game
-      .seats[1];
+    const name = (await host.untilView((s) => s.seats[1].state === 'computer')).seats[1];
     expect(await host.send('seat:rename', { seat: 1 })).toEqual({ ok: true });
     const next = (
-      await host.until(
-        'game:state',
-        (s) => s.game.seats[1].name !== (name as { name: string }).name,
+      await host.untilView(
+        (s) =>
+          s.seats[1].state === 'computer' && s.seats[1].name !== (name as { name: string }).name,
       )
-    ).game.seats[1];
+    ).seats[1];
     expect(next).toMatchObject({ state: 'computer' });
     expect(game.id).toBeTruthy();
   });
@@ -404,8 +398,7 @@ describe('seat:rename', () => {
     const guest = await Client.start('Renameguest');
     await guest.send('game:join', { gameId: game.id });
     await host.send('seat:set', { seat: 2, mode: 'computer' });
-    const before = (await guest.until('game:state', (s) => s.game.seats[2].state === 'computer'))
-      .game;
+    const before = await guest.untilView((s) => s.seats[2].state === 'computer');
 
     expect(await guest.send('seat:rename', { seat: 2, name: 'Rex' })).toMatchObject({
       reason: 'notHost',
@@ -428,7 +421,7 @@ describe('seat:rename', () => {
     expect(await host.send('seat:rename', { seat: 2, name: 'Rex' })).toEqual({ ok: true });
 
     for (const c of [host, guest]) {
-      const state = (await c.until('game:state', (s) => s.game.seats[2].name === 'Rex')).game;
+      const state = await c.untilView((s) => s.seats[2].name === 'Rex');
       expect(state.seats[2].name).toBe('Rex');
     }
     expect(nameOf(before, 2)).not.toBe('Rex');
@@ -444,8 +437,7 @@ describe('seat:rename', () => {
     await host.send('seat:ready', { ready: true });
     expect(await host.send('game:start')).toEqual({ ok: true });
     expect(await host.send('seat:rename', { seat: 1, name: 'Rex' })).toEqual({ ok: true });
-    const live = (await host.until('game:state', (s) => s.game.game?.players[1].name === 'Rex'))
-      .game;
+    const live = await host.untilView((s) => s.game?.players[1].name === 'Rex');
     expect(live.seats[1].name).toBe('Rex');
     const back = await Client.connect();
     const ack = await back.send('session:start', {
@@ -495,10 +487,10 @@ describe('finished game', () => {
   it('keeps the table of the others intact when a player leaves', async () => {
     const { host, p } = await finishedGame();
     expect(await p.send('game:leave')).toMatchObject({ ok: true });
-    const state = await host.until('game:state', (s) => s.game.seats[1].state === 'computer');
-    expect(state.game.seats).toHaveLength(8);
-    expect(state.game.seats[1]).toMatchObject({ name: 'Finguest' });
-    expect(state.game.phase).toBe('finished');
+    const state = await host.untilView((s) => s.seats[1].state === 'computer');
+    expect(state.seats).toHaveLength(8);
+    expect(state.seats[1]).toMatchObject({ name: 'Finguest' });
+    expect(state.phase).toBe('finished');
   });
 });
 
@@ -538,31 +530,27 @@ describe('rematch', () => {
   it('reopens the room for the host, keeps the others on the finished table and lets them rejoin', async () => {
     const { host, p, id } = await finishedTable();
     expect(await host.send('rematch:start', { round: 1 })).toMatchObject({ ok: true });
-    const lobby = await host.until(
-      'game:state',
-      (s) => s.game.phase === 'lobby' && s.game.round === 2,
-    );
-    expect(lobby.game).toMatchObject({ round: 2, you: { seat: 0 } });
-    expect(lobby.game.seats.map((s: Any) => s.state).slice(0, 3)).toEqual([
+    const lobby = await host.untilView((s) => s.phase === 'lobby' && s.round === 2);
+    expect(lobby).toMatchObject({ round: 2, you: { seat: 0 } });
+    expect(lobby.seats.map((s: Any) => s.state).slice(0, 3)).toEqual([
       'human',
       'reserved',
       'reserved',
     ]);
-    const waiting = await p.until('game:state', (s) => s.game.rematch === 'open');
-    expect(waiting.game).toMatchObject({ phase: 'finished', round: 1, you: { reserved: 1 } });
-    expect(JSON.stringify(waiting.game)).not.toContain('"deck"');
+    const waiting = await p.untilView((s) => s.rematch === 'open');
+    expect(waiting).toMatchObject({ phase: 'finished', round: 1, you: { reserved: 1 } });
+    expect(JSON.stringify(waiting)).not.toContain('"deck"');
     expect(
-      p.pushes.some((x) => x.event === 'game:log' && x.payload.entries[0]?.kind === 'rematch'),
+      p.pushes.some(
+        (x) => x.event === 'game:change' && x.payload.log?.some((e: Any) => e.kind === 'rematch'),
+      ),
     ).toBe(false);
 
     expect(await p.send('rematch:join', { round: 2 })).toMatchObject({ reason: 'staleRound' });
     const ack = await p.send('rematch:join', { round: 1 });
     expect(ack).toMatchObject({ ok: true, game: { phase: 'lobby', round: 2, you: { seat: 1 } } });
-    const seen = await host.until(
-      'game:state',
-      (s) => s.game.round === 2 && s.game.seats[1].state === 'human',
-    );
-    expect(seen.game.seats[2].state).toBe('reserved');
+    const seen = await host.untilView((s) => s.round === 2 && s.seats[1].state === 'human');
+    expect(seen.seats[2].state).toBe('reserved');
     expect(await p.send('rematch:join', { round: 1 })).toMatchObject({ reason: 'notRejoinable' });
     expect((await host.send('lobby:list')).games.find((g: Any) => g.id === id)).toMatchObject({
       phase: 'lobby',
@@ -577,8 +565,8 @@ describe('rematch', () => {
     await host.send('seat:ready', { ready: true });
     await p.send('seat:ready', { ready: true });
     expect(await host.send('game:start')).toEqual({ ok: true });
-    const closed = await q.until('game:state', (s) => s.game.rematch === 'closed');
-    expect(closed.game).toMatchObject({ phase: 'finished', round: 1 });
+    const closed = await q.untilView((s) => s.rematch === 'closed');
+    expect(closed).toMatchObject({ phase: 'finished', round: 1 });
     expect(room.dropped.size).toBe(0);
     expect(await q.send('rematch:join', { round: 1 })).toMatchObject({ reason: 'notRejoinable' });
     expect(await q.send('game:leave')).toMatchObject({ ok: true });
@@ -623,5 +611,10 @@ describe('rematch', () => {
     expect(await c.send('session:start', { nickname: 'Oldie', protocolVersion: 9 })).toMatchObject({
       reason: 'versionMismatch',
     });
+    // the full-state protocol of spec 016 and earlier
+    expect(PROTOCOL_VERSION).toBe(12);
+    expect(
+      await c.send('session:start', { nickname: 'Oldie', protocolVersion: PROTOCOL_VERSION - 1 }),
+    ).toMatchObject({ reason: 'versionMismatch' });
   });
 });

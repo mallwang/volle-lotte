@@ -44,3 +44,26 @@ export class AttemptLimiter {
     return `${clientKey}\0${gameId}`;
   }
 }
+
+/** At most `max` calls per `windowMs` for each key (sliding window), for cheap repeatable requests. */
+export class RateLimiter {
+  private readonly calls = new Map<string, number[]>();
+
+  constructor(
+    private readonly max: number,
+    private readonly windowMs: number,
+    private readonly now: () => number = Date.now,
+  ) {}
+
+  /** 0 when the call is allowed (and counted); otherwise the wait in ms until it would be. */
+  take(key: string): number {
+    const now = this.now();
+    const recent = (this.calls.get(key) ?? []).filter((t) => now - t < this.windowMs);
+    if (recent.length >= this.max) {
+      this.calls.set(key, recent);
+      return recent[0] + this.windowMs - now;
+    }
+    this.calls.set(key, [...recent, now]);
+    return 0;
+  }
+}

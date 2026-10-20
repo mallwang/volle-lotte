@@ -16,12 +16,12 @@ The Java reference lives as a copy in `tmp/java/` (git-ignored, read-only).
 ## Workspace
 
 - Nx monorepo (npm workspaces): `apps/frontend` (Angular), `apps/backend` (NestJS), `libs/game-rules` (shared). Use npm >= 11 (`packageManager` in `package.json`).
-- Run everything through Nx: `npm run dev|build|test|lint|typecheck`. `npm run test:e2e` (slow end-to-end flows, manual via the `run-e2e` skill) is not part of CI or the hooks. Module boundaries are enforced via `scope:*` tags.
+- Run everything through Nx: `npm run dev|build|test|lint|typecheck`. `npm run test:e2e` (slow end-to-end flows, manual via the `run-e2e` skill) is not part of CI or the hooks. `npm run measure:socket -- --label <name>` plays full games and reports the socket traffic per event ([docs/socket-traffic.md](docs/socket-traffic.md)). Module boundaries are enforced via `scope:*` tags.
 - Git hooks (husky): pre-commit runs lint-staged (secretlint, eslint, prettier); pre-push runs affected typecheck and tests.
 - Spec-Kit git extension hooks auto-commit around each `/speckit-*` phase; `/speckit-format` runs before those commits.
 - Releases: `npm run release` (Nx Release, conventional commits, fixed version).
 
 <!-- SPECKIT START -->
 
-Current feature plan: [specs/016-spectators/plan.md](specs/016-spectators/plan.md)
+Current feature plan: [specs/017-leaner-socket-messages/plan.md](specs/017-leaner-socket-messages/plan.md)
 <!-- SPECKIT END -->

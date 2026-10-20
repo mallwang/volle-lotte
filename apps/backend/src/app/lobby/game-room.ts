@@ -6,6 +6,7 @@ import {
   createGame,
   DEFAULT_SPEED,
   isComputerSpeed,
+  LOG_CAP,
   pacing,
   renamePlayer,
   skipTurn,
@@ -40,7 +41,6 @@ export const TURN_LIMIT_MS = {
 } as const;
 /** The 3rd timeout in a row hands the seat to a computer. */
 export const MAX_TIMEOUTS = 3;
-export const LOG_CAP = 500;
 /**
  * Computer pacing comes from `pacing(computerSpeed)`: after a throw wait out the client roll (max) plus a margin,
  * otherwise a pause (FR-013, FR-019). The roll maximum is the client animation and does not scale.
@@ -157,7 +157,7 @@ export class GameRoom {
   showBustProbability = false;
   /** Host pause of a running game; timers are stopped and their remaining time kept in `frozen`. */
   paused = false;
-  private frozen?: { computerElapsed?: number; turnLeft?: number };
+  private frozen?: { computerElapsed?: number };
   private computerDelay: (p: Pacing) => number = (p) => p.pauseMs;
   /** The armed computer timer, kept so a speed change can re-arm it. */
   private pending?: { delayFor: (p: Pacing) => number; run: () => void; startedAt: number };
@@ -627,7 +627,7 @@ export class GameRoom {
     return { ok: true, changes, evicted };
   }
 
-  /** Host only: freezes or continues a running game, keeping what is left of every wait. */
+  /** Host only: freezes or continues a running game, keeping what is left of every computer wait; a human turn limit starts over on resume. */
   setPaused(playerId: string, paused: boolean): Res {
     if (playerId !== this.hostId) return fail('notHost');
     if (this.phase !== 'running') return fail('notInGame');
@@ -646,15 +646,13 @@ export class GameRoom {
       clearTimeout(this.computerTimer);
       this.computerTimer = undefined;
     }
-    if (this.turnTimer && this.turnDeadline) {
-      frozen.turnLeft = Math.max(0, this.turnDeadline.at - this.now());
-      this.stopTurnTimer();
-    }
+    // a human limit is not kept: resuming gives the full limit again (see `scheduleTurnTimer`)
+    this.stopTurnTimer();
     this.frozen = frozen;
   }
 
   private thawTimers() {
-    const { computerElapsed, turnLeft } = this.frozen ?? {};
+    const { computerElapsed } = this.frozen ?? {};
     this.frozen = undefined;
     if (computerElapsed !== undefined && this.pending) {
       const { delayFor, run } = this.pending;
@@ -662,7 +660,6 @@ export class GameRoom {
       const wait = Math.max(0, delayFor(pacing(this.computerSpeed)) - computerElapsed);
       this.computerTimer = setTimeout(run, wait);
     }
-    if (turnLeft !== undefined) this.armTurnTimer(turnLeft);
   }
 
   /** `timeout`: the turn ends by a timeout, so its result notice is shown before this action's events. */

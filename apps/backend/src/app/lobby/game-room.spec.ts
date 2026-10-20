@@ -508,6 +508,22 @@ describe('GameRoom turn timer', () => {
     room.dispose();
   });
 
+  it('gives the idle human the full limit again after a pause', () => {
+    const room = started();
+    const first = room.seats[room.game?.current === 0 ? 0 : 1] as Human;
+    jest.advanceTimersByTime(TURN_LIMIT_MS.draw - 1000);
+    expect(room.setPaused('h', true)).toEqual({ ok: true });
+    expect(room.turnDeadline).toBeUndefined();
+    jest.advanceTimersByTime(60_000);
+    expect(room.setPaused('h', false)).toEqual({ ok: true });
+    expect(room.turnDeadline?.at).toBe(Date.now() + TURN_LIMIT_MS.draw);
+    jest.advanceTimersByTime(TURN_LIMIT_MS.draw - 1);
+    expect(first.timeouts).toBe(0);
+    jest.advanceTimersByTime(1);
+    expect(first.timeouts).toBe(1);
+    room.dispose();
+  });
+
   it('an own action resets the strikes and the 3rd timeout replaces the seat', () => {
     const room = started();
     const current = () => room.seats[room.game?.current === 0 ? 0 : 1] as Human;

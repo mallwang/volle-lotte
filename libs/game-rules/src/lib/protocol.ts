@@ -1,6 +1,6 @@
 import type { Action, Event, GameState, RejectionReason, Rules } from './types.js';
 
-export const PROTOCOL_VERSION = 11;
+export const PROTOCOL_VERSION = 12;
 
 /** UI language a player reports; the server names computers in the host's language. */
 export type UiLanguage = 'en' | 'de';
@@ -93,8 +93,11 @@ export interface SeatView {
   former?: { nickname: string };
 }
 
-/** Engine state without the deck (never sent), plus its size. */
-export type GameStateView = Omit<GameState, 'deck'> & { deckSize: number };
+/** Entries the room keeps in its log; older ones drop off the front and raise `logBase`. */
+export const LOG_CAP = 500;
+
+/** Engine state without the deck (never sent) and without the rules (`GameView.rules`), plus its size. */
+export type GameStateView = Omit<GameState, 'deck' | 'rules'> & { deckSize: number };
 
 export interface GameView {
   id: string;
@@ -136,6 +139,8 @@ export interface GameView {
   spectators: number;
   /** Host paused the running game: no computer move, no turn limit, no action. */
   paused: boolean;
+  /** Running number of the last change this view contains, counted per recipient (see `GameChange`). */
+  n: number;
   /** Entries dropped from the front of `log` so far; `logBase + i` is the stable index of `log[i]`. */
   logBase: number;
   log: LogEntry[];
@@ -159,6 +164,33 @@ export interface GameSummary {
   phase: RoomPhase;
   /** Running and the host allows spectators: the list offers "Watch". */
   spectatable: boolean;
+}
+
+/**
+ * One `game:change` push: only the parts of the recipient's view that differ from what they have.
+ * `n` must be the recipient's last number plus one; `applyChange` in `view-sync.ts` applies it.
+ */
+export interface GameChange {
+  n: number;
+  you?: GameView['you'];
+  hostId?: string;
+  phase?: RoomPhase;
+  /** `null` clears it. */
+  rematch?: 'open' | 'closed' | null;
+  /** Only the seats that changed, by index. */
+  seats?: [index: number, seat: SeatView][];
+  /** The whole engine state view; `null` = no game. */
+  game?: GameStateView | null;
+  preview?: number[];
+  /** `null` clears it. */
+  turnDeadline?: NonNullable<GameView['turnDeadline']> | null;
+  settings?: Partial<
+    Pick<GameView, 'fastComputerDice' | 'computerSpeed' | 'showBustProbability' | 'spectating'>
+  >;
+  spectators?: number;
+  paused?: boolean;
+  /** Entries to append to the log. */
+  log?: LogEntry[];
 }
 
 /** Client to server: event name -> [payload, ack data]. */
@@ -185,6 +217,8 @@ export interface Intents {
   'seat:ready': [{ ready: boolean }, object];
   'game:start': [undefined, object];
   'game:rejoin': [{ gameId: string }, { game: GameView }];
+  /** The caller's own current snapshot, to repair a missed change; same errors as `game:rejoin`. */
+  'game:sync': [undefined, { game: GameView }];
   /** Last host ends a running game that only has computers left; `notHost` once a human took over. */
   'game:end': [{ gameId: string }, object];
   'seat:remove': [{ seat: number }, object];
@@ -213,8 +247,9 @@ export interface SettingChange {
 /** Server to client pushes: event name -> payload. */
 export interface Pushes {
   'lobby:games': { games: GameSummary[] };
-  'game:state': { game: GameView };
-  'game:log': { entries: LogEntry[] };
+  /** Replaces the whole view when it cannot be expressed as a change (rematch, new round). */
+  'game:snapshot': { game: GameView };
+  'game:change': GameChange;
   'game:settingsChanged': { by: string; changes: SettingChange[] };
   'session:replaced': undefined;
   'game:closed': { reason: 'cleanup' | 'banned' | 'ended' | 'spectatingOff' };

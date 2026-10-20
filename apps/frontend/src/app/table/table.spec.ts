@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { defaultRules, type GameStateView, type SeatView } from 'game-rules';
+import { applyChange, type GameStateView, type SeatView } from 'game-rules';
 import { LeaveGame } from '../core/leave-game';
 import { SocketService, TOAST_MS } from '../core/socket.service';
 import { MessageService } from 'primeng/api';
@@ -19,7 +19,6 @@ const thrownLog = { kind: 'turn', seat: 1, data: { type: 'thrown', dice: [6, 4] 
 
 const state = (current: number): GameStateView => ({
   version: 1,
-  rules: defaultRules(),
   players: [
     { name: 'Ann', score: 100 },
     { name: 'Bob', score: 200 },
@@ -333,6 +332,31 @@ describe('Table', () => {
       fixture.detectChanges();
       expect(logLen(el)).toBe(1);
       expect(el.querySelector('.vl-roll-status')?.textContent?.trim()).toBe('');
+    });
+
+    it('rolls and reveals the log when the entries arrive as a game:change append', async () => {
+      localStorage.setItem('vl-skip-dice', 'false');
+      const t = await setup(0);
+      vi.useFakeTimers();
+      t.socket.game.set(applyChange(t.socket.game()!, { n: 1, log: [thrown as never] }));
+      t.fixture.detectChanges();
+      expect(logLen(t.el)).toBe(0);
+      expect(t.el.querySelector('.vl-roll-status')?.textContent).toContain('rolling');
+      vi.advanceTimersByTime(5000);
+      t.fixture.detectChanges();
+      expect(logLen(t.el)).toBe(1);
+      // a change without log entries leaves the revealed log as it is
+      t.socket.game.set(applyChange(t.socket.game()!, { n: 2, preview: [0] }));
+      t.fixture.detectChanges();
+      expect(logLen(t.el)).toBe(1);
+      expect(t.el.querySelector('.vl-roll-status')?.textContent?.trim()).toBe('');
+      const next = { ...thrown, data: { type: 'thrown', dice: [1, 2, 3] } };
+      t.socket.game.set(applyChange(t.socket.game()!, { n: 3, log: [next as never] }));
+      t.fixture.detectChanges();
+      expect(logLen(t.el)).toBe(1);
+      vi.advanceTimersByTime(5000);
+      t.fixture.detectChanges();
+      expect(logLen(t.el)).toBe(2);
     });
 
     it('does not roll when animation is skipped', async () => {
