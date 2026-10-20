@@ -1,3 +1,4 @@
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import {
   applyChange,
@@ -10,6 +11,7 @@ import { MessageService } from 'primeng/api';
 import { providePrimeNG } from 'primeng/config';
 import { Celebration } from '../core/celebration';
 import { LeaveGame } from '../core/leave-game';
+import { Sounds } from '../core/sounds';
 import { SocketService } from '../core/socket.service';
 import { gameView, stubSocket } from '../core/testing';
 import { Table } from './table';
@@ -56,6 +58,7 @@ const finished = (over: Partial<GameView> = {}) =>
 async function setup(game: GameView) {
   const socket = stubSocket(game);
   const celebration = { preload: vi.fn(), start: vi.fn(), stop: vi.fn() };
+  const sounds = { preload: vi.fn(), play: vi.fn(), stop: vi.fn(), muted: signal(false) };
   TestBed.configureTestingModule({
     imports: [Table],
     providers: [
@@ -64,13 +67,14 @@ async function setup(game: GameView) {
       { provide: SocketService, useValue: socket },
       { provide: LeaveGame, useValue: { request: vi.fn() } },
       { provide: Celebration, useValue: celebration },
+      { provide: Sounds, useValue: sounds },
     ],
   });
   const fixture = TestBed.createComponent(Table);
   await fixture.whenStable();
   fixture.detectChanges();
   const dialog = () => document.body.querySelector<HTMLElement>('app-game-over [role=dialog]');
-  return { socket, celebration, fixture, dialog, el: fixture.nativeElement as HTMLElement };
+  return { socket, celebration, sounds, fixture, dialog, el: fixture.nativeElement as HTMLElement };
 }
 
 describe('Table game-over modal', () => {
@@ -80,11 +84,12 @@ describe('Table game-over modal', () => {
   });
 
   it('is not shown while the game runs', async () => {
-    const { dialog, celebration } = await setup(
+    const { dialog, celebration, sounds } = await setup(
       gameView({ phase: 'running', game: engine({ result: null }) }, seats),
     );
     expect(dialog()).toBeNull();
     expect(celebration.start).not.toHaveBeenCalled();
+    expect(sounds.play).not.toHaveBeenCalledWith('defeat');
   });
 
   it('shows the ranking over the table and congratulates the winner', async () => {
@@ -130,6 +135,22 @@ describe('Table game-over modal', () => {
     expect(celebration.stop).toHaveBeenCalled();
   });
 
+  it('plays the defeat sound once for a player who did not win, not the victory', async () => {
+    const { sounds, socket, fixture } = await setup(
+      finished({ you: { playerId: 'p1', seat: 1, timeoutWarning: false } }),
+    );
+    expect(sounds.play.mock.calls.filter(([c]) => c === 'defeat')).toHaveLength(1);
+    // a later log entry (a player leaving) must not play it again
+    socket.game.set({ ...socket.game()! });
+    fixture.detectChanges();
+    expect(sounds.play.mock.calls.filter(([c]) => c === 'defeat')).toHaveLength(1);
+  });
+
+  it('plays no defeat sound for the winner', async () => {
+    const { sounds } = await setup(finished());
+    expect(sounds.play).not.toHaveBeenCalledWith('defeat');
+  });
+
   it('keeps the modal and plays the celebration once when a player leaves afterwards', async () => {
     const { socket, dialog, fixture, celebration } = await setup(finished());
     expect(dialog()).not.toBeNull();
@@ -152,11 +173,12 @@ describe('Table game-over modal', () => {
   });
 
   it('shows nothing to a player whose seat a computer took over', async () => {
-    const { dialog, celebration } = await setup(
+    const { dialog, celebration, sounds } = await setup(
       finished({ you: { playerId: 'p0', seat: -1, timeoutWarning: false } }),
     );
     expect(dialog()).toBeNull();
     expect(celebration.start).not.toHaveBeenCalled();
+    expect(sounds.play).not.toHaveBeenCalledWith('defeat');
   });
 
   it('cannot be closed by Escape or the backdrop and leaves with its button', async () => {
@@ -257,7 +279,7 @@ describe('Table game-over modal', () => {
   });
 
   it('offers a spectator only the way back, with a hint and no celebration', async () => {
-    const { dialog, celebration } = await setup(
+    const { dialog, celebration, sounds } = await setup(
       finished({
         you: { playerId: 'v1', seat: -1, timeoutWarning: false, spectator: true },
       }),
@@ -268,5 +290,6 @@ describe('Table game-over modal', () => {
     const buttons = [...dialog()!.querySelectorAll('button')].map((b) => b.textContent?.trim());
     expect(buttons).toEqual(['Back to the lobby']);
     expect(celebration.start).not.toHaveBeenCalled();
+    expect(sounds.play).not.toHaveBeenCalledWith('defeat');
   });
 });

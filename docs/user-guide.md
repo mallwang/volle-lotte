@@ -65,7 +65,7 @@ The player's score changes only when the turn ends, not when dice are set aside.
 
 Buttons that are not available show the reason (for example "Not your turn"). The log lists what happened; players who leave a running game (after a confirmation), lose their connection for 30 seconds or miss three turns in a row are replaced by a computer. A timer shows how long you have left: 10 seconds to draw or roll, 15 to choose dice, 20 to secure or continue. If time runs out the action is taken for you (a skipped draw or selection ends your turn). After the third timeout you see a notice and can only go back to the lobby. Computers pause while no human is seated.
 
-When a player reaches the target score (or wins with the Clover card), a **Game over** window opens on top of the table as soon as the last dice have stopped. It names the winner, shows how the game ended and ranks everyone (equal scores share a rank); the final scores stay visible behind it. The window cannot be closed by clicking next to it or with Escape, only with **Back to the lobby**, which returns to the games list. A finished game is not restored: if you reload the page or reconnect afterwards, you land in the games list. If you won, confetti bursts across the screen while the window is open; it stays off if your system is set to reduce motion (the window still says that you won).
+When a player reaches the target score (or wins with the Clover card), a **Game over** window opens on top of the table as soon as the last dice have stopped. It names the winner, shows how the game ended and ranks everyone (equal scores share a rank); the final scores stay visible behind it. The window cannot be closed by clicking next to it or with Escape, only with **Back to the lobby**, which returns to the games list. A finished game is not restored: if you reload the page or reconnect afterwards, you land in the games list. If you won, confetti bursts across the screen while the window is open; it stays off if your system is set to reduce motion (the window still says that you won). A victory sound plays with it, unless you muted the sounds (see [Sounds](#sounds)).
 
 **Rematch.** In the Game over window the host can press **Rematch**. The same game, with its name, password, settings, computers and seat order, turns back into a lobby and the host is in it at once. Everybody else who is still looking at the Game over window sees **Rejoin**, which switches on as soon as the host decided; it puts you back on your old seat, and you press **Ready** again. A seat stays reserved for you (shown with a dashed outline and "Reserved, not back yet") until you rejoin, leave, the host removes you or the host starts the next game. The host can start without waiting for everybody: players who have not come back lose their seat and the game starts with fewer players (at least two players are still needed); their window then says that the next game started without them. Players who left the finished game, reloaded the page, or were replaced by a computer during the game get no Rejoin; their seat is free for others. **Back to the lobby** is always available. If the host leaves without a rematch, there is none.
 
@@ -73,10 +73,25 @@ If the connection to the game server drops for more than a moment, a notice at t
 
 ## 4. Language and Theme
 
-The menu bar at the top is on every screen. It shows the **Lobby** and **Create game** pages (the open page is highlighted; both are disabled until you have chosen a nickname) and, while you are in a lobby or a running game, a **Current game** entry with a tag for the phase. On the right are two controls:
+The menu bar at the top is on every screen. It shows the **Lobby** and **Create game** pages (the open page is highlighted; both are disabled until you have chosen a nickname) and, while you are in a lobby or a running game, a **Current game** entry with a tag for the phase. On the right are three controls:
 
 - **Language** (flag and name): English or Deutsch. On the first visit the app uses your browser language (German for German, otherwise English). Your choice is saved in the browser and applies at once, without reloading. On narrow screens only the flag is shown; the name stays available to screen readers.
+- **Sounds**: a speaker button mutes and unmutes all game sounds (see [Sounds](#sounds)).
 - **Color scheme**: a sun or moon button switches between Light and Dark. The first visit follows your device setting; after you switch, your choice is saved in the browser.
+
+### Sounds
+
+Seven short sounds accompany the game:
+
+- **Game start**: once for every seated player when the game starts (also after a rematch).
+- **Your turn**: once when the turn passes to you, after the previous player's dice and notice are done.
+- **Countdown**: a beep every second during the last 5 seconds of your own turn timer; it stops as soon as you act.
+- **Volle Lotte**: applause when you throw a Volle Lotte yourself, after the dice have stopped.
+- **Points**: a short sound when points are credited to your own score, together with the result of your turn. It stays silent for a bust, a timeout and the winning turn (the victory sound covers that). After a Volle Lotte that ends with banking, it plays together with the applause.
+- **Victory**: when you win the game.
+- **Defeat**: a short sound when the **Game over** window opens and you did not win. Spectators hear nothing.
+
+The speaker button in the menu bar mutes all of them at once and turns them on again; the choice is remembered on this device. Spectators hear no turn, countdown, Volle Lotte, points or defeat sounds. Browsers may stay silent until you have clicked or tapped somewhere on the page once.
 
 ## 5. FAQ
 

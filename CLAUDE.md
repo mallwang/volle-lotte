@@ -23,5 +23,5 @@ The Java reference lives as a copy in `tmp/java/` (git-ignored, read-only).
 
 <!-- SPECKIT START -->
 
-Current feature plan: [specs/018-finer-socket-diffs/plan.md](specs/018-finer-socket-diffs/plan.md)
+Current feature plan: [specs/019-sounds/plan.md](specs/019-sounds/plan.md)
 <!-- SPECKIT END -->

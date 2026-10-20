@@ -7,6 +7,7 @@ import { App } from './app';
 import { expectNoA11yViolations, inBothModes } from './core/testing';
 import { SOCKET, SocketService } from './core/socket.service';
 import { I18nService } from './core/i18n.service';
+import { Sounds } from './core/sounds';
 import { ThemeService } from './core/theme.service';
 import { TableScale } from './core/table-scale';
 
@@ -28,6 +29,7 @@ beforeEach(() => {
 
 function setup(online = true) {
   const theme = { mode: signal('light'), toggle: vi.fn() };
+  const sounds = { muted: signal(false), toggle: vi.fn(() => sounds.muted.update((m) => !m)) };
   const socket = {
     online: signal(online),
     session: signal<unknown>({ playerId: 'p0', nickname: 'Ann' }),
@@ -47,11 +49,12 @@ function setup(online = true) {
       { provide: SOCKET, useValue: {} },
       { provide: SocketService, useValue: socket },
       { provide: ThemeService, useValue: theme },
+      { provide: Sounds, useValue: sounds },
     ],
   });
   const fixture = TestBed.createComponent(App);
   fixture.detectChanges();
-  return { fixture, theme, socket, el: fixture.nativeElement as HTMLElement };
+  return { fixture, theme, sounds, socket, el: fixture.nativeElement as HTMLElement };
 }
 
 describe('App', () => {
@@ -63,7 +66,9 @@ describe('App', () => {
 
   it('theme button toggles the mode, names it and shows the matching icon', async () => {
     const { fixture, theme, el } = setup();
-    const button = el.querySelector<HTMLButtonElement>('p-button button')!;
+    const button = el.querySelector<HTMLButtonElement>(
+      'p-button button[aria-label^="Colour theme"]',
+    )!;
     expect(button.getAttribute('aria-label')).toBe('Colour theme: Light. Switch to dark theme');
     expect(button.querySelector('.pi-sun')).not.toBeNull();
     button.click();
@@ -73,6 +78,30 @@ describe('App', () => {
     await fixture.whenStable();
     expect(button.getAttribute('aria-label')).toBe('Colour theme: Dark. Switch to light theme');
     expect(button.querySelector('.pi-moon')).not.toBeNull();
+  });
+
+  it('sound button sits before the theme button, mutes and unmutes, in both languages', async () => {
+    const { fixture, sounds, el } = setup();
+    const buttons = el.querySelectorAll<HTMLButtonElement>('p-button button');
+    const button = buttons[0];
+    expect(buttons[1].getAttribute('aria-label')).toContain('Colour theme');
+    expect(button.getAttribute('aria-label')).toBe('Sounds: on. Mute sounds');
+    expect(button.getAttribute('aria-pressed')).toBe('false');
+    expect(button.querySelector('.pi-volume-up')).not.toBeNull();
+    button.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(sounds.toggle).toHaveBeenCalledTimes(1);
+    expect(button.getAttribute('aria-label')).toBe('Sounds: off. Turn sounds on');
+    expect(button.getAttribute('aria-pressed')).toBe('true');
+    expect(button.querySelector('.pi-volume-off')).not.toBeNull();
+    button.click();
+    fixture.detectChanges();
+    expect(button.getAttribute('aria-pressed')).toBe('false');
+    TestBed.inject(I18nService).lang.set('de');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(button.getAttribute('aria-label')).toBe('Töne: an. Töne stummschalten');
   });
 
   describe('menubar', () => {
@@ -98,7 +127,7 @@ describe('App', () => {
       fixture.detectChanges();
       expect(links(el)).toHaveLength(0);
       expect(el.querySelectorAll('.vl-menu-disabled[aria-disabled=true]')).toHaveLength(2);
-      el.querySelector<HTMLButtonElement>('p-button button')!.click();
+      el.querySelector<HTMLButtonElement>('p-button button[aria-label^="Colour theme"]')!.click();
       expect(theme.toggle).toHaveBeenCalled();
       expect(el.querySelector('p-select.vl-lang')).not.toBeNull();
     });
@@ -147,9 +176,11 @@ describe('App', () => {
     TestBed.inject(I18nService).set('de');
     fixture.detectChanges();
     await fixture.whenStable();
-    expect(el.querySelector<HTMLElement>('p-button button')?.getAttribute('aria-label')).toBe(
-      'Farbschema: Hell. Zum dunklen Farbschema wechseln',
-    );
+    expect(
+      el
+        .querySelector<HTMLElement>('p-button button[aria-label^="Farbschema"]')
+        ?.getAttribute('aria-label'),
+    ).toBe('Farbschema: Hell. Zum dunklen Farbschema wechseln');
     expect(el.querySelector('p-select.vl-lang [aria-label="Sprache"]')).not.toBeNull();
     localStorage.clear();
   });

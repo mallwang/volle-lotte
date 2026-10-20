@@ -1,10 +1,10 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
+import { Sounds } from './sounds';
 
 /** Pause between two rounds of bursts while a celebration runs. */
 export const BURST_INTERVAL_MS = 3000;
 const BURSTS_PER_ROUND = 3;
 const CONFETTI_COUNT = 70;
-const VICTORY_SOUND = 'sounds/victory.mp3';
 
 const reducedMotion = (): boolean => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -12,20 +12,21 @@ const reducedMotion = (): boolean => window.matchMedia('(prefers-reduced-motion:
  * Fireworks-style confetti over the whole screen, for screens that celebrate something (the
  * game-over modal today, the starting-player draw later). Based on the ReAIity Guesser confetti
  * (party-js), which is only loaded when a celebration actually starts. The victory sound plays
- * once per celebration, while the confetti repeats.
+ * once per celebration, while the confetti repeats; it goes through `Sounds`, so the mute button
+ * silences it.
  */
 @Injectable({ providedIn: 'root' })
 export class Celebration {
   private timer?: ReturnType<typeof setInterval>;
-  private sound?: HTMLAudioElement;
+  private readonly sounds = inject(Sounds);
   private running = false;
 
   /**
-   * Fetches the victory sound and the confetti library ahead of time, so a slow network cannot
+   * Fetches the sounds and the confetti library ahead of time, so a slow network cannot
    * delay the celebration once the game is won. Safe to call repeatedly.
    */
   preload(): void {
-    this.audio();
+    this.sounds.preload();
     if (!reducedMotion()) import('party-js').catch(() => undefined);
   }
 
@@ -37,9 +38,7 @@ export class Celebration {
     if (this.running) return;
     this.running = true;
     // the browser may refuse to play before any user interaction; the confetti still works then
-    this.audio()
-      .play()
-      .catch(() => undefined);
+    this.sounds.play('victory');
     if (reducedMotion()) return;
     void this.burst();
     this.timer = setInterval(() => void this.burst(), BURST_INTERVAL_MS);
@@ -50,19 +49,7 @@ export class Celebration {
     this.running = false;
     clearInterval(this.timer);
     this.timer = undefined;
-    if (this.sound) {
-      this.sound.pause();
-      this.sound.currentTime = 0;
-    }
-  }
-
-  private audio(): HTMLAudioElement {
-    if (!this.sound) {
-      this.sound = new Audio(VICTORY_SOUND);
-      this.sound.preload = 'auto';
-      this.sound.load();
-    }
-    return this.sound;
+    this.sounds.stop('victory');
   }
 
   private async burst(): Promise<void> {
