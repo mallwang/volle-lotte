@@ -62,16 +62,29 @@ Egal bei welchen Einstellungen: Kann ein Computer durch Sichern den Zielstand er
 
 Nicht verfügbare Schaltflächen nennen den Grund (zum Beispiel „Du bist nicht dran“). Das Protokoll listet, was passiert ist; wer ein laufendes Spiel verlässt (nach Rückfrage), 30 Sekunden offline ist oder dreimal in Folge nicht reagiert, wird durch einen Computer ersetzt. Ein Timer zeigt die Restzeit: 10 Sekunden zum Ziehen oder Würfeln, 15 zum Auswählen, 20 zum Sichern oder Weiterwürfeln. Läuft die Zeit ab, wird für dich gehandelt (übersprungenes Ziehen oder Auswählen beendet deinen Zug). Nach dem dritten Ablauf siehst du einen Hinweis und kannst nur in die Lobby zurück. Computer pausieren, solange kein Mensch am Tisch sitzt.
 
-Erreicht jemand die Zielpunktzahl (oder gewinnt mit der Kleeblatt-Karte), öffnet sich über dem Tisch das Fenster **Spiel vorbei**, sobald die letzten Würfel stehen. Es nennt die Gewinnerin oder den Gewinner, zeigt, wie das Spiel endete, und ordnet alle nach Rang (gleiche Punktzahlen teilen sich einen Rang); die Endstände bleiben dahinter sichtbar. Das Fenster lässt sich weder durch einen Klick daneben noch mit Escape schließen, sondern nur mit **Zurück zur Lobby**, das zur Spieleliste führt. Ein beendetes Spiel wird nicht wiederhergestellt: Lädst du die Seite neu oder verbindest dich danach neu, landest du in der Spieleliste. Hast du gewonnen, regnet Konfetti über den Bildschirm, solange das Fenster offen ist; ist dein System auf reduzierte Bewegung eingestellt, bleibt es aus (das Fenster sagt trotzdem, dass du gewonnen hast).
+Erreicht jemand die Zielpunktzahl (oder gewinnt mit der Kleeblatt-Karte), öffnet sich über dem Tisch das Fenster **Spiel vorbei**, sobald die letzten Würfel stehen. Es nennt die Gewinnerin oder den Gewinner, zeigt, wie das Spiel endete, und ordnet alle nach Rang (gleiche Punktzahlen teilen sich einen Rang); die Endstände bleiben dahinter sichtbar. Das Fenster lässt sich weder durch einen Klick daneben noch mit Escape schließen, sondern nur mit **Zurück zur Lobby**, das zur Spieleliste führt. Ein beendetes Spiel wird nicht wiederhergestellt: Lädst du die Seite neu oder verbindest dich danach neu, landest du in der Spieleliste. Hast du gewonnen, regnet Konfetti über den Bildschirm, solange das Fenster offen ist; ist dein System auf reduzierte Bewegung eingestellt, bleibt es aus (das Fenster sagt trotzdem, dass du gewonnen hast). Dazu spielt ein Siegerton, außer du hast die Töne stummgeschaltet (siehe [Töne](#töne)).
 
 **Revanche.** Im Fenster „Spiel vorbei“ kann der Host **Revanche** drücken. Dasselbe Spiel mit Name, Passwort, Einstellungen, Computern und Sitzreihenfolge wird wieder zur Lobby, und der Host ist sofort darin. Alle anderen, die das Fenster noch offen haben, sehen **Wieder beitreten**; der Knopf wird aktiv, sobald der Host entschieden hat. Er bringt dich auf deinen alten Platz zurück, dann drückst du wieder **Bereit**. Dein Platz bleibt für dich reserviert (gestrichelt, „Reserviert, noch nicht zurück“), bis du beitrittst, gehst, der Host dich entfernt oder das nächste Spiel startet. Der Host kann starten, ohne auf alle zu warten: Wer nicht zurückgekommen ist, verliert den Platz, und das Spiel startet mit weniger Spielern (mindestens zwei sind weiter nötig); im Fenster der Betroffenen steht dann, dass das nächste Spiel ohne sie begonnen hat. Wer das beendete Spiel verlassen, die Seite neu geladen hat oder im Spiel von einem Computer ersetzt wurde, bekommt kein „Wieder beitreten“; sein Platz ist für andere frei. **Zurück zur Lobby** geht immer. Verlässt der Host das Fenster ohne Revanche, gibt es keine.
 
 ## 4. Sprache und Farbschema
 
-Die Menüleiste oben ist auf jeder Seite da. Sie zeigt die Seiten **Lobby** und **Spiel erstellen** (die geöffnete Seite ist hervorgehoben; beide sind gesperrt, bis du einen Spitznamen gewählt hast) und, solange du in einer Lobby oder einem laufenden Spiel bist, den Eintrag **Aktuelles Spiel** mit einem Hinweis zur Phase. Rechts sind zwei Bedienelemente:
+Die Menüleiste oben ist auf jeder Seite da. Sie zeigt die Seiten **Lobby** und **Spiel erstellen** (die geöffnete Seite ist hervorgehoben; beide sind gesperrt, bis du einen Spitznamen gewählt hast) und, solange du in einer Lobby oder einem laufenden Spiel bist, den Eintrag **Aktuelles Spiel** mit einem Hinweis zur Phase. Rechts sind drei Bedienelemente:
 
 - **Sprache** (Flagge und Name): English oder Deutsch. Beim ersten Besuch nutzt die App die Browsersprache (Deutsch bei deutschem Browser, sonst Englisch). Die Wahl wird im Browser gespeichert und gilt sofort, ohne Neuladen. Auf schmalen Bildschirmen wird nur die Flagge gezeigt; der Name bleibt für Screenreader verfügbar.
+- **Töne**: Ein Lautsprecher-Button schaltet alle Spieltöne stumm und wieder ein (siehe [Töne](#töne)).
 - **Farbschema**: Eine Sonne oder ein Mond schaltet zwischen Hell und Dunkel um. Beim ersten Besuch gilt die Einstellung deines Geräts; nach dem Umschalten wird deine Wahl im Browser gespeichert.
+
+### Töne
+
+Fünf kurze Töne begleiten das Spiel:
+
+- **Spielstart**: einmal für jeden Spieler am Tisch, wenn das Spiel beginnt (auch nach einer Revanche).
+- **Du bist dran**: einmal, wenn der Zug an dich geht, nachdem Würfel und Hinweis des vorigen Spielers vorbei sind.
+- **Countdown**: ein Piepton pro Sekunde in den letzten 10 Sekunden deines eigenen Zugtimers; er endet, sobald du etwas tust.
+- **Volle Lotte**: Applaus, wenn du selbst eine Volle Lotte wirfst, nachdem die Würfel stehen.
+- **Sieg**: wenn du das Spiel gewinnst.
+
+Der Lautsprecher-Button in der Menüleiste schaltet alle Töne auf einmal stumm und wieder ein; die Wahl wird auf diesem Gerät gespeichert. Zuschauer hören keine Zug-, Countdown- und Volle-Lotte-Töne. Browser bleiben mitunter stumm, bis du einmal auf die Seite geklickt oder getippt hast.
 
 ## 5. FAQ
 

@@ -16,8 +16,8 @@ All decisions are frontend-only; no unknowns were left open in the Technical Con
 
 ## R3. Detecting "your turn"
 
-- **Decision**: The table's existing `mine()` signal (my seat is current, no notice shown, not replaced) drives the cue: a change from `false` to `true` plays `your-turn`. The first value after the table opens is only a baseline.
-- **Rationale**: `mine()` turns true exactly when the previous turn's notice is over, so the sound comes with the visible turn change (acceptance 1.4). The baseline covers the first turn after the start (FR-002, the table is created at the start) and a reload or reconnect (acceptance 1.5). Spectators and replaced players never have `mine()` true (FR-013).
+- **Decision**: A change of my seat from "not current" to "current" (`onTurn`, `mine()` without the notice check) arms the cue; it plays once `mine()` is true (no notice shown) and no dice roll, so after the previous turn's last roll and notice. The first value after the table opens is only a baseline. The effect is declared after the log-processing effect, which sets the roll and notice for the same state update.
+- **Rationale**: The sound comes with the visible turn change (acceptance 1.4); the armed flag keeps my own later rolls from replaying it. The baseline covers the first turn after the start (FR-002, the table is created at the start) and a reload or reconnect (acceptance 1.5). Spectators and replaced players never have `mine()` true (FR-013).
 - **Alternatives considered**: Watching `game.current` in the raw state: it changes before the notice and the last roll are shown, so the sound would spoil the result. A `turnEnded` log entry: the same timing problem and an extra case for the first turn.
 
 ## R4. Countdown beeps

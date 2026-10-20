@@ -22,6 +22,7 @@ import { errorMessage } from '../core/error-message';
 import { isHost, isSpectator, logText, playerSeats, seatName, youWon } from '../core/game-view';
 import { I18nService } from '../core/i18n.service';
 import { SocketService, TOAST_MS } from '../core/socket.service';
+import { countdownDelays, Sounds } from '../core/sounds';
 import { TableScale } from '../core/table-scale';
 import { TranslatePipe } from '../core/translate.pipe';
 import { GameCard } from '../shared/game-card';
@@ -269,6 +270,7 @@ export class Table {
   );
   private readonly messages = inject(MessageService);
   private readonly celebration = inject(Celebration);
+  private readonly sounds = inject(Sounds);
   protected readonly roll = inject(DiceRollService);
   private readonly prefs = inject(DicePrefs);
   protected readonly settingsOpen = signal(false);
@@ -528,9 +530,11 @@ export class Table {
     return !!g?.game && g.seats[this.seats()[g.game.current]]?.state === 'computer';
   });
   /** It is my turn. */
-  protected readonly mine = computed(() => {
+  protected readonly mine = computed(() => !this.notice() && this.onTurn());
+  /** My seat is the current one, even while the previous turn's notice is still shown. */
+  private readonly onTurn = computed(() => {
     const g = this.socket.game();
-    if (!g?.game || this.notice() || this.removed()) return false;
+    if (!g?.game || this.removed()) return false;
     return this.seats()[g.game.current] === g.you.seat;
   });
 
@@ -620,6 +624,7 @@ export class Table {
     const tableScale = inject(TableScale);
     tableScale.enable();
     this.celebration.preload();
+    this.sounds.preload();
     inject(DestroyRef).onDestroy(() => {
       clearInterval(tick);
       tableScale.disable();
@@ -633,6 +638,16 @@ export class Table {
     effect(() => {
       const on = celebrate();
       untracked(() => (on ? this.celebration.start() : this.celebration.stop()));
+    });
+    // one beep per second in the last ten seconds of my own timer; a new deadline, the end of my
+    // turn or a pause (deadline null) clears the rest
+    effect((onCleanup) => {
+      const at = this.deadlineAt();
+      if (!this.mine() || at === null) return;
+      const timers = countdownDelays(at, Date.now()).map((delay) =>
+        setTimeout(() => this.sounds.play('countdown'), delay),
+      );
+      onCleanup(() => timers.forEach(clearTimeout));
     });
     effect(() => {
       const paused = this.paused();
@@ -655,11 +670,36 @@ export class Table {
       }
       this.revealed.set(this.seen);
     });
+    // Declared after the log effect: it has set the roll and the notice of the previous turn by
+    // now, so the sound waits for them. The first value is only the baseline (start and reload).
+    let wasOnTurn: boolean | undefined;
+    let pending = false;
+    effect(() => {
+      const onTurn = this.onTurn();
+      const ready = this.mine() && !this.roll.rolling();
+      untracked(() => {
+        if (wasOnTurn === false && onTurn) pending = true;
+        else if (!onTurn) pending = false;
+        wasOnTurn = onTurn;
+        if (pending && ready) {
+          pending = false;
+          this.sounds.play('your-turn');
+        }
+      });
+    });
+  }
+
+  /** Applause for my own Volle Lotte; process() gets here only once the roll animation is over. */
+  private cheerOwnVolleLotte(g: GameView, e: LogEntry): void {
+    const mine = e.seat === g.you.seat;
+    if (mine && e.kind === 'turn' && typeof e.data === 'object' && e.data.type === 'volleLotte')
+      this.sounds.play('volle-lotte');
   }
 
   /** Handle one new log entry; true = pause until the roll or notice is over. */
   private process(g: GameView, e: LogEntry): boolean {
     const data = e.kind === 'turn' && typeof e.data === 'object' ? e.data : null;
+    this.cheerOwnVolleLotte(g, e);
     if (data?.type === 'thrown') {
       this.startRoll(g, data.dice);
       if (this.roll.rolling()) return true;

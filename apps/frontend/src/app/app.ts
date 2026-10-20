@@ -13,6 +13,7 @@ import { version } from '../../package.json';
 import { I18nService } from './core/i18n.service';
 import { LeaveGame } from './core/leave-game';
 import { SocketService } from './core/socket.service';
+import { Sounds } from './core/sounds';
 import { ThemeService } from './core/theme.service';
 import { STAGE_HEIGHT, STAGE_WIDTH, TableScale } from './core/table-scale';
 import { TranslatePipe } from './core/translate.pipe';
@@ -43,6 +44,7 @@ export class App {
   protected readonly version = version;
   protected readonly socket = inject(SocketService);
   protected readonly theme = inject(ThemeService);
+  protected readonly sounds = inject(Sounds);
   protected readonly i18n = inject(I18nService);
   protected readonly tableScale = inject(TableScale);
   private readonly router = inject(Router);
@@ -72,6 +74,13 @@ export class App {
   protected readonly themeLabel = computed(() => {
     const current = this.i18n.t(`theme.${this.theme.mode()}`);
     return this.i18n.t('theme.label') + ': ' + current + '. ' + this.themeAction();
+  });
+  protected readonly soundAction = computed(() =>
+    this.i18n.t(this.sounds.muted() ? 'sound.unmute' : 'sound.mute'),
+  );
+  protected readonly soundLabel = computed(() => {
+    const current = this.i18n.t(this.sounds.muted() ? 'sound.off' : 'sound.on');
+    return current + '. ' + this.soundAction();
   });
   protected readonly currentTag = computed(() =>
     this.i18n.t(`nav.current.${this.socket.game()?.phase === 'running' ? 'running' : 'lobby'}`),

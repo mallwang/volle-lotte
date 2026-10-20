@@ -1,3 +1,4 @@
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { applyChange, encodeLog, type GameStateView, type SeatView } from 'game-rules';
 import { LeaveGame } from '../core/leave-game';
@@ -5,6 +6,7 @@ import { SocketService, TOAST_MS } from '../core/socket.service';
 import { MessageService } from 'primeng/api';
 import { providePrimeNG } from 'primeng/config';
 import { Celebration } from '../core/celebration';
+import { Sounds } from '../core/sounds';
 import { expectNoA11yViolations, gameView, inBothModes, stubSocket } from '../core/testing';
 import { Table } from './table';
 
@@ -38,6 +40,14 @@ const state = (current: number): GameStateView => ({
   result: null,
 });
 
+const sounds = { preload: vi.fn(), play: vi.fn(), stop: vi.fn(), muted: signal(false) };
+const played = (cue: string) => sounds.play.mock.calls.filter(([c]) => c === cue).length;
+beforeEach(() => {
+  sounds.preload.mockClear();
+  sounds.play.mockClear();
+  sounds.stop.mockClear();
+});
+
 async function setup(current: number, over = {}, showLog = true) {
   const socket = stubSocket(
     gameView({ phase: 'running', game: state(current), ...over }, [
@@ -53,6 +63,7 @@ async function setup(current: number, over = {}, showLog = true) {
       { provide: SocketService, useValue: socket },
       { provide: LeaveGame, useValue: { request: vi.fn() } },
       { provide: Celebration, useValue: { preload: vi.fn(), start: vi.fn(), stop: vi.fn() } },
+      { provide: Sounds, useValue: sounds },
     ],
   });
   const fixture = TestBed.createComponent(Table);
@@ -589,6 +600,213 @@ describe('Table', () => {
   it('has no a11y violations in both modes', async () => {
     const { fixture } = await setup(0);
     await inBothModes(fixture, () => expectNoA11yViolations(fixture));
+  });
+});
+
+describe('Table sounds', () => {
+  const pass = (t: Awaited<ReturnType<typeof setup>>, current: number, over = {}) => {
+    t.socket.game.set({ ...t.socket.game()!, game: state(current), ...over } as never);
+    t.fixture.detectChanges();
+  };
+  afterEach(() => vi.useRealTimers());
+
+  it('preloads the sounds when the table opens', async () => {
+    await setup(0);
+    expect(sounds.preload).toHaveBeenCalled();
+  });
+
+  describe('your turn', () => {
+    it('stays silent when the table opens on my turn (start and reload)', async () => {
+      await setup(0);
+      expect(played('your-turn')).toBe(0);
+    });
+
+    it('plays once when the turn passes to me', async () => {
+      const t = await setup(1);
+      pass(t, 0);
+      await t.fixture.whenStable();
+      expect(played('your-turn')).toBe(1);
+      pass(t, 0, { n: 5 });
+      expect(played('your-turn')).toBe(1);
+    });
+
+    it('waits for the previous turn notice to end', async () => {
+      const t = await setup(1);
+      vi.useFakeTimers();
+      pass(t, 0, { log: [{ kind: 'timedOut', seat: 1 }] });
+      expect(t.el.querySelector('.vl-wait .vl-bust-timer')).not.toBeNull();
+      expect(played('your-turn')).toBe(0);
+      vi.advanceTimersByTime(20_000);
+      t.fixture.detectChanges();
+      expect(played('your-turn')).toBe(1);
+    });
+
+    it('waits for the last dice of the previous turn to stop', async () => {
+      localStorage.setItem('vl-skip-dice', 'false');
+      const t = await setup(1);
+      vi.useFakeTimers();
+      pass(t, 0, { log: [{ kind: 'turn', seat: 1, data: { type: 'thrown', dice: [2, 3] } }] });
+      expect(t.el.querySelector('.vl-roll-status')?.textContent).toContain('rolling');
+      expect(played('your-turn')).toBe(0);
+      vi.advanceTimersByTime(5000);
+      t.fixture.detectChanges();
+      expect(played('your-turn')).toBe(1);
+      localStorage.removeItem('vl-skip-dice');
+    });
+
+    it('does not play again after my own roll', async () => {
+      localStorage.setItem('vl-skip-dice', 'false');
+      const t = await setup(1);
+      vi.useFakeTimers();
+      pass(t, 0);
+      expect(played('your-turn')).toBe(1);
+      t.socket.game.set({
+        ...t.socket.game()!,
+        log: [{ kind: 'turn', seat: 0, data: { type: 'thrown', dice: [2, 3] } }],
+      } as never);
+      t.fixture.detectChanges();
+      vi.advanceTimersByTime(5000);
+      t.fixture.detectChanges();
+      expect(played('your-turn')).toBe(1);
+      localStorage.removeItem('vl-skip-dice');
+    });
+
+    it('is silent for a turn change between two other seats', async () => {
+      const t = await setup(1, {
+        seats: [human('p0', 'Ann'), human('p1', 'Bob'), human('p2', 'Cy'), { state: 'open' }],
+        game: {
+          ...state(1),
+          players: [...state(1).players, { name: 'Cy', score: 0 }],
+        },
+      });
+      t.socket.game.set({
+        ...t.socket.game()!,
+        game: { ...t.socket.game()!.game!, current: 2 },
+      } as never);
+      t.fixture.detectChanges();
+      expect(played('your-turn')).toBe(0);
+    });
+
+    it('is silent for a spectator', async () => {
+      const t = await setup(0, {
+        you: { playerId: 'v1', seat: -1, timeoutWarning: false, spectator: true },
+      });
+      pass(t, 1, { you: { playerId: 'v1', seat: -1, timeoutWarning: false, spectator: true } });
+      pass(t, 0, { you: { playerId: 'v1', seat: -1, timeoutWarning: false, spectator: true } });
+      expect(played('your-turn')).toBe(0);
+    });
+  });
+
+  describe('countdown', () => {
+    const withDeadline = (t: Awaited<ReturnType<typeof setup>>, at: number | null) => {
+      const view = t.socket.game()!;
+      t.socket.game.set({
+        ...view,
+        turnDeadline: at === null ? undefined : { at, phase: 'throw' },
+      } as never);
+      t.fixture.detectChanges();
+    };
+
+    it('beeps once a second in the last ten seconds of my timer', async () => {
+      const t = await setup(0);
+      vi.useFakeTimers();
+      withDeadline(t, Date.now() + 30_000);
+      vi.advanceTimersByTime(19_999);
+      expect(played('countdown')).toBe(0);
+      vi.advanceTimersByTime(1);
+      expect(played('countdown')).toBe(1);
+      vi.advanceTimersByTime(10_000);
+      expect(played('countdown')).toBe(10);
+    });
+
+    it('stops the beeps when the deadline changes and arms the new timer', async () => {
+      const t = await setup(0);
+      vi.useFakeTimers();
+      withDeadline(t, Date.now() + 12_000);
+      vi.advanceTimersByTime(4_500);
+      expect(played('countdown')).toBe(3);
+      withDeadline(t, Date.now() + 30_000);
+      vi.advanceTimersByTime(19_000);
+      expect(played('countdown')).toBe(3);
+      vi.advanceTimersByTime(11_000);
+      expect(played('countdown')).toBe(13);
+    });
+
+    it('plays nothing more once the deadline is cleared (pause)', async () => {
+      const t = await setup(0);
+      vi.useFakeTimers();
+      withDeadline(t, Date.now() + 12_000);
+      vi.advanceTimersByTime(3_000);
+      const before = played('countdown');
+      withDeadline(t, null);
+      vi.advanceTimersByTime(20_000);
+      expect(played('countdown')).toBe(before);
+    });
+
+    it("is silent for another player's deadline", async () => {
+      const t = await setup(1);
+      vi.useFakeTimers();
+      withDeadline(t, Date.now() + 12_000);
+      vi.advanceTimersByTime(20_000);
+      expect(played('countdown')).toBe(0);
+    });
+
+    it('is silent in a game without a turn timer', async () => {
+      const t = await setup(0);
+      vi.useFakeTimers();
+      vi.advanceTimersByTime(60_000);
+      expect(played('countdown')).toBe(0);
+      expect(t.socket.game()!.turnDeadline).toBeUndefined();
+    });
+
+    it('cancels pending beeps when the table is destroyed', async () => {
+      const t = await setup(0);
+      vi.useFakeTimers();
+      withDeadline(t, Date.now() + 12_000);
+      t.fixture.destroy();
+      vi.advanceTimersByTime(20_000);
+      expect(played('countdown')).toBe(0);
+    });
+  });
+
+  describe('Volle Lotte', () => {
+    const lotte = (seat: number) => ({ kind: 'turn', seat, data: { type: 'volleLotte' } });
+    const thrownMine = { kind: 'turn', seat: 0, data: { type: 'thrown', dice: [1, 1, 1] } };
+
+    afterEach(() => localStorage.removeItem('vl-skip-dice'));
+
+    it('plays after my roll animation, not while the dice roll', async () => {
+      localStorage.setItem('vl-skip-dice', 'false');
+      const t = await setup(0);
+      vi.useFakeTimers();
+      t.socket.game.set({ ...t.socket.game()!, log: [thrownMine, lotte(0)] } as never);
+      t.fixture.detectChanges();
+      expect(played('volle-lotte')).toBe(0);
+      vi.advanceTimersByTime(5000);
+      t.fixture.detectChanges();
+      expect(played('volle-lotte')).toBe(1);
+    });
+
+    it('plays at once when the dice animation is skipped', async () => {
+      localStorage.setItem('vl-skip-dice', 'true');
+      const t = await setup(0);
+      t.socket.game.set({ ...t.socket.game()!, log: [thrownMine, lotte(0)] } as never);
+      t.fixture.detectChanges();
+      expect(played('volle-lotte')).toBe(1);
+    });
+
+    it("is silent for another seat's Volle Lotte", async () => {
+      localStorage.setItem('vl-skip-dice', 'true');
+      const t = await setup(0);
+      t.socket.game.set({ ...t.socket.game()!, log: [lotte(1)] } as never);
+      t.fixture.detectChanges();
+      expect(played('volle-lotte')).toBe(0);
+    });
+
+    it('is silent for entries already in the log when the table opened', async () => {
+      await setup(0, { log: [lotte(0)] });
+      expect(played('volle-lotte')).toBe(0);
+    });
   });
 });
 

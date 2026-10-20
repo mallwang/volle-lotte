@@ -80,6 +80,16 @@
               [rounded]="true"
               [text]="true"
               severity="secondary"
+              [icon]="sounds.muted() ? 'pi pi-volume-off' : 'pi pi-volume-up'"
+              (onClick)="sounds.toggle()"
+              [ariaLabel]="soundLabel()"
+              [pTooltip]="soundAction()"
+              [pt]="{ root: { 'aria-pressed': sounds.muted() ? 'true' : 'false' } }"
+            />
+            <p-button
+              [rounded]="true"
+              [text]="true"
+              severity="secondary"
               [icon]="theme.mode() === 'dark' ? 'pi pi-moon' : 'pi pi-sun'"
               (onClick)="theme.toggle()"
               [ariaLabel]="themeLabel()"

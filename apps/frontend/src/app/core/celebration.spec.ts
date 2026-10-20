@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { BURST_INTERVAL_MS, Celebration } from './celebration';
+import { Sounds } from './sounds';
 
 const confetti = vi.fn();
 vi.mock('party-js', () => ({
@@ -38,6 +39,7 @@ describe('Celebration', () => {
     play.mockReset().mockResolvedValue();
     pause.mockClear();
     load.mockClear();
+    localStorage.clear();
     vi.useFakeTimers();
     confetti.mockClear();
     motion(false);
@@ -45,6 +47,7 @@ describe('Celebration', () => {
   });
   afterEach(() => {
     vi.unstubAllGlobals();
+    localStorage.clear();
     vi.useRealTimers();
     vi.restoreAllMocks();
     Reflect.deleteProperty(window, 'matchMedia');
@@ -86,18 +89,29 @@ describe('Celebration', () => {
     expect(pause).toHaveBeenCalledTimes(1);
   });
 
-  it('preloads the sound and the confetti library ahead of the celebration', async () => {
+  it('preloads the sounds and the confetti library ahead of the celebration', async () => {
     const celebration = TestBed.inject(Celebration);
     celebration.preload();
     celebration.preload();
-    expect(audios).toHaveLength(1);
-    expect(audios[0].preload).toBe('auto');
-    expect(load).toHaveBeenCalledTimes(1);
+    expect(audios).toHaveLength(5);
+    expect(audios.every((a) => a.preload === 'auto')).toBe(true);
+    expect(load).toHaveBeenCalledTimes(5);
     expect(play).not.toHaveBeenCalled();
     celebration.start();
-    expect(audios).toHaveLength(1);
+    expect(audios).toHaveLength(5);
     expect(play).toHaveBeenCalledTimes(1);
     celebration.stop();
+  });
+
+  it('plays no sound while muted but still bursts confetti', async () => {
+    TestBed.inject(Sounds).toggle();
+    const celebration = TestBed.inject(Celebration);
+    celebration.start();
+    await flush();
+    expect(play).not.toHaveBeenCalled();
+    expect(confetti).toHaveBeenCalledTimes(3);
+    celebration.stop();
+    TestBed.inject(Sounds).toggle();
   });
 
   it('plays the preloaded sound again from the start in a later celebration', () => {
