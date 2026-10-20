@@ -180,6 +180,21 @@ Done in spec 016. Visitors watch a running game anonymously and read-only; the g
 - Constraint: gameplay is never affected (no pay to win, no credits to win).
 - Open: how cosmetics look to the other players at the table; assets must be provided.
 
+### R24. Leaner socket messages (`idea`)
+
+Goal: send much less data over the socket per change. Found in playtests: traffic grows during a game and most of every message is unchanged.
+
+- Today: every accepted change pushes a full `game:state` (`toView` in `apps/backend/src/app/lobby/view.ts`) to every player and spectator. It contains the whole capped log (`log`, up to `LOG_CAP` = 500 entries) and all seats including names, although the log is also pushed incrementally as `game:log` (`entries`). So the log travels twice and grows to its cap.
+- Quick wins, no protocol redesign:
+  - drop `log` from `game:state` and send it only as a snapshot when a client (re)joins, rejoins, starts watching or reloads (`logBase` stays the cursor for later `game:log` deltas);
+  - send seat identity (nicknames, computer names, host) only on join, rejoin, seat changes and rematch, not with every state; the per-turn state carries only seat indexes.
+- Larger step: snapshot on connect, then diffs. A `version` counter per room; the server sends `{ from, to, patch }`, the client applies it and requests a fresh snapshot on a gap (reconnect, missed message). Candidates for a patch: current seat and phase, dice, selection, piles, scores, timers. A hand-written patch per field group is probably simpler and safer than a generic JSON patch.
+- Static data (rules, card names, texts) is never sent; only ids.
+- Encoding: Base64 would not help (it adds about 33%). Better: enable Socket.IO `perMessageDeflate` (check CPU cost and that nginx passes it) or a binary parser such as MessagePack; measure before choosing. Short field names only if the measurements justify the lost readability.
+- Measure first: log the payload size per event over a full game (2 and 8 players, with spectators) as a baseline, and re-measure afterwards.
+- Constraints: the reducer on the client must stay the single place that builds the view; protocol version bump (`PROTOCOL_VERSION`); a reconnect, a rematch and spectators must always get a complete snapshot; the backend integration tests cover the resync path. Shares the snapshot idea with R4 (save and load) and R13 (replay).
+- Open: how large the payloads really are, whether the diff step is worth it after the quick wins.
+
 ### Later, not for the next releases
 
 - Drag and drop for dice selection (tap is the current interaction).
