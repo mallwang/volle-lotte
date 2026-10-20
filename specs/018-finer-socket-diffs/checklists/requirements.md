@@ -32,4 +32,4 @@
 ## Notes
 
 - Same style as spec 017: the subject is the network protocol, so message and key names appear as behaviour, not as design. Concrete event and field names are left to the plan.
-- The branch is deliberately not new: the spec lives in `017-leaner-socket-messages`.
+- The spec has its own branch `018-finer-socket-diffs`.

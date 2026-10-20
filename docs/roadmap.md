@@ -43,7 +43,7 @@ Last updated: 2026-10-20. The Java -> web migration is finished (see [migration.
 
 ## Next
 
-### R25. Finer socket diffs and compact log (`in progress`, spec [018-finer-socket-diffs](../specs/018-finer-socket-diffs/spec.md), branch `017-leaner-socket-messages`)
+### R25. Finer socket diffs and compact log (`in progress`, spec [018-finer-socket-diffs](../specs/018-finer-socket-diffs/spec.md), branch `018-finer-socket-diffs`)
 
 Goal: cut the socket traffic further after spec 017. A recorded 4-player round shows that most of every `game:change` is still the whole `game` part (all players with names and scores, the full turn with default values).
 
@@ -51,7 +51,7 @@ Goal: cut the socket traffic further after spec 017. A recorded 4-player round s
 - Compact log entries (one time stamp per action, flat type, no derivable entries); no `turnDeadline: null` right before the new deadline; send only the changed flag of `you`.
 - Later stage, decided from the measurement: shorter keys (`playerId` to `pid`, `seats` to `s`) from one table in `libs/game-rules` shared by frontend and backend.
 - Rejected: CSV-formatted strings (escaping of player names, lost types, little gain for the frequent change messages). Unchanged: the host receiving its own change (no optimistic client state) and the Engine.IO ping/pong heartbeat.
-- Protocol v13; figures via `npm run measure:socket` into [socket-traffic.md](socket-traffic.md). The spec lives in the branch of spec 017, no separate branch.
+- Protocol v13; figures via `npm run measure:socket` into [socket-traffic.md](socket-traffic.md). Story 4 (short keys) is only built if it saves at least 25% of the data per player in an 8-player game after the other stories.
 
 ### R2. E2E suite with bots (`planned`)
 
