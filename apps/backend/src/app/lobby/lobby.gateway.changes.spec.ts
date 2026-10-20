@@ -22,6 +22,17 @@ async function table(name: string, spectator = true) {
   await host.send('seat:ready', { ready: true });
   await guest.send('seat:ready', { ready: true });
   expect(await host.send('game:start')).toEqual({ ok: true });
+  const room = registry().get(id)!;
+  const hostId: string = created.game.you.playerId;
+  const guestId = guest.view!.you.playerId;
+  // the same cards and dice in every run: a Bonus card, and a throw that has a 1 to set aside
+  room.game = { ...room.game!, deck: Array.from({ length: 30 }, () => 'bonus200' as const) };
+  Object.assign(room, {
+    rng: scriptedRandomInt(Array.from({ length: 60 }, (_, i) => [0, 1, 1, 2, 3, 5][i % 6])),
+  });
+  // the clients learn about the new deck through two ordinary changes
+  room.setPaused(hostId, true);
+  room.setPaused(hostId, false);
   await tick();
   let spec: Client | undefined;
   if (spectator) {
@@ -30,9 +41,6 @@ async function table(name: string, spectator = true) {
       ok: true,
     });
   }
-  const room = registry().get(id)!;
-  const hostId: string = created.game.you.playerId;
-  const guestId = guest.view!.you.playerId;
   const mover = () => (room.game?.current === 0 ? hostId : guestId);
   const all = [host, guest, ...(spec ? [spec] : [])];
   return { host, guest, spec, id, room, hostId, guestId, mover, all };

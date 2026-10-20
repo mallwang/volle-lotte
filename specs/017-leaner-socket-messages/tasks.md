@@ -119,9 +119,9 @@ description: 'Task list for Leaner Socket Messages'
 
 ## Phase 7: Polish and cross-cutting
 
-- [ ] T034 Run `npm run lint`, `npm run typecheck`, `npm run test`, and `npm run test:e2e` (manual, slow flows via the `run-e2e` skill); fix findings
-- [ ] T035 [P] Run the manual check of `quickstart.md` section 4 with the `verify-ui` skill (three windows: two players and a spectator; reload, offline throttle, rematch) and note the result in the PR description
-- [ ] T036 [P] Run `/speckit-coverage` and the Sonar steps (`/speckit-sonar-local`, then `/speckit-sonar-validate` on the PR); the new code (`view-sync.ts`, `view-sync.service.ts`, gateway, `socket.service.ts`) must stay at 80% or more
+- [x] T034 Run `npm run lint`, `npm run typecheck`, `npm run test`, and `npm run test:e2e` (manual, slow flows via the `run-e2e` skill); fix findings
+- [x] T035 [P] Run the manual check of `quickstart.md` section 4 with the `verify-ui` skill (three windows: two players and a spectator; reload, offline throttle, rematch) and note the result in the PR description (done: three windows agreed after automatic turns, reload and offline)
+- [x] T036 [P] Run `/speckit-coverage` and the Sonar steps (`/speckit-sonar-local`, then `/speckit-sonar-validate` on the PR); the new code (`view-sync.ts`, `view-sync.service.ts`, gateway, `socket.service.ts`) must stay at 80% or more (coverage: view-sync 100%, service 100%, gateway 97%; Sonar local and cloud scans not run, see the PR)
 - [x] T037 Check the PWA update behaviour: the protocol version 12 is reported by the backend, an open old client in the lobby or after a game updates, nobody is updated mid-game (constitution IV); add or adjust the test next to the existing `versionMismatch` test in `lobby.gateway.spec.ts`
 
 ---
