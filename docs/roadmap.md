@@ -43,6 +43,16 @@ Last updated: 2026-10-20. The Java -> web migration is finished (see [migration.
 
 ## Next
 
+### R25. Finer socket diffs and compact log (`in progress`, spec [018-finer-socket-diffs](../specs/018-finer-socket-diffs/spec.md), branch `017-leaner-socket-messages`)
+
+Goal: cut the socket traffic further after spec 017. A recorded 4-player round shows that most of every `game:change` is still the whole `game` part (all players with names and scores, the full turn with default values).
+
+- Send only the differences of the game state (changed scores by index, changed turn fields, pile size, current player).
+- Compact log entries (one time stamp per action, flat type, no derivable entries); no `turnDeadline: null` right before the new deadline; send only the changed flag of `you`.
+- Later stage, decided from the measurement: shorter keys (`playerId` to `pid`, `seats` to `s`) from one table in `libs/game-rules` shared by frontend and backend.
+- Rejected: CSV-formatted strings (escaping of player names, lost types, little gain for the frequent change messages). Unchanged: the host receiving its own change (no optimistic client state) and the Engine.IO ping/pong heartbeat.
+- Protocol v13; figures via `npm run measure:socket` into [socket-traffic.md](socket-traffic.md). The spec lives in the branch of spec 017, no separate branch.
+
 ### R2. E2E suite with bots (`planned`)
 
 Goal: a thorough suite that plays real games with bots of different strength and checks the functionality and the UI. Run manually through its own skill, never in CI.
