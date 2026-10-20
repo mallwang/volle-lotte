@@ -131,8 +131,8 @@ description: 'Task list for Finer Socket Diffs and Compact Log'
 - [x] T034 [P] Add a gateway test for the old client (clarification of 2026-10-20): `session:start` with `protocolVersion: 12` is answered `versionMismatch` and the socket receives no `game:change`/`game:snapshot` afterwards, in `apps/backend/src/app/lobby/lobby.gateway.spec.ts`
 - [x] T035 [P] Verify the frontend side of T034 in `apps/frontend/src/app/core/socket.service.ts` and its spec: after a `versionMismatch` ack no table is left (`game` is `null`) and `error.versionMismatch` is shown (English and German texts exist); fix only if the check fails and record what was found in the PR
 - [x] T036 Update `docs/roadmap.md`: move R25 to the Done table as spec 018 with a one-line result (the figures of T028 and the Story 4 decision), set "Last updated"; update `README` or `docs` mentions of `PROTOCOL_VERSION` 12 if any (`grep -rn "protocol 12\|version 12"`)
-- [ ] T037 Run `npm run lint`, `npm run typecheck`, `npm run test` and `npm run build` and fix findings; run `npm run test:e2e` once manually (skill `run-e2e`) to cover the player, spectator and rematch flows against real sockets (SC-006)
-- [ ] T038 Run `/speckit-sonar-local` and fix findings; update `.specify/memory/test-coverage-guide.md` and `sonar.coverage.exclusions` only if a new file is a pure bootstrap or measurement file (the new files in `libs/game-rules` are logic and stay covered)
+- [x] T037 Run `npm run lint`, `npm run typecheck`, `npm run test` and `npm run build` and fix findings; run `npm run test:e2e` once manually (skill `run-e2e`) to cover the player, spectator and rematch flows against real sockets (SC-006)
+- [x] T038 Run `/speckit-sonar-local` and fix findings; update `.specify/memory/test-coverage-guide.md` and `sonar.coverage.exclusions` only if a new file is a pure bootstrap or measurement file (the new files in `libs/game-rules` are logic and stay covered)
 
 ---
 
