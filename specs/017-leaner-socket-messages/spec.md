@@ -99,7 +99,7 @@ After the re-measurement, the maintainer decides whether transport compression, 
 
 - A client has the old version of the app open while the server is updated: the existing update/version handling applies, and no client is left showing a broken or empty game.
 - The log reaches its maximum length and the oldest entries are dropped: clients that joined earlier and clients that joined later agree on the latest entries and see no duplicates.
-- A rematch begins while spectators are watching: spectators get the fresh snapshot without rejoining, and the running number starts again for the new game.
+- A rematch begins while spectators are watching: spectators get the fresh snapshot without rejoining, and the running number continues from the new snapshot.
 - A seat is taken over by a computer player, or a player leaves, during a running game: the identity change reaches everybody, including spectators.
 - A spectator joins or leaves: still only the counter changes for the others (spec 016 behaviour is unchanged).
 - Several changes are caused by one action (for example a bank, a card draw and the start of the next turn): they reach every client in order; a client that misses any of them recovers by snapshot.
@@ -119,7 +119,7 @@ After the re-measurement, the maintainer decides whether transport compression, 
 - **FR-006**: Static values (rules, game name, host settings, card and text identifiers) MUST be sent only in the snapshot, and again only when they change.
 - **FR-007**: Seat identities (nicknames, computer names, host marker) MUST be sent in the snapshot and after that only when they change; a change MUST name only the seats it concerns and MUST reach all players and spectators.
 - **FR-008**: The size of a turn message MUST NOT grow with the number of log entries or with the length of the game.
-- **FR-009**: Every change message MUST carry a running number that counts up from the start of each game, and every snapshot MUST state the number of the last change it contains.
+- **FR-009**: Every change message MUST carry a running number that counts up per client from that client's last snapshot, and every snapshot MUST state the number of the last change it contains.
 - **FR-010**: A client MUST apply a change only if its number directly follows the client's current number; it MUST ignore changes already contained in its snapshot; and on a gap it MUST ask for a fresh complete snapshot and apply nothing in between.
 - **FR-011**: Requesting a snapshot MUST affect only the requesting client. The game, the timers and the other clients MUST continue undisturbed. The server MUST limit how often a single client can request snapshots.
 - **FR-012**: Reconnecting players, rejoining players, spectators and all clients after a rematch MUST always receive a complete snapshot; none of these flows may depend on a prior state held by the client.
@@ -134,7 +134,7 @@ After the re-measurement, the maintainer decides whether transport compression, 
 
 - **Snapshot**: the complete view of a game for one participant (all seats with identities, rules and settings, the whole log so far, scores, current action) together with the number of the last change it contains; sent on entering, re-entering, after a rematch and on request.
 - **Change**: a small, named message about one thing that happened (turn result with its log entry, dice preview, seat change, setting change, spectator counter, pause, rematch decision), carrying a running number.
-- **Running number**: the per-game counter that orders changes from the start of a game; makes a missed or duplicated change visible to the client.
+- **Running number**: the per-client counter that orders the changes a client receives; makes a missed or duplicated change visible to the client.
 - **Log entries**: the ordered, length-limited record of what happened in the game; delivered as a complete list in a snapshot and one entry at a time with the turn results.
 - **Seat identity**: nickname or computer name of a seat and the host marker; changes rarely.
 - **Measurement report**: size per event type and total per participant for a scenario (player count, with or without spectators), before and after the change.

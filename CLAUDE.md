@@ -23,5 +23,5 @@ The Java reference lives as a copy in `tmp/java/` (git-ignored, read-only).
 
 <!-- SPECKIT START -->
 
-Current feature plan: [specs/016-spectators/plan.md](specs/016-spectators/plan.md)
+Current feature plan: [specs/017-leaner-socket-messages/plan.md](specs/017-leaner-socket-messages/plan.md)
 <!-- SPECKIT END -->
