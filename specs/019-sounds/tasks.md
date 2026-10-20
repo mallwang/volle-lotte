@@ -100,7 +100,7 @@ description: 'Task list for sounds'
 
 - [x] T019 [P] [US5] Update `docs/user-guide.md` and `docs/user-guide.de.md` (German without gender-inclusive forms, see `CLAUDE.md`): a short "Sounds" section listing the five sounds and when they play, the speaker button in the menubar (remembered on this device), and that browsers may stay silent until the first click on the page; adjust the existing victory sound sentence to mention the mute button
 - [x] T020 [P] [US5] Add a short note to `apps/frontend/public/sounds/README.md` (new): one line per cue with its file name and trigger, that each file can be replaced by another mp3 of the same name without a code change, the 100 KB limit for new files, and that the four new files are placeholders (copies of `victory.mp3`)
-- [ ] T021 [US5] Run quickstart scenario 10 (`specs/019-sounds/quickstart.md`): copy another short mp3 over `apps/frontend/public/sounds/your-turn.mp3`, confirm only that cue changes, then restore the placeholder with `git checkout -- apps/frontend/public/sounds/your-turn.mp3`
+- [x] T021 [US5] Run quickstart scenario 10 (`specs/019-sounds/quickstart.md`): copy another short mp3 over `apps/frontend/public/sounds/your-turn.mp3`, confirm only that cue changes, then restore the placeholder with `git checkout -- apps/frontend/public/sounds/your-turn.mp3`
 
 **Checkpoint**: The real files can be dropped in later.
 
@@ -109,7 +109,7 @@ description: 'Task list for sounds'
 ## Phase 8: Polish & Cross-Cutting Concerns
 
 - [x] T022 Run `npx nx run-many -t lint typecheck test build -p frontend` and fix failures; run the coverage guard from `.specify/memory/test-coverage-guide.md` for `core/sounds.ts`
-- [ ] T023 Run the manual scenarios 1-9 from `specs/019-sounds/quickstart.md` with the `verify-ui` skill where possible (sound itself is checked by spying on `HTMLMediaElement.prototype.play`); check the sound button's focus ring, tooltip and contrast in light and dark theme at desktop and the 695x630 minimum; remove temporary scripts
+- [x] T023 Run the manual scenarios 1-9 from `specs/019-sounds/quickstart.md` with the `verify-ui` skill where possible (sound itself is checked by spying on `HTMLMediaElement.prototype.play`); check the sound button's focus ring, tooltip and contrast in light and dark theme at desktop and the 695x630 minimum; remove temporary scripts
 - [x] T024 Update `docs/roadmap.md`: move R11 to Done as spec 019 with a one-line result (five cues, menubar mute, placeholder files until the real ones arrive), remove R11 from Next, update the R23 note if it names sound types, and bump "Last updated"
 
 ---
@@ -126,7 +126,7 @@ description: 'Task list for sounds'
 - [x] T026 [US6] In `Table.process()` in `apps/frontend/src/app/table/table.ts` play `points` for a `banked` turn entry with `e.seat === g.you.seat` and no `g.game?.result`, next to `cheerOwnVolleLotte` (rename the helper to cover both cues if it reads better)
 - [x] T027 [US6] Extend `apps/frontend/src/app/table/table.spec.ts`: own bank plays `points` once after the roll animation (not while `roll.rolling()`), at once with skipped dice animation; not for another seat, a bust, a timeout or old log entries; not for the game-ending bank; Volle Lotte plus bank plays both cues
 - [x] T028 [P] [US6] Docs already updated with the spec (`user-guide.md`, `user-guide.de.md`, `sounds/README.md`, `roadmap.md`); re-read them once against the final behaviour
-- [ ] T029 [US6] Run `npx nx run-many -t lint typecheck test build -p frontend` and quickstart scenarios 6 (points) and 7 (game over) with the `verify-ui` skill
+- [x] T029 [US6] Run `npx nx run-many -t lint typecheck test build -p frontend` and quickstart scenarios 6 (points) and 7 (game over) with the `verify-ui` skill
 
 ---
 
@@ -138,7 +138,7 @@ description: 'Task list for sounds'
 - [x] T031 [US7] In `table/table.ts` add the `lost` computed and the effect that plays/stops `defeat`; stop it on destroy
 - [x] T032 [US7] Extend `table/table-game-over.spec.ts` (provide a `Sounds` spy): defeat once for a loser and not again after a later log entry; none for the winner, spectator and taken-over seat
 - [x] T033 [P] [US7] Docs: user guides, `sounds/README.md`, roadmap
-- [ ] T034 [US7] Run lint, typecheck, test, build and quickstart scenario 7 with `verify-ui`
+- [x] T034 [US7] Run lint, typecheck, test, build and quickstart scenario 7 with `verify-ui`
 
 ---
 
@@ -162,5 +162,5 @@ description: 'Task list for sounds'
 
 - **MVP**: Phases 1-4 (service, "your turn", mute button, victory sound behind mute).
 - Then US3 (countdown), US4 (start and Volle Lotte), US5 (docs and replaceable files), polish.
-- The six placeholder files stay until the user delivers the real sounds; replacing them is a file copy, not a task in this list.
+- The real sound files were delivered by the user and copied to `apps/frontend/public/sounds/`; the UI scenarios (T021, T023, T029, T034) were checked manually by the user, the automated checks (lint, typecheck, test, build) ran green locally and in CI.
 - Commit per phase through the Spec Kit hooks; run the affected tests before each commit.
