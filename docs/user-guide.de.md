@@ -76,15 +76,17 @@ Die Menüleiste oben ist auf jeder Seite da. Sie zeigt die Seiten **Lobby** und 
 
 ### Töne
 
-Fünf kurze Töne begleiten das Spiel:
+Sieben kurze Töne begleiten das Spiel:
 
 - **Spielstart**: einmal für jeden Spieler am Tisch, wenn das Spiel beginnt (auch nach einer Revanche).
 - **Du bist dran**: einmal, wenn der Zug an dich geht, nachdem Würfel und Hinweis des vorigen Spielers vorbei sind.
-- **Countdown**: ein Piepton pro Sekunde in den letzten 10 Sekunden deines eigenen Zugtimers; er endet, sobald du etwas tust.
+- **Countdown**: ein Piepton pro Sekunde in den letzten 5 Sekunden deines eigenen Zugtimers; er endet, sobald du etwas tust.
 - **Volle Lotte**: Applaus, wenn du selbst eine Volle Lotte wirfst, nachdem die Würfel stehen.
+- **Punkte**: ein kurzer Ton, wenn dir Punkte auf dein eigenes Konto gutgeschrieben werden, zusammen mit dem Ergebnis deines Zugs. Bei einem Bust, einem Zeitablauf und dem Gewinnzug bleibt er stumm (dort spielt der Siegerton). Endet der Zug nach einer Volle Lotte mit Punkten, spielt er zusammen mit dem Applaus.
 - **Sieg**: wenn du das Spiel gewinnst.
+- **Niederlage**: ein kurzer Ton, wenn sich das Fenster **Spiel vorbei** öffnet und du nicht gewonnen hast. Zuschauer hören nichts.
 
-Der Lautsprecher-Button in der Menüleiste schaltet alle Töne auf einmal stumm und wieder ein; die Wahl wird auf diesem Gerät gespeichert. Zuschauer hören keine Zug-, Countdown- und Volle-Lotte-Töne. Browser bleiben mitunter stumm, bis du einmal auf die Seite geklickt oder getippt hast.
+Der Lautsprecher-Button in der Menüleiste schaltet alle Töne auf einmal stumm und wieder ein; die Wahl wird auf diesem Gerät gespeichert. Zuschauer hören keine Zug-, Countdown-, Volle-Lotte-, Punkte- und Niederlage-Töne. Browser bleiben mitunter stumm, bis du einmal auf die Seite geklickt oder getippt hast.
 
 ## 5. FAQ
 

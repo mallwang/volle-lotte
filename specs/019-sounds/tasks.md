@@ -64,14 +64,14 @@ description: 'Task list for sounds'
 
 ## Phase 5: User Story 3 - Countdown beeps at the end of my timer (Priority: P2)
 
-**Goal**: One beep per second during the last 10 seconds of the player's own turn timer, stopping as soon as the timer changes.
+**Goal**: One beep per second during the last 5 seconds of the player's own turn timer, stopping as soon as the timer changes.
 
-**Independent Test**: Game with a turn timer, do nothing on your turn: 10 beeps, then the automatic move; act after 3 beeps: they stop.
+**Independent Test**: Game with a turn timer, do nothing on your turn: 5 beeps, then the automatic move; act after 3 beeps: they stop.
 
-- [x] T011 [US3] Add `export function countdownDelays(at: number, now: number): number[]` to `apps/frontend/src/app/core/sounds.ts`: for `s` from 10 down to 1, `at - s * 1000 - now`, keeping only values `>= 0`, ascending (contract examples: `(30_000, 0)` gives `20_000 ... 29_000`, `(7_500, 0)` gives `500 ... 6_500`, `(0, 1)` gives `[]`)
-- [x] T012 [P] [US3] Add `countdownDelays` cases to `apps/frontend/src/app/core/sounds.spec.ts`: the three contract examples, a deadline exactly 10 s ahead (10 values, the first `0`), and a deadline in the past (`[]`)
+- [x] T011 [US3] Add `export function countdownDelays(at: number, now: number): number[]` to `apps/frontend/src/app/core/sounds.ts`: for `s` from 5 down to 1, `at - s * 1000 - now`, keeping only values `>= 0`, ascending (contract examples: `(30_000, 0)` gives `20_000 ... 29_000`, `(7_500, 0)` gives `500 ... 6_500`, `(0, 1)` gives `[]`)
+- [x] T012 [P] [US3] Add `countdownDelays` cases to `apps/frontend/src/app/core/sounds.spec.ts`: the three contract examples, a deadline exactly 5 s ahead (5 values, the first `0`), and a deadline in the past (`[]`)
 - [x] T013 [US3] In `apps/frontend/src/app/table/table.ts` add an effect that reads `mine()` and `deadlineAt()`; when both are set, schedule one `setTimeout` per value of `countdownDelays(at, Date.now())` that calls `this.sounds.play('countdown')`; use `onCleanup` to clear all of them, so a new deadline, the end of my turn, a pause (deadline `null`, spec 018) or the table's destruction cancels the remaining beeps
-- [x] T014 [US3] Extend `apps/frontend/src/app/table/table.spec.ts` with fake timers: a full 30 s timer on my turn gives 10 `countdown` plays in the last 10 s; acting (a new `turnDeadline.at`) after 3 beeps cancels the rest and arms the new timer's own countdown; deadline cleared (pause) plays nothing more; another player's deadline plays nothing; a game without `turnDeadline` plays nothing; destroying the table cancels pending beeps
+- [x] T014 [US3] Extend `apps/frontend/src/app/table/table.spec.ts` with fake timers: a full 30 s timer on my turn gives 5 `countdown` plays in the last 5 s; acting (a new `turnDeadline.at`) after 3 beeps cancels the rest and arms the new timer's own countdown; deadline cleared (pause) plays nothing more; another player's deadline plays nothing; a game without `turnDeadline` plays nothing; destroying the table cancels pending beeps
 
 **Checkpoint**: Players hear their timer running out.
 
@@ -100,7 +100,7 @@ description: 'Task list for sounds'
 
 - [x] T019 [P] [US5] Update `docs/user-guide.md` and `docs/user-guide.de.md` (German without gender-inclusive forms, see `CLAUDE.md`): a short "Sounds" section listing the five sounds and when they play, the speaker button in the menubar (remembered on this device), and that browsers may stay silent until the first click on the page; adjust the existing victory sound sentence to mention the mute button
 - [x] T020 [P] [US5] Add a short note to `apps/frontend/public/sounds/README.md` (new): one line per cue with its file name and trigger, that each file can be replaced by another mp3 of the same name without a code change, the 100 KB limit for new files, and that the four new files are placeholders (copies of `victory.mp3`)
-- [ ] T021 [US5] Run quickstart scenario 8 (`specs/019-sounds/quickstart.md`): copy another short mp3 over `apps/frontend/public/sounds/your-turn.mp3`, confirm only that cue changes, then restore the placeholder with `git checkout -- apps/frontend/public/sounds/your-turn.mp3`
+- [ ] T021 [US5] Run quickstart scenario 10 (`specs/019-sounds/quickstart.md`): copy another short mp3 over `apps/frontend/public/sounds/your-turn.mp3`, confirm only that cue changes, then restore the placeholder with `git checkout -- apps/frontend/public/sounds/your-turn.mp3`
 
 **Checkpoint**: The real files can be dropped in later.
 
@@ -109,8 +109,36 @@ description: 'Task list for sounds'
 ## Phase 8: Polish & Cross-Cutting Concerns
 
 - [x] T022 Run `npx nx run-many -t lint typecheck test build -p frontend` and fix failures; run the coverage guard from `.specify/memory/test-coverage-guide.md` for `core/sounds.ts`
-- [ ] T023 Run the manual scenarios 1-7 from `specs/019-sounds/quickstart.md` with the `verify-ui` skill where possible (sound itself is checked by spying on `HTMLMediaElement.prototype.play`); check the sound button's focus ring, tooltip and contrast in light and dark theme at desktop and the 695x630 minimum; remove temporary scripts
+- [ ] T023 Run the manual scenarios 1-9 from `specs/019-sounds/quickstart.md` with the `verify-ui` skill where possible (sound itself is checked by spying on `HTMLMediaElement.prototype.play`); check the sound button's focus ring, tooltip and contrast in light and dark theme at desktop and the 695x630 minimum; remove temporary scripts
 - [x] T024 Update `docs/roadmap.md`: move R11 to Done as spec 019 with a one-line result (five cues, menubar mute, placeholder files until the real ones arrive), remove R11 from Next, update the R23 note if it names sound types, and bump "Last updated"
+
+---
+
+---
+
+## Phase 9: User Story 6 - Points sound (Priority: P3)
+
+**Goal**: A sound for the player's own credited points, silent for the winning bank (FR-018, research R6a).
+
+**Independent Test**: Bank on your turn: one sound with the result notice; winning bank: only victory.
+
+- [x] T025 [US6] Copy `apps/frontend/public/sounds/victory.mp3` byte for byte to `apps/frontend/public/sounds/points.mp3`; add `'points'` to `SoundCue` in `apps/frontend/src/app/core/sounds.ts` and its path to the cue map (check `core/sounds.spec.ts` for hard-coded cue lists)
+- [x] T026 [US6] In `Table.process()` in `apps/frontend/src/app/table/table.ts` play `points` for a `banked` turn entry with `e.seat === g.you.seat` and no `g.game?.result`, next to `cheerOwnVolleLotte` (rename the helper to cover both cues if it reads better)
+- [x] T027 [US6] Extend `apps/frontend/src/app/table/table.spec.ts`: own bank plays `points` once after the roll animation (not while `roll.rolling()`), at once with skipped dice animation; not for another seat, a bust, a timeout or old log entries; not for the game-ending bank; Volle Lotte plus bank plays both cues
+- [x] T028 [P] [US6] Docs already updated with the spec (`user-guide.md`, `user-guide.de.md`, `sounds/README.md`, `roadmap.md`); re-read them once against the final behaviour
+- [ ] T029 [US6] Run `npx nx run-many -t lint typecheck test build -p frontend` and quickstart scenarios 6 (points) and 7 (game over) with the `verify-ui` skill
+
+---
+
+## Phase 10: User Story 7 - Defeat sound (Priority: P3)
+
+**Goal**: A sound with the game-over window for players who did not win (FR-019, research R6b).
+
+- [x] T030 [US7] Copy `victory.mp3` to `apps/frontend/public/sounds/defeat.mp3`; add `'defeat'` to `SoundCue` and the cue list in `core/sounds.ts` (and the cue counts in `sounds.spec.ts` and `celebration.spec.ts`)
+- [x] T031 [US7] In `table/table.ts` add the `lost` computed and the effect that plays/stops `defeat`; stop it on destroy
+- [x] T032 [US7] Extend `table/table-game-over.spec.ts` (provide a `Sounds` spy): defeat once for a loser and not again after a later log entry; none for the winner, spectator and taken-over seat
+- [x] T033 [P] [US7] Docs: user guides, `sounds/README.md`, roadmap
+- [ ] T034 [US7] Run lint, typecheck, test, build and quickstart scenario 7 with `verify-ui`
 
 ---
 
@@ -134,5 +162,5 @@ description: 'Task list for sounds'
 
 - **MVP**: Phases 1-4 (service, "your turn", mute button, victory sound behind mute).
 - Then US3 (countdown), US4 (start and Volle Lotte), US5 (docs and replaceable files), polish.
-- The four placeholder files stay until the user delivers the real sounds; replacing them is a file copy, not a task in this list.
+- The six placeholder files stay until the user delivers the real sounds; replacing them is a file copy, not a task in this list.
 - Commit per phase through the Spec Kit hooks; run the affected tests before each commit.

@@ -6,7 +6,7 @@
 
 ## Summary
 
-Add four sound cues (game start, your turn, countdown beeps, own Volle Lotte) and one mute button in the menubar that also silences the existing victory sound. A new root service `Sounds` owns one audio element per cue, the device-local mute setting and `play`/`stop`; `Celebration` hands its victory sound over to it. The triggers reuse signals the frontend already derives: the table's `mine()` (your turn, countdown together with `deadlineAt()`), the table's log processing after the roll animation (Volle Lotte) and the game page's switch from lobby to table (game start). Each cue has its own file under `public/sounds/`, a copy of `victory.mp3` until the real files arrive. Frontend only; no protocol change.
+Add six sound cues (game start, your turn, countdown beeps, own Volle Lotte, points credited, defeat) and one mute button in the menubar that also silences the existing victory sound. A new root service `Sounds` owns one audio element per cue, the device-local mute setting and `play`/`stop`; `Celebration` hands its victory sound over to it. The triggers reuse signals the frontend already derives: the table's `mine()` (your turn, countdown together with `deadlineAt()`), the table's log processing after the roll animation (Volle Lotte, points) and the game page's switch from lobby to table (game start). Each cue has its own file under `public/sounds/`, a copy of `victory.mp3` until the real files arrive. Frontend only; no protocol change.
 
 ## Technical Context
 
@@ -26,7 +26,7 @@ Add four sound cues (game start, your turn, countdown beeps, own Volle Lotte) an
 
 **Constraints**: No protocol change (`PROTOCOL_VERSION` stays); no autoplay error surfaces; English and German texts; module boundaries unchanged; final new sound files at most 100 KB each
 
-**Scale/Scope**: One service, one pure helper, small changes in five existing files, four placeholder assets, two texts per language pair
+**Scale/Scope**: One service, one pure helper, small changes in five existing files, six placeholder assets, two texts per language pair
 
 ## Constitution Check
 
@@ -70,7 +70,7 @@ specs/019-sounds/
 apps/frontend/
 ├── public/sounds/
 │   ├── victory.mp3              # exists
-│   └── game-start.mp3, your-turn.mp3, countdown.mp3, volle-lotte.mp3   # new, copies of victory.mp3
+│   └── game-start.mp3, your-turn.mp3, countdown.mp3, volle-lotte.mp3, points.mp3, defeat.mp3   # new, copies of victory.mp3
 └── src/app/
     ├── core/
     │   ├── sounds.ts            # new: cues, audio elements, mute, countdownDelays
@@ -78,7 +78,7 @@ apps/frontend/
     │   ├── celebration.ts       # victory sound via Sounds
     │   └── celebration.spec.ts  # adjusted
     ├── table/
-    │   ├── table.ts             # preload; your-turn and countdown effects; Volle Lotte in process()
+    │   ├── table.ts             # preload; your-turn and countdown effects; Volle Lotte and points in process(); defeat with the game-over modal
     │   └── table.spec.ts        # new cases
     ├── game/
     │   ├── game.ts              # game-start on lobby -> running
@@ -95,7 +95,7 @@ docs/
 
 ## Phase 0: Outline & Research
 
-See [research.md](./research.md): playback with one `HTMLAudioElement` per cue, where the logic lives, how each trigger is detected (your turn, countdown, game start, Volle Lotte), the mute setting, the menubar button and the asset layout.
+See [research.md](./research.md): playback with one `HTMLAudioElement` per cue, where the logic lives, how each trigger is detected (your turn, countdown, game start, Volle Lotte, points), the mute setting, the menubar button and the asset layout.
 
 ## Phase 1: Design & Contracts
 

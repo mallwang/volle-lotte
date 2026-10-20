@@ -93,12 +93,12 @@ describe('Celebration', () => {
     const celebration = TestBed.inject(Celebration);
     celebration.preload();
     celebration.preload();
-    expect(audios).toHaveLength(5);
+    expect(audios).toHaveLength(7);
     expect(audios.every((a) => a.preload === 'auto')).toBe(true);
-    expect(load).toHaveBeenCalledTimes(5);
+    expect(load).toHaveBeenCalledTimes(7);
     expect(play).not.toHaveBeenCalled();
     celebration.start();
-    expect(audios).toHaveLength(5);
+    expect(audios).toHaveLength(7);
     expect(play).toHaveBeenCalledTimes(1);
     celebration.stop();
   });

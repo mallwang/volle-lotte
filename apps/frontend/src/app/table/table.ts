@@ -629,6 +629,7 @@ export class Table {
       clearInterval(tick);
       tableScale.disable();
       this.celebration.stop();
+      this.sounds.stop('defeat');
     });
     // a computed, so only a change of the verdict (not every new game state) reaches the effect
     const celebrate = computed(() => {
@@ -639,7 +640,16 @@ export class Table {
       const on = celebrate();
       untracked(() => (on ? this.celebration.start() : this.celebration.stop()));
     });
-    // one beep per second in the last ten seconds of my own timer; a new deadline, the end of my
+    // the players who did not win hear the defeat sound when the modal opens; spectators stay silent
+    const lost = computed(() => {
+      const g = this.socket.game();
+      return this.gameOverVisible() && !!g && g.you.seat >= 0 && !isSpectator(g) && !youWon(g);
+    });
+    effect(() => {
+      const on = lost();
+      untracked(() => (on ? this.sounds.play('defeat') : this.sounds.stop('defeat')));
+    });
+    // one beep per second in the last five seconds of my own timer; a new deadline, the end of my
     // turn or a pause (deadline null) clears the rest
     effect((onCleanup) => {
       const at = this.deadlineAt();
@@ -689,17 +699,21 @@ export class Table {
     });
   }
 
-  /** Applause for my own Volle Lotte; process() gets here only once the roll animation is over. */
-  private cheerOwnVolleLotte(g: GameView, e: LogEntry): void {
-    const mine = e.seat === g.you.seat;
-    if (mine && e.kind === 'turn' && typeof e.data === 'object' && e.data.type === 'volleLotte')
-      this.sounds.play('volle-lotte');
+  /**
+   * Applause for my own Volle Lotte and the sound for my own credited points; process() gets here
+   * only once the roll animation is over. The winning bank stays silent (the victory sound covers
+   * it), like it shows no result notice.
+   */
+  private cheerOwn(g: GameView, e: LogEntry): void {
+    if (e.seat !== g.you.seat || e.kind !== 'turn' || typeof e.data !== 'object') return;
+    if (e.data.type === 'volleLotte') this.sounds.play('volle-lotte');
+    if (e.data.type === 'banked' && !g.game?.result) this.sounds.play('points');
   }
 
   /** Handle one new log entry; true = pause until the roll or notice is over. */
   private process(g: GameView, e: LogEntry): boolean {
     const data = e.kind === 'turn' && typeof e.data === 'object' ? e.data : null;
-    this.cheerOwnVolleLotte(g, e);
+    this.cheerOwn(g, e);
     if (data?.type === 'thrown') {
       this.startRoll(g, data.dice);
       if (this.roll.rolling()) return true;

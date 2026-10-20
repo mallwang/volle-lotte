@@ -707,36 +707,46 @@ describe('Table sounds', () => {
       t.fixture.detectChanges();
     };
 
-    it('beeps once a second in the last ten seconds of my timer', async () => {
+    it('beeps once a second in the last five seconds of my timer', async () => {
       const t = await setup(0);
       vi.useFakeTimers();
       withDeadline(t, Date.now() + 30_000);
-      vi.advanceTimersByTime(19_999);
+      vi.advanceTimersByTime(24_999);
       expect(played('countdown')).toBe(0);
       vi.advanceTimersByTime(1);
       expect(played('countdown')).toBe(1);
       vi.advanceTimersByTime(10_000);
-      expect(played('countdown')).toBe(10);
+      expect(played('countdown')).toBe(5);
+    });
+
+    it('waits five seconds into a 10 second step', async () => {
+      const t = await setup(0);
+      vi.useFakeTimers();
+      withDeadline(t, Date.now() + 10_000);
+      vi.advanceTimersByTime(4_999);
+      expect(played('countdown')).toBe(0);
+      vi.advanceTimersByTime(1);
+      expect(played('countdown')).toBe(1);
     });
 
     it('stops the beeps when the deadline changes and arms the new timer', async () => {
       const t = await setup(0);
       vi.useFakeTimers();
       withDeadline(t, Date.now() + 12_000);
-      vi.advanceTimersByTime(4_500);
-      expect(played('countdown')).toBe(3);
+      vi.advanceTimersByTime(8_500);
+      expect(played('countdown')).toBe(2);
       withDeadline(t, Date.now() + 30_000);
-      vi.advanceTimersByTime(19_000);
-      expect(played('countdown')).toBe(3);
-      vi.advanceTimersByTime(11_000);
-      expect(played('countdown')).toBe(13);
+      vi.advanceTimersByTime(24_000);
+      expect(played('countdown')).toBe(2);
+      vi.advanceTimersByTime(6_000);
+      expect(played('countdown')).toBe(7);
     });
 
     it('plays nothing more once the deadline is cleared (pause)', async () => {
       const t = await setup(0);
       vi.useFakeTimers();
       withDeadline(t, Date.now() + 12_000);
-      vi.advanceTimersByTime(3_000);
+      vi.advanceTimersByTime(8_000);
       const before = played('countdown');
       withDeadline(t, null);
       vi.advanceTimersByTime(20_000);
@@ -806,6 +816,75 @@ describe('Table sounds', () => {
     it('is silent for entries already in the log when the table opened', async () => {
       await setup(0, { log: [lotte(0)] });
       expect(played('volle-lotte')).toBe(0);
+    });
+  });
+
+  describe('points', () => {
+    const banked = (seat: number) => ({
+      kind: 'turn',
+      seat,
+      data: { type: 'banked', points: 300 },
+    });
+    const thrown = (seat: number) => ({
+      kind: 'turn',
+      seat,
+      data: { type: 'thrown', dice: [1, 1, 1] },
+    });
+
+    beforeEach(() => localStorage.setItem('vl-skip-dice', 'true'));
+    afterEach(() => localStorage.removeItem('vl-skip-dice'));
+
+    async function logged(log: unknown[], over = {}) {
+      const t = await setup(1, over);
+      t.socket.game.set({ ...t.socket.game()!, log } as never);
+      t.fixture.detectChanges();
+      return t;
+    }
+
+    it('plays once for my own bank, with the notice', async () => {
+      await logged([banked(0)]);
+      expect(played('points')).toBe(1);
+    });
+
+    it('plays after my roll animation, not while the dice roll', async () => {
+      localStorage.setItem('vl-skip-dice', 'false');
+      const t = await setup(1);
+      vi.useFakeTimers();
+      t.socket.game.set({ ...t.socket.game()!, log: [thrown(0), banked(0)] } as never);
+      t.fixture.detectChanges();
+      expect(played('points')).toBe(0);
+      vi.advanceTimersByTime(5000);
+      t.fixture.detectChanges();
+      expect(played('points')).toBe(1);
+    });
+
+    it("is silent for another seat's bank", async () => {
+      await logged([banked(1)]);
+      expect(played('points')).toBe(0);
+    });
+
+    it('is silent for a bust and a timeout', async () => {
+      await logged([
+        { kind: 'turn', seat: 0, data: { type: 'bust', lost: 100 } },
+        { kind: 'timedOut', seat: 0 },
+      ]);
+      expect(played('points')).toBe(0);
+    });
+
+    it('is silent for the bank that ends the game', async () => {
+      await logged([banked(0)], { game: { ...state(1), result: { winner: 0 } } });
+      expect(played('points')).toBe(0);
+    });
+
+    it('is silent for entries already in the log when the table opened', async () => {
+      await setup(1, { log: [banked(0)] });
+      expect(played('points')).toBe(0);
+    });
+
+    it('plays together with the applause after a Volle Lotte', async () => {
+      await logged([{ kind: 'turn', seat: 0, data: { type: 'volleLotte' } }, banked(0)]);
+      expect(played('volle-lotte')).toBe(1);
+      expect(played('points')).toBe(1);
     });
   });
 });

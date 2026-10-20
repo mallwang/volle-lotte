@@ -95,15 +95,25 @@ describe('Sounds', () => {
 
   it('gives every cue its own file', () => {
     const sounds = create();
-    (['victory', 'game-start', 'your-turn', 'countdown', 'volle-lotte'] as const).forEach((cue) =>
-      sounds.play(cue),
-    );
+    (
+      [
+        'victory',
+        'game-start',
+        'your-turn',
+        'countdown',
+        'volle-lotte',
+        'points',
+        'defeat',
+      ] as const
+    ).forEach((cue) => sounds.play(cue));
     expect(audios.map((a) => a.src)).toEqual([
       'sounds/victory.mp3',
       'sounds/game-start.mp3',
       'sounds/your-turn.mp3',
       'sounds/countdown.mp3',
       'sounds/volle-lotte.mp3',
+      'sounds/points.mp3',
+      'sounds/defeat.mp3',
     ]);
   });
 
@@ -111,9 +121,9 @@ describe('Sounds', () => {
     const sounds = create();
     sounds.preload();
     sounds.preload();
-    expect(audios).toHaveLength(5);
+    expect(audios).toHaveLength(7);
     expect(audios.every((a) => a.preload === 'auto')).toBe(true);
-    expect(load).toHaveBeenCalledTimes(5);
+    expect(load).toHaveBeenCalledTimes(7);
     expect(play).not.toHaveBeenCalled();
   });
 
@@ -124,19 +134,17 @@ describe('Sounds', () => {
 });
 
 describe('countdownDelays', () => {
-  it('beeps once per second in the last ten seconds', () => {
-    expect(countdownDelays(30_000, 0)).toEqual([
-      20_000, 21_000, 22_000, 23_000, 24_000, 25_000, 26_000, 27_000, 28_000, 29_000,
-    ]);
+  it('beeps once per second in the last five seconds', () => {
+    expect(countdownDelays(30_000, 0)).toEqual([25_000, 26_000, 27_000, 28_000, 29_000]);
   });
 
   it('skips beeps that already lie in the past', () => {
-    expect(countdownDelays(7_500, 0)).toEqual([500, 1_500, 2_500, 3_500, 4_500, 5_500, 6_500]);
+    expect(countdownDelays(3_500, 0)).toEqual([500, 1_500, 2_500]);
   });
 
-  it('starts at once when the deadline is exactly ten seconds ahead', () => {
-    const delays = countdownDelays(10_000, 0);
-    expect(delays).toHaveLength(10);
+  it('starts at once when the deadline is exactly five seconds ahead', () => {
+    const delays = countdownDelays(5_000, 0);
+    expect(delays).toHaveLength(5);
     expect(delays[0]).toBe(0);
   });
 

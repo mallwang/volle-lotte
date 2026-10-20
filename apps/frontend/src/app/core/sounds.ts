@@ -1,6 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 
-export type SoundCue = 'victory' | 'game-start' | 'your-turn' | 'countdown' | 'volle-lotte';
+export type SoundCue =
+  'victory' | 'game-start' | 'your-turn' | 'countdown' | 'volle-lotte' | 'points' | 'defeat';
 
 const CUES: readonly SoundCue[] = [
   'victory',
@@ -8,15 +9,17 @@ const CUES: readonly SoundCue[] = [
   'your-turn',
   'countdown',
   'volle-lotte',
+  'points',
+  'defeat',
 ];
 const path = (cue: SoundCue): string => `sounds/${cue}.mp3`;
 const KEY = 'vl-muted';
 
 /** Seconds before the deadline in which the countdown beeps. */
-const COUNTDOWN_SECONDS = 10;
+const COUNTDOWN_SECONDS = 5;
 
 /**
- * Delays (ms from `now`) of the countdown beeps, one per second of the last ten before `at`;
+ * Delays (ms from `now`) of the countdown beeps, one per second of the last five before `at`;
  * beeps that would already lie in the past are left out. Ascending.
  */
 export function countdownDelays(at: number, now: number): number[] {

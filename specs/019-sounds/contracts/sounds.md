@@ -5,7 +5,8 @@ No socket message, payload or `PROTOCOL_VERSION` changes. The contract is the fr
 ## `Sounds` service (`apps/frontend/src/app/core/sounds.ts`, `providedIn: 'root'`)
 
 ```ts
-export type SoundCue = 'victory' | 'game-start' | 'your-turn' | 'countdown' | 'volle-lotte';
+export type SoundCue =
+  'victory' | 'game-start' | 'your-turn' | 'countdown' | 'volle-lotte' | 'points' | 'defeat';
 
 class Sounds {
   /** true = every cue is silent; read from localStorage `vl-muted`, default false. */
@@ -30,11 +31,11 @@ Guarantees:
 ## Pure helper
 
 ```ts
-/** Milliseconds from `now` to each beep at at-10s, at-9s, ..., at-1s that is still ahead. */
+/** Milliseconds from `now` to each beep at at-5s, at-4s, ..., at-1s that is still ahead. */
 export function countdownDelays(at: number, now: number): number[];
 ```
 
-Examples: `countdownDelays(30_000, 0)` gives 10 values `20_000 ... 29_000`; `countdownDelays(7_500, 0)` gives 7 values `500 ... 6_500`; `countdownDelays(0, 1)` gives `[]`.
+Examples: `countdownDelays(30_000, 0)` gives 5 values `25_000 ... 29_000`; `countdownDelays(3_500, 0)` gives 3 values `500, 1_500, 2_500`; `countdownDelays(0, 1)` gives `[]`.
 
 ## Callers
 
@@ -42,7 +43,8 @@ Examples: `countdownDelays(30_000, 0)` gives 10 values `20_000 ... 29_000`; `cou
 | -------------------------------- | ------------------------------------------------------------------------------------------------- |
 | `Celebration.preload/start/stop` | `sounds.preload()`, `sounds.play('victory')`, `sounds.stop('victory')` (replaces its own `Audio`) |
 | `Table` constructor              | `sounds.preload()`; effects for `your-turn` and `countdown`                                       |
-| `Table.process()`                | `sounds.play('volle-lotte')` for the own Volle Lotte                                              |
+| `Table.process()`                | `sounds.play('volle-lotte')` for the own Volle Lotte, `sounds.play('points')` for the own credit  |
+| `Table` constructor              | `sounds.play('defeat')` when the game-over modal opens for a player who did not win               |
 | `Game` (game page)               | `sounds.play('game-start')` on `lobby` to `running`                                               |
 | `App` menubar                    | `sounds.muted()`, `sounds.toggle()`                                                               |
 
@@ -61,4 +63,4 @@ Examples: `countdownDelays(30_000, 0)` gives 10 values `20_000 ... 29_000`; `cou
 
 ## Assets
 
-`apps/frontend/public/sounds/` served at `/sounds/`: `victory.mp3` (exists), `game-start.mp3`, `your-turn.mp3`, `countdown.mp3`, `volle-lotte.mp3` (copies of `victory.mp3` until replaced; final files at most 100 KB each).
+`apps/frontend/public/sounds/` served at `/sounds/`: `victory.mp3` (exists), `game-start.mp3`, `your-turn.mp3`, `countdown.mp3`, `volle-lotte.mp3`, `points.mp3`, `defeat.mp3` (copies of `victory.mp3` until replaced; final files at most 100 KB each).

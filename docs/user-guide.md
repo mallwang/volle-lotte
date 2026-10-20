@@ -81,15 +81,17 @@ The menu bar at the top is on every screen. It shows the **Lobby** and **Create 
 
 ### Sounds
 
-Five short sounds accompany the game:
+Seven short sounds accompany the game:
 
 - **Game start**: once for every seated player when the game starts (also after a rematch).
 - **Your turn**: once when the turn passes to you, after the previous player's dice and notice are done.
-- **Countdown**: a beep every second during the last 10 seconds of your own turn timer; it stops as soon as you act.
+- **Countdown**: a beep every second during the last 5 seconds of your own turn timer; it stops as soon as you act.
 - **Volle Lotte**: applause when you throw a Volle Lotte yourself, after the dice have stopped.
+- **Points**: a short sound when points are credited to your own score, together with the result of your turn. It stays silent for a bust, a timeout and the winning turn (the victory sound covers that). After a Volle Lotte that ends with banking, it plays together with the applause.
 - **Victory**: when you win the game.
+- **Defeat**: a short sound when the **Game over** window opens and you did not win. Spectators hear nothing.
 
-The speaker button in the menu bar mutes all of them at once and turns them on again; the choice is remembered on this device. Spectators hear no turn, countdown or Volle Lotte sounds. Browsers may stay silent until you have clicked or tapped somewhere on the page once.
+The speaker button in the menu bar mutes all of them at once and turns them on again; the choice is remembered on this device. Spectators hear no turn, countdown, Volle Lotte, points or defeat sounds. Browsers may stay silent until you have clicked or tapped somewhere on the page once.
 
 ## 5. FAQ
 
