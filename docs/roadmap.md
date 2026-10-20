@@ -44,7 +44,58 @@ Last updated: 2026-10-20. The Java -> web migration is finished (see [migration.
 
 ## Next
 
-### R2. E2E suite with bots (`planned`)
+Ordered by effort, smallest first, so small items ship before the big ones; an item never comes before what it needs. Effort is a rough guess: S (a few days, mostly one app), M (engine or protocol change plus UI), L (new subsystem or wide change), XL (new app or foundation for several items). R26 stays last on purpose: it is only built if its gate is met.
+
+### R11. Sounds (`in progress`, spec 019, effort S)
+
+- Goal: optional sound effects; the audio files are provided (until then, every cue uses a copy of the victory sound).
+- Done already (spec 013): the victory sound when you win the game, played once together with the confetti.
+- Sounds still open: a game start sound; timer sounds during the running game, such as a beep every second during the last 10 seconds of the turn timer; a distinct sound (for example a double bell) when it becomes your turn after the previous player busted or finished; applause on your own Volle Lotte.
+- Constraints: one mute toggle in the menubar, remembered in `localStorage`; no autoplay before the first user interaction; assets stay small. Vibration on mobile is a possible addition (R3).
+
+### R19. Score change animations (`idea`, effort S)
+
+- Gain: a green "+500" appears above the player's score and the score counts up like an odometer (rolling digits).
+- Loss: the same with a red "-1000" (Plus/Minus card).
+- Bust: when a player busts and loses the banked points of the turn, a red "-500" appears above the secured score and the points roll back to 0.
+- Securing: every time a player banks, a green "+500" appears above "Secured: x points" and the points count up.
+- Constraints: the Star score updates already wait for the final roll animation; the new animations follow the same rule and the "skip dice animation" setting; `prefers-reduced-motion`.
+
+### R17. Starting player draw (`idea`, effort M)
+
+- Goal: the starting player is drawn in a start animation: a modal with a spin-the-wheel animation of all active player names, then fireworks with the message "Player X is the starting player".
+- Seat order: the player cards are numbered: the starting player gets 1, then humans in alphabetical order, then computers by their seat. Every player sees the same order; the current layout where your own card is always first no longer applies.
+- Constraints: the draw is made on the server (no client-side randomness), all clients show the same result; the animation does not hold the turn timers.
+- Open: touches the seat layout of spec 007 and 008; reuse the `Celebration` service (`apps/frontend/src/app/core/celebration.ts`, spec 013) for the fireworks.
+
+### R14. In-game reactions (`idea`, effort M)
+
+- Goal: quick emotes or short chat messages between humans at the table.
+- Constraints: rate-limited, plain text only (no HTML), host can mute; translated preset reactions are the safe first step before free chat.
+
+### R18. Reshuffle step (`idea`, effort M)
+
+- When a draw pile is empty and the cards must be reshuffled, the current player has to press a "Reshuffle" button.
+- A new 30 second timeout runs below that button; when it expires, the cards are shuffled automatically and the player continues normally with "Draw" and the usual turn timer.
+- The shuffle animation takes 5 seconds: the discard pile is shuffled and moves to the draw pile.
+- Open: computers press the button after their normal pacing delay (spec 010); protocol change for the new phase.
+
+### R9. Rule options per game (`idea`, effort M)
+
+- Goal: the host adjusts rules in the lobby, for example target score, enabled card types, number of cards per type, house rules from playtests. The new cards (R20) are one such option.
+- Why: playtests already produced rule tweaks (Double Lotte, bonus Volle Lotte); options make variants testable without code changes.
+- Constraints: the engine in `libs/game-rules` stays the single source of truth and defaults stay unchanged; every option shows up in the lobby, the table settings and `docs/rules.md`.
+
+### R20. New cards (`idea`, effort M, option per game, needs R9)
+
+- Goal: an own game option in the settings that adds new card types to the deck. Card images are provided.
+- Bonus 800 (3 times) and Bonus 1000 (2 times).
+- Short Street (as often as the real Street): five in a row, so 1-5 or 2-6.
+- Three of a kind (3 times) and four of a kind (3 times), each with 3 attempts. Check first whether they are too easy; if so, adjust the target points (for example 300 for three, 600 for four of a kind).
+- Full House (3 times): a pair and three of a kind in one throw, 3 attempts. Check whether it is too easy; if so, adjust the points (for example 500).
+- Work: engine and `docs/rules.md` (both languages), tooltips, computer AI (spec 011: odds for the new goals), protocol version, deck size shown in the settings.
+
+### R2. E2E suite with bots (`planned`, effort L)
 
 Goal: a thorough suite that plays real games with bots of different strength and checks the functionality and the UI. Run manually through its own skill, never in CI.
 
@@ -53,7 +104,30 @@ Goal: a thorough suite that plays real games with bots of different strength and
 - Spike: try [Lightpanda](https://github.com/lightpanda-io/browser) as an optional second Playwright project (`connectOverCDP`) for the flow checks (socket and DOM state, two player contexts). It has no layout or rendering engine, so it cannot replace Chromium for layout and focus checks.
 - Ideas: bots of all difficulties against each other, many seeded games, UI checks per player count and language, reconnect and timeout flows in the browser, protocol version mismatch.
 
-### R3. Mobile app as installable PWA (`idea`)
+### R4. Save and load games (`planned`, effort L)
+
+- Host saves a game server-side and loads it later; the game state is already immutable JSON (`toJSON`/`fromJSON`).
+- Persist after every turn in SQLite so restarts do not lose games. Loading leads to the game lobby, all humans must press "Ready" again.
+- Open: SQLite is not part of the backend yet; it is also the base for R6, R12, R15 and R22. Not to be confused with saving a finished game for later viewing (R15).
+
+### R6. Game log (`planned`, effort L, builds on R4)
+
+Goal: a persisted, structured game log. The in-game log is shown below the table, but it is technical, hard to read (every action is one row) and not persisted.
+
+- Backend table: participants, date and time, duration, final result; plus an event log per game. Shares the SQLite work with R4.
+- Format: one compact, easy to parse text line per event (a code plus fields), so human-readable texts can be generated from it in any language later. The table log can group the lines per turn.
+- Game events: player leaves, rejoins, is disconnected, reconnects, is removed or banned, does not react (timer expired), host changes a setting, final result.
+- Throw events: round number, time since game start, player name, card name, dice result, chosen dice, final dice, turn result, dice points, total points.
+- First step: check which data is needed for a replay (R13): seating order, the global dice animation setting, card order if the engine is seeded.
+- Saved games keep their log assigned to the saving players (R15).
+
+### R13. Replay (`idea`, effort L, builds on R6)
+
+- Goal: watch a finished game again ("re-live") from its persisted log, without a recording: the viewer is built purely by parsing the log (who sits where, rolling dice follow the viewer's global setting, and so on). Also useful to debug the computer AI (spec 011) and to reproduce bugs.
+- Saved games stay assigned to the players who saved them (R15).
+- Open: log granularity (needs dice and card order), a seeded engine makes replays small.
+
+### R3. Mobile app as installable PWA (`idea`, effort XL)
 
 Goal: a separate mobile frontend with a UI optimized for phones, so the desktop and tablet frontend stays as it is. A new Nx application that only talks to the backend over WebSocket.
 
@@ -66,105 +140,7 @@ Goal: a separate mobile frontend with a UI optimized for phones, so the desktop 
 - Shared code: `libs/game-rules` (protocol types, rules); keep `scope:*` tags in mind for the new app.
 - Open: the same bundle behind nginx or a second deployment; haptics and sound see R11. The desktop scope is settled (spec 008), so this item can start any time.
 
-### R4. Save and load games (`planned`)
-
-- Host saves a game server-side and loads it later; the game state is already immutable JSON (`toJSON`/`fromJSON`).
-- Persist after every turn in SQLite so restarts do not lose games. Loading leads to the game lobby, all humans must press "Ready" again.
-- Open: SQLite is not part of the backend yet; it is also the base for R6, R12, R15 and R22. Not to be confused with saving a finished game for later viewing (R15).
-
-### R6. Game log (`planned`)
-
-Goal: a persisted, structured game log. The in-game log is shown below the table, but it is technical, hard to read (every action is one row) and not persisted.
-
-- Backend table: participants, date and time, duration, final result; plus an event log per game. Shares the SQLite work with R4.
-- Format: one compact, easy to parse text line per event (a code plus fields), so human-readable texts can be generated from it in any language later. The table log can group the lines per turn.
-- Game events: player leaves, rejoins, is disconnected, reconnects, is removed or banned, does not react (timer expired), host changes a setting, final result.
-- Throw events: round number, time since game start, player name, card name, dice result, chosen dice, final dice, turn result, dice points, total points.
-- First step: check which data is needed for a replay (R13): seating order, the global dice animation setting, card order if the engine is seeded.
-- Saved games keep their log assigned to the saving players (R15).
-
-### R8. Spectators (`done`)
-
-Done in spec 016. Visitors watch a running game anonymously and read-only; the games list shows "Watch" (same password and rate limit as joining), players and spectators see a counter of spectators, joining or leaving writes no log entry and shows no toast, spectators never influence timers, cleanup or the game end, and the host can switch spectating off (default on), which sends all spectators back to the lobby. A reload resumes watching. Protocol v11.
-
-### R9. Rule options per game (`idea`)
-
-- Goal: the host adjusts rules in the lobby, for example target score, enabled card types, number of cards per type, house rules from playtests. The new cards (R20) are one such option.
-- Why: playtests already produced rule tweaks (Double Lotte, bonus Volle Lotte); options make variants testable without code changes.
-- Constraints: the engine in `libs/game-rules` stays the single source of truth and defaults stay unchanged; every option shows up in the lobby, the table settings and `docs/rules.md`.
-
-### R11. Sounds (`idea`)
-
-- Goal: optional sound effects; the audio files are provided.
-- Done already (spec 013): the victory sound when you win the game, played once together with the confetti.
-- Sounds still open: a game start sound; timer sounds during the running game, such as a beep every second during the last 10 seconds of the turn timer; a distinct sound (for example a double bell) when it becomes your turn after the previous player busted or finished; applause on your own Volle Lotte.
-- Constraints: one mute toggle in the menubar, remembered in `localStorage`; no autoplay before the first user interaction; assets stay small. Vibration on mobile is a possible addition (R3).
-
-### R12. Statistics, history and highscore (`idea`, builds on R6 and R22)
-
-- Highscore: a ranking of all players, either a paginated table or the top 20, with wins and total points; switchable category (wins or total points).
-- Game history: the logged-in player sees the past games they took part in and the result of each (list in the lobby, see R15). Won games can be filtered there.
-- Statistics per player: games played and won, average score, busts, Volle Lottes, favourite card. The admin table (R22) shows the operational variants (aborts, timer overruns).
-- Constraints: without accounts, identity is the nickname plus token (see [migration.md](migration.md)), so a ranking is only meaningful per account (R22). Needs the persistence of R4 and R6.
-
-### R13. Replay (`idea`, builds on R6)
-
-- Goal: watch a finished game again ("re-live") from its persisted log, without a recording: the viewer is built purely by parsing the log (who sits where, rolling dice follow the viewer's global setting, and so on). Also useful to debug the computer AI (spec 011) and to reproduce bugs.
-- Saved games stay assigned to the players who saved them (R15).
-- Open: log granularity (needs dice and card order), a seeded engine makes replays small.
-
-### R14. In-game reactions (`idea`)
-
-- Goal: quick emotes or short chat messages between humans at the table.
-- Constraints: rate-limited, plain text only (no HTML), host can mute; translated preset reactions are the safe first step before free chat.
-
-### R15. Lobby rework: search, finished games, saved games (`idea`, needs R4, R6 and R22)
-
-- Search: search the games list by name and filter by criteria (status, player count, own games, won games).
-- "Finished" section: finished games stay listed until they are finally deleted and show the deletion time, so players know how long they remain. Today finished games are gone at once because nothing is persisted.
-- Saving: a player can save a finished game; it then stays in their "Finished" section together with its log, assigned to every player who saved it, and can be watched again in the re-live (R13). Re-live needs the log rework (R6), which is a separate feature.
-- History: a game history of the logged-in player (see R12).
-- Open: retention time of unsaved finished games.
-
-### R17. Starting player draw (`idea`)
-
-- Goal: the starting player is drawn in a start animation: a modal with a spin-the-wheel animation of all active player names, then fireworks with the message "Player X is the starting player".
-- Seat order: the player cards are numbered: the starting player gets 1, then humans in alphabetical order, then computers by their seat. Every player sees the same order; the current layout where your own card is always first no longer applies.
-- Constraints: the draw is made on the server (no client-side randomness), all clients show the same result; the animation does not hold the turn timers.
-- Open: touches the seat layout of spec 007 and 008; reuse the `Celebration` service (`apps/frontend/src/app/core/celebration.ts`, spec 013) for the fireworks.
-
-### R18. Reshuffle step (`idea`)
-
-- When a draw pile is empty and the cards must be reshuffled, the current player has to press a "Reshuffle" button.
-- A new 30 second timeout runs below that button; when it expires, the cards are shuffled automatically and the player continues normally with "Draw" and the usual turn timer.
-- The shuffle animation takes 5 seconds: the discard pile is shuffled and moves to the draw pile.
-- Open: computers press the button after their normal pacing delay (spec 010); protocol change for the new phase.
-
-### R19. Score change animations (`idea`)
-
-- Gain: a green "+500" appears above the player's score and the score counts up like an odometer (rolling digits).
-- Loss: the same with a red "-1000" (Plus/Minus card).
-- Bust: when a player busts and loses the banked points of the turn, a red "-500" appears above the secured score and the points roll back to 0.
-- Securing: every time a player banks, a green "+500" appears above "Secured: x points" and the points count up.
-- Constraints: the Star score updates already wait for the final roll animation; the new animations follow the same rule and the "skip dice animation" setting; `prefers-reduced-motion`.
-
-### R20. New cards (`idea`, option per game, see R9)
-
-- Goal: an own game option in the settings that adds new card types to the deck. Card images are provided.
-- Bonus 800 (3 times) and Bonus 1000 (2 times).
-- Short Street (as often as the real Street): five in a row, so 1-5 or 2-6.
-- Three of a kind (3 times) and four of a kind (3 times), each with 3 attempts. Check first whether they are too easy; if so, adjust the target points (for example 300 for three, 600 for four of a kind).
-- Full House (3 times): a pair and three of a kind in one throw, 3 attempts. Check whether it is too easy; if so, adjust the points (for example 500).
-- Work: engine and `docs/rules.md` (both languages), tooltips, computer AI (spec 011: odds for the new goals), protocol version, deck size shown in the settings.
-
-### R21. Tournaments (`idea`, needs R22)
-
-- Several tournament types: easy (easy opponents), medium (easy and medium), hard (medium and hard).
-- A tournament section in the lobby with system-provided tournament settings: number of humans and computers, deck (standard or extended, see R20), computer speed, and so on.
-- The system is the host: players cannot change any setting that influences the game. Only the participating player can leave and rejoin. As today, a tournament that nobody takes part in is deleted after 24 hours.
-- Open: result and rewards (see R23); several rounds or a single game.
-
-### R22. User accounts and administration (`idea`)
+### R22. User accounts and administration (`idea`, effort XL)
 
 - Users: change name, change password, e-mail confirmation required; no admin needed who sends invitations or approves registrations. Also forgot password and profile picture (logic from Vaultfolio), SMTP.
 - An admin role (for example the operator of the application) with an admin section:
@@ -174,7 +150,29 @@ Done in spec 016. Visitors watch a running game anonymously and read-only; the g
 - Presets of R10 move to the account: they are stored on the server per user, so they load on every device and browser, not only in the local storage of one client. The "settings cannot be saved on this device" notice of R10 is removed then, and existing local presets are offered for import on the first sign-in.
 - Foundation for R12, R15, R21 and R23. Needs the persistence of R4 and R6.
 
-### R23. Credits and cosmetics (`idea`, needs R22; builds on R21)
+### R12. Statistics, history and highscore (`idea`, effort L, builds on R6 and R22)
+
+- Highscore: a ranking of all players, either a paginated table or the top 20, with wins and total points; switchable category (wins or total points).
+- Game history: the logged-in player sees the past games they took part in and the result of each (list in the lobby, see R15). Won games can be filtered there.
+- Statistics per player: games played and won, average score, busts, Volle Lottes, favourite card. The admin table (R22) shows the operational variants (aborts, timer overruns).
+- Constraints: without accounts, identity is the nickname plus token (see [migration.md](migration.md)), so a ranking is only meaningful per account (R22). Needs the persistence of R4 and R6.
+
+### R15. Lobby rework: search, finished games, saved games (`idea`, effort L, needs R4, R6 and R22)
+
+- Search: search the games list by name and filter by criteria (status, player count, own games, won games).
+- "Finished" section: finished games stay listed until they are finally deleted and show the deletion time, so players know how long they remain. Today finished games are gone at once because nothing is persisted.
+- Saving: a player can save a finished game; it then stays in their "Finished" section together with its log, assigned to every player who saved it, and can be watched again in the re-live (R13). Re-live needs the log rework (R6), which is a separate feature.
+- History: a game history of the logged-in player (see R12).
+- Open: retention time of unsaved finished games.
+
+### R21. Tournaments (`idea`, effort L, needs R22)
+
+- Several tournament types: easy (easy opponents), medium (easy and medium), hard (medium and hard).
+- A tournament section in the lobby with system-provided tournament settings: number of humans and computers, deck (standard or extended, see R20), computer speed, and so on.
+- The system is the host: players cannot change any setting that influences the game. Only the participating player can leave and rejoin. As today, a tournament that nobody takes part in is deleted after 24 hours.
+- Open: result and rewards (see R23); several rounds or a single game.
+
+### R23. Credits and cosmetics (`idea`, effort XL, needs R22; builds on R21)
 
 - Players earn credits per game (depending on the difficulty and number of opponents) and per tournament (depending on its settings).
 - A small store redeems credits for cosmetics only: card patterns, modern versus hand-drawn cards, other dice, special player cards, other backgrounds (water, sky, lava, and so on).
@@ -182,7 +180,7 @@ Done in spec 016. Visitors watch a running game anonymously and read-only; the g
 - Constraint: gameplay is never affected (no pay to win, no credits to win).
 - Open: how cosmetics look to the other players at the table; assets must be provided.
 
-### R26. Short message keys (`idea`, do last)
+### R26. Short message keys (`idea`, effort S, do last)
 
 - Shorten the keys of the socket messages (`playerId` to `pid`, `seats` to `s`) from one table shared by frontend and backend (`wire-keys.ts` with `shortenKeys` / `expandKeys`, applied at the send boundary, and a test that fails for a key without an entry).
 - Why: spec 018 (Story 4) measured it and did not build it: the throw-away estimate (`keyTableEstimate` in `apps/backend/src/app/lobby/testing/traffic.ts`) saves 23.1% per player (109,262 instead of 142,121 bytes in an 8-player game), below the 25% gate. Details in [socket-traffic.md](socket-traffic.md#short-keys-not-built).
