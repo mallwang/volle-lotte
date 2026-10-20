@@ -277,7 +277,8 @@
         const v = canvas.dataset.screen;
         canvas.querySelectorAll('[data-show]').forEach((e) => {
           const t = e.dataset.show.split(' ');
-          e.hidden = !(t.includes('all') || t.includes(v));
+          // the attribute, not the property: SVG elements have no `hidden` property
+          e.toggleAttribute('hidden', !(t.includes('all') || t.includes(v)));
         });
       };
       const setScreen = (v) => {

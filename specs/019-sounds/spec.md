@@ -6,6 +6,8 @@
 
 **Status**: Draft
 
+**Design**: [design.md](design.md) (approved mockup of the sound button and the cue moments)
+
 **Input**: User description: "R11 Sounds (see docs/roadmap.md, item R11). Optional sound effects at the table, building on the existing victory sound and Celebration service from spec 013. New sounds: a game start sound; a beep every second during the last 10 seconds of the own turn timer; a distinct sound (for example a double bell) when it becomes your turn after the previous player busted or finished; applause on your own Volle Lotte. One mute toggle in the menubar, remembered in localStorage; no autoplay before the first user interaction (blocked autoplay tolerated as in spec 013); assets stay small. Until the final audio files are provided by the user, every sound uses the existing victory.mp3 as a placeholder; each sound must be a separate, replaceable asset path so the real files can be dropped in later without code changes. Vibration on mobile is out of scope (R3)."
 
 ## Scope
