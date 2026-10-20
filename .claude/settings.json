@@ -7,5 +7,19 @@
       "Bash(npm run test:affected)",
       "Bash(npm run format:check)"
     ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path // empty' | xargs -r \"$CLAUDE_PROJECT_DIR/node_modules/.bin/prettier\" --write --ignore-unknown >/dev/null 2>&1 || true",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
   }
 }
