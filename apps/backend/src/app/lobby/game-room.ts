@@ -6,6 +6,7 @@ import {
   createGame,
   DEFAULT_SPEED,
   isComputerSpeed,
+  LOG_CAP,
   pacing,
   renamePlayer,
   skipTurn,
@@ -40,7 +41,6 @@ export const TURN_LIMIT_MS = {
 } as const;
 /** The 3rd timeout in a row hands the seat to a computer. */
 export const MAX_TIMEOUTS = 3;
-export const LOG_CAP = 500;
 /**
  * Computer pacing comes from `pacing(computerSpeed)`: after a throw wait out the client roll (max) plus a margin,
  * otherwise a pause (FR-013, FR-019). The roll maximum is the client animation and does not scale.

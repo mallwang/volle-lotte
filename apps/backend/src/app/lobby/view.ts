@@ -28,7 +28,9 @@ function seatViews(seats: readonly Seat[]): SeatView[] {
 }
 
 const withoutDeck = (game: NonNullable<GameRoom['game']>): GameStateView => {
-  const { deck, ...rest } = game;
+  // the rules travel once, in `GameView.rules`
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { deck, rules: _rules, ...rest } = game;
   return { ...rest, deckSize: deck.length };
 };
 
@@ -64,6 +66,7 @@ function waitingView(room: GameRoom, playerId: string): GameView | undefined {
     spectating: room.spectating,
     spectators: room.spectators.size,
     paused: false,
+    n: 0,
     logBase: archive.logBase,
     log: archive.log,
   };
@@ -93,6 +96,7 @@ export function toView(room: GameRoom, playerId: string): GameView {
     spectating: room.spectating,
     spectators: room.spectators.size,
     paused: room.paused,
+    n: 0,
     logBase: room.logBase,
     log: room.log,
   };

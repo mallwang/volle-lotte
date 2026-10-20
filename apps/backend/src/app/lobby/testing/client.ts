@@ -1,6 +1,13 @@
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { defaultRules, PROTOCOL_VERSION, type Ack, type UiLanguage } from 'game-rules';
+import {
+  applyChange,
+  defaultRules,
+  PROTOCOL_VERSION,
+  type Ack,
+  type GameView,
+  type UiLanguage,
+} from 'game-rules';
 import { io, type Socket } from 'socket.io-client';
 import { GameRegistryService } from '../game-registry.service';
 import { LobbyModule } from '../lobby.module';
@@ -33,10 +40,32 @@ export class Client {
   readonly socket: Socket;
   token = '';
   pushes: { event: string; payload: Any }[] = [];
+  /** The client's view as the real client builds it: the last snapshot plus the changes applied to it. */
+  view?: GameView;
+  /** Every state `view` has had, oldest first. */
+  views: GameView[] = [];
+  /** Changes this client could not apply because one before them was missing. */
+  gaps = 0;
+  /** Test hook: `game:change` pushes for which this returns true are lost (not applied). */
+  lose?: (change: Any) => boolean;
   private constructor(socket: Socket) {
     this.socket = socket;
     sockets.push(socket);
-    socket.onAny((event, payload) => this.pushes.push({ event, payload }));
+    socket.onAny((event, payload) => {
+      this.pushes.push({ event, payload });
+      if (event === 'game:snapshot') this.setView(payload.game);
+      if (event === 'game:change' && !this.lose?.(payload)) this.applyPushed(payload);
+      if (event === 'game:closed') this.view = undefined;
+    });
+  }
+  private setView(view: GameView): void {
+    this.view = view;
+    this.views.push(view);
+  }
+  private applyPushed(change: Any): void {
+    if (!this.view || change.n <= this.view.n) return;
+    if (change.n === this.view.n + 1) this.setView(applyChange(this.view, change));
+    else this.gaps++;
   }
   static async connect(): Promise<Client> {
     const socket = io(url, { transports: ['websocket'], forceNew: true });
@@ -59,7 +88,24 @@ export class Client {
     return c;
   }
   send(event: string, payload?: unknown): Promise<Ack<Any> & Any> {
-    return this.socket.timeout(2000).emitWithAck(event, payload);
+    // the view is set inside the ack callback: a change in the same chunk must find it
+    return new Promise((resolve, reject) =>
+      this.socket.timeout(2000).emit(event, payload, (err: Error | null, ack: Any) => {
+        if (err) return reject(err);
+        if (ack?.ok && ack.game) this.setView(ack.game);
+        if (event === 'game:leave' && ack?.ok) this.view = undefined;
+        resolve(ack);
+      }),
+    );
+  }
+  /** Waits for a state of the client's view that matches (any it has had since the start). */
+  async untilView(pred: (v: GameView) => boolean = () => true): Promise<GameView> {
+    for (let i = 0; i < 100; i++) {
+      const hit = this.views.find(pred);
+      if (hit) return hit;
+      await new Promise((r) => setTimeout(r, 20));
+    }
+    throw new Error('no matching view');
   }
   async until(event: string, pred: (p: Any) => boolean = () => true): Promise<Any> {
     for (let i = 0; i < 100; i++) {

@@ -1,6 +1,6 @@
 import { Injectable, type OnModuleDestroy } from '@nestjs/common';
 import { randomBytes } from 'node:crypto';
-import type { GameSummary, LogEntry } from 'game-rules';
+import type { GameSummary } from 'game-rules';
 import { GameRoom, type RoomOptions } from './game-room';
 
 export const LOBBY_CLEANUP_MS = 15 * 60_000;
@@ -12,7 +12,7 @@ export class GameRegistryService implements OnModuleDestroy {
   private readonly timers = new Map<string, NodeJS.Timeout>();
 
   /** Set by the gateway: a room changed (also from timers). */
-  onChange?: (room: GameRoom, entries: LogEntry[]) => void;
+  onChange?: (room: GameRoom) => void;
   /** Set by the gateway: a room was removed by cleanup or because it emptied. */
   onClosed?: (room: GameRoom, reason: 'cleanup' | 'empty' | 'ended') => void;
 
@@ -20,9 +20,9 @@ export class GameRegistryService implements OnModuleDestroy {
     const room = new GameRoom({
       ...options,
       id: randomBytes(6).toString('hex'),
-      onChange: (entries) => {
+      onChange: () => {
         this.arm(room);
-        this.onChange?.(room, entries);
+        this.onChange?.(room);
         this.closeIfEmpty(room);
       },
     });

@@ -14,8 +14,7 @@ beforeAll(startApp);
 afterAll(stopApp);
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-const lastState = (c: Client): GameView | undefined =>
-  [...c.pushes].reverse().find((p) => p.event === 'game:state')?.payload.game;
+const lastState = (c: Client): GameView | undefined => c.view;
 const waitFor = async (pred: () => boolean, ms = 5000) => {
   for (let waited = 0; waited < ms && !pred(); waited += 10) await sleep(10);
   if (!pred()) throw new Error('condition not reached');
@@ -25,8 +24,10 @@ const waitFor = async (pred: () => boolean, ms = 5000) => {
 function autoPlay(c: Client): void {
   let sent = '';
   const rng = seededRandomInt(c.token.length + Date.now());
-  c.socket.on('game:state', ({ game }: { game: GameView }) => {
-    const state = game.game;
+  c.socket.onAny((event: string) => {
+    const game = c.view;
+    const state = game?.game;
+    if (!event.startsWith('game:') || !game) return;
     if (game.phase !== 'running' || !state?.turn || state.result) return;
     const engine = game.seats
       .slice(0, game.you.seat)
@@ -42,7 +43,7 @@ function autoPlay(c: Client): void {
     if (key === sent) return;
     sent = key;
     const action = chooseAction(
-      { ...state, deck: [] } as unknown as GameState,
+      { ...state, rules: game.rules, deck: [] } as unknown as GameState,
       { difficulty: 'medium', risk: 'medium' },
       rng,
     );
@@ -128,7 +129,6 @@ describe('integration flows', () => {
       });
       await finish([...all, spec]);
       expect(lastState(spec)?.you.spectator).toBe(true);
-      expect(spec.pushes.some((p) => p.event === 'game:log')).toBe(false);
       expect(await spec.send('game:leave')).toEqual({ ok: true });
     }, 60_000);
 
@@ -156,8 +156,8 @@ describe('integration flows', () => {
     it('rejects out-of-turn and illegal actions without a push or state change', async () => {
       const { host, guests, all } = await gameOf(['Rej0', 'Rej1'], 2);
       await host.send('game:start');
-      const state = await host.until('game:state', (s) => s.game.phase === 'running');
-      const [mover, waiter] = state.game.game.current === 0 ? [host, guests[0]] : [guests[0], host];
+      const state = await host.untilView((s) => s.phase === 'running');
+      const [mover, waiter] = state.game?.current === 0 ? [host, guests[0]] : [guests[0], host];
       await sleep(50);
       const before = all.map((c) => c.pushes.length);
       expect(await waiter.send('turn:action', { action: { type: 'draw' } })).toMatchObject({
@@ -210,13 +210,13 @@ describe('integration flows', () => {
       const { host, guests } = await gameOf(['Con0', 'Con1'], 2);
       const guest = guests[0];
       await host.send('game:start');
-      await host.until('game:state', (s) => s.game.phase === 'running');
+      await host.untilView((s) => s.phase === 'running');
       await sleep(50);
       const before = shared(lastState(host) as GameView).game;
 
       guest.socket.close();
-      const warned = await host.until('game:state', (s) => s.game.seats[1].connected === false);
-      expect(warned.game.log.at(-1)).toMatchObject({ kind: 'disconnected', seat: 1 });
+      const warned = await host.untilView((s) => s.seats[1].connected === false);
+      expect(warned.log.at(-1)).toMatchObject({ kind: 'disconnected', seat: 1 });
 
       const back = await Client.start('ignored', guest.token);
       const resumed = await back.send('session:start', {
@@ -227,22 +227,21 @@ describe('integration flows', () => {
       expect(resumed.game.you.seat).toBe(1);
       expect(resumed.game.seats[1]).toMatchObject({ state: 'human', connected: true });
       expect(resumed.game.game).toEqual(before);
-      await host.until('game:state', (s) => s.game.log.at(-1)?.kind === 'reconnected');
+      await host.untilView((s) => s.log.at(-1)?.kind === 'reconnected');
     });
 
     it('hands the seat to a computer after the grace period, and the player can rejoin', async () => {
       const { host, guests, id } = await gameOf(['Exp0', 'Exp1'], 2);
       const guest = guests[0];
       await host.send('game:start');
-      await host.until('game:state', (s) => s.game.phase === 'running');
+      await host.untilView((s) => s.phase === 'running');
       guest.socket.close();
-      const replaced = await host.until(
-        'game:state',
-        (s) => s.game.seats[1].state === 'computer' && s.game.seats[1].former,
+      const replaced = await host.untilView(
+        (s) => s.seats[1].state === 'computer' && !!s.seats[1].former,
       );
-      expect(replaced.game.seats[1].former).toEqual({ nickname: 'Exp1' });
+      expect(replaced.seats[1].former).toEqual({ nickname: 'Exp1' });
       expect(
-        replaced.game.log.some((l: Any) => l.kind === 'replaced' && l.data === 'disconnected'),
+        replaced.log.some((l: Any) => l.kind === 'replaced' && l.data === 'disconnected'),
       ).toBe(true);
 
       const back = await Client.start('ignored', guest.token);
@@ -266,7 +265,7 @@ describe('integration flows', () => {
 
       const dropped = await gameOf(['Drop0', 'Drop1'], 3);
       dropped.host.socket.close();
-      await dropped.guests[0].until('game:state', (s) => s.game.seats[0].state === 'open');
+      await dropped.guests[0].untilView((s) => s.seats[0].state === 'open');
       const view = lastState(dropped.guests[0]) as GameView;
       expect(view.hostId).toBe(view.you.playerId);
       expect(view.log.some((l) => l.kind === 'hostChanged')).toBe(true);

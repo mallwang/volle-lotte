@@ -43,6 +43,7 @@ export function gameView(over: Partial<GameView> = {}, seats: SeatView[] = []): 
     spectating: true,
     spectators: 0,
     paused: false,
+    n: 0,
     logBase: 0,
     log: [],
     ...over,

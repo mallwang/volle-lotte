@@ -32,6 +32,19 @@ describe('toView', () => {
     room.dispose();
   });
 
+  it('sends the rules once, not again inside the game part, and leaves n to the sync service', () => {
+    const room = finishedRoom();
+    for (const id of ['h', 'p']) {
+      const view = toView(room, id);
+      expect(view.rules).toEqual(room.rules);
+      expect(view.game).not.toHaveProperty('rules');
+      expect(view.n).toBe(0);
+    }
+    room.rematch('h', 1);
+    expect(toView(room, 'q').game).not.toHaveProperty('rules');
+    room.dispose();
+  });
+
   it('shows a reserved seat in the lobby with the nickname only', () => {
     const room = finishedRoom();
     room.rematch('h', 1);

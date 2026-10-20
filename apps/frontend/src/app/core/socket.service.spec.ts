@@ -19,12 +19,21 @@ class FakeSocket implements SocketLike {
   handlers = new Map<string, (...a: never[]) => void>();
   sent: { event: string; payload: unknown }[] = [];
   replies: Record<string, unknown> = {};
+  /** Events whose ack is held back until `release` is called. */
+  hold = new Set<string>();
+  private held: { event: string; ack: (r: unknown) => void }[] = [];
   on(event: string, l: (...a: never[]) => void) {
     this.handlers.set(event, l);
   }
   emit(event: string, payload: unknown, ack: (r: unknown) => void) {
     this.sent.push({ event, payload });
-    ack(this.replies[event] ?? { ok: true, games: [] });
+    if (this.hold.has(event)) this.held.push({ event, ack });
+    else ack(this.replies[event] ?? { ok: true, games: [] });
+  }
+  release(event: string) {
+    const [first] = this.held.filter((h) => h.event === event);
+    this.held = this.held.filter((h) => h !== first);
+    first.ack(this.replies[event]);
   }
   connect() {
     this.connected = true;
@@ -35,7 +44,7 @@ class FakeSocket implements SocketLike {
 }
 
 const started = { ok: true, token: 't1', playerId: 'p1', nickname: 'Ann', protocolVersion: 2 };
-const game = { id: 'g1' };
+const game = { id: 'g1', n: 0 };
 
 function setup(stored?: object) {
   localStorage.clear();
@@ -151,9 +160,9 @@ describe('SocketService', () => {
       TestBed.inject(I18nService).set('en');
     });
 
-    it('shows no toast for a game:state push alone', () => {
+    it('shows no toast for a game:snapshot push alone', () => {
       const { socket, add } = setup();
-      socket.fire('game:state', { game: { id: 'g1', computerSpeed: 5 } });
+      socket.fire('game:snapshot', { game: { id: 'g1', computerSpeed: 5 } });
       expect(add).not.toHaveBeenCalled();
     });
   });
@@ -191,11 +200,12 @@ describe('SocketService', () => {
     });
   });
 
-  it('shows no toast when a game:state only changes the spectator count', async () => {
+  it('shows no toast when a game:change only changes the spectator count', async () => {
     const { socket, add, service } = setup();
+    socket.replies['session:start'] = { ...started, game: { ...game, spectators: 1 } };
     await service.start('Ann');
     add.mockClear();
-    socket.fire('game:state', { game: { id: 'g1', spectators: 3 } });
+    socket.fire('game:change', { n: 1, spectators: 3 });
     expect(service.game()).toMatchObject({ spectators: 3 });
     expect(add).not.toHaveBeenCalled();
   });
@@ -419,12 +429,135 @@ describe('SocketService', () => {
     expect(socket.sent).toEqual([]);
   });
 
-  it('applies game:state and lobby:games pushes', () => {
+  it('applies game:snapshot and lobby:games pushes', () => {
     const { socket, service } = setup();
-    socket.fire('game:state', { game });
+    socket.fire('game:snapshot', { game });
     socket.fire('lobby:games', { games: [{ id: 'x' }] });
     expect(service.game()).toEqual(game);
     expect(service.games()).toHaveLength(1);
+  });
+
+  describe('game:change', () => {
+    const view = (n: number, over: object = {}) => ({
+      id: 'g1',
+      n,
+      seats: [{ state: 'open' }, { state: 'open' }],
+      spectators: 0,
+      logBase: 0,
+      log: [],
+      ...over,
+    });
+    async function inGame(n = 50) {
+      const t = setup();
+      t.socket.replies['session:start'] = { ...started, game: view(n) };
+      await t.service.start('Ann');
+      t.add.mockClear();
+      t.socket.sent.length = 0;
+      return t;
+    }
+    const syncs = (socket: FakeSocket) => socket.sent.filter((s) => s.event === 'game:sync');
+
+    it('applies the next change to the view', async () => {
+      const { socket, service } = await inGame();
+      socket.fire('game:change', {
+        n: 51,
+        spectators: 2,
+        seats: [[1, { state: 'locked' }]],
+        settings: { computerSpeed: 5 },
+        log: [{ at: 1, kind: 'turn' }],
+      });
+      expect(service.game()).toMatchObject({
+        n: 51,
+        spectators: 2,
+        computerSpeed: 5,
+        seats: [{ state: 'open' }, { state: 'locked' }],
+        log: [{ at: 1, kind: 'turn' }],
+      });
+      socket.fire('game:change', { n: 52, game: null });
+      expect(service.game()).toMatchObject({ n: 52, spectators: 2 });
+      expect(syncs(socket)).toEqual([]);
+    });
+
+    it('ignores a change that is already in the view', async () => {
+      const { socket, service } = await inGame();
+      socket.fire('game:change', { n: 51, spectators: 2 });
+      socket.fire('game:change', { n: 51, spectators: 9 });
+      socket.fire('game:change', { n: 49, spectators: 9 });
+      expect(service.game()).toMatchObject({ n: 51, spectators: 2 });
+      expect(syncs(socket)).toEqual([]);
+    });
+
+    it('asks for its own snapshot on a gap and continues from it', async () => {
+      const { socket, service } = await inGame();
+      socket.replies['game:sync'] = { ok: true, game: view(60, { spectators: 4 }) };
+      socket.fire('game:change', { n: 60, spectators: 1 });
+      expect(syncs(socket)).toEqual([{ event: 'game:sync', payload: undefined }]);
+      await Promise.resolve();
+      expect(service.game()).toMatchObject({ n: 60, spectators: 4 });
+      socket.fire('game:change', { n: 61, spectators: 5 });
+      expect(service.game()).toMatchObject({ n: 61, spectators: 5 });
+      socket.fire('game:change', { n: 55, spectators: 0 });
+      expect(service.game()).toMatchObject({ n: 61 });
+    });
+
+    it('sends one sync at a time and drops changes while it is pending', async () => {
+      const { socket, service } = await inGame();
+      socket.hold.add('game:sync');
+      socket.replies['game:sync'] = { ok: true, game: view(60) };
+      socket.fire('game:change', { n: 60, spectators: 1 });
+      socket.fire('game:change', { n: 62, spectators: 1 });
+      socket.fire('game:change', { n: 51, spectators: 7 });
+      expect(syncs(socket)).toHaveLength(1);
+      expect(service.game()).toMatchObject({ n: 50, spectators: 0 });
+      socket.release('game:sync');
+      await Promise.resolve();
+      expect(service.game()).toMatchObject({ n: 60 });
+      // the dropped 62 left a gap: the next change asks again
+      socket.hold.delete('game:sync');
+      socket.replies['game:sync'] = { ok: true, game: view(63) };
+      socket.fire('game:change', { n: 64, spectators: 1 });
+      expect(syncs(socket)).toHaveLength(2);
+    });
+
+    it('leaves the game cleanly when the server does not know it', async () => {
+      const { socket, service, add } = await inGame();
+      socket.replies['game:sync'] = { ok: false, reason: 'notInGame' };
+      socket.fire('game:change', { n: 60 });
+      await Promise.resolve();
+      expect(service.game()).toBeNull();
+      expect(add).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
+    });
+
+    it('keeps the view when the sync is refused for another reason', async () => {
+      const { socket, service } = await inGame();
+      socket.replies['game:sync'] = { ok: false, reason: 'locked', retryAfterMs: 1000 };
+      socket.fire('game:change', { n: 60 });
+      await Promise.resolve();
+      expect(service.game()).toMatchObject({ n: 50 });
+    });
+
+    it('ignores changes without a view and does not sync while offline', async () => {
+      const { socket, service } = await inGame();
+      socket.fire('game:closed', { reason: 'ended' });
+      socket.fire('game:change', { n: 99 });
+      expect(service.game()).toBeNull();
+      expect(syncs(socket)).toEqual([]);
+      socket.fire('game:snapshot', { game: view(10) });
+      socket.connected = false;
+      socket.fire('game:change', { n: 20 });
+      expect(syncs(socket)).toEqual([]);
+    });
+
+    it('takes the numbering from every snapshot: an ack, a push and a rematch', async () => {
+      const { socket, service } = await inGame();
+      socket.fire('game:snapshot', { game: view(7, { round: 2 }) });
+      socket.fire('game:change', { n: 8, spectators: 1 });
+      expect(service.game()).toMatchObject({ n: 8, round: 2, spectators: 1 });
+      socket.replies['game:join'] = { ok: true, game: view(3) };
+      await service.join({ gameId: 'g1', password: '' });
+      socket.fire('game:change', { n: 4, spectators: 6 });
+      expect(service.game()).toMatchObject({ n: 4, spectators: 6 });
+    });
   });
 
   it('resumes a stored identity', async () => {

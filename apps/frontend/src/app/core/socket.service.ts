@@ -11,7 +11,9 @@ import { MessageService } from 'primeng/api';
 import { io } from 'socket.io-client';
 import {
   PROTOCOL_VERSION,
+  applyChange,
   type Ack,
+  type GameChange,
   type GameSummary,
   type GameView,
   type Intents,
@@ -62,6 +64,8 @@ export class SocketService {
   private stored: Stored | null = this.read();
   /** True after a successful session:start on this page; enables replay on reconnect. */
   private active = false;
+  /** A `game:sync` is pending: changes that arrive meanwhile are dropped. */
+  private syncing = false;
 
   readonly session = signal<Session | null>(null);
   readonly games = signal<GameSummary[]>([]);
@@ -101,7 +105,9 @@ export class SocketService {
     }) as never);
     if (this.connection() === 'connecting') this.beginOutage(false);
     this.socket.on('lobby:games', ((p: Pushes['lobby:games']) => this.games.set(p.games)) as never);
-    this.socket.on('game:state', ((p: Pushes['game:state']) => this.game.set(p.game)) as never);
+    this.socket.on('game:snapshot', ((p: Pushes['game:snapshot']) =>
+      this.game.set(p.game)) as never);
+    this.socket.on('game:change', ((c: GameChange) => this.change(c)) as never);
     this.socket.on('game:settingsChanged', ((p: Pushes['game:settingsChanged']) => {
       for (const c of p.changes) this.notify('info', this.settingText(p.by, c));
     }) as never);
@@ -119,6 +125,31 @@ export class SocketService {
         this.notify('info', this.i18n.t('server.spectatingOff'));
       else this.notify('info', this.i18n.t('server.closed'));
     }) as never);
+  }
+
+  /**
+   * Applies the next change; ignores one that is already in the view; asks for a new snapshot when
+   * one is missing (only this client pays for it). Changes are dropped while that is pending.
+   */
+  private change(change: GameChange): void {
+    const view = this.game();
+    if (!view || this.syncing || change.n <= view.n) return;
+    if (change.n === view.n + 1) this.game.set(applyChange(view, change));
+    else void this.resync();
+  }
+
+  private async resync(): Promise<void> {
+    // after a reconnect the session replay delivers the snapshot
+    if (!this.socket.connected || !this.synced()) return;
+    this.syncing = true;
+    const ack = await this.emit('game:sync');
+    this.syncing = false;
+    if (ack.ok) {
+      if (this.game()) this.game.set(ack.game);
+    } else if (ack.reason === 'notInGame' || ack.reason === 'gameNotFound') {
+      this.game.set(null);
+      this.notify('error', errorMessage(ack, this.i18n));
+    }
   }
 
   private beginOutage(announceLoss: boolean): void {

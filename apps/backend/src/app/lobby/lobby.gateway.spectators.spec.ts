@@ -13,7 +13,7 @@ async function runningGame(name: string, password = '') {
   await host.send('seat:ready', { ready: true });
   await guest.send('seat:ready', { ready: true });
   expect(await host.send('game:start')).toEqual({ ok: true });
-  await guest.until('game:state', (s) => s.game.phase === 'running');
+  await guest.untilView((s) => s.phase === 'running');
   return { host, guest, id: game.id as string };
 }
 
@@ -53,7 +53,6 @@ describe('game:spectate', () => {
     const { host, guest, id } = await runningGame('Watch');
     const flag = (await host.send('lobby:list')).games.find((g: Any) => g.id === id);
     expect(flag.spectatable).toBe(true);
-    const logs = quiet(host, 'game:log');
     const toasts = quiet(host, 'game:settingsChanged');
 
     const spec = await Client.start('Watcher');
@@ -67,8 +66,8 @@ describe('game:spectate', () => {
       reason: 'alreadyInGame',
     });
     expect(await spec.send('game:create', {})).toMatchObject({ reason: 'alreadyInGame' });
-    await host.until('game:state', (s) => s.game.spectators === 1);
-    await guest.until('game:state', (s) => s.game.spectators === 1);
+    await host.untilView((s) => s.spectators === 1);
+    await guest.untilView((s) => s.spectators === 1);
 
     for (const [event, body] of [
       ['turn:action', { action: { type: 'draw' } }],
@@ -84,11 +83,10 @@ describe('game:spectate', () => {
     }
 
     expect(await spec.send('game:leave')).toEqual({ ok: true });
-    await host.until('game:state', (s) => s.game.spectators === 0);
+    await host.untilView((s) => s.spectators === 0);
     await spec.until('lobby:games');
     expect(await spec.send('game:leave')).toMatchObject({ reason: 'notInGame' });
     await tick();
-    expect(logs()).toBe(0);
     expect(toasts()).toBe(0);
   });
 
@@ -99,14 +97,13 @@ describe('game:spectate', () => {
     registry()
       .get(id)
       ?.setPaused(registry().get(id)?.hostId ?? '', true);
-    const paused = await spec.until('game:state', (s) => s.game.paused === true);
-    expect(paused.game.you.spectator).toBe(true);
-    expect(spec.pushes.some((p) => p.event === 'game:log')).toBe(false);
+    const paused = await spec.untilView((s) => s.paused === true);
+    expect(paused.you.spectator).toBe(true);
     for (let i = 0; i < 8; i++) {
       const more = await Client.start(`Flowmore${i}`);
       expect(await more.send('game:spectate', { gameId: id })).toMatchObject({ ok: true });
     }
-    await host.until('game:state', (s) => s.game.spectators === 9);
+    await host.untilView((s) => s.spectators === 9);
   });
 
   it('checks the password and shares the attempt limit with join', async () => {
@@ -171,9 +168,9 @@ describe('reload', () => {
     const { host, id } = await runningGame('Reload');
     const spec = await Client.start('Reloadspec');
     await spec.send('game:spectate', { gameId: id });
-    await host.until('game:state', (s) => s.game.spectators === 1);
+    await host.untilView((s) => s.spectators === 1);
     spec.socket.close();
-    await host.until('game:state', (s) => s.game.spectators === 0);
+    await host.untilView((s) => s.spectators === 0);
 
     const back = await Client.connect();
     const ack = await back.send('session:start', {
@@ -182,7 +179,7 @@ describe('reload', () => {
       protocolVersion: PROTOCOL_VERSION,
     });
     expect(ack).toMatchObject({ ok: true, game: { you: { spectator: true }, spectators: 1 } });
-    await host.until('game:state', (s) => s.game.spectators === 1);
+    await host.untilView((s) => s.spectators === 1);
 
     registry().get(id)!.phase = 'finished';
     back.socket.close();

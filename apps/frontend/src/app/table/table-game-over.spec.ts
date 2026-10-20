@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { defaultRules, type GameStateView, type GameView, type SeatView } from 'game-rules';
+import { applyChange, type GameStateView, type GameView, type SeatView } from 'game-rules';
 import { MessageService } from 'primeng/api';
 import { providePrimeNG } from 'primeng/config';
 import { Celebration } from '../core/celebration';
@@ -26,7 +26,6 @@ const result = {
 
 const engine = (over: Partial<GameStateView> = {}): GameStateView => ({
   version: 1,
-  rules: defaultRules(),
   players: [
     { name: 'Ann', score: 10_100 },
     { name: 'Bob', score: 6000 },
@@ -93,6 +92,20 @@ describe('Table game-over modal', () => {
     expect(text).toMatch(/Rank 2\s*Bob \(6000\),\s*Cy \(6000\)/);
     expect(el.textContent).toContain('Bob');
     expect(celebration.start).toHaveBeenCalled();
+  });
+
+  it('opens when the end arrives as a game:change with the phase, the game and the last entries', async () => {
+    const running = gameView({ phase: 'running', game: engine({ result: null }) }, seats);
+    const { socket, dialog, fixture, celebration } = await setup(running);
+    expect(dialog()).toBeNull();
+    socket.game.set(
+      applyChange(running, { n: 1, phase: 'finished', game: engine(), log: endLog as never }),
+    );
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(dialog()?.textContent).toContain('You won!');
+    expect(celebration.start).toHaveBeenCalledTimes(1);
   });
 
   it('names the winner for everybody else and does not celebrate', async () => {

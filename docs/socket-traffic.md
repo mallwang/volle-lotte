@@ -75,3 +75,50 @@ The message grows with the log until the log cap (500 entries) is reached; with 
 | ack:game:spectate | spectator |     2 |      5982 |  2991 |  3080 |
 
 (Rows with a few bytes - `seat:ready`, `game:start` acks - are left out; the rows of the two spectators and the reload add up in the spectator figures.)
+
+## Result (protocol 12, spec 017)
+
+A client gets a snapshot when it enters (the ack of join, rejoin, spectate, reload, rematch, or `game:sync`) and after that only `game:change` messages: the recipient's running number `n` plus the parts that changed (see [the protocol contract](../specs/017-leaner-socket-messages/contracts/protocol.md)). The log travels once, as the new entries of a change; the rules are sent once, not with every state.
+
+Bytes received per person over one game:
+
+| Scenario            | Baseline (v11) | Result (v12) | Saved |
+| ------------------- | -------------: | -----------: | ----: |
+| 2 players           |      3,009,094 |       98,121 | 96.7% |
+| 2 players + 2 spec. |      3,017,207 |       98,386 | 96.7% |
+| 8 players           |     18,202,194 |      369,458 | 98.0% |
+| 8 players + 2 spec. |     18,215,340 |      370,119 | 98.0% |
+
+Per spectator:
+
+| Scenario            | Baseline (v11) | Result (v12) | Saved |
+| ------------------- | -------------: | -----------: | ----: |
+| 2 players + 2 spec. |      2,974,013 |       95,355 | 96.8% |
+| 8 players + 2 spec. |     18,093,023 |      362,886 | 98.0% |
+
+Size of one `game:change` over the game (first message to last, in 10% steps):
+
+| Scenario  | Series (bytes)                                         |
+| --------- | ------------------------------------------------------ |
+| 2 players | 191, 560, 433, 419, 435, 437, 429, 422, 422, 428, 699  |
+| 8 players | 191, 608, 610, 613, 621, 606, 621, 619, 625, 753, 1105 |
+
+(The first message is a seat change in the lobby, the last one carries the game result.)
+
+### Success criteria
+
+- **SC-001** (message size independent of the log length): met. In the 8-player game the turn messages stay between 606 and 625 bytes from the 10% mark to the 80% mark, although the log grows to its cap of 500 entries (the old message grew from 7.7 KB to 46 KB). The gateway test "keeps a turn message the same size however long the log is" checks it with 0 and 400 earlier log entries (within 10%).
+- **SC-002** (at least 70% less data per player over an 8-player game): met, 98.0% less (18.2 MB to 0.37 MB).
+- **SC-003** (spectators at least as much): met, 96.8% and 98.0% less.
+
+### What is left
+
+Over a game, 8 players receive 4660 `game:change` messages of 625 bytes on average. Most of every message is the `game` part: all players with name and score, the current turn with dice and card, the deck size. It is sent whole whenever any of it changes (design decision D3). `lobby:games` is the biggest push outside a game (about 660 to 870 bytes, 19 times per game of 8 players, because every join changes the list).
+
+### Decisions
+
+| Option                                                   | Decision  | Why                                                                                                                                                                                                                                                                         |
+| -------------------------------------------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Compression (`perMessageDeflate`)                        | Postponed | A game of 8 players now costs a player about 0.37 MB, a message about 0.6 KB. Deflate on such short messages would likely save little unless context takeover is on, and that costs memory for every socket. Measure again if traffic ever matters; the script is reusable. |
+| Binary encoding (MessagePack)                            | Dropped   | It needs a custom parser on both sides and makes the traffic unreadable in the browser tools, for a gain that is small after this change.                                                                                                                                   |
+| Finer or generic diffs (for example only changed scores) | Postponed | The `game` part is about 300 to 400 bytes. Sub-diffs could save perhaps another third of the traffic, with more code and more states to test. The round-trip test (`view-sync.spec.ts`) makes it possible later without changing the protocol rules.                        |

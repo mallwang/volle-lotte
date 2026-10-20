@@ -30,7 +30,7 @@ export function autoplay(
     if (key === sent) return;
     sent = key;
     const action = chooseAction(
-      { ...state, deck: [] } as unknown as GameState,
+      { ...state, rules: view.rules, deck: [] } as unknown as GameState,
       { difficulty: 'medium', risk: 'medium' },
       rng,
     );

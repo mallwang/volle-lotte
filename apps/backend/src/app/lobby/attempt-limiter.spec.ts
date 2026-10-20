@@ -1,4 +1,4 @@
-import { AttemptLimiter } from './attempt-limiter';
+import { AttemptLimiter, RateLimiter } from './attempt-limiter';
 
 describe('AttemptLimiter', () => {
   let t: number;
@@ -38,5 +38,28 @@ describe('AttemptLimiter', () => {
     for (let i = 0; i < 5; i++) limiter.fail('c', 'g');
     limiter.forgetGame('g');
     expect(limiter.retryAfterMs('c', 'g')).toBe(0);
+  });
+});
+
+describe('RateLimiter', () => {
+  it('allows max calls per window and tells how long to wait after that', () => {
+    let now = 1000;
+    const limiter = new RateLimiter(2, 10_000, () => now);
+    expect(limiter.take('a')).toBe(0);
+    now += 1000;
+    expect(limiter.take('a')).toBe(0);
+    now += 1000;
+    expect(limiter.take('a')).toBe(8000);
+  });
+
+  it('counts keys separately and frees a slot when the oldest call leaves the window', () => {
+    let now = 0;
+    const limiter = new RateLimiter(1, 1000, () => now);
+    expect(limiter.take('a')).toBe(0);
+    expect(limiter.take('b')).toBe(0);
+    now = 400;
+    expect(limiter.take('a')).toBe(600);
+    now = 1000;
+    expect(limiter.take('a')).toBe(0);
   });
 });

@@ -104,7 +104,7 @@ const logEnd = (g: GameView | null | undefined): number => (g?.logBase ?? 0) + (
           <span class="vl-game-clock">
             {{
               'table.rules'
-                | t: { target: state.rules.targetScore, minimum: state.rules.minimumPoints }
+                | t: { target: view.rules.targetScore, minimum: view.rules.minimumPoints }
             }}
           </span>
           <span class="vl-game-clock">
@@ -183,7 +183,7 @@ const logEnd = (g: GameView | null | undefined): number => (g?.logBase ?? 0) + (
               }
               @if (state.turn; as turn) {
                 <div class="vl-centre-row">
-                  <app-card-deck [size]="state.deckSize" [total]="totalCards(state.rules)" />
+                  <app-card-deck [size]="state.deckSize" [total]="totalCards(view.rules)" />
                   <div class="vl-card-slot" [pTooltip]="cardInfo()" tooltipPosition="top">
                     @for (n of [drawnCards().length]; track n) {
                       @if (activeCard()) {
@@ -202,7 +202,7 @@ const logEnd = (g: GameView | null | undefined): number => (g?.logBase ?? 0) + (
                     }
                   </div>
                   <app-discard-pile
-                    [played]="playedCards(totalCards(state.rules), state.deckSize, !!activeCard())"
+                    [played]="playedCards(totalCards(view.rules), state.deckSize, !!activeCard())"
                     [previous]="previousCard()"
                   />
                 </div>
@@ -220,7 +220,7 @@ const logEnd = (g: GameView | null | undefined): number => (g?.logBase ?? 0) + (
                   [showPoints]="showPoints()"
                   [bustPercent]="bustPercent()"
                   [safeText]="safeText()"
-                  [minimum]="belowMinimum() ? state.rules.minimumPoints : null"
+                  [minimum]="belowMinimum() ? view.rules.minimumPoints : null"
                   (toggled)="toggle($event)"
                 />
               }
@@ -353,8 +353,9 @@ export class Table {
   });
   /** Points are collected but still below the minimum needed to bank. */
   protected readonly belowMinimum = computed(() => {
-    const g = this.socket.game()?.game;
-    return !!g?.turn && g.turn.run > 0 && g.turn.run < g.rules.minimumPoints && this.canBank();
+    const view = this.socket.game();
+    const turn = view?.game?.turn;
+    return !!turn && turn.run > 0 && turn.run < view.rules.minimumPoints && this.canBank();
   });
   /** Plus/Minus and Clover are about reaching the goal, so points of the secured dice mean nothing there. */
   protected readonly showPoints = computed(() => {
@@ -456,7 +457,7 @@ export class Table {
     const bonus = c.startsWith('bonus') ? c.slice(5) : null;
     return this.i18n.t('card.info.' + (bonus ? 'bonus' : c), {
       bonus: bonus ?? '',
-      min: this.socket.game()?.game?.rules.minimumPoints ?? 0,
+      min: this.socket.game()?.rules.minimumPoints ?? 0,
     });
   });
 
@@ -841,7 +842,7 @@ export class Table {
   protected canBank(): boolean {
     const card = this.socket.game()?.game?.turn?.card;
     const turn = this.socket.game()?.game?.turn;
-    const min = this.socket.game()?.game?.rules.minimumPoints ?? 0;
+    const min = this.socket.game()?.rules.minimumPoints ?? 0;
     return (
       this.can('decide') &&
       card !== 'star' &&
