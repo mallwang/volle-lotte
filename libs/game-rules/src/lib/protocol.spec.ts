@@ -9,7 +9,7 @@ import {
 
 describe('protocol', () => {
   it('has a version that includes language and computer names', () => {
-    expect(PROTOCOL_VERSION).toBeGreaterThanOrEqual(8);
+    expect(PROTOCOL_VERSION).toBeGreaterThanOrEqual(13);
   });
 
   it('accepts exactly the supported UI languages', () => {

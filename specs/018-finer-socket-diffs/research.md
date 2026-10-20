@@ -82,6 +82,8 @@ The group time stamp, the flat kind and the shared seat already cut the entry by
 
 **Decision**: the measurement script gets an estimate mode that re-serialises every received frame with a throw-away key table (`playerId` to `pid`, `seats` to `s`, `players` to `p`, `score` to `sc`, and so on) and prints the saving per player in the 8-player game. Story 4 is built only if the saving is at least 25% of the figure after Stories 1 to 3 (FR-012); otherwise the estimate and the decision go into the docs. Expectation from the recording: after Stories 1 to 3 a change is mostly numbers and short keys, so the saving is likely below the gate; the estimate decides, not this guess.
 
+**Outcome (measured 2026-10-20, `v13`)**: the estimate saves 23.1% per player (142,121 to 109,262 bytes) and 23.0% per spectator in the 8-player game, with 78 distinct keys. That is below the 25% gate, so Story 4 is **not built** (T030 to T033). The figures are in `docs/socket-traffic.md`; `keyTableEstimate` in `testing/traffic.ts` can be run again.
+
 ## R10. Measurement and documentation
 
 **Decision**: run `npm run measure:socket -- --label v13` unchanged and add the v13 columns to `docs/socket-traffic.md` next to v11 and v12, with the saving per story (game diff, log, deadline and `you`) measured by the intermediate steps of the implementation (label per step). Decisions to record: CSV-formatted strings rejected (escaping of names, lost types, little gain for the frequent messages), compression postponed, binary encoding dropped, host receives its own change (no optimistic client state), Engine.IO heartbeat unchanged, short keys per the gate.

@@ -10,3 +10,5 @@ export * from './lib/computer.js';
 export * from './lib/pacing.js';
 export { bustProbability } from './lib/computer/odds.js';
 export * from './lib/view-sync.js';
+export * from './lib/game-diff.js';
+export * from './lib/wire-log.js';

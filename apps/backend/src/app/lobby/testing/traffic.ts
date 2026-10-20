@@ -29,19 +29,23 @@ export const frameBytes = (event: string, payload: unknown): number =>
  */
 export class Meter {
   readonly stats = new Map<string, Stat>();
+  /** Every received frame as `[event, payload]`, for the key-table estimate. */
+  readonly frames: [string, unknown][] = [];
 
   constructor(
     readonly client: Client,
     readonly role: Role,
   ) {
-    client.socket.onAny((event: string, payload: unknown) =>
-      this.record(event, frameBytes(event, payload)),
-    );
+    client.socket.onAny((event: string, payload: unknown) => {
+      this.frames.push([event, payload]);
+      this.record(event, frameBytes(event, payload));
+    });
   }
 
   /** `client.send`, additionally counting the ack as `ack:<event>`. */
   async send(event: string, payload?: unknown): Promise<Any> {
     const ack = await this.client.send(event, payload);
+    this.frames.push([`ack:${event}`, ack]);
     this.record(`ack:${event}`, Buffer.byteLength(JSON.stringify([ack])));
     return ack;
   }
@@ -105,4 +109,63 @@ export function largestSeries(
     .map((m) => m.stats.get(event)?.series ?? [])
     .reduce<number[]>((best, s) => (s.length > best.length ? s : best), []);
   return { event, sizes };
+}
+
+const countKeys = (value: unknown, counts: Map<string, number>): void => {
+  if (Array.isArray(value)) value.forEach((v) => countKeys(v, counts));
+  else if (typeof value === 'object' && value !== null)
+    for (const [k, v] of Object.entries(value)) {
+      counts.set(k, (counts.get(k) ?? 0) + 1);
+      countKeys(v, counts);
+    }
+};
+
+const rename = (value: unknown, table: Map<string, string>): unknown => {
+  if (Array.isArray(value)) return value.map((v) => rename(v, table));
+  if (typeof value !== 'object' || value === null) return value;
+  return Object.fromEntries(
+    Object.entries(value).map(([k, v]) => [table.get(k) ?? k, rename(v, table)]),
+  );
+};
+
+/** `a`..`z`, `A`..`Z`, then two letters: unique short names, handed out by frequency. */
+const shortNames = function* (): Generator<string> {
+  const letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  for (const a of letters) yield a;
+  for (const a of letters) for (const b of letters) yield a + b;
+};
+
+/**
+ * Throw-away estimate for the short-key decision: every object key that occurs in the received
+ * frames gets a unique short name (most frequent first), the frames are measured again, and the
+ * bytes per person of each role are returned with and without it. Nothing in production reads it.
+ */
+export function keyTableEstimate(meters: readonly Meter[]): {
+  keys: number;
+  perPlayer: { plain: number; short: number };
+  perSpectator: { plain: number; short: number };
+} {
+  const counts = new Map<string, number>();
+  for (const m of meters) for (const [, payload] of m.frames) countKeys(payload, counts);
+  const names = shortNames();
+  const table = new Map(
+    [...counts].sort((a, b) => b[1] - a[1]).map(([key]) => [key, names.next().value as string]),
+  );
+  const short = (role: Role): number => {
+    const of = meters.filter((m) => m.role === role);
+    const people = new Set(of.map((m) => m.client.token)).size;
+    if (people === 0) return 0;
+    const total = of.reduce(
+      (sum, m) =>
+        sum +
+        m.frames.reduce((a, [event, payload]) => a + frameBytes(event, rename(payload, table)), 0),
+      0,
+    );
+    return Math.round(total / people);
+  };
+  return {
+    keys: table.size,
+    perPlayer: { plain: bytesPerClient(meters, 'player'), short: short('player') },
+    perSpectator: { plain: bytesPerClient(meters, 'spectator'), short: short('spectator') },
+  };
 }

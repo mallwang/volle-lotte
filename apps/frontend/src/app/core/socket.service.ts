@@ -12,6 +12,7 @@ import { io } from 'socket.io-client';
 import {
   PROTOCOL_VERSION,
   applyChange,
+  decodeView,
   type Ack,
   type GameChange,
   type GameSummary,
@@ -19,6 +20,7 @@ import {
   type Intents,
   type Pushes,
   type SettingChange,
+  type WireView,
 } from 'game-rules';
 import { errorMessage } from './error-message';
 import { I18nService } from './i18n.service';
@@ -105,8 +107,7 @@ export class SocketService {
     }) as never);
     if (this.connection() === 'connecting') this.beginOutage(false);
     this.socket.on('lobby:games', ((p: Pushes['lobby:games']) => this.games.set(p.games)) as never);
-    this.socket.on('game:snapshot', ((p: Pushes['game:snapshot']) =>
-      this.game.set(p.game)) as never);
+    this.socket.on('game:snapshot', ((p: Pushes['game:snapshot']) => this.adopt(p.game)) as never);
     this.socket.on('game:change', ((c: GameChange) => this.change(c)) as never);
     this.socket.on('game:settingsChanged', ((p: Pushes['game:settingsChanged']) => {
       for (const c of p.changes) this.notify('info', this.settingText(p.by, c));
@@ -127,6 +128,11 @@ export class SocketService {
     }) as never);
   }
 
+  /** Takes a snapshot from the server as the current view; the log arrives compact and is decoded here. */
+  private adopt(view: WireView): void {
+    this.game.set(decodeView(view));
+  }
+
   /**
    * Applies the next change; ignores one that is already in the view; asks for a new snapshot when
    * one is missing (only this client pays for it). Changes are dropped while that is pending.
@@ -145,7 +151,7 @@ export class SocketService {
     const ack = await this.emit('game:sync');
     this.syncing = false;
     if (ack.ok) {
-      if (this.game()) this.game.set(ack.game);
+      if (this.game()) this.adopt(ack.game);
     } else if (ack.reason === 'notInGame' || ack.reason === 'gameNotFound') {
       this.game.set(null);
       this.notify('error', errorMessage(ack, this.i18n));
@@ -241,7 +247,8 @@ export class SocketService {
       this.active = true;
       this.messages.clear();
       this.session.set({ playerId: ack.playerId, nickname: ack.nickname });
-      this.game.set(ack.game ?? null);
+      if (ack.game) this.adopt(ack.game);
+      else this.game.set(null);
       await this.refreshLobby();
     }
     return ack;
@@ -259,25 +266,25 @@ export class SocketService {
 
   async create(payload: Intents['game:create'][0]): Promise<Ack<Intents['game:create'][1]>> {
     const ack = await this.send('game:create', payload);
-    if (ack.ok) this.game.set(ack.game);
+    if (ack.ok) this.adopt(ack.game);
     return ack;
   }
 
   async join(payload: Intents['game:join'][0]): Promise<Ack<Intents['game:join'][1]>> {
     const ack = await this.send('game:join', payload);
-    if (ack.ok) this.game.set(ack.game);
+    if (ack.ok) this.adopt(ack.game);
     return ack;
   }
 
   async spectate(payload: Intents['game:spectate'][0]): Promise<Ack<Intents['game:spectate'][1]>> {
     const ack = await this.send('game:spectate', payload);
-    if (ack.ok) this.game.set(ack.game);
+    if (ack.ok) this.adopt(ack.game);
     return ack;
   }
 
   async rejoin(gameId: string): Promise<Ack<Intents['game:rejoin'][1]>> {
     const ack = await this.send('game:rejoin', { gameId });
-    if (ack.ok) this.game.set(ack.game);
+    if (ack.ok) this.adopt(ack.game);
     return ack;
   }
 
@@ -295,7 +302,7 @@ export class SocketService {
     const game = this.game();
     if (!game) return false;
     const ack = await this.send('rematch:join', { round: game.round });
-    if (ack.ok) this.game.set(ack.game);
+    if (ack.ok) this.adopt(ack.game);
     else this.notify('error', errorMessage(ack, this.i18n));
     return ack.ok;
   }
@@ -348,7 +355,7 @@ export class SocketService {
     this.stored = { token: ack.token, nickname: ack.nickname };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(this.stored));
     this.session.set({ playerId: ack.playerId, nickname: ack.nickname });
-    if (ack.game) this.game.set(ack.game);
+    if (ack.game) this.adopt(ack.game);
     else {
       this.game.set(null);
       if (hadGame) this.notify('warn', this.i18n.t('server.restarted'));

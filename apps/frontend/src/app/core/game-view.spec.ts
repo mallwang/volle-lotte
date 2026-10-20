@@ -1,4 +1,4 @@
-import type { LogEntry } from 'game-rules';
+import { decodeLog, encodeLog, LOG_KINDS, type Event, type LogEntry } from 'game-rules';
 import { gameView } from './testing';
 import { isHost, isSpectator, logText, rematchState, seatName } from './game-view';
 import { I18nService } from './i18n.service';
@@ -75,5 +75,54 @@ describe('isSpectator', () => {
     });
     expect(isSpectator(view)).toBe(true);
     expect(isHost(view)).toBe(false);
+  });
+});
+
+describe('log text of a compact log', () => {
+  const result = {
+    reason: 'targetScore' as const,
+    winner: 0,
+    ranking: [{ rank: 1, players: [0] }],
+  };
+  const events: Event[] = [
+    { type: 'cardDrawn', card: 'plusMinus' },
+    { type: 'thrown', dice: [1, 2, 3] },
+    { type: 'selected', dice: [1], points: 100 },
+    { type: 'volleLotte' },
+    { type: 'bust', lost: 300 },
+    { type: 'banked', points: 500 },
+    { type: 'turnLost', lost: 100 },
+    { type: 'turnEnded', next: 1 },
+    { type: 'deckReshuffled' },
+    { type: 'penalty', player: 1, lost: 500 },
+    { type: 'gameOver', result },
+  ];
+  const log: LogEntry[] = [
+    ...LOG_KINDS.filter((kind) => kind !== 'turn').map((kind, i) => ({
+      at: i,
+      kind,
+      seat: i % 2,
+      data: kind === 'replaced' ? 'left' : `x${i}`,
+    })),
+    ...events.map((data, i) => ({
+      at: 100 + Math.floor(i / 2),
+      kind: 'turn' as const,
+      seat: 0,
+      data,
+    })),
+  ];
+  const game = gameView({}, [
+    { state: 'human', playerId: 'p0', nickname: 'Ann', connected: true },
+    { state: 'computer', name: 'Brave Fox', difficulty: 'easy', risk: 'medium' },
+  ]);
+
+  it.each(['en', 'de'] as const)('reads the same in %s after the trip over the wire', (lang) => {
+    const i18n = TestBed.inject(I18nService);
+    i18n.set(lang);
+    const texts = (entries: LogEntry[]) => entries.map((e) => logText(game, e, i18n));
+    const decoded = decodeLog(encodeLog(log));
+    expect(decoded).toEqual(log);
+    expect(texts(decoded)).toEqual(texts(log));
+    expect(texts(decoded).every((t) => t.length > 0)).toBe(true);
   });
 });

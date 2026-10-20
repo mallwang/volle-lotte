@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { applyChange, type GameStateView, type SeatView } from 'game-rules';
+import { applyChange, encodeLog, type GameStateView, type SeatView } from 'game-rules';
 import { LeaveGame } from '../core/leave-game';
 import { SocketService, TOAST_MS } from '../core/socket.service';
 import { MessageService } from 'primeng/api';
@@ -338,7 +338,7 @@ describe('Table', () => {
       localStorage.setItem('vl-skip-dice', 'false');
       const t = await setup(0);
       vi.useFakeTimers();
-      t.socket.game.set(applyChange(t.socket.game()!, { n: 1, log: [thrown as never] }));
+      t.socket.game.set(applyChange(t.socket.game()!, { n: 1, log: encodeLog([thrown as never]) }));
       t.fixture.detectChanges();
       expect(logLen(t.el)).toBe(0);
       expect(t.el.querySelector('.vl-roll-status')?.textContent).toContain('rolling');
@@ -351,7 +351,7 @@ describe('Table', () => {
       expect(logLen(t.el)).toBe(1);
       expect(t.el.querySelector('.vl-roll-status')?.textContent?.trim()).toBe('');
       const next = { ...thrown, data: { type: 'thrown', dice: [1, 2, 3] } };
-      t.socket.game.set(applyChange(t.socket.game()!, { n: 3, log: [next as never] }));
+      t.socket.game.set(applyChange(t.socket.game()!, { n: 3, log: encodeLog([next as never]) }));
       t.fixture.detectChanges();
       expect(logLen(t.el)).toBe(1);
       vi.advanceTimersByTime(5000);

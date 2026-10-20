@@ -44,7 +44,7 @@ class FakeSocket implements SocketLike {
 }
 
 const started = { ok: true, token: 't1', playerId: 'p1', nickname: 'Ann', protocolVersion: 2 };
-const game = { id: 'g1', n: 0 };
+const game = { id: 'g1', n: 0, log: [] };
 
 function setup(stored?: object) {
   localStorage.clear();
@@ -162,7 +162,7 @@ describe('SocketService', () => {
 
     it('shows no toast for a game:snapshot push alone', () => {
       const { socket, add } = setup();
-      socket.fire('game:snapshot', { game: { id: 'g1', computerSpeed: 5 } });
+      socket.fire('game:snapshot', { game: { id: 'g1', computerSpeed: 5, log: [] } });
       expect(add).not.toHaveBeenCalled();
     });
   });
@@ -170,7 +170,7 @@ describe('SocketService', () => {
   it('spectate() sends the intent and shows the spectator view on success', async () => {
     const { socket, service } = setup();
     await service.start('Ann');
-    socket.replies['game:spectate'] = { ok: true, game: { id: 'g1', spectators: 1 } };
+    socket.replies['game:spectate'] = { ok: true, game: { id: 'g1', spectators: 1, log: [] } };
     expect(await service.spectate({ gameId: 'g1', password: '' })).toMatchObject({ ok: true });
     expect(socket.sent.at(-1)).toEqual({
       event: 'game:spectate',
@@ -387,6 +387,22 @@ describe('SocketService', () => {
     expect(service.game()).toBeNull();
   });
 
+  it('leaves no table and asks for a reload when the server refuses the version on reconnect', async () => {
+    const { socket, add, service } = setup();
+    socket.replies['session:start'] = { ...started, game };
+    await service.start('Ann');
+    add.mockClear();
+    socket.replies['session:start'] = { ok: false, reason: 'versionMismatch' };
+    socket.fire('connect');
+    await vi.waitFor(() =>
+      expect(add).toHaveBeenCalledWith(
+        expect.objectContaining({ severity: 'error', detail: expect.stringContaining('reload') }),
+      ),
+    );
+    expect(service.game()).toBeNull();
+    expect(service.session()).toBeNull();
+  });
+
   it('drops a finished game on reconnect without a warning', async () => {
     const { socket, add, service } = setup();
     socket.replies['session:start'] = { ...started, game: { ...game, phase: 'finished' } };
@@ -464,7 +480,7 @@ describe('SocketService', () => {
         spectators: 2,
         seats: [[1, { state: 'locked' }]],
         settings: { computerSpeed: 5 },
-        log: [{ at: 1, kind: 'turn' }],
+        log: [{ at: 1, e: [{ kind: 'turn' }] }],
       });
       expect(service.game()).toMatchObject({
         n: 51,

@@ -2,6 +2,7 @@ import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import {
   applyChange,
+  decodeView,
   defaultRules,
   PROTOCOL_VERSION,
   type Ack,
@@ -53,7 +54,7 @@ export class Client {
     sockets.push(socket);
     socket.onAny((event, payload) => {
       this.pushes.push({ event, payload });
-      if (event === 'game:snapshot') this.setView(payload.game);
+      if (event === 'game:snapshot') this.setView(decodeView(payload.game));
       if (event === 'game:change' && !this.lose?.(payload)) this.applyPushed(payload);
       if (event === 'game:closed') this.view = undefined;
     });
@@ -92,7 +93,7 @@ export class Client {
     return new Promise((resolve, reject) =>
       this.socket.timeout(2000).emit(event, payload, (err: Error | null, ack: Any) => {
         if (err) return reject(err);
-        if (ack?.ok && ack.game) this.setView(ack.game);
+        if (ack?.ok && ack.game) this.setView(decodeView(ack.game));
         if (event === 'game:leave' && ack?.ok) this.view = undefined;
         resolve(ack);
       }),

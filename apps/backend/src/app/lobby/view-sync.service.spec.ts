@@ -1,4 +1,11 @@
-import { defaultRules, seededRandomInt, applyChange, type GameChange } from 'game-rules';
+import {
+  applyChange,
+  decodeLog,
+  decodeView,
+  defaultRules,
+  seededRandomInt,
+  type GameChange,
+} from 'game-rules';
 import { GameRoom } from './game-room';
 import { ViewSyncService, type Outgoing } from './view-sync.service';
 import { toView } from './view';
@@ -30,7 +37,7 @@ describe('ViewSyncService', () => {
 
   it('starts counting at 0 with the first snapshot and registers the recipient', () => {
     const view = service.snapshot(room, 'h');
-    expect(view).toEqual({ ...toView(room, 'h'), n: 0 });
+    expect(decodeView(view)).toEqual({ ...toView(room, 'h'), n: 0 });
     expect(service.changes(room, everyone('h', 'p'))).toEqual([]);
   });
 
@@ -52,7 +59,7 @@ describe('ViewSyncService', () => {
     const change = out[0].payload as GameChange;
     expect(change).toMatchObject({ n: 1, seats: [[0, { ready: true }]] });
     expect(Object.keys(change)).toEqual(['n', 'seats']);
-    expect(applyChange(snapshot, change)).toEqual({ ...toView(room, 'h'), n: 1 });
+    expect(applyChange(decodeView(snapshot), change)).toEqual({ ...toView(room, 'h'), n: 1 });
   });
 
   it('counts every recipient on its own and sends nobody without a snapshot', () => {
@@ -104,10 +111,10 @@ describe('ViewSyncService', () => {
     service.snapshot(room, 'h');
     room.join('q', 'Quin');
     const [first] = service.changes(room, everyone('h'));
-    expect((first.payload as GameChange).log).toMatchObject([{ kind: 'joined' }]);
+    expect(decodeLog((first.payload as GameChange).log!)).toMatchObject([{ kind: 'joined' }]);
     room.leave('q');
     const [second] = service.changes(room, everyone('h'));
-    expect((second.payload as GameChange).log).toMatchObject([{ kind: 'left' }]);
+    expect(decodeLog((second.payload as GameChange).log!)).toMatchObject([{ kind: 'left' }]);
     expect((second.payload as GameChange).n).toBe(2);
   });
 

@@ -1,5 +1,11 @@
 import { TestBed } from '@angular/core/testing';
-import { applyChange, type GameStateView, type GameView, type SeatView } from 'game-rules';
+import {
+  applyChange,
+  encodeLog,
+  type GameStateView,
+  type GameView,
+  type SeatView,
+} from 'game-rules';
 import { MessageService } from 'primeng/api';
 import { providePrimeNG } from 'primeng/config';
 import { Celebration } from '../core/celebration';
@@ -99,7 +105,12 @@ describe('Table game-over modal', () => {
     const { socket, dialog, fixture, celebration } = await setup(running);
     expect(dialog()).toBeNull();
     socket.game.set(
-      applyChange(running, { n: 1, phase: 'finished', game: engine(), log: endLog as never }),
+      applyChange(running, {
+        n: 1,
+        phase: 'finished',
+        game: engine(),
+        log: encodeLog(endLog as never),
+      }),
     );
     fixture.detectChanges();
     await fixture.whenStable();
