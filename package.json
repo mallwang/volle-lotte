@@ -13,6 +13,7 @@
     "build": "nx run-many -t build -p backend frontend",
     "test": "nx run-many -t test",
     "test:e2e": "nx run-many -t e2e",
+    "measure:socket": "node scripts/measure-socket.mjs",
     "test:affected": "nx affected -t test --base=main",
     "lint": "nx run-many -t lint",
     "lint:fix": "nx run-many -t lint --fix",

@@ -77,6 +77,14 @@
         "command": "jest -c jest.e2e.config.cts --runInBand",
         "cwd": "apps/backend"
       }
+    },
+    "measure-socket": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "jest -c jest.measure.config.cts --runInBand",
+        "cwd": "apps/backend"
+      }
     }
   }
 }

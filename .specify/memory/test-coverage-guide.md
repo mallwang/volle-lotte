@@ -5,6 +5,7 @@ Drives the `/speckit-coverage` audit. Principle: test logic, not wiring. Target:
 ## Always skip
 
 - `**/main.ts` (bootstrap), `**/app.config.ts`, `**/app.routes.ts` (wiring/config)
+- Socket traffic measurement tooling: `**/testing/traffic.ts`, `**/testing/autoplay.ts`, `**/measure/**` (run by `npm run measure:socket`, not part of the test suite)
 - Pure data/constant files and components whose body is only a template
 
 ## Always test
