@@ -1,4 +1,4 @@
-import { PROTOCOL_VERSION, type GameView } from 'game-rules';
+import { decodeLog, PROTOCOL_VERSION, type GameView } from 'game-rules';
 import { Client, create, registry, startApp, stopApp, type Any } from './testing/client';
 
 beforeAll(startApp);
@@ -542,7 +542,9 @@ describe('rematch', () => {
     expect(JSON.stringify(waiting)).not.toContain('"deck"');
     expect(
       p.pushes.some(
-        (x) => x.event === 'game:change' && x.payload.log?.some((e: Any) => e.kind === 'rematch'),
+        (x) =>
+          x.event === 'game:change' &&
+          decodeLog(x.payload.log ?? []).some((e) => e.kind === 'rematch'),
       ),
     ).toBe(false);
 
@@ -606,13 +608,30 @@ describe('rematch', () => {
     expect(await create(p)).toMatchObject({ ok: true });
   });
 
+  it('answers a version 12 client versionMismatch and sends it no game push afterwards', async () => {
+    const host = await Client.start('Vhost');
+    const created = await create(host, 2, '');
+    const old = await Client.connect();
+    expect(await old.send('session:start', { nickname: 'Old12', protocolVersion: 12 })).toEqual({
+      ok: false,
+      reason: 'versionMismatch',
+    });
+    await host.send('seat:ready', { ready: true });
+    expect(await old.send('game:join', { gameId: created.game.id, password: '' })).toMatchObject({
+      ok: false,
+      reason: 'noSession',
+    });
+    await new Promise((r) => setTimeout(r, 100));
+    expect(old.pushes.filter((p) => /^game:(change|snapshot)$/.test(p.event))).toEqual([]);
+  });
+
   it('turns away a client of the old protocol version', async () => {
     const c = await Client.connect();
     expect(await c.send('session:start', { nickname: 'Oldie', protocolVersion: 9 })).toMatchObject({
       reason: 'versionMismatch',
     });
-    // the full-state protocol of spec 016 and earlier
-    expect(PROTOCOL_VERSION).toBe(12);
+    // the whole-game changes of spec 017 and earlier
+    expect(PROTOCOL_VERSION).toBe(13);
     expect(
       await c.send('session:start', { nickname: 'Oldie', protocolVersion: PROTOCOL_VERSION - 1 }),
     ).toMatchObject({ reason: 'versionMismatch' });

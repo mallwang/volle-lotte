@@ -1,10 +1,23 @@
 import { applyAction, createGame } from './game.js';
-import { LOG_CAP, type GameChange, type GameStateView, type GameView } from './protocol.js';
+import {
+  LOG_CAP,
+  type LogEntry,
+  type GameChange,
+  type GameStateView,
+  type GameView,
+} from './protocol.js';
 import { scriptedRandomInt, seededRandomInt } from './rng.js';
+import { replayViews } from './testing/replay.js';
 import { defaultRules, type GameState } from './types.js';
-import { applyChange, diffView } from './view-sync.js';
+import { applyChange, decodeView, diffView, encodeChange, encodeView } from './view-sync.js';
+import { decodeLog, encodeLog } from './wire-log.js';
 
 const rules = defaultRules();
+const engineResult = {
+  reason: 'targetScore' as const,
+  winner: 0,
+  ranking: [{ rank: 1, players: [0] }],
+};
 const rolls = (...faces: number[]) => scriptedRandomInt(faces.map((f) => f - 1));
 
 const stateView = (state: GameState): GameStateView => {
@@ -57,7 +70,7 @@ const running = (): GameView => {
 /** The change as the server would send it: `n` one higher. */
 const send = (prev: GameView, next: GameView): GameChange | 'snapshot' | null => {
   const parts = diffView(prev, next);
-  return parts && parts !== 'snapshot' ? { n: prev.n + 1, ...parts } : parts;
+  return parts && parts !== 'snapshot' ? { n: prev.n + 1, ...encodeChange(parts) } : parts;
 };
 const sameAs = (view: GameView, n: number): GameView => ({ ...view, n });
 const roundTrip = (prev: GameView, next: GameView) => {
@@ -105,7 +118,7 @@ describe('diffView and applyChange', () => {
         turnDeadline: { at: 9000, phase: 'select' },
       };
       const change = roundTrip(base, afterThrow);
-      expect(change.log).toEqual([entry(1)]);
+      expect(decodeLog(change.log!)).toEqual([entry(1)]);
       expect(change.seats).toBeUndefined();
       const preview = roundTrip(afterThrow, { ...afterThrow, preview: [0, 2] });
       expect(Object.keys(preview)).toEqual(['n', 'preview']);
@@ -165,6 +178,125 @@ describe('diffView and applyChange', () => {
       const started = roundTrip(base, running());
       expect(started.game).toBeDefined();
       expect(started.preview).toEqual([]);
+      expect(started.gameDiff).toBeUndefined();
+    });
+
+    it('a game that disappears', () => {
+      const base = running();
+      const { game: _game, ...gone } = base;
+      expect(roundTrip(base, gone as GameView).game).toBeNull();
+    });
+
+    it('a running game sends a difference, never the whole game', () => {
+      const base = running();
+      const next = { ...base, game: { ...base.game!, current: 1 } };
+      const change = roundTrip(base, next);
+      expect(change.game).toBeUndefined();
+      expect(change.gameDiff).toEqual({ current: 1 });
+    });
+
+    it('replays seeded full games of 2, 4 and 8 players step by step', () => {
+      for (const players of [2, 4, 8]) {
+        const views = replayViews(players * 11, players);
+        expect(views.length).toBeGreaterThan(20);
+        let have = views[0];
+        for (const next of views.slice(1)) {
+          const parts = diffView(have, next);
+          expect(parts).not.toBe('snapshot');
+          if (parts === null || parts === 'snapshot') continue;
+          have = applyChange(have, { n: have.n + 1, ...encodeChange(parts) });
+          expect(have).toEqual({ ...next, n: have.n });
+        }
+      }
+    });
+  });
+
+  describe('partial you', () => {
+    it('sends only the timeout warning flag, on and off', () => {
+      const base = running();
+      const warned = { ...base, you: { ...base.you, timeoutWarning: true } };
+      expect(roundTrip(base, warned).you).toEqual({ timeoutWarning: true });
+      expect(roundTrip(warned, base).you).toEqual({ timeoutWarning: false });
+    });
+
+    it('sends a changed own seat alone', () => {
+      const base = running();
+      expect(roundTrip(base, { ...base, you: { ...base.you, seat: 2 } }).you).toEqual({ seat: 2 });
+    });
+
+    it('sets and removes the reserved seat', () => {
+      const base = running();
+      const reserved = { ...base, you: { ...base.you, reserved: 1 } };
+      expect(roundTrip(base, reserved).you).toEqual({ reserved: 1 });
+      const removed = roundTrip(reserved, base).you;
+      expect(removed).toEqual({ reserved: null });
+      expect(applyChange(reserved, { n: 1, you: removed })).not.toHaveProperty('you.reserved');
+    });
+  });
+
+  describe('turn deadline (rule D)', () => {
+    const at = (view: GameView, patch: Partial<GameView>): GameView => ({ ...view, ...patch });
+    const base = running();
+    const current = (c: number) => ({ ...base.game!, current: c });
+
+    it.each([
+      [
+        'the turn passes to another player',
+        at(base, { game: current(1), turnDeadline: undefined }),
+      ],
+      [
+        'the turn phase changes',
+        at(base, {
+          game: { ...base.game!, turn: { ...base.game!.turn!, phase: 'throw' } },
+          turnDeadline: undefined,
+        }),
+      ],
+      [
+        'the game ends',
+        at(base, {
+          game: { ...base.game!, turn: null, result: engineResult },
+          turnDeadline: undefined,
+        }),
+      ],
+      ['the game disappears', at({ ...base }, { game: undefined, turnDeadline: undefined })],
+      ['the host pauses', at(base, { paused: true, turnDeadline: undefined })],
+    ])('is not sent as null when %s', (_name, next) => {
+      const change = roundTrip(base, next);
+      expect(change).not.toHaveProperty('turnDeadline');
+      expect(applyChange(base, change).turnDeadline).toBeUndefined();
+    });
+
+    it('is sent once with the new value when the turn moves to a human', () => {
+      const next = at(base, { game: current(1), turnDeadline: { at: 9000, phase: 'draw' } });
+      expect(roundTrip(base, next).turnDeadline).toEqual({ at: 9000, phase: 'draw' });
+    });
+
+    it('is sent again when the same value would be dropped by the rule', () => {
+      const next = at(base, { game: current(1) });
+      expect(roundTrip(base, next).turnDeadline).toEqual(base.turnDeadline);
+    });
+
+    it('is still sent as null when only the timer is switched off', () => {
+      const change = roundTrip(base, at(base, { turnDeadline: undefined }));
+      expect(change.turnDeadline).toBeNull();
+    });
+
+    it('is kept when something else changes', () => {
+      const change = roundTrip(base, at(base, { spectators: 3 }));
+      expect(change).not.toHaveProperty('turnDeadline');
+    });
+
+    it('replays seeded games with a turn limit that restarts with each action', () => {
+      for (const players of [2, 4, 8]) {
+        const views = replayViews(players * 17, players, true);
+        let have = views[0];
+        for (const next of views.slice(1)) {
+          const parts = diffView(have, next);
+          if (parts === null || parts === 'snapshot') continue;
+          have = applyChange(have, { n: have.n + 1, ...encodeChange(parts) });
+          expect(have).toEqual({ ...next, n: have.n });
+        }
+      }
     });
   });
 
@@ -189,6 +321,7 @@ describe('diffView and applyChange', () => {
       ['name', { ...base, name: 'Renamed' }],
       ['rules', { ...base, rules: { ...rules, targetScore: 9999 } }],
       ['seat count', { ...base, seats: base.seats.slice(1) }],
+      ['player count', { ...base, game: { ...base.game!, players: base.game!.players.slice(1) } }],
       ['spectator flag', { ...base, you: { ...base.you, spectator: true } }],
       ['shorter log', { ...base, log: [] }],
       ['log base backwards', { ...base, logBase: -1 }],
@@ -208,7 +341,7 @@ describe('diffView and applyChange', () => {
       const base = running();
       const next = { ...base, log: [...base.log, entry(1), entry(2)] };
       const change = roundTrip(base, next);
-      expect(change.log).toEqual([entry(1), entry(2)]);
+      expect(decodeLog(change.log!)).toEqual([entry(1), entry(2)]);
     });
 
     it('trims to LOG_CAP and raises logBase, like the room', () => {
@@ -217,10 +350,44 @@ describe('diffView and applyChange', () => {
       const added = [entry(LOG_CAP), entry(LOG_CAP + 1), entry(LOG_CAP + 2)];
       const next = { ...base, logBase: 13, log: [...full, ...added].slice(3) };
       const change = roundTrip(base, next);
-      expect(change.log).toEqual(added);
+      expect(decodeLog(change.log!)).toEqual(added);
       const applied = applyChange(base, change);
       expect(applied.logBase).toBe(13);
       expect(applied.log).toHaveLength(LOG_CAP);
+    });
+
+    it('a snapshot keeps its log through encodeView and decodeView', () => {
+      const views = replayViews(21, 4);
+      const view = views.at(-1)!;
+      expect(view.log.length).toBeGreaterThan(20);
+      expect(decodeView(encodeView(view))).toEqual(view);
+      expect(encodeView(view).log.length).toBeLessThanOrEqual(view.log.length);
+      expect(decodeView(encodeView(running()))).toEqual(running());
+    });
+
+    it('trims the same for a client who joined late and one who applied every change', () => {
+      const room = { ...running(), log: [] as LogEntry[], logBase: 0 };
+      let early = room;
+      const rng = seededRandomInt(8);
+      for (let i = 0; i < LOG_CAP + 120; i++) {
+        const added = Array.from({ length: 1 + rng(3) }, (_, k) => ({
+          ...entry(i * 3 + k),
+          at: 1000 + i,
+        }));
+        const log = [...room.log, ...added];
+        const drop = Math.max(0, log.length - LOG_CAP);
+        const next = { ...room, log: log.slice(drop), logBase: room.logBase + drop };
+        const parts = diffView(room, next);
+        if (parts === null || parts === 'snapshot') throw new Error('expected a change');
+        early = applyChange(early, { n: early.n + 1, ...encodeChange(parts) });
+        Object.assign(room, next);
+      }
+      const late = decodeView(encodeView(room));
+      expect(early.log).toHaveLength(LOG_CAP);
+      expect({ log: early.log, logBase: early.logBase }).toEqual({
+        log: late.log,
+        logBase: late.logBase,
+      });
     });
 
     it('does not modify the given view', () => {
@@ -228,7 +395,7 @@ describe('diffView and applyChange', () => {
       const frozen = structuredClone(base);
       applyChange(base, {
         n: 1,
-        log: [entry(5)],
+        log: encodeLog([entry(5)]),
         seats: [[0, { state: 'open' }]],
         settings: { computerSpeed: 1 },
         game: null,
@@ -282,7 +449,7 @@ describe('diffView and applyChange', () => {
       } else if (parts === null) {
         expect(view).toEqual({ ...next, n: view.n });
       } else {
-        const change = { n: view.n + 1, ...parts };
+        const change = { n: view.n + 1, ...encodeChange(parts) };
         view = applyChange(view, change);
         expect(view).toEqual({ ...next, n: change.n });
       }

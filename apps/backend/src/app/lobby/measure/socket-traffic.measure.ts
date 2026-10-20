@@ -3,7 +3,7 @@ import path from 'node:path';
 import { defaultRules, seededRandomInt } from 'game-rules';
 import { autoplay } from '../testing/autoplay';
 import { Client, registry, startApp, stopApp } from '../testing/client';
-import { bytesPerClient, largestSeries, Meter, rows } from '../testing/traffic';
+import { bytesPerClient, keyTableEstimate, largestSeries, Meter, rows } from '../testing/traffic';
 
 // Plays full games over real sockets and reports the bytes every client receives, per event.
 // Run with `npm run measure:socket -- --label <name>`; see docs/socket-traffic.md.
@@ -30,6 +30,10 @@ const SCENARIOS: Scenario[] = [
 /** Eleven values from the first to the last, evenly spread: shows how the size grows over the game. */
 const sampled = (sizes: number[]): number[] =>
   Array.from({ length: 11 }, (_, i) => sizes[Math.round((i / 10) * (sizes.length - 1))]);
+
+/** The saving of the short form as a percentage. */
+const saving = ({ plain, short }: { plain: number; short: number }): string =>
+  plain > 0 ? `-${(100 - (short / plain) * 100).toFixed(1)}%` : 'n/a';
 
 /** Repo root: the first parent with an `nx.json`. */
 function repoRoot(): string {
@@ -136,7 +140,14 @@ describe('socket traffic', () => {
         bytesPerPlayer: bytesPerClient(meters, 'player'),
         bytesPerSpectator: bytesPerClient(meters, 'spectator'),
       };
-      report.push({ scenario: { ...scenario, seed: SEED }, rows: table, series, totals });
+      const keyEstimate = keyTableEstimate(meters);
+      report.push({
+        scenario: { ...scenario, seed: SEED },
+        rows: table,
+        series,
+        totals,
+        keyEstimate,
+      });
       const lines = [
         `\n## ${scenario.players} players, ${scenario.spectators} spectators (${LABEL})`,
         '| event | role | count | total | avg | max |',
@@ -146,6 +157,7 @@ describe('socket traffic', () => {
             `| ${r.event} | ${r.role} | ${r.count} | ${r.bytesTotal} | ${r.bytesAvg} | ${r.bytesMax} |`,
         ),
         `bytes per player: ${totals.bytesPerPlayer}, per spectator: ${totals.bytesPerSpectator}`,
+        `with a key table (${keyEstimate.keys} keys, estimate only): per player ${keyEstimate.perPlayer.short} (${saving(keyEstimate.perPlayer)}), per spectator ${keyEstimate.perSpectator.short} (${saving(keyEstimate.perSpectator)})`,
       ];
       for (const [role, s] of Object.entries(series))
         if (s.sizes.length)

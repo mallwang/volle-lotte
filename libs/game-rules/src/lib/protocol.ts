@@ -1,6 +1,6 @@
-import type { Action, Event, GameState, RejectionReason, Rules } from './types.js';
+import type { Action, Event, GameState, RejectionReason, Result, Rules, Turn } from './types.js';
 
-export const PROTOCOL_VERSION = 12;
+export const PROTOCOL_VERSION = 13;
 
 /** UI language a player reports; the server names computers in the host's language. */
 export type UiLanguage = 'en' | 'de';
@@ -72,11 +72,49 @@ export type LogKind =
   | 'renamed'
   | 'rematch';
 
+/** Every `LogKind`; the record type makes the compiler check the list is complete. */
+const LOG_KIND_SET: Record<LogKind, true> = {
+  joined: true,
+  left: true,
+  disconnected: true,
+  reconnected: true,
+  hostChanged: true,
+  seatChanged: true,
+  started: true,
+  turn: true,
+  finished: true,
+  replaced: true,
+  rejoined: true,
+  timedOut: true,
+  removed: true,
+  renamed: true,
+  rematch: true,
+};
+export const LOG_KINDS = Object.keys(LOG_KIND_SET) as LogKind[];
+
 export interface LogEntry {
   at: number;
   kind: LogKind;
   seat?: number;
   data?: Event | number | string;
+}
+
+/**
+ * A log entry on the wire: `kind` is flat (the event type for a `turn` entry, whose event fields
+ * sit beside it). `seat` is set only when the entry's group has no common seat.
+ */
+export type WireLogEntry = {
+  kind: string;
+  seat?: number;
+  data?: number | string;
+} & { [field: string]: unknown };
+
+/** Consecutive log entries with the same time stamp. */
+export interface WireLogGroup {
+  at: number;
+  /** Set only if every entry of the group has this seat. */
+  seat?: number;
+  e: WireLogEntry[];
 }
 
 export interface SeatView {
@@ -166,21 +204,40 @@ export interface GameSummary {
   spectatable: boolean;
 }
 
+/** A view as it travels in snapshots: the log in its compact form. */
+export type WireView = Omit<GameView, 'log'> & { log: WireLogGroup[] };
+
+/**
+ * The difference of two `GameStateView`s with the same number of players; at least one key is set.
+ * `version` never travels in a difference (it is part of snapshots only).
+ */
+export interface GameStateDiff {
+  /** Only players whose name or score changed, by index. */
+  players?: [index: number, changed: { name?: string; score?: number }][];
+  current?: number;
+  /** Changed turn fields; `null` = no turn; the whole turn when there was none before. */
+  turn?: Partial<Turn> | null;
+  result?: Result | null;
+  deckSize?: number;
+}
+
 /**
  * One `game:change` push: only the parts of the recipient's view that differ from what they have.
  * `n` must be the recipient's last number plus one; `applyChange` in `view-sync.ts` applies it.
  */
 export interface GameChange {
   n: number;
-  you?: GameView['you'];
+  you?: Partial<Omit<GameView['you'], 'reserved'>> & { reserved?: number | null };
   hostId?: string;
   phase?: RoomPhase;
   /** `null` clears it. */
   rematch?: 'open' | 'closed' | null;
   /** Only the seats that changed, by index. */
   seats?: [index: number, seat: SeatView][];
-  /** The whole engine state view; `null` = no game. */
+  /** The whole engine state view, only when the recipient has none; `null` = no game. */
   game?: GameStateView | null;
+  /** What changed in the engine state view the recipient has; never together with `game`. */
+  gameDiff?: GameStateDiff;
   preview?: number[];
   /** `null` clears it. */
   turnDeadline?: NonNullable<GameView['turnDeadline']> | null;
@@ -190,24 +247,24 @@ export interface GameChange {
   spectators?: number;
   paused?: boolean;
   /** Entries to append to the log. */
-  log?: LogEntry[];
+  log?: WireLogGroup[];
 }
 
 /** Client to server: event name -> [payload, ack data]. */
 export interface Intents {
   'session:start': [
     { nickname: string; token?: string; protocolVersion: number; language: UiLanguage },
-    { token: string; playerId: string; nickname: string; protocolVersion: number; game?: GameView },
+    { token: string; playerId: string; nickname: string; protocolVersion: number; game?: WireView },
   ];
   'session:language': [{ language: UiLanguage }, object];
   'lobby:list': [undefined, { games: GameSummary[] }];
   'game:create': [
     { name: string; password: string; seats: number; rules: Rules },
-    { game: GameView },
+    { game: WireView },
   ];
-  'game:join': [{ gameId: string; password: string; seat?: number }, { game: GameView }];
+  'game:join': [{ gameId: string; password: string; seat?: number }, { game: WireView }];
   /** Watch a running game without a seat; same password rule and rate limit as `game:join`. */
-  'game:spectate': [{ gameId: string; password: string }, { game: GameView }];
+  'game:spectate': [{ gameId: string; password: string }, { game: WireView }];
   'game:leave': [undefined, object];
   'seat:set': [
     { seat: number; mode: 'open' | 'locked' | 'computer'; difficulty?: Difficulty; risk?: Risk },
@@ -216,9 +273,9 @@ export interface Intents {
   'seat:rename': [{ seat: number; name?: string }, object];
   'seat:ready': [{ ready: boolean }, object];
   'game:start': [undefined, object];
-  'game:rejoin': [{ gameId: string }, { game: GameView }];
+  'game:rejoin': [{ gameId: string }, { game: WireView }];
   /** The caller's own current snapshot, to repair a missed change; same errors as `game:rejoin`. */
-  'game:sync': [undefined, { game: GameView }];
+  'game:sync': [undefined, { game: WireView }];
   /** Last host ends a running game that only has computers left; `notHost` once a human took over. */
   'game:end': [{ gameId: string }, object];
   'seat:remove': [{ seat: number }, object];
@@ -229,7 +286,7 @@ export interface Intents {
   /** Host of a finished game reopens the room as a lobby; `round` is the finished game's round. */
   'rematch:start': [{ round: number }, object];
   /** A player waiting in the game-over modal takes their reserved seat; `round` is the finished game's round. */
-  'rematch:join': [{ round: number }, { game: GameView }];
+  'rematch:join': [{ round: number }, { game: WireView }];
 }
 
 export interface GameSettings {
@@ -248,7 +305,7 @@ export interface SettingChange {
 export interface Pushes {
   'lobby:games': { games: GameSummary[] };
   /** Replaces the whole view when it cannot be expressed as a change (rematch, new round). */
-  'game:snapshot': { game: GameView };
+  'game:snapshot': { game: WireView };
   'game:change': GameChange;
   'game:settingsChanged': { by: string; changes: SettingChange[] };
   'session:replaced': undefined;

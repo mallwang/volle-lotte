@@ -40,9 +40,9 @@ fi
 version="$(node -p "require('./package.json').version")"
 
 docker run --rm \
-  --add-host=host.docker.internal:host-gateway \
+  --network host \
   -e SONAR_TOKEN="$SONAR_LOCAL_TOKEN" \
-  -e SONAR_HOST_URL="http://host.docker.internal:9000" \
+  -e SONAR_HOST_URL="$url" \
   -v "$PWD:/usr/src" \
   sonarsource/sonar-scanner-cli \
   -Dsonar.projectKey=volle-lotte-local \

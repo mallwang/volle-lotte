@@ -1,12 +1,21 @@
 # Feature Specification: Finer Socket Diffs and Compact Log
 
-**Feature Branch**: `017-leaner-socket-messages` (the spec lives in this branch; no separate branch)
+**Feature Branch**: `018-finer-socket-diffs`
 
 **Created**: 2026-10-20
 
 **Status**: Draft
 
 **Input**: User description: "Reduce the socket traffic further after spec 017, based on a recorded 4-player round. A change repeats the whole `game` part (all players with names and scores, the complete turn with default values) although usually one or two values changed: send only the differences. Make log entries more compact. Do not send a value that is cleared and set again by the same change, and do not resend the whole `you` part for one flag. Later stage: shorter message keys from one shared table. CSV-formatted strings are rejected. Measure again and record the figures; raise the protocol version."
+
+## Clarifications
+
+### Session 2026-10-20
+
+- Q: From which measured saving is Story 4 (short message keys) built, and when is it dropped? → A: Built only if the short keys lower the data per player in an 8-player game by at least 25% compared with the figure after Stories 1 to 3; otherwise dropped and recorded as such.
+- Q: Does the compact log form apply everywhere, including snapshots, or only to changes? → A: Everywhere: snapshot (join, watch, rejoin, reload, sync) and changes use the same compact format, decoded in one place.
+- Q: What does a player or spectator with an outdated client (protocol v12) see after the server was updated to v13? → A: The server refuses the connection, the client shows "update required, please reload", the running game stays on the server, and the player returns by rejoin after reloading.
+- Q: Should the target of SC-002 stay at 50% less data per player, and does it count with or without the short keys? → A: It stays at 50% and must be reached by Stories 1 to 3 alone, without the short keys.
 
 ## User Scenarios & Testing _(mandatory)_
 
@@ -39,7 +48,7 @@ Log entries become smaller without changing what the log shows. Entries created 
 **Acceptance Scenarios**:
 
 1. **Given** a bust, **When** the entries are sent, **Then** the time stamp is sent once for them and the log shows the same lines as before.
-2. **Given** a snapshot with a long log, **When** the client shows it, **Then** it equals the log built from the changes.
+2. **Given** a snapshot with a long log in the compact form, **When** the client shows it, **Then** it equals the log built from the changes.
 3. **Given** the log is trimmed at its maximum length, **When** clients that joined at different times compare it, **Then** they agree on the entries.
 
 ---
@@ -62,7 +71,7 @@ A change does not send a value only to clear it, nor clear it and set it in one 
 
 ### User Story 4 - Shorter message keys (Priority: P3)
 
-The keys of the messages are shortened (for example `playerId` becomes `pid`, `seats` becomes `s`) from one table that frontend and backend share, so nobody abbreviates by hand and the two sides cannot disagree. This is a separate stage that is only built after the measurement of the first three stories, and only if the remaining saving justifies the lower readability of the traffic in the browser tools.
+The keys of the messages are shortened (for example `playerId` becomes `pid`, `seats` becomes `s`) from one table that frontend and backend share, so nobody abbreviates by hand and the two sides cannot disagree. This is a separate stage that is only built after the measurement of the first three stories, and only if the short keys lower the data per player in an 8-player game by at least 25% compared with the figure after Stories 1 to 3 (lower readability of the traffic in the browser tools is the cost).
 
 **Why this priority**: The saving is real but smaller than the structural changes, and it makes the traffic harder to read. It comes last and is decided from numbers.
 
@@ -72,7 +81,7 @@ The keys of the messages are shortened (for example `playerId` becomes `pid`, `s
 
 1. **Given** the shared table, **When** a message is sent and received, **Then** the receiving side shows the same data as before the shortening.
 2. **Given** a new field, **When** it is added without a table entry, **Then** the build or the tests fail.
-3. **Given** the measurement after stories 1 to 3, **When** the saving of the short keys is small, **Then** the story is dropped and the decision is recorded.
+3. **Given** the measurement after stories 1 to 3, **When** the short keys would save less than 25% of the data per player in an 8-player game, **Then** the story is dropped and the decision is recorded.
 
 ---
 
@@ -94,7 +103,7 @@ The existing measurement reports the new figures next to the figures of specs 01
 ### Edge Cases
 
 - A client misses a message: gap detection and the request for a snapshot of spec 017 keep working unchanged; the snapshot is complete.
-- A client has an outdated version after the server update: the existing version handling applies and nobody is left with a broken table.
+- A client has an outdated version (v12) after the server update: the server refuses the connection, the client shows "update required, please reload" instead of a table, the running game stays on the server, and the player returns by rejoin after reloading.
 - A change affects the number of players or the rules (rematch, new round): a complete snapshot is sent instead of a difference, as today.
 - A player is renamed, replaced by a computer, or leaves: the changed name reaches everybody; names are not repeated otherwise.
 - Two changes follow each other quickly (draw and throw): applied in order, no flicker to an older state.
@@ -110,16 +119,16 @@ The existing measurement reports the new figures next to the figures of specs 01
 - **FR-002**: Player scores MUST be sent only for the players whose score changed, identified by position.
 - **FR-003**: Turn values that are empty or at their start value MUST NOT be sent as separate values when the recipient can derive them from the state change.
 - **FR-004**: Applying the changes to a snapshot MUST give the same state as a snapshot taken at that moment; this MUST be tested for sequences of real games.
-- **FR-005**: Log entries created by one action MUST share one time stamp in the message; the log MUST show the same lines in the same order as before.
+- **FR-005**: Log entries created by one action MUST share one time stamp in the message; the log MUST show the same lines in the same order as before. The compact form MUST be used in snapshots and in changes alike, and the client MUST decode it in one place.
 - **FR-006**: Log entries that the client can derive from other values MUST NOT be sent as separate entries, unless this changes what the log shows.
 - **FR-007**: A clearing of the turn deadline MUST NOT be sent together with, or directly before, the new deadline.
 - **FR-008**: A change of one flag of the recipient's own data MUST send only that flag.
 - **FR-009**: The running number, gap detection, snapshot request and rate limit of spec 017 MUST stay unchanged.
 - **FR-010**: The user MUST see the same table, log, scores and counters as before; no visible behaviour changes.
 - **FR-011**: The view shown to the user MUST still be built in one place on the client, from the snapshot and the changes.
-- **FR-012**: If the shortened keys are built, they MUST come from one table shared by frontend and backend, and a field without an entry MUST fail the build or the tests.
+- **FR-012**: The shortened keys MUST only be built if they save at least 25% of the data per player in an 8-player game (measured after Stories 1 to 3); if built, they MUST come from one table shared by frontend and backend, and a field without an entry MUST fail the build or the tests.
 - **FR-013**: The measurement of spec 017 MUST run unchanged and its figures MUST be recorded together with the earlier baselines.
-- **FR-014**: The protocol version MUST be raised to 13 so that old and new clients are never mixed silently.
+- **FR-014**: The protocol version MUST be raised to 13 so that old and new clients are never mixed silently; a client with another version is refused and told to reload (see Edge Cases).
 - **FR-015**: CSV-formatted strings, compression and binary encoding MUST NOT be part of this feature; the decision on each MUST be recorded.
 - **FR-016**: Automated tests MUST cover the differences of every change type (draw, throw, select, bank, bust, timeout, seat change, game end, rematch), the equality with a fresh snapshot, and the log display.
 
@@ -135,7 +144,7 @@ The existing measurement reports the new figures next to the figures of specs 01
 ### Measurable Outcomes
 
 - **SC-001**: A card draw message in a 4-player game is at least 60% smaller than before (about 700 bytes in the recorded round).
-- **SC-002**: The total data per player over a full 8-player game is at least 50% lower than the figure of spec 017 (0.37 MB); the figure reached is recorded.
+- **SC-002**: The total data per player over a full 8-player game is at least 50% lower than the figure of spec 017 (0.37 MB) with Stories 1 to 3 alone, without the short keys of Story 4; the figure reached is recorded.
 - **SC-003**: The same reduction applies to spectators.
 - **SC-004**: In 100% of the tested game sequences the table of a client that applied the differences equals the table after a fresh snapshot.
 - **SC-005**: The log of a game looks identical before and after, in English and German.
@@ -145,7 +154,7 @@ The existing measurement reports the new figures next to the figures of specs 01
 ## Assumptions
 
 - The recorded round in `tmp/socket-traffic-single-round` is representative; the measurement of spec 017 gives the final figures and may adjust the targets, which are then recorded.
-- The saving of the short keys (story 4) is measured after stories 1 to 3; if it is small, the story is dropped.
+- The saving of the short keys (story 4) is measured after stories 1 to 3; below 25% the story is dropped.
 - The host keeps receiving its own change like any other client (the client has no optimistic state); this is not changed.
 - The Engine.IO heartbeat (one byte every 25 seconds) is not changed.
 - Event names and message formats are decided in the plan; this spec fixes the behaviour.

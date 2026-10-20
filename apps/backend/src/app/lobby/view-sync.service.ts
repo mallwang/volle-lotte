@@ -1,5 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { diffView, type GameChange, type GameView } from 'game-rules';
+import {
+  diffView,
+  encodeChange,
+  encodeView,
+  type GameChange,
+  type GameView,
+  type WireView,
+} from 'game-rules';
 import type { GameRoom } from './game-room';
 import { toView } from './view';
 
@@ -12,7 +19,7 @@ interface Entry {
 
 export type Outgoing =
   | { playerId: string; event: 'game:change'; payload: GameChange }
-  | { playerId: string; event: 'game:snapshot'; payload: { game: GameView } };
+  | { playerId: string; event: 'game:snapshot'; payload: { game: WireView } };
 
 /**
  * Remembers per room and recipient what the recipient's view looks like, so a change can be sent
@@ -23,13 +30,13 @@ export type Outgoing =
 export class ViewSyncService {
   private readonly rooms = new Map<string, Map<string, Entry>>();
 
-  /** The recipient's complete view (for an ack or a `game:snapshot`); later changes continue from it. */
-  snapshot(room: GameRoom, playerId: string): GameView {
+  /** The recipient's complete view, log compacted (for an ack or a `game:snapshot`); later changes continue from it. */
+  snapshot(room: GameRoom, playerId: string): WireView {
     const entries = this.entriesOf(room.id);
     const n = entries.get(playerId)?.n ?? 0;
     const view = { ...toView(room, playerId), n };
     entries.set(playerId, { view: remember(view), n });
-    return view;
+    return encodeView(view);
   }
 
   /**
@@ -51,8 +58,13 @@ export class ViewSyncService {
       const view = { ...next, n: entry.n };
       entry.view = remember(view);
       if (parts === 'snapshot')
-        out.push({ playerId, event: 'game:snapshot', payload: { game: view } });
-      else out.push({ playerId, event: 'game:change', payload: { n: entry.n, ...parts } });
+        out.push({ playerId, event: 'game:snapshot', payload: { game: encodeView(view) } });
+      else
+        out.push({
+          playerId,
+          event: 'game:change',
+          payload: { n: entry.n, ...encodeChange(parts) },
+        });
     }
     return out;
   }
