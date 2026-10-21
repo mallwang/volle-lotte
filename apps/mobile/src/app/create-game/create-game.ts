@@ -15,27 +15,33 @@ const SEATS = [2, 3, 4, 5, 6, 7, 8];
   template: `
     <form id="create" (submit)="submit($event)">
       <h2>{{ 'create.title' | t }}</h2>
-      <label for="game-name">{{ 'create.name' | t }}</label>
-      <input
-        id="game-name"
-        maxlength="40"
-        autocomplete="off"
-        [value]="name()"
-        (input)="name.set($any($event.target).value)"
-      />
+      <div class="fields">
+        <div>
+          <label for="game-name">{{ 'create.name' | t }}</label>
+          <input
+            id="game-name"
+            maxlength="40"
+            autocomplete="off"
+            [value]="name()"
+            (input)="name.set($any($event.target).value)"
+          />
+        </div>
+        <div>
+          <label for="game-password">{{ 'create.password' | t }}</label>
+          <input
+            id="game-password"
+            type="password"
+            autocomplete="new-password"
+            aria-describedby="game-password-hint"
+            [value]="password()"
+            (input)="password.set($any($event.target).value)"
+          />
+        </div>
+      </div>
+      <small id="game-password-hint">{{ 'create.passwordHint' | t }}</small>
       @if (errors().name; as e) {
         <p class="chip bad" role="alert">{{ e }}</p>
       }
-      <label for="game-password">{{ 'create.password' | t }}</label>
-      <input
-        id="game-password"
-        type="password"
-        autocomplete="new-password"
-        aria-describedby="game-password-hint"
-        [value]="password()"
-        (input)="password.set($any($event.target).value)"
-      />
-      <small id="game-password-hint">{{ 'create.passwordHint' | t }}</small>
       @if (errors().password; as e) {
         <p class="chip bad" role="alert">{{ e }}</p>
       }
@@ -46,26 +52,36 @@ const SEATS = [2, 3, 4, 5, 6, 7, 8];
         }
       </select>
       <details class="card">
-        <summary>{{ 'create.rules' | t }} {{ 'create.rulesFixed' | t }}</summary>
-        <label for="target">{{ 'create.target' | t }}</label>
-        <input
-          id="target"
-          type="number"
-          inputmode="numeric"
-          min="1"
-          [value]="rules().targetScore"
-          (input)="patch({ targetScore: +$any($event.target).value })"
-        />
-        <label for="minimum">{{ 'create.minimum' | t }}</label>
-        <input
-          id="minimum"
-          type="number"
-          inputmode="numeric"
-          min="0"
-          [value]="rules().minimumPoints"
-          (input)="patch({ minimumPoints: +$any($event.target).value })"
-        />
-        <label>
+        <summary>
+          <span
+            >{{ 'create.rules' | t }} <small>{{ 'create.rulesFixed' | t }}</small></span
+          >
+        </summary>
+        <div class="fields">
+          <div>
+            <label for="target">{{ 'create.target' | t }}</label>
+            <input
+              id="target"
+              type="number"
+              inputmode="numeric"
+              min="1"
+              [value]="rules().targetScore"
+              (input)="patch({ targetScore: +$any($event.target).value })"
+            />
+          </div>
+          <div>
+            <label for="minimum">{{ 'create.minimum' | t }}</label>
+            <input
+              id="minimum"
+              type="number"
+              inputmode="numeric"
+              min="0"
+              [value]="rules().minimumPoints"
+              (input)="patch({ minimumPoints: +$any($event.target).value })"
+            />
+          </div>
+        </div>
+        <label class="check">
           <input
             type="checkbox"
             [checked]="rules().fourOfAKindDoubling"
@@ -74,17 +90,21 @@ const SEATS = [2, 3, 4, 5, 6, 7, 8];
           {{ 'create.doubling' | t }}
         </label>
         <h3>{{ 'create.cardsPerType' | t }}</h3>
-        @for (c of cardTypes; track c) {
-          <label [for]="'card-' + c">{{ 'card.' + c | t }}</label>
-          <input
-            [id]="'card-' + c"
-            type="number"
-            inputmode="numeric"
-            min="0"
-            [value]="rules().cardCounts[c]"
-            (input)="setCount(c, +$any($event.target).value)"
-          />
-        }
+        <div class="fields">
+          @for (c of cardTypes; track c) {
+            <div>
+              <label [for]="'card-' + c">{{ 'card.' + c | t }}</label>
+              <input
+                [id]="'card-' + c"
+                type="number"
+                inputmode="numeric"
+                min="0"
+                [value]="rules().cardCounts[c]"
+                (input)="setCount(c, +$any($event.target).value)"
+              />
+            </div>
+          }
+        </div>
         @if (errors().rules; as e) {
           <p class="chip bad" role="alert">{{ e }}</p>
         }

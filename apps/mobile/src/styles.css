@@ -1,5 +1,6 @@
 :root {
   color-scheme: light dark;
+  --vl-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23888' stroke-width='2'/%3E%3C/svg%3E");
   --vl-bg: #fbf1ea;
   --vl-surface: #fff;
   --vl-ink: #2c2420;
@@ -16,7 +17,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --vl-bg: #1c1411;
     --vl-surface: #2a201b;
     --vl-ink: #f3e8e1;
@@ -31,6 +32,22 @@
     --vl-rose: #5a2626;
     --vl-on-rose: #ffd9d9;
   }
+}
+
+:root[data-theme='dark'] {
+  --vl-bg: #1c1411;
+  --vl-surface: #2a201b;
+  --vl-ink: #f3e8e1;
+  --vl-muted: #c1b0a6;
+  --vl-line: #4a3a31;
+  --vl-accent: #e0875f;
+  --vl-on-accent: #1c1411;
+  --vl-mint: #244a38;
+  --vl-on-mint: #c9f1db;
+  --vl-butter: #4d4018;
+  --vl-on-butter: #ffefb0;
+  --vl-rose: #5a2626;
+  --vl-on-rose: #ffd9d9;
 }
 
 * {
@@ -173,4 +190,186 @@ button:disabled {
 .chip.bad {
   background: var(--vl-rose);
   color: var(--vl-on-rose);
+}
+
+header {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--vl-line);
+}
+
+header img {
+  border-radius: 8px;
+}
+
+header h1 {
+  font-size: 1.25rem;
+}
+
+/* vertical rhythm for stacked form controls and expandable sections */
+form > *,
+details > * {
+  margin-top: 12px;
+}
+
+form > h2,
+details > summary {
+  margin-top: 0;
+}
+
+form > .card,
+main > .card {
+  margin-top: 16px;
+}
+
+label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.9rem;
+}
+
+label.check {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  min-height: 44px;
+  font-size: 1rem;
+}
+
+input[type='checkbox'] {
+  flex: none;
+  width: 22px;
+  min-height: 22px;
+  height: 22px;
+  accent-color: var(--vl-accent);
+}
+
+summary {
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+}
+
+/* short number fields sit side by side to keep long forms compact */
+.fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 12px;
+}
+
+.fields > div {
+  margin: 0;
+}
+
+a.button,
+button {
+  justify-content: center;
+  text-align: center;
+}
+
+.card .row {
+  margin-top: 8px;
+}
+
+main .grid {
+  gap: 8px;
+}
+
+.card {
+  padding: 10px 12px;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--vl-bg);
+}
+
+header h1 {
+  flex: 1;
+}
+
+button.icon {
+  min-width: 44px;
+  padding: 0 8px;
+  border: 0;
+  background: none;
+  font-size: 1.4rem;
+}
+
+/* labels sit right above their control */
+label + input,
+label + select {
+  margin-top: 0;
+}
+
+select {
+  padding-right: 36px;
+  appearance: none;
+  background: var(--vl-surface) var(--vl-chevron) no-repeat right 14px center;
+}
+
+/* expandable sections show a chevron */
+summary {
+  justify-content: space-between;
+  list-style: none;
+  cursor: pointer;
+}
+
+summary::-webkit-details-marker {
+  display: none;
+}
+
+summary::after {
+  content: '';
+  flex: none;
+  width: 12px;
+  height: 8px;
+  background: var(--vl-chevron) no-repeat center;
+  transition: transform 0.15s;
+}
+
+details[open] > summary::after {
+  transform: rotate(180deg);
+}
+
+summary small {
+  color: var(--vl-muted);
+  font-weight: 400;
+  font-size: 0.75rem;
+}
+
+button.danger {
+  border-color: var(--vl-on-rose);
+  background: var(--vl-rose);
+  color: var(--vl-on-rose);
+}
+
+button.go {
+  border-color: var(--vl-on-mint);
+  background: var(--vl-mint);
+  color: var(--vl-on-mint);
+  font-weight: 600;
+}
+
+button.ghost {
+  width: 100%;
+  border: 0;
+  background: none;
+  color: var(--vl-muted);
+}
+
+.bar > .danger {
+  margin-left: auto;
 }

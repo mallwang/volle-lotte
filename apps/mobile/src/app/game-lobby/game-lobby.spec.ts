@@ -55,12 +55,36 @@ describe('GameLobby', () => {
     expect(emit).toHaveBeenCalledWith('seat:ready', { ready: true }, expect.any(Function));
   });
 
-  it('adds a computer to a free seat', () => {
-    const { emit, button } = setup(gameView({}, [human('p0', false)]));
-    button('Add computer').click();
+  it('shows Ready first and Start only after the host is ready', () => {
+    const { button } = setup(gameView({}, [human('p0', false)]));
+    expect(button('Ready').disabled).toBe(true);
+    expect(button('Start game')).toBeUndefined();
+  });
+
+  it('lets the host ready up once no seat is open', () => {
+    const locked: SeatView = { state: 'locked' };
+    const { emit, button } = setup(
+      gameView({}, [human('p0', false), human('p1', true), locked, locked]),
+    );
+    button('Ready').click();
+    expect(emit).toHaveBeenCalledWith('seat:ready', { ready: true }, expect.any(Function));
+  });
+
+  it('shows cards for open seats and adds a computer to the first locked one', async () => {
+    const locked: SeatView = { state: 'locked' };
+    const { emit, el, button, update } = setup(
+      gameView({}, [human('p0', false), { state: 'open' }, locked, locked]),
+    );
+    expect(el.querySelectorAll('li')).toHaveLength(2);
+    button('Add new player').click();
+    await update();
+    const adds = [...el.querySelectorAll('button')].filter((b) =>
+      b.textContent?.includes('Add computer'),
+    );
+    adds[adds.length - 1].click();
     expect(emit).toHaveBeenCalledWith(
       'seat:set',
-      { seat: 1, mode: 'computer', difficulty: 'medium', risk: 'medium' },
+      { seat: 2, mode: 'computer', difficulty: 'medium', risk: 'medium' },
       expect.any(Function),
     );
   });

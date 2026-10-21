@@ -6,5 +6,9 @@ export const mobileDe: Record<keyof typeof mobileEn, string> = {
   'mobile.started.title': 'Das Spiel hat begonnen',
   'mobile.started.body':
     'Der Spieltisch für das Handy folgt bald. Spiele vorerst auf der Desktop-Seite.',
-  'mobile.started.back': 'Zurück zu den Spielen',
+  'mobile.started.back': 'Zurück zur Lobby',
+  'mobile.lobby.addSeat': 'Neuen Spieler hinzufügen',
+  'mobile.lobby.openSeat': 'Für Spieler öffnen',
+  'mobile.lobby.difficulty': 'Schwierigkeit',
+  'mobile.lobby.risk': 'Risiko',
 };
