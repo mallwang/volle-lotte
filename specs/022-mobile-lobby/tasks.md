@@ -72,9 +72,9 @@ description: 'Task list for Mobile lobby and game setup'
 
 **Independent Test**: Create a game with name and optional password, change settings, add a computer, ready up, start when conditions are met (quickstart scenario 2).
 
-- [ ] T015 [P] [US2] Create-game form in `apps/mobile/src/app/create-game/create-game.ts` (+ spec): name, password, seats, rules, computer options using `client-core` setup model; fixed Cancel/Create bar; values kept on rotation; `game:create` then navigate to `game/:id`
-- [ ] T016 [US2] Lobby in `apps/mobile/src/app/game-lobby/game-lobby.ts` (+ spec): seat list with ready, lock and host markers, ready/withdraw, leave, host controls (add/remove computer, difficulty and risk, lock, remove player, collapsible `<details>` settings via `game:settings`), start with the same confirmation as desktop, fixed action bar, two columns in landscape
-- [ ] T017 [US2] Handle removal by host, host change notice and `game:closed` in `game-lobby.ts` (return to list with explanation), and the `game/:id` membership guard in `apps/mobile/src/app/app.routes.ts`
+- [x] T015 [P] [US2] Create-game form in `apps/mobile/src/app/create-game/create-game.ts` (+ spec): name, password, seats, rules, computer options using `client-core` setup model; fixed Cancel/Create bar; values kept on rotation; `game:create` then navigate to `game/:id`
+- [x] T016 [US2] Lobby in `apps/mobile/src/app/game-lobby/game-lobby.ts` (+ spec): seat list with ready, lock and host markers, ready/withdraw, leave, host controls (add/remove computer, difficulty and risk, lock, remove player, collapsible `<details>` settings via `game:settings`), start with the same confirmation as desktop, fixed action bar, two columns in landscape
+- [x] T017 [US2] Handle removal by host, host change notice and `game:closed` in `game-lobby.ts` (return to list with explanation), and the `game/:id` membership guard in `apps/mobile/src/app/app.routes.ts`
 
 **Checkpoint**: US1 and US2 work; hosting from a phone is possible.
 
