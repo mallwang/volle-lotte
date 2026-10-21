@@ -73,6 +73,7 @@
     "test": {
       "executor": "@angular/build:unit-test",
       "options": {
+        "coverageReporters": ["html", "lcov"],
         "watch": false
       }
     }
