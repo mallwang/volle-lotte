@@ -100,8 +100,8 @@ description: 'Task list for Mobile lobby and game setup'
 
 **Independent Test**: At 320 px portrait and 568×320 landscape with max-length names and German texts, no horizontal scroll and no clipped primary action (quickstart scenario 4).
 
-- [ ] T021 [US4] Long-content pass: wrap or truncate names, nicknames and computer names with visible ellipsis in `apps/mobile/src/styles.css` and the component styles; confirm component styles stay within the 4/8 kB budgets
-- [ ] T022 [US4] Landscape and keyboard pass: fixed action bars stay reachable with the on-screen keyboard, reduced height scrolls vertically; fix in component styles
+- [x] T021 [US4] Long-content pass: wrap or truncate names, nicknames and computer names with visible ellipsis in `apps/mobile/src/styles.css` and the component styles; confirm component styles stay within the 4/8 kB budgets
+- [x] T022 [US4] Landscape and keyboard pass: fixed action bars stay reachable with the on-screen keyboard, reduced height scrolls vertically; fix in component styles
 - [x] T023 [US4] Manual viewport walk-through of every screen in both languages per quickstart.md (320, 480 portrait; 568, 932 landscape); fix findings
 
 ---
@@ -109,9 +109,9 @@ description: 'Task list for Mobile lobby and game setup'
 ## Phase 7: Polish & Cross-Cutting Concerns
 
 - [x] T024 [P] Record the presets deferral in `docs/mobile-roadmap.md` (M1 section) and mark M1 status in `docs/roadmap.md` if it tracks mobile status (research R6)
-- [ ] T025 [P] Run `/speckit-coverage` for `apps/mobile` and `libs/client-core`; add tests until ≥ 80 %
+- [x] T025 [P] Run `/speckit-coverage` for `apps/mobile` and `libs/client-core`; add tests until ≥ 80 %
 - [x] T026 Run `npm run lint`, `typecheck`, `test`, `build` for all projects; confirm the initial mobile bundle stays under 500 kB and desktop suites pass unmodified (SC-005)
-- [ ] T027 Run quickstart.md scenarios 1-7 (including cross-client join against a desktop host and the desktop regression) and fix findings
+- [x] T027 Run quickstart.md scenarios 1-7 (including cross-client join against a desktop host and the desktop regression) and fix findings
 - [ ] T028 Run `/speckit-sonar-validate` and resolve new issues
 
 ---

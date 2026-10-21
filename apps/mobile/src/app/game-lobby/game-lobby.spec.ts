@@ -100,4 +100,59 @@ describe('GameLobby', () => {
     expect(nav).toHaveBeenCalledWith('/');
     expect(TestBed.inject(MobileSocketService).notice()).toBe('server.banned');
   });
+
+  it('lets the host manage seats: lock, add and remove computers, remove a player', () => {
+    const computer: SeatView = { state: 'computer', name: 'Bot', difficulty: 'easy', risk: 'none' };
+    const { emit, el, button } = setup(
+      gameView({}, [human('p0', false), human('p1', false), computer, { state: 'open' }]),
+    );
+    const sent = (payload: object) =>
+      expect(emit).toHaveBeenCalledWith('seat:set', payload, expect.any(Function));
+    button('Lock').click();
+    sent({ seat: 3, mode: 'locked', difficulty: undefined, risk: undefined });
+    button('Remove this player').click();
+    expect(emit).toHaveBeenCalledWith('seat:remove', { seat: 1 }, expect.any(Function));
+    button('Remove computer').click();
+    sent({ seat: 2, mode: 'open', difficulty: undefined, risk: undefined });
+    const pick = (id: string, value: string) => {
+      const select = el.querySelector(`#${id}`) as HTMLSelectElement;
+      select.value = value;
+      select.dispatchEvent(new Event('change'));
+    };
+    pick('difficulty-2', 'hard');
+    sent({ seat: 2, mode: 'computer', difficulty: 'hard', risk: 'none' });
+    pick('risk-2', 'high');
+    sent({ seat: 2, mode: 'computer', difficulty: 'easy', risk: 'high' });
+  });
+
+  it('lets the host change settings and a guest read them only', () => {
+    const { emit, el } = setup(gameView({}, [human('p0', false)]));
+    const box = el.querySelector('input[type=checkbox]') as HTMLInputElement;
+    box.checked = !box.checked;
+    box.dispatchEvent(new Event('change'));
+    expect(emit).toHaveBeenCalledWith('game:settings', expect.any(Object), expect.any(Function));
+    const speed = el.querySelector('#speed') as HTMLInputElement;
+    speed.value = '4';
+    speed.dispatchEvent(new Event('change'));
+    expect(emit).toHaveBeenCalledWith('game:settings', { computerSpeed: 4 }, expect.any(Function));
+  });
+
+  it('leaves for the list', async () => {
+    const { button, nav } = setup(gameView({}, [human('p0', false)]));
+    button('Withdraw game').click();
+    await vi.waitFor(() => expect(nav).toHaveBeenCalledWith('/'));
+  });
+
+  it('shows an error and stays when the server refuses', async () => {
+    const view = gameView({}, [human('p0', false)]);
+    const { emit, nav, button, update, el } = setup(view);
+    emit.mockImplementation(((_e: string, _p: unknown, cb?: (a: object) => void) =>
+      cb?.({ ok: false, reason: 'notHost' })) as never);
+    button('Withdraw game').click();
+    await vi.waitFor(async () => {
+      await update();
+      expect(el.querySelector('[role=alert]')).not.toBeNull();
+    });
+    expect(nav).not.toHaveBeenCalled();
+  });
 });
