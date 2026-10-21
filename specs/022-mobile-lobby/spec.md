@@ -8,6 +8,8 @@
 
 **Input**: User description: "Mobile lobby and game setup (M1 in docs/mobile-roadmap.md). A phone user can enter a game from the mobile app: nickname and session flow, game list, create and join, host settings, seats, computer players, ready state and start, all usable on narrow screens with touch."
 
+**Design**: [design.md](design.md) (layout and states; mockup in [mockup.html](mockup.html)).
+
 ## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Sign in and browse games on a phone (Priority: P1)
@@ -77,7 +79,7 @@ As a phone user, I want every lobby screen to fit my screen with labeled, touch-
 1. **Given** any lobby screen at a supported viewport size, **When** it is displayed, **Then** the page has no horizontal scrolling and no zoom is needed to read or use primary controls.
 2. **Given** long game names, nicknames, or computer names, **When** they are displayed, **Then** they wrap or truncate visibly without pushing actions off screen.
 3. **Given** either supported language, **When** screens are displayed, **Then** labels and button texts are fully readable and all actions remain visible.
-4. **Given** a phone in landscape orientation, **When** the user is in the lobby, **Then** the screens remain usable and the primary actions remain reachable.
+4. **Given** a phone in landscape orientation, **When** the user is in the lobby, **Then** the screens remain usable, and the primary actions remain reachable by vertical scrolling or a fixed action bar despite the reduced height.
 5. **Given** the on-screen keyboard is open while editing a field, **When** the user needs to submit, **Then** the submit action can still be reached.
 
 ### Edge Cases
@@ -88,6 +90,8 @@ As a phone user, I want every lobby screen to fit my screen with labeled, touch-
 - The user is removed from the lobby by the host: they return to the list with an explanation.
 - The game starts: the mobile application acknowledges the start and does not show a broken screen, even though the phone game table is delivered in M2.
 - A nickname or game name at the maximum allowed length.
+- The on-screen keyboard is open in landscape: the focused field and its submit action stay reachable.
+- The user rotates the device while editing a form: entered values are kept.
 - Opening or refreshing a nested mobile route directly restores the matching screen or falls back to the list.
 
 ## Requirements _(mandatory)_
@@ -130,9 +134,10 @@ As a phone user, I want every lobby screen to fit my screen with labeled, touch-
 ## Assumptions
 
 - M0 (spec 021) is delivered: the mobile application is reachable at `/m/` and connects to the same API and WebSocket as desktop.
-- The initial supported viewport range is 320 to 480 CSS pixels wide in portrait, plus the same devices in landscape; tablets and desktop keep using the existing application.
+- The initial supported viewport range is 320 to 480 CSS pixels wide in portrait and 568 to 932 CSS pixels wide (320 to 430 high) in landscape; tablets and desktop keep using the existing application.
 - Supported browsers for this increment are current mobile Chrome and Safari; the formal support matrix is decided in the plan.
 - The mobile application reuses the existing nickname, session and protocol behavior and shares only client-neutral logic, as established in M0.
+- Lobby screens support both orientations. Matches are landscape-only: the rotate-device blocker for portrait is delivered with the game table in M2, and a landscape-only restriction applies to the table only, not the lobby.
 - Out of scope: the phone game table and game actions (M2); spectating, rejoining or ending running games, game over, rematch, game log and polished reconnect and accessibility work (M3); installability and update handling (M4); Capacitor and Android (M5).
 - Settings presets that exist in the desktop lobby are treated as part of host settings and are included if they are usable on narrow screens without extra design work; otherwise they are deferred and noted in the plan.
 - Running games in the list are shown with their status only; their rejoin, end and watch actions arrive with M2 and M3.

@@ -1,0 +1,1106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Mobile lobby and game setup (M1) – review mockup</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --review-bg: #f3f2ee;
+        --review-ink: #2c2a25;
+        --review-muted: #7a7669;
+        --review-line: #ddd9d0;
+        --review-accent: #b45f2c;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--review-bg);
+        color: var(--review-ink);
+        font-family:
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          sans-serif;
+      }
+      [hidden] {
+        display: none !important;
+      }
+
+      /* ============ review chrome ============ */
+      .review-header {
+        padding: 1.25rem 2rem 0.75rem;
+        border-bottom: 1px solid var(--review-line);
+      }
+      .review-eyebrow {
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--review-accent);
+        font-weight: 700;
+        margin: 0 0 0.25rem;
+      }
+      .review-header h1 {
+        margin: 0 0 0.35rem;
+        font-size: 1.35rem;
+      }
+      .review-header p {
+        margin: 0;
+        color: var(--review-muted);
+        font-size: 0.9rem;
+        max-width: 80ch;
+        line-height: 1.5;
+      }
+      .review-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem 1.5rem;
+        align-items: center;
+        padding: 0.75rem 2rem;
+        background: #fff;
+        border-bottom: 1px solid var(--review-line);
+        position: sticky;
+        top: 0;
+        z-index: 20;
+      }
+      .control-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .control-group .label {
+        font-size: 0.72rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--review-muted);
+        font-weight: 700;
+      }
+      .segmented {
+        display: inline-flex;
+        border: 1px solid var(--review-line);
+        border-radius: 8px;
+        overflow: hidden;
+        flex-wrap: wrap;
+      }
+      .segmented button {
+        appearance: none;
+        border: none;
+        background: #fff;
+        color: var(--review-ink);
+        font: inherit;
+        font-size: 0.83rem;
+        font-weight: 600;
+        padding: 0.4rem 0.7rem;
+        cursor: pointer;
+        border-right: 1px solid var(--review-line);
+      }
+      .segmented button:last-child {
+        border-right: none;
+      }
+      .segmented button:hover {
+        background: #f1efe9;
+      }
+      .segmented button[aria-pressed='true'] {
+        background: var(--review-accent);
+        color: #fff;
+      }
+      .review-stage {
+        padding: 1.5rem 1rem;
+        display: flex;
+        justify-content: center;
+        overflow-x: auto;
+      }
+      .device {
+        background: #1d1b18;
+        border-radius: 28px;
+        padding: 14px;
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
+        flex: none;
+      }
+      .device-label {
+        color: var(--review-muted);
+        font-size: 0.72rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        text-align: center;
+        margin: 0 0 0.5rem;
+      }
+      .review-footer {
+        padding: 0 2rem 2rem;
+        max-width: 1100px;
+        margin: 0 auto;
+        font-size: 0.85rem;
+        color: var(--review-muted);
+      }
+      .review-footer h3 {
+        margin: 0.75rem 0 0;
+        font-size: 0.8rem;
+        color: var(--review-ink);
+      }
+      .review-footer ul {
+        margin: 0.25rem 0;
+        padding-left: 1.1rem;
+        line-height: 1.5;
+      }
+
+      /* ============ phone (app tokens: terracotta theme) ============ */
+      .phone {
+        --bg: #fbf1ea;
+        --surface: #fffaf6;
+        --surface-2: #f3dccd;
+        --line: #e6c3ad;
+        --text: #3a241b;
+        --muted: #7b5a4c;
+        --primary: #a8431f;
+        --on-primary: #fff;
+        --mint: #d3e8d6;
+        --on-mint: #1f4a2c;
+        --lavender: #e6dcef;
+        --on-lavender: #44305f;
+        --butter: #f6e3a8;
+        --on-butter: #5a4300;
+        --rose: #f6d0cb;
+        --on-rose: #7a2118;
+        background: var(--bg);
+        color: var(--text);
+        font-size: 15px;
+        border-radius: 16px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        transition: none;
+      }
+      .phone.dark {
+        --bg: #1c1411;
+        --surface: #2a1d18;
+        --surface-2: #3b2a22;
+        --line: #52382c;
+        --text: #f5e6dc;
+        --muted: #cbaa98;
+        --primary: #f08a5d;
+        --on-primary: #2a1008;
+        --mint: #244a38;
+        --on-mint: #c9f1db;
+        --lavender: #3a3159;
+        --on-lavender: #e0d8fa;
+        --butter: #4d4018;
+        --on-butter: #ffefb0;
+        --rose: #5a2626;
+        --on-rose: #ffd9d9;
+      }
+      .phone[data-vp='portrait'] {
+        width: 360px;
+        height: 640px;
+      }
+      .phone[data-vp='landscape'] {
+        width: 740px;
+        height: 360px;
+      }
+      .phone[data-vp='small'] {
+        width: 568px;
+        height: 320px;
+      }
+      .phone h2,
+      .phone h3,
+      .phone p {
+        margin: 0;
+      }
+      .muted {
+        color: var(--muted);
+      }
+
+      .appbar {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0 0.5rem 0 0.75rem;
+        min-height: 48px;
+        border-bottom: 1px solid var(--line);
+        flex: none;
+      }
+      .appbar b {
+        font-size: 1.05rem;
+        margin-right: auto;
+      }
+      .phone:not([data-vp='portrait']) .appbar {
+        min-height: 44px;
+      }
+      .ibtn {
+        min-width: 44px;
+        min-height: 44px;
+        border: 0;
+        background: transparent;
+        color: var(--text);
+        border-radius: 8px;
+        font-size: 1.1rem;
+      }
+      .flag {
+        display: inline-block;
+        width: 1.5rem;
+        height: 1rem;
+        border-radius: 2px;
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
+        background: linear-gradient(#000 33%, #d00 33% 66%, #fc0 66%);
+        vertical-align: middle;
+      }
+
+      .main {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        padding: 0.75rem;
+      }
+      .actionbar {
+        flex: none;
+        display: flex;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        border-top: 1px solid var(--line);
+        background: var(--surface);
+      }
+      .actionbar .btn {
+        flex: 1;
+      }
+      .kb {
+        flex: none;
+        height: 0;
+        background: #b9b4ab;
+        color: #5f5b53;
+        font-size: 0.8rem;
+        text-align: center;
+        overflow: hidden;
+      }
+      .phone[data-kb='on'] .kb {
+        height: 42%;
+        padding-top: 0.5rem;
+      }
+
+      .btn {
+        border: 0;
+        border-radius: 8px;
+        padding: 0.4rem 0.9rem;
+        font: inherit;
+        font-weight: 700;
+        min-height: 44px;
+        background: var(--primary);
+        color: var(--on-primary);
+        text-align: center;
+        overflow-wrap: anywhere;
+      }
+      .btn.sec {
+        background: transparent;
+        color: var(--primary);
+        border: 1px solid var(--primary);
+      }
+      .btn.danger {
+        background: transparent;
+        color: var(--on-rose);
+        border: 1px solid var(--on-rose);
+      }
+      .btn[disabled] {
+        opacity: 0.45;
+      }
+      .btn.sm {
+        min-height: 44px;
+        padding: 0.25rem 0.6rem;
+        font-size: 0.85rem;
+      }
+
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+      }
+      .field small {
+        font-weight: 400;
+        color: var(--muted);
+      }
+      .input {
+        min-height: 44px;
+        border: 1px solid var(--line);
+        background: var(--surface);
+        color: var(--text);
+        border-radius: 8px;
+        padding: 0 0.6rem;
+        font: inherit;
+        display: flex;
+        align-items: center;
+        overflow: hidden;
+        white-space: nowrap;
+      }
+      .input.focus {
+        outline: 2px solid var(--primary);
+      }
+      .chip {
+        display: inline-block;
+        border-radius: 999px;
+        padding: 0.1rem 0.6rem;
+        font-size: 0.8rem;
+        white-space: nowrap;
+      }
+      .mint {
+        background: var(--mint);
+        color: var(--on-mint);
+      }
+      .lav {
+        background: var(--lavender);
+        color: var(--on-lavender);
+      }
+      .butter {
+        background: var(--butter);
+        color: var(--on-butter);
+      }
+      .rose {
+        background: var(--rose);
+        color: var(--on-rose);
+      }
+
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .wrap {
+        flex-wrap: wrap;
+      }
+      .grow {
+        flex: 1;
+        min-width: 0;
+      }
+      .name {
+        font-weight: 700;
+        overflow-wrap: anywhere;
+      }
+      .grid {
+        display: grid;
+        gap: 0.6rem;
+        grid-template-columns: 1fr;
+      }
+      .phone:not([data-vp='portrait']) .grid.two {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .card {
+        border: 1px solid var(--line);
+        background: var(--surface);
+        border-radius: 10px;
+        padding: 0.6rem 0.75rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+      }
+      .page-title {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.6rem;
+      }
+      .page-title h2 {
+        font-size: 1.2rem;
+        margin-right: auto;
+      }
+
+      .seat {
+        border: 1px solid var(--line);
+        background: var(--surface);
+        border-radius: 10px;
+        padding: 0.5rem 0.6rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+      }
+      .seat.me {
+        border: 2px solid var(--primary);
+      }
+      .avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: var(--surface-2);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        flex: none;
+      }
+      .sel {
+        min-height: 44px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+        padding: 0 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        font-size: 0.85rem;
+        flex: 1;
+        min-width: 7rem;
+      }
+      .tick {
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-weight: 600;
+      }
+      .box {
+        width: 22px;
+        height: 22px;
+        border: 2px solid var(--primary);
+        border-radius: 5px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--on-primary);
+        font-size: 0.8rem;
+        flex: none;
+      }
+      .box.on {
+        background: var(--primary);
+      }
+      details.panel {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--surface);
+      }
+      details.panel > summary {
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        padding: 0 0.75rem;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      details.panel > div {
+        padding: 0 0.75rem 0.6rem;
+        display: grid;
+        gap: 0.5rem;
+      }
+      .kv {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.5rem;
+        border-top: 1px solid var(--line);
+        padding-top: 0.4rem;
+      }
+      .lobby-cols {
+        display: grid;
+        gap: 0.75rem;
+        grid-template-columns: 1fr;
+      }
+      .phone:not([data-vp='portrait']) .lobby-cols {
+        grid-template-columns: 3fr 2fr;
+        height: 100%;
+      }
+      .phone:not([data-vp='portrait']) .lobby-cols > * {
+        overflow-y: auto;
+        min-height: 0;
+      }
+      .phone:not([data-vp='portrait']) .lobby-main {
+        padding: 0;
+      }
+
+      .scrim {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        display: flex;
+        z-index: 5;
+      }
+      .phone[data-vp='portrait'] .scrim {
+        align-items: flex-end;
+      }
+      .phone:not([data-vp='portrait']) .scrim {
+        align-items: center;
+        justify-content: center;
+      }
+      .dlg {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        padding: 0.9rem;
+        display: grid;
+        gap: 0.6rem;
+        width: 100%;
+      }
+      .phone[data-vp='portrait'] .dlg {
+        border-radius: 14px 14px 0 0;
+      }
+      .phone:not([data-vp='portrait']) .dlg {
+        max-width: 24rem;
+        border-radius: 12px;
+      }
+      .rotate {
+        position: absolute;
+        inset: 0;
+        z-index: 9;
+        background: var(--bg);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        text-align: center;
+        padding: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="review-header">
+      <p class="review-eyebrow">Non-functional review mockup</p>
+      <h1>Mobile lobby and game setup (M1)</h1>
+      <p>
+        Static layout sketch of the phone lobby in portrait and landscape. The terracotta tokens
+        mirror the desktop theme; real components are not chosen yet. Use the switches to compare
+        orientation, screen, long text and an open on-screen keyboard. Content areas scroll inside
+        the device like the real thing.
+      </p>
+    </header>
+
+    <div class="review-controls">
+      <div class="control-group">
+        <span class="label">Device</span>
+        <div class="segmented" id="vp-toggle">
+          <button type="button" data-vp="portrait" aria-pressed="true">Portrait 360×640</button>
+          <button type="button" data-vp="landscape" aria-pressed="false">Landscape 740×360</button>
+          <button type="button" data-vp="small" aria-pressed="false">
+            Small landscape 568×320
+          </button>
+        </div>
+      </div>
+      <div class="control-group">
+        <span class="label">Screen</span>
+        <div class="segmented" id="screen-toggle">
+          <button type="button" data-screen="nickname" aria-pressed="false">Nickname</button>
+          <button type="button" data-screen="list" aria-pressed="true">Game list</button>
+          <button type="button" data-screen="empty" aria-pressed="false">Empty list</button>
+          <button type="button" data-screen="join" aria-pressed="false">Join (password)</button>
+          <button type="button" data-screen="create" aria-pressed="false">Create game</button>
+          <button type="button" data-screen="host" aria-pressed="false">Lobby: host</button>
+          <button type="button" data-screen="guest" aria-pressed="false">Lobby: guest</button>
+          <button type="button" data-screen="started" aria-pressed="false">Game started</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <span class="label">Stress</span>
+        <div class="segmented">
+          <button type="button" id="long-toggle" aria-pressed="false">Long names + German</button>
+          <button type="button" id="kb-toggle" aria-pressed="false">Keyboard open</button>
+          <button type="button" id="theme-toggle" aria-pressed="false">Dark</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="review-stage">
+      <div>
+        <p class="device-label" id="device-label">Portrait 360×640</p>
+        <div class="device">
+          <div class="phone" id="phone" data-vp="portrait" data-screen="list" data-kb="off">
+            <header class="appbar">
+              <b>Volle Lotte</b>
+              <span class="row" style="gap: 0"
+                ><span
+                  class="ibtn"
+                  style="display: inline-flex; align-items: center; justify-content: center"
+                  ><span class="flag"></span></span
+                ><span
+                  class="ibtn"
+                  style="display: inline-flex; align-items: center; justify-content: center"
+                  >♪</span
+                ><span
+                  class="ibtn"
+                  style="display: inline-flex; align-items: center; justify-content: center"
+                  >◐</span
+                ></span
+              >
+            </header>
+
+            <!-- NICKNAME -->
+            <main class="main" data-show="nickname">
+              <div class="grid" style="max-width: 24rem; margin: 0 auto">
+                <h2 data-t="Choose a nickname|Wähle einen Spielernamen">Choose a nickname</h2>
+                <label class="field"
+                  ><span data-t="Nickname|Spielername">Nickname</span>
+                  <span class="input focus">Marku</span>
+                  <small
+                    data-t="2–20 characters. No account needed.|2–20 Zeichen. Kein Konto nötig."
+                    >2–20 characters. No account needed.</small
+                  ></label
+                >
+                <button class="btn" type="button" data-open="list" data-t="Continue|Weiter">
+                  Continue
+                </button>
+              </div>
+            </main>
+
+            <!-- GAME LIST -->
+            <main class="main" data-show="list empty join">
+              <div class="page-title">
+                <h2 data-t="Games|Spiele">Games</h2>
+                <button
+                  class="btn"
+                  type="button"
+                  data-open="create"
+                  data-t="Create game|Spiel erstellen"
+                >
+                  Create game
+                </button>
+              </div>
+              <p
+                class="muted"
+                data-show="empty"
+                style="padding: 1rem 0"
+                data-t="No games yet. Create the first one.|Noch keine Spiele. Erstelle das erste."
+              >
+                No games yet. Create the first one.
+              </p>
+              <div class="grid two" data-show="list join">
+                <div class="card">
+                  <div class="row wrap">
+                    <span class="name grow" data-t="Friday night|Freitagabend-Runde"
+                      >Friday night</span
+                    >
+                    <span class="chip mint" data-t="2 free|2 frei">2 free</span>
+                  </div>
+                  <span
+                    class="muted"
+                    data-t="Host: Anna · target 5000 · 2/4 seats|Gastgeber: Anna · Ziel 5000 · 2/4 Plätze"
+                    >Host: Anna · target 5000 · 2/4 seats</span
+                  >
+                  <div class="row wrap">
+                    <span class="chip lav"
+                      >🔒 <span data-t="Password|Passwort">Password</span></span
+                    >
+                  </div>
+                  <button class="btn" type="button" data-open="join" data-t="Join|Beitreten">
+                    Join
+                  </button>
+                </div>
+                <div class="card">
+                  <div class="row wrap">
+                    <span
+                      class="name grow"
+                      data-t="Lotte lovers|Die Lotte-Freunde und ihre sehr lange Spielrunde am Wochenende"
+                      >Lotte lovers</span
+                    >
+                    <span class="chip mint" data-t="1 free|1 frei">1 free</span>
+                  </div>
+                  <span
+                    class="muted"
+                    data-t="Host: Ben · target 3000 · 3/4 seats|Gastgeber: Benjamin-Alexander · Ziel 3000 · 3/4 Plätze"
+                    >Host: Ben · target 3000 · 3/4 seats</span
+                  >
+                  <div class="row wrap">
+                    <span class="chip butter" data-t="Open|Offen">Open</span>
+                  </div>
+                  <button class="btn" type="button" data-open="guest" data-t="Join|Beitreten">
+                    Join
+                  </button>
+                </div>
+                <div class="card">
+                  <div class="row wrap">
+                    <span class="name grow">Quick dice</span>
+                    <span class="chip lav" data-t="Full|Voll">Full</span>
+                  </div>
+                  <span
+                    class="muted"
+                    data-t="Host: Chris · target 2000 · 4/4 seats|Gastgeber: Chris · Ziel 2000 · 4/4 Plätze"
+                    >Host: Chris · target 2000 · 4/4 seats</span
+                  >
+                </div>
+                <div class="card">
+                  <div class="row wrap">
+                    <span class="name grow">Evening round</span>
+                    <span class="chip butter" data-t="Running|Läuft">Running</span>
+                  </div>
+                  <span
+                    class="muted"
+                    data-t="Host: Dana · target 5000 · 3/4 seats|Gastgeber: Dana · Ziel 5000 · 3/4 Plätze"
+                    >Host: Dana · target 5000 · 3/4 seats</span
+                  >
+                  <span
+                    class="muted"
+                    style="font-size: 0.8rem"
+                    data-t="Joining or watching comes with a later release.|Beitreten oder Zuschauen folgt in einer späteren Version."
+                    >Joining or watching comes with a later release.</span
+                  >
+                </div>
+              </div>
+            </main>
+
+            <!-- CREATE -->
+            <main class="main" data-show="create">
+              <div class="page-title">
+                <h2 data-t="Create game|Spiel erstellen">Create game</h2>
+              </div>
+              <div class="grid two">
+                <label class="field"
+                  ><span data-t="Game name|Spielname">Game name</span>
+                  <span class="input focus" data-t="Marku's game|Markus' Spiel"
+                    >Marku's game</span
+                  ></label
+                >
+                <label class="field"
+                  ><span data-t="Password (optional)|Passwort (optional)">Password (optional)</span>
+                  <span class="input">••••</span></label
+                >
+                <label class="field"
+                  ><span data-t="Seats|Plätze">Seats</span> <span class="input">4 ▾</span></label
+                >
+                <label class="field"
+                  ><span data-t="Target score|Zielpunktzahl">Target score</span>
+                  <span class="input">5000 ▾</span></label
+                >
+                <label class="field"
+                  ><span data-t="Minimum to bank|Mindestpunkte zum Anschreiben"
+                    >Minimum to bank</span
+                  >
+                  <span class="input">300</span></label
+                >
+                <label class="tick"
+                  ><span class="box on">✓</span
+                  ><span data-t="Doubling|Verdoppeln">Doubling</span></label
+                >
+                <div class="card" style="grid-column: 1 / -1">
+                  <span class="name" data-t="Computer players|Computerspieler"
+                    >Computer players</span
+                  >
+                  <div class="row wrap">
+                    <span class="chip lav">Computer 1 · medium</span>
+                    <button
+                      class="btn sec sm"
+                      type="button"
+                      data-t="Add computer|Computer hinzufügen"
+                    >
+                      Add computer
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </main>
+
+            <!-- LOBBY (host and guest share the layout) -->
+            <main class="main lobby-main" data-show="host guest">
+              <div class="lobby-cols">
+                <section class="grid" style="align-content: start">
+                  <div class="row">
+                    <h2
+                      class="grow"
+                      data-t="Lotte lovers|Die Lotte-Freunde und ihre sehr lange Spielrunde am Wochenende"
+                    >
+                      Lotte lovers
+                    </h2>
+                    <span class="chip butter" data-t="2 of 4 ready|2 von 4 bereit"
+                      >2 of 4 ready</span
+                    >
+                  </div>
+                  <div class="seat me">
+                    <div class="row">
+                      <span class="avatar">1</span>
+                      <span class="name grow" data-t="Marku (you)|Markus-Maximilian (du)"
+                        >Marku (you)</span
+                      >
+                      <span class="chip lav" data-show="host" data-t="Host|Gastgeber">Host</span>
+                    </div>
+                    <label class="tick"
+                      ><span class="box on">✓</span><span data-t="Ready|Bereit">Ready</span></label
+                    >
+                  </div>
+                  <div class="seat">
+                    <div class="row">
+                      <span class="avatar">2</span>
+                      <span class="name grow">Anna</span>
+                      <span class="chip lav" data-show="guest" data-t="Host|Gastgeber">Host</span>
+                      <span class="chip mint" data-t="Ready|Bereit">Ready</span>
+                    </div>
+                    <div class="row" data-show="host">
+                      <button
+                        class="btn danger sm"
+                        type="button"
+                        data-t="Remove player|Spieler entfernen"
+                      >
+                        Remove player
+                      </button>
+                    </div>
+                  </div>
+                  <div class="seat">
+                    <div class="row">
+                      <span class="avatar">3</span>
+                      <span class="name grow" data-t="Computer 1|Computer 1">Computer 1</span>
+                      <span class="chip mint" data-t="Ready|Bereit">Ready</span>
+                    </div>
+                    <div class="row wrap" data-show="host">
+                      <span class="sel" data-t="Difficulty: medium ▾|Stärke: mittel ▾"
+                        >Difficulty: medium ▾</span
+                      >
+                      <span class="sel" data-t="Risk: careful ▾|Risiko: vorsichtig ▾"
+                        >Risk: careful ▾</span
+                      >
+                      <button
+                        class="btn danger sm"
+                        type="button"
+                        data-t="Remove computer|Computer entfernen"
+                      >
+                        Remove computer
+                      </button>
+                    </div>
+                    <span
+                      class="muted"
+                      data-show="guest"
+                      data-t="Medium · careful|Mittel · vorsichtig"
+                      >Medium · careful</span
+                    >
+                  </div>
+                  <div class="seat">
+                    <div class="row">
+                      <span class="avatar">4</span>
+                      <span class="muted grow" data-t="Free seat|Freier Platz">Free seat</span>
+                    </div>
+                    <div class="row wrap" data-show="host">
+                      <button
+                        class="btn sec sm"
+                        type="button"
+                        data-t="Add computer|Computer hinzufügen"
+                      >
+                        Add computer
+                      </button>
+                      <button class="btn sec sm" type="button" data-t="Lock seat|Platz sperren">
+                        Lock seat
+                      </button>
+                    </div>
+                  </div>
+                </section>
+                <section class="grid" style="align-content: start">
+                  <details class="panel" open>
+                    <summary data-t="Game settings|Spieleinstellungen">Game settings</summary>
+                    <div data-show="host">
+                      <label class="field"
+                        ><span data-t="Target score|Zielpunktzahl">Target score</span
+                        ><span class="input">5000 ▾</span></label
+                      >
+                      <label class="field"
+                        ><span data-t="Minimum to bank|Mindestpunkte zum Anschreiben"
+                          >Minimum to bank</span
+                        ><span class="input">300</span></label
+                      >
+                      <label class="tick"
+                        ><span class="box on">✓</span
+                        ><span data-t="Doubling|Verdoppeln">Doubling</span></label
+                      >
+                    </div>
+                    <div data-show="guest">
+                      <div class="kv">
+                        <span data-t="Target score|Zielpunktzahl">Target score</span><b>5000</b>
+                      </div>
+                      <div class="kv">
+                        <span data-t="Minimum to bank|Mindestpunkte zum Anschreiben"
+                          >Minimum to bank</span
+                        ><b>300</b>
+                      </div>
+                      <div class="kv">
+                        <span data-t="Doubling|Verdoppeln">Doubling</span><b data-t="On|An">On</b>
+                      </div>
+                      <span
+                        class="muted"
+                        style="font-size: 0.8rem"
+                        data-t="Only the host can change settings.|Nur der Gastgeber kann Einstellungen ändern."
+                        >Only the host can change settings.</span
+                      >
+                    </div>
+                  </details>
+                </section>
+              </div>
+            </main>
+
+            <!-- GAME STARTED PLACEHOLDER -->
+            <main class="main" data-show="started">
+              <div class="grid" style="max-width: 24rem; margin: 1rem auto; text-align: center">
+                <h2 data-t="The game has started|Das Spiel hat begonnen">The game has started</h2>
+                <p
+                  class="muted"
+                  data-t="The phone game table is coming soon. Continue on a desktop or tablet for now.|Der Spieltisch für das Handy kommt bald. Spiele vorerst am Computer oder Tablet weiter."
+                >
+                  The phone game table is coming soon. Continue on a desktop or tablet for now.
+                </p>
+                <button
+                  class="btn"
+                  type="button"
+                  data-open="list"
+                  data-t="Back to games|Zurück zu den Spielen"
+                >
+                  Back to games
+                </button>
+              </div>
+            </main>
+
+            <!-- ACTION BARS -->
+            <footer class="actionbar" data-show="create">
+              <button class="btn sec" type="button" data-open="list" data-t="Cancel|Abbrechen">
+                Cancel
+              </button>
+              <button
+                class="btn"
+                type="button"
+                data-open="host"
+                data-t="Create game|Spiel erstellen"
+              >
+                Create game
+              </button>
+            </footer>
+            <footer class="actionbar" data-show="host">
+              <button
+                class="btn sec"
+                type="button"
+                data-open="list"
+                data-t="Withdraw game|Spiel zurückziehen"
+              >
+                Withdraw game
+              </button>
+              <button
+                class="btn"
+                type="button"
+                data-open="started"
+                data-t="Start game|Spiel starten"
+              >
+                Start game
+              </button>
+            </footer>
+            <footer class="actionbar" data-show="guest">
+              <button class="btn sec" type="button" data-open="list" data-t="Leave|Verlassen">
+                Leave
+              </button>
+              <button class="btn" type="button" data-t="Withdraw ready|Nicht mehr bereit">
+                Withdraw ready
+              </button>
+            </footer>
+
+            <!-- JOIN DIALOG -->
+            <div class="scrim" data-show="join">
+              <div class="dlg">
+                <h3 data-t="Join Friday night|Freitagabend-Runde beitreten">Join Friday night</h3>
+                <label class="field"
+                  ><span data-t="Password|Passwort">Password</span
+                  ><span class="input focus">••</span></label
+                >
+                <div class="row">
+                  <button
+                    class="btn sec grow"
+                    type="button"
+                    data-open="list"
+                    data-t="Cancel|Abbrechen"
+                  >
+                    Cancel
+                  </button>
+                  <button class="btn grow" type="button" data-open="guest" data-t="Join|Beitreten">
+                    Join
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="kb">on-screen keyboard (about 42% of the height)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="review-footer">
+      <h3>What to look at</h3>
+      <ul>
+        <li>
+          Primary actions (Create game, Join, Ready, Start, Leave) stay in a fixed action bar or a
+          full-width button; lists and settings scroll.
+        </li>
+        <li>
+          Landscape lobby uses two columns (seats, settings) so that more seats fit without
+          scrolling.
+        </li>
+        <li>
+          Switch "Long names + German" and "Keyboard open" in the smallest landscape size to check
+          that nothing important is clipped.
+        </li>
+        <li>
+          Portrait and landscape share the same screens; the portrait rotate blocker only applies to
+          the game table (M2).
+        </li>
+      </ul>
+      <h3>Out of scope for this mockup</h3>
+      <ul>
+        <li>
+          Session persistence and validation rules, live updates, error and lockout messages (same
+          copy as desktop).
+        </li>
+        <li>
+          Spectating, rejoining or ending running games, game log, reconnect banner (M3), game table
+          (M2).
+        </li>
+        <li>
+          Presets and the remaining create-game options (cards per type) are folded into the
+          settings section and decided in the plan.
+        </li>
+      </ul>
+    </footer>
+
+    <script>
+      const phone = document.getElementById('phone');
+      const label = document.getElementById('device-label');
+      const vpNames = {
+        portrait: 'Portrait 360×640',
+        landscape: 'Landscape 740×360',
+        small: 'Small landscape 568×320',
+      };
+      const show = () => {
+        const v = phone.dataset.screen;
+        phone.querySelectorAll('[data-show]').forEach((e) => {
+          e.toggleAttribute('hidden', !e.dataset.show.split(' ').includes(v));
+        });
+      };
+      const setScreen = (v) => {
+        phone.dataset.screen = v;
+        show();
+        document
+          .querySelectorAll('#screen-toggle button')
+          .forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.screen === v)));
+        phone.querySelectorAll('.main').forEach((m) => (m.scrollTop = 0));
+      };
+      document.getElementById('screen-toggle').addEventListener('click', (e) => {
+        const b = e.target.closest('button[data-screen]');
+        if (b) setScreen(b.dataset.screen);
+      });
+      phone
+        .querySelectorAll('[data-open]')
+        .forEach((b) => b.addEventListener('click', () => setScreen(b.dataset.open)));
+      document.getElementById('vp-toggle').addEventListener('click', (e) => {
+        const b = e.target.closest('button[data-vp]');
+        if (!b) return;
+        phone.dataset.vp = b.dataset.vp;
+        label.textContent = vpNames[b.dataset.vp];
+        document
+          .querySelectorAll('#vp-toggle button')
+          .forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      });
+      const flip = (id, fn) => {
+        const b = document.getElementById(id);
+        b.addEventListener('click', () => {
+          const on = b.getAttribute('aria-pressed') !== 'true';
+          b.setAttribute('aria-pressed', String(on));
+          fn(on);
+        });
+      };
+      flip('theme-toggle', (on) => phone.classList.toggle('dark', on));
+      flip('kb-toggle', (on) => (phone.dataset.kb = on ? 'on' : 'off'));
+      flip('long-toggle', (on) => {
+        phone.querySelectorAll('[data-t]').forEach((e) => {
+          e.dataset.en ??= e.textContent;
+          e.textContent = on ? e.dataset.t.split('|')[1] : e.dataset.en;
+        });
+      });
+      show();
+    </script>
+  </body>
+</html>

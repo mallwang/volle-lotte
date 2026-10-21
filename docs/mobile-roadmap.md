@@ -66,14 +66,14 @@ The goal is to put usable browser builds in front of real users early, then comp
 - Present a phone-oriented game table instead of scaling the desktop table to fit.
 - Support all game actions through touch, including selecting dice, throwing, securing points, drawing or playing cards, and other actions available in the current game state.
 - Keep the active player's state and turn controls clear with the maximum supported number of seats.
-- Support portrait and landscape layouts without losing the current turn.
+- Design the game table for landscape only. In portrait, show a blocker asking the user to rotate the device, without losing the current turn when rotating back. The lobby and other non-game screens keep supporting both orientations.
 - Do not use the desktop small-window resize notice as a substitute for a mobile layout.
 
 **Acceptance**
 
 - A phone user and desktop users can complete a game together.
 - A mobile player can perform every legal action in a full game without browser zoom or horizontal scrolling.
-- The game remains playable at the supported phone viewport sizes and orientations.
+- The game remains playable at the supported landscape phone viewport sizes; portrait shows the rotate blocker instead of the table.
 
 **Depends on:** M1.
 
@@ -92,7 +92,7 @@ The goal is to put usable browser builds in front of real users early, then comp
 
 - Mobile users can complete the same supported lobby and post-game flows as desktop users.
 - A temporary connection drop can recover through the existing reconnect flow without silently losing the user's place.
-- Essential controls and feedback remain usable with long text and in both supported orientations.
+- Essential controls and feedback remain usable with long text and in both orientations outside a match, and in landscape during a match.
 
 **Depends on:** M2.
 
