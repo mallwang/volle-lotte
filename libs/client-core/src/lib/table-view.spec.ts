@@ -12,7 +12,7 @@ import {
   seatRows,
   seatViews,
   totalCards,
-} from './table-view';
+} from './table-view.js';
 
 const view = (n: number, current: number, youSeat: number): GameView =>
   ({

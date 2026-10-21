@@ -1,5 +1,5 @@
 import type { Routes } from '@angular/router';
-import { membershipGuard, sessionGuard } from './core/session.guard';
+import { membershipGuard, sessionGuard, tableGuard } from './core/session.guard';
 
 /** Screens are added with their user stories; unknown paths fall back to the game list. */
 export const routes: Routes = [
@@ -21,9 +21,9 @@ export const routes: Routes = [
     loadComponent: () => import('./game-lobby/game-lobby').then((m) => m.GameLobby),
   },
   {
-    path: 'started',
-    canActivate: [sessionGuard],
-    loadComponent: () => import('./started/started').then((m) => m.Started),
+    path: 'table/:id',
+    canActivate: [sessionGuard, tableGuard],
+    loadComponent: () => import('./table/table').then((m) => m.Table),
   },
   { path: '**', redirectTo: '' },
 ];

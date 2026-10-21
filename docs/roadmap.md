@@ -47,26 +47,27 @@ Last updated: 2026-10-21. The Java -> web migration is finished (see [migration.
 
 Ordered by current priority and prerequisites; effort is a rough guess: S (a few days, mostly one app), M (engine or protocol change plus UI), L (new subsystem or wide change), XL (new app or foundation for several items). Mobile PWA work is the current top priority. R26 stays last because it is only built if its gate is met.
 
-| #                                                 | Title                                                                       | Status      | Effort |
-| ------------------------------------------------- | --------------------------------------------------------------------------- | ----------- | ------ |
-| [R3](#r3-mobile-app-as-installable-pwa)           | Mobile app as installable PWA ([spec 020](../specs/020-mobile-pwa/spec.md)) | in progress | XL     |
-| [R19](#r19-score-change-animations)               | Score change animations                                                     | idea        | S      |
-| [R27](#r27-start-countdown-screen)                | Start countdown screen                                                      | idea        | M      |
-| [R17](#r17-starting-player-draw)                  | Starting player draw                                                        | idea        | M      |
-| [R14](#r14-in-game-reactions)                     | In-game reactions                                                           | idea        | M      |
-| [R18](#r18-reshuffle-step)                        | Reshuffle step                                                              | idea        | M      |
-| [R9](#r9-rule-options-per-game)                   | Rule options per game                                                       | idea        | M      |
-| [R20](#r20-new-cards)                             | New cards                                                                   | idea        | M      |
-| [R2](#r2-e2e-suite-with-bots)                     | E2E suite with bots                                                         | planned     | L      |
-| [R4](#r4-save-and-load-games)                     | Save and load games                                                         | planned     | L      |
-| [R6](#r6-game-log)                                | Game log                                                                    | planned     | L      |
-| [R13](#r13-replay)                                | Replay                                                                      | idea        | L      |
-| [R22](#r22-user-accounts-and-administration)      | User accounts and administration                                            | idea        | XL     |
-| [R12](#r12-statistics-history-and-highscore)      | Statistics, history and highscore                                           | idea        | L      |
-| [R15](#r15-lobby-search-finished-and-saved-games) | Lobby search, finished and saved games                                      | idea        | L      |
-| [R21](#r21-tournaments)                           | Tournaments                                                                 | idea        | L      |
-| [R23](#r23-credits-and-cosmetics)                 | Credits and cosmetics                                                       | idea        | XL     |
-| [R26](#r26-short-message-keys)                    | Short message keys                                                          | idea        | S      |
+| #                                                           | Title                                                                       | Status      | Effort |
+| ----------------------------------------------------------- | --------------------------------------------------------------------------- | ----------- | ------ |
+| [R3](#r3-mobile-app-as-installable-pwa)                     | Mobile app as installable PWA ([spec 020](../specs/020-mobile-pwa/spec.md)) | in progress | XL     |
+| [R28](#r28-unify-shared-client-code-of-frontend-and-mobile) | Unify shared client code of frontend and mobile                             | planned     | L      |
+| [R19](#r19-score-change-animations)                         | Score change animations                                                     | idea        | S      |
+| [R27](#r27-start-countdown-screen)                          | Start countdown screen                                                      | idea        | M      |
+| [R17](#r17-starting-player-draw)                            | Starting player draw                                                        | idea        | M      |
+| [R14](#r14-in-game-reactions)                               | In-game reactions                                                           | idea        | M      |
+| [R18](#r18-reshuffle-step)                                  | Reshuffle step                                                              | idea        | M      |
+| [R9](#r9-rule-options-per-game)                             | Rule options per game                                                       | idea        | M      |
+| [R20](#r20-new-cards)                                       | New cards                                                                   | idea        | M      |
+| [R2](#r2-e2e-suite-with-bots)                               | E2E suite with bots                                                         | planned     | L      |
+| [R4](#r4-save-and-load-games)                               | Save and load games                                                         | planned     | L      |
+| [R6](#r6-game-log)                                          | Game log                                                                    | planned     | L      |
+| [R13](#r13-replay)                                          | Replay                                                                      | idea        | L      |
+| [R22](#r22-user-accounts-and-administration)                | User accounts and administration                                            | idea        | XL     |
+| [R12](#r12-statistics-history-and-highscore)                | Statistics, history and highscore                                           | idea        | L      |
+| [R15](#r15-lobby-search-finished-and-saved-games)           | Lobby search, finished and saved games                                      | idea        | L      |
+| [R21](#r21-tournaments)                                     | Tournaments                                                                 | idea        | L      |
+| [R23](#r23-credits-and-cosmetics)                           | Credits and cosmetics                                                       | idea        | XL     |
+| [R26](#r26-short-message-keys)                              | Short message keys                                                          | idea        | S      |
 
 ### R19. Score change animations
 
@@ -251,6 +252,45 @@ Ordered by current priority and prerequisites; effort is a rough guess: S (a few
 **Delivery backlog:** [Mobile App Roadmap](./mobile-roadmap.md).
 
 **Open questions:** Mobile/desktop selection, user-agent routing or a linked `/m/` build; shared or separate deployment. User-agent routing must not break update caching. The feature specification is [020](../specs/020-mobile-pwa/spec.md).
+
+### R28. Unify shared client code of frontend and mobile
+
+**User story:** As a maintainer, I want logic that is identical or near-identical in `apps/frontend` and `apps/mobile` to live once in `libs/client-core`, so that fixes and features land in one place and the SonarQube duplication gate keeps passing.
+
+**Background:** Spec 023 failed the duplication gate because the mobile dice roll was a verbatim copy of the frontend one. It was fixed by moving the logic into `client-core` as an undecorated `DiceRoll` class (signals only, no decorators) with a tiny `@Injectable` subclass per app, and by sharing `PIP_CELLS`. A file-by-file comparison and `jscpd` found more candidates.
+
+**Scope and constraints**
+
+Use the same pattern throughout: the shared code is a framework-light base class or pure function in `client-core`; each app keeps a thin `@Injectable` subclass or wrapper for DI and app-specific behavior. Move the tests with the code (Jest in `client-core`) and remove the then-redundant app specs. Keep the socket protocol unchanged.
+
+| Candidate               | Current state                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Proposal                                                                                                                                                                          |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Socket client           | `socket.service.ts` (374 lines) and `mobile-socket.service.ts` (254 lines) share 11 clone blocks, about 150 lines: `connect`, `send`, `emit`, `on`, `rejoin`, `resume`, `resync`, `replay`, `adopt`, `refreshLobby`, `create`, `join`, `start`, `leave`, `online`, `synced`, `session`, `settingText`. Only mobile has `action`, `preview`, `credentials`, `tableNotice`, `protocolVersion`. Only the frontend has rematch, spectate, pause, outage handling and `messages`. | A `SocketClient` base class in `client-core`; the apps extend it with their own members. Largest gain and the largest duplication in the Sonar scan, but also the biggest change. |
+| Error message           | `errorMessage()` is nearly identical. Only the frontend knows `rejectedEngine` and the `Msg` type.                                                                                                                                                                                                                                                                                                                                                                           | Move the function and `Msg` to `client-core`; depend on a minimal `{ t(key, params) }` interface instead of the concrete i18n class.                                              |
+| I18n core               | The dictionaries (`en.ts`, `de.ts`, about 450 lines each) are shared already. The lookup is not: fallback `dict[lang][key] ?? en[key] ?? key`, `{param}` interpolation, stored language, browser language. The frontend adds `<html lang>` and flags; mobile adds `mobileEn`/`mobileDe`.                                                                                                                                                                                     | An `I18n` base class that takes the dictionaries as parameters; keep `<html lang>` and flags in the frontend subclass.                                                            |
+| Theme                   | `ThemeService` and `MobileThemeService` are about 90% identical: same `localStorage` key, same system-preference default. They differ only in the DOM effect (`app-dark` class versus `data-theme`).                                                                                                                                                                                                                                                                         | A base class with an overridable `apply()`.                                                                                                                                       |
+| `TranslatePipe`         | Identical except for the injected class name (99%).                                                                                                                                                                                                                                                                                                                                                                                                                          | Share it once both apps provide the i18n service through the same injection token (follows from the I18n base class).                                                             |
+| Session guard           | Similar logic (11 versus 24 lines).                                                                                                                                                                                                                                                                                                                                                                                                                                          | Optional: extract the check as a pure function.                                                                                                                                   |
+| Lobby and setup helpers | Small clones (6-11 lines) in `create-game.ts`, `lobby.ts` versus `list.ts`, `table.ts` and `i18n.service.ts`.                                                                                                                                                                                                                                                                                                                                                                | Evaluate case by case; part of it may fit the existing `client-core` setup module.                                                                                                |
+| Confetti                | `celebration.ts` shares a 6-line block; the frontend adds sound and different constants.                                                                                                                                                                                                                                                                                                                                                                                     | Low value; only if it falls out of the other work.                                                                                                                                |
+| Design tokens           | `styles.css` is structurally similar (about 40%), not identical.                                                                                                                                                                                                                                                                                                                                                                                                             | Optional shared CSS tokens (colors, spacing) in `client-core`; depends on a design decision.                                                                                      |
+
+**Benefit:** one implementation of connection, resync, language and theme handling instead of two that drift apart; fewer changes per protocol or feature fix; lower Sonar duplication on new-code analysis; the shared logic is covered by one test suite.
+
+**Not shared on purpose:** templates and components (`nickname`, `game-lobby`, `create-game`, `table`, `game-over`). The TypeScript is partly 70-90% similar, but the frontend uses PrimeNG and a desktop layout while mobile has its own landscape components; a shared component would need more configuration than it saves. Also `index.html`, `main.ts`, `app.routes.ts` and the app-level CSS.
+
+**Recommended order**
+
+1. Socket base class: biggest gain and the main duplication risk; needs thorough tests, since both apps depend on it.
+2. I18n base class, `errorMessage` and `TranslatePipe` together.
+3. Theme base class (small).
+4. Optional leftovers: session guard, lobby and setup helpers, confetti, design tokens.
+
+Each step can be its own pull request; the existing frontend and mobile specs act as the regression net.
+
+**Dependencies:** Mobile table ([spec 023](../specs/023-mobile-game-table/spec.md)) merged; best done before M3 adds more mobile socket code ([mobile-roadmap.md](mobile-roadmap.md)).
+
+**Open questions:** Whether `client-core` may depend on `@angular/core` for signals permanently (it does now, via `DiceRoll`) or whether the shared classes should be framework-free with a thin signal adapter; how to share the Jest-based `client-core` tests with Angular's ESM build (the Jest config already transforms `@angular/*`); whether the base classes should be introduced as a single spec or one per step.
 
 ### R22. User accounts and administration
 

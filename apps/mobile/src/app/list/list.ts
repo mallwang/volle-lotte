@@ -78,7 +78,7 @@ export class List implements OnInit {
   }
 
   protected open(g: GameSummary): Promise<boolean> {
-    return this.router.navigateByUrl(g.phase === 'lobby' ? `/game/${g.id}` : '/started');
+    return this.router.navigateByUrl(g.phase === 'lobby' ? `/game/${g.id}` : `/table/${g.id}`);
   }
 
   protected closed(message: string) {

@@ -310,7 +310,8 @@ export class GameLobby {
       const g = this.socket.game();
       // removed or closed: the shell shows the server notice, the list is the way out
       if (!g) return void untracked(() => this.router.navigateByUrl('/'));
-      if (g.phase === 'running') return void untracked(() => this.router.navigateByUrl('/started'));
+      if (g.phase === 'running')
+        return void untracked(() => this.router.navigateByUrl(`/table/${g.id}`));
       if (hostId && g.hostId !== hostId) {
         const who = untracked(() => this.hostName());
         this.hostNotice.set(this.i18n.t('log.hostChanged', { who }));

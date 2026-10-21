@@ -4,7 +4,7 @@
 
 The phone version of Volle Lotte runs at `/m/` of the app address and plays with the same games as the desktop version. Rules are explained in [how-to-play.md](how-to-play.md); the desktop screens are described in the [user guide](user-guide.md). This guide only covers what is different on the phone.
 
-The phone game table is not available yet. When a game starts, a notice tells you so and you can go back to the lobby or leave the game.
+When a game starts, the phone shows its own game table, in landscape only: players on the left, cards and dice in the middle, the turn buttons on the right. In portrait a notice asks you to rotate the phone; your turn is kept. The red **Leave** button asks first, and a computer takes your seat. At the end a dialog shows the winner and the ranking.
 
 ## Table of Contents
 
@@ -35,4 +35,4 @@ Enter a name and an optional password, then choose seats and rules. The rules ca
 - **Seats**: every unlocked seat is a card with the name and badges (host, ready, computer) in their own row. Locked seats are hidden.
 - **Add new player** (host): the dashed card at the end opens the next free seat for a human (**Open for a player**) or fills it with a computer (**Add computer**). Computers have labelled **Difficulty** and **Risk** selects and the computer speed scale is marked slow, default and fast. Other players see the settings read-only.
 - **Ready and Start**: guests press **Ready** or **Not ready**. The host's **Ready** only works when no seat is open and all other players are ready; a ready host then sees **Not ready** and **Start game**.
-- **Leaving**: the red button leaves the lobby or, before the game starts, withdraws you. After the game started, **Back to the lobby** returns to the game list.
+- **Leaving**: the red button leaves the lobby or, before the game starts, withdraws you. Once the game has started, the table opens instead.

@@ -23,5 +23,5 @@ The Java reference lives as a copy in `tmp/java/` (git-ignored, read-only).
 
 <!-- SPECKIT START -->
 
-Current feature plan: [specs/022-mobile-lobby/plan.md](specs/022-mobile-lobby/plan.md)
+Current feature plan: [specs/023-mobile-game-table/plan.md](specs/023-mobile-game-table/plan.md)
 <!-- SPECKIT END -->

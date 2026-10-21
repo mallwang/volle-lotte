@@ -1,4 +1,3 @@
-/* eslint-disable */
 const { readFileSync } = require('fs');
 
 // Reading the SWC compilation config for the spec files
@@ -12,9 +11,11 @@ module.exports = {
   preset: '../../jest.preset.js',
   testEnvironment: 'node',
   transform: {
-    '^.+\\.[tj]s$': ['@swc/jest', swcJestConfig],
+    '^.+\\.[tj]s$|^.+\\.mjs$': ['@swc/jest', swcJestConfig],
   },
-  moduleFileExtensions: ['ts', 'js', 'html'],
+  // Angular ships ESM only; the dice roll uses its signals.
+  transformIgnorePatterns: ['node_modules/(?!@angular/)'],
+  moduleFileExtensions: ['ts', 'js', 'mjs', 'html'],
   coverageDirectory: 'test-output/jest/coverage',
   coverageReporters: ['html', 'lcov'],
 };

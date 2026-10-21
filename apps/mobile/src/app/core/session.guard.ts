@@ -15,3 +15,10 @@ export const membershipGuard: CanActivateFn = (route) => {
   const game = inject(MobileSocketService).game();
   return game?.id === route.paramMap.get('id') ? true : inject(Router).createUrlTree(['/']);
 };
+
+/** `table/:id` needs my seat in that game, already started (a finished game still shows its result). */
+export const tableGuard: CanActivateFn = (route) => {
+  const game = inject(MobileSocketService).game();
+  const ok = game?.id === route.paramMap.get('id') && game.you.seat >= 0 && game.phase !== 'lobby';
+  return ok ? true : inject(Router).createUrlTree(['/']);
+};

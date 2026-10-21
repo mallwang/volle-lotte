@@ -64,6 +64,7 @@
         }
       },
       "options": {
+        "port": 4201,
         "proxyConfig": "apps/mobile/proxy.conf.json"
       }
     },
