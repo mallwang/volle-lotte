@@ -1,4 +1,13 @@
-import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  output,
+  signal,
+  untracked,
+} from '@angular/core';
 import { PIP_CELLS } from 'client-core';
 import type { CardType } from 'game-rules';
 import { DiceRollService } from '../core/dice-roll';
@@ -21,7 +30,7 @@ const WARN_SECONDS = 10;
     </div>
     @if (deadline(); as at) {
       @for (d of [at]; track d) {
-        <div class="bar" aria-hidden="true" [style.animation-duration.ms]="left(d)"></div>
+        <div class="bar" aria-hidden="true" [style.animation-duration.ms]="barMs()"></div>
       }
     }
     <div class="cardrow">
@@ -222,5 +231,9 @@ export class TableBoard {
   }
 
   protected pips = (v: number | null): readonly number[] => PIP_CELLS[v ?? 0] ?? [];
-  protected left = (at: number): number => Math.max(0, at - Date.now());
+  /** Fixed per deadline: re-reading the clock on every render would speed the bar up. */
+  protected readonly barMs = computed(() => {
+    const at = this.deadline();
+    return at === null ? 0 : Math.max(0, at - untracked(() => Date.now()));
+  });
 }

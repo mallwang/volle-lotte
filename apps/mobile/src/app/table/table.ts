@@ -49,7 +49,7 @@ const logEnd = (g: GameView | null): number => (g ? g.logBase + g.log.length : 0
         [points]="g.game?.turn?.run ?? 0"
         [safe]="safe()"
         [dice]="dice()"
-        [selected]="chosen()"
+        [selected]="shownSelection()"
         [canSelect]="mine() && can('select')"
         [status]="status()"
         (toggled)="toggle($event)"
@@ -121,6 +121,10 @@ export class Table implements OnDestroy {
   protected readonly view = this.socket.game;
   protected readonly leaveOpen = signal(false);
   protected readonly chosen = signal<number[]>([]);
+  /** My own picks while I play, otherwise the active player's live preview. */
+  protected readonly shownSelection = computed(() =>
+    this.mine() ? this.chosen() : (this.view()?.preview ?? []),
+  );
   protected readonly notice = signal<Notice | null>(null);
   /** The last revealed throw and the card/player of the turn that is being shown. */
   private readonly lastThrow = signal<readonly number[]>([]);
