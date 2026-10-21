@@ -4,14 +4,17 @@ import {
   applyChange,
   decodeView,
   type Ack,
+  type Action,
   type GameChange,
   type GameSummary,
   type GameView,
   type Intents,
   type Pushes,
+  type SettingChange,
   type WireView,
 } from 'game-rules';
 import { io } from 'socket.io-client';
+import { errorMessage } from './error-message';
 import { MobileI18nService } from './i18n.service';
 
 export interface SocketLike {
@@ -53,6 +56,10 @@ export class MobileSocketService {
   readonly game = signal<GameView | null>(null);
   /** i18n key of the latest server notice (replaced session, closed game), shown by the shell. */
   readonly notice = signal<string | null>(null);
+  /** An action is on its way: further actions are ignored until the server answers (no optimistic update). */
+  readonly pending = signal(false);
+  /** Text of the latest refused action or host setting change, shown by the table. */
+  readonly tableNotice = signal<string | null>(null);
   private readonly connected = signal(this.socket.connected);
   /** False between a reconnect and the finished session replay. */
   private readonly synced = signal(true);
@@ -74,6 +81,10 @@ export class MobileSocketService {
     this.socket.on('lobby:games', ((p: Pushes['lobby:games']) => this.games.set(p.games)) as never);
     this.socket.on('game:snapshot', ((p: Pushes['game:snapshot']) => this.adopt(p.game)) as never);
     this.socket.on('game:change', ((c: GameChange) => this.change(c)) as never);
+    this.socket.on('game:settingsChanged', ((p: Pushes['game:settingsChanged']) => {
+      const last = p.changes.at(-1);
+      if (last) this.tableNotice.set(this.settingText(p.by, last));
+    }) as never);
     this.socket.on('session:replaced', (() => {
       this.active = false;
       this.session.set(null);
@@ -100,6 +111,20 @@ export class MobileSocketService {
   send<K extends keyof Intents>(event: K, payload?: Intents[K][0]): Promise<Ack<Intents[K][1]>> {
     if (!this.online()) return Promise.resolve({ ok: false, reason: 'offline' });
     return this.emit(event, payload);
+  }
+
+  /** Sends a turn action; ignored while one is pending. A refusal becomes `tableNotice`. */
+  async action(action: Action): Promise<void> {
+    if (this.pending()) return;
+    this.pending.set(true);
+    const ack = await this.send('turn:action', { action });
+    this.pending.set(false);
+    if (!ack.ok) this.tableNotice.set(errorMessage(ack, this.i18n));
+  }
+
+  /** Shares the ticked dice with the table; not blocked by `pending`, failures are not worth a message. */
+  preview(dice: number[]): void {
+    void this.send('turn:preview', { dice });
   }
 
   async start(nickname: string): Promise<Ack<Intents['session:start'][1]>> {
@@ -155,6 +180,16 @@ export class MobileSocketService {
     payload?: Intents[K][0],
   ): Promise<Ack<Intents[K][1]>> {
     return new Promise((resolve) => this.socket.emit(event, payload, resolve));
+  }
+
+  private settingText(who: string, c: SettingChange): string {
+    if (c.setting === 'computerSpeed')
+      return this.i18n.t('toast.setting.computerSpeed', {
+        who,
+        step: String(c.value),
+        name: this.i18n.t(`settings.computerSpeed.${c.value}`),
+      });
+    return this.i18n.t(`toast.setting.${c.setting}.${c.value ? 'on' : 'off'}`, { who });
   }
 
   private credentials(nickname: string, token?: string) {

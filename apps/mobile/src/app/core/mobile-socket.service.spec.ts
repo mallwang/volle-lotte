@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { PROTOCOL_VERSION, encodeView } from 'game-rules';
 import { MobileSocketService, STORAGE_KEY } from './mobile-socket.service';
+import { MobileI18nService } from './i18n.service';
 import { fakeSocket, gameView } from './testing';
 
 const started = { ok: true, token: 't1', playerId: 'p0', nickname: 'Anna' } as const;
@@ -111,5 +112,26 @@ describe('MobileSocketService', () => {
     expect(service.game()).toBeNull();
     await service.join({} as never);
     expect(service.game()?.id).toBe('g1');
+  });
+
+  it('sends actions once at a time, previews freely and reports refusals', async () => {
+    let answer: ((a: object) => void) | undefined;
+    const { fire, emit } = fakeSocket({}, true);
+    emit.mockImplementation((e: string, _p: unknown, cb?: (a: object) => void) => {
+      if (e === 'turn:action') answer = cb as never;
+      else cb?.({ ok: true });
+    });
+    const service = TestBed.inject(MobileSocketService);
+    const first = service.action({ type: 'draw' } as never);
+    expect(service.pending()).toBe(true);
+    await service.action({ type: 'draw' } as never); // ignored
+    service.preview([0]);
+    expect(emit.mock.calls.filter((c) => c[0] === 'turn:action')).toHaveLength(1);
+    expect(emit).toHaveBeenCalledWith('turn:preview', { dice: [0] }, expect.any(Function));
+    answer?.({ ok: false, reason: 'notYourTurn' });
+    await first;
+    expect(service.pending()).toBe(false);
+    expect(service.tableNotice()).toBe(TestBed.inject(MobileI18nService).t('error.notYourTurn'));
+    fire('game:settingsChanged', { by: 'Bob', changes: [{ setting: 'paused', value: true }] });
   });
 });
