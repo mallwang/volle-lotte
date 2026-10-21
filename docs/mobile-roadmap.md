@@ -61,6 +61,8 @@ The goal is to put usable browser builds in front of real users early, then comp
 
 ### M2. Play a complete game on a phone ([spec 023](../specs/023-mobile-game-table/spec.md))
 
+**Status:** implemented; the `started` placeholder screen is removed. Manual device checks are listed in the spec's quickstart.
+
 **Outcome:** A mobile player can finish a full game with desktop players.
 
 **Requirements**

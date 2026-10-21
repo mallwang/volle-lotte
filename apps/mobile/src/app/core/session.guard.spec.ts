@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { Router, UrlTree, type ActivatedRouteSnapshot } from '@angular/router';
 import { encodeView } from 'game-rules';
 import { MobileSocketService, STORAGE_KEY } from './mobile-socket.service';
-import { membershipGuard, sessionGuard } from './session.guard';
+import { membershipGuard, sessionGuard, tableGuard } from './session.guard';
 import { fakeSocket, gameView } from './testing';
 
 const run = <T>(fn: () => T) => TestBed.runInInjectionContext(fn);
@@ -39,5 +39,22 @@ describe('guards', () => {
     await TestBed.inject(MobileSocketService).start('A');
     expect(run(() => membershipGuard(route('g1'), {} as never))).toBe(true);
     expect(url(run(() => membershipGuard(route('other'), {} as never)))).toBe('/');
+  });
+
+  it('keeps table/:id for a seated player of a started game only', async () => {
+    const started = { ...gameView(), phase: 'running' as const };
+    fakeSocket({
+      'session:start': {
+        ok: true,
+        token: 't',
+        playerId: 'p0',
+        nickname: 'A',
+        game: encodeView(started),
+      },
+    });
+    expect(url(run(() => tableGuard(route('g1'), {} as never)))).toBe('/');
+    await TestBed.inject(MobileSocketService).start('A');
+    expect(run(() => tableGuard(route('g1'), {} as never))).toBe(true);
+    expect(url(run(() => tableGuard(route('other'), {} as never)))).toBe('/');
   });
 });

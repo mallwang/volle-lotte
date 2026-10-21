@@ -4,7 +4,7 @@
 
 Die Handy-Version von Volle Lotte läuft unter `/m/` der App-Adresse und spielt mit denselben Spielen wie die Desktop-Version. Die Regeln stehen in der [Spielanleitung](how-to-play.de.md), die Desktop-Ansichten in der [Benutzeranleitung](user-guide.de.md). Diese Anleitung beschreibt nur, was auf dem Handy anders ist.
 
-Der Spieltisch für das Handy ist noch nicht verfügbar. Wenn ein Spiel startet, weist ein Hinweis darauf hin und du kannst zur Lobby zurückkehren oder das Spiel verlassen.
+Wenn ein Spiel startet, öffnet sich der Spieltisch für das Handy, nur im Querformat: links die Spieler, in der Mitte Karten und Würfel, rechts die Knöpfe für den Zug. Im Hochformat bittet ein Hinweis, das Handy zu drehen; dein Zug bleibt erhalten. Der rote Knopf **Verlassen** fragt vorher nach, danach übernimmt ein Computer deinen Platz. Am Ende zeigt ein Dialog den Gewinner und die Rangliste.
 
 ## Inhaltsverzeichnis
 
@@ -35,4 +35,4 @@ Gib einen Namen und optional ein Passwort ein, wähle dann Plätze und Regeln. D
 - **Plätze**: Jeder freigegebene Platz ist eine Karte mit Name und Badges (Gastgeber, bereit, Computer) in einer eigenen Zeile. Gesperrte Plätze sind ausgeblendet.
 - **Neuen Spieler hinzufügen** (Gastgeber): Die gestrichelte Karte am Ende öffnet den nächsten freien Platz für einen Menschen (**Für Spieler öffnen**) oder besetzt ihn mit einem Computer (**Computer hinzufügen**). Computer haben beschriftete Auswahlfelder **Schwierigkeit** und **Risiko**, die Skala der Computer-Geschwindigkeit ist mit langsam, Standard und schnell beschriftet. Andere Spieler sehen die Einstellungen nur lesend.
 - **Bereit und Start**: Gäste drücken **Bereit** oder **Nicht bereit**. **Bereit** des Gastgebers funktioniert nur, wenn kein Platz offen ist und alle anderen Spieler bereit sind; ein bereiter Gastgeber sieht dann **Nicht bereit** und **Spiel starten**.
-- **Verlassen**: Der rote Knopf verlässt die Lobby oder zieht dich vor dem Start zurück. Nach dem Spielstart führt **Zurück zur Lobby** zur Spieleliste.
+- **Verlassen**: Der rote Knopf verlässt die Lobby oder zieht dich vor dem Start zurück. Nach dem Spielstart öffnet sich stattdessen der Spieltisch.

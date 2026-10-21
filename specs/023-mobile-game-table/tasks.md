@@ -32,7 +32,7 @@ description: 'Task list for M2 Mobile Game Table'
 **Purpose**: Page-level settings and routing skeleton
 
 - [x] T001 [P] Add `maximum-scale=1, user-scalable=no` to the viewport meta in `apps/mobile/src/index.html` (keep `viewport-fit=cover`)
-- [ ] T002 [P] Add the table i18n keys (about 25: rotate message, leave dialog, game over, actions, reasons, timer, seat markers, notices) to `apps/mobile/src/app/i18n/mobile-en.ts` and `apps/mobile/src/app/i18n/mobile-de.ts`; keep `apps/mobile/src/app/i18n/mobile-i18n.spec.ts` green (same keys in both languages); reuse shared keys from `libs/client-core/src/lib/i18n/` where they exist
+- [x] T002 [P] Add the table i18n keys (about 25: rotate message, leave dialog, game over, actions, reasons, timer, seat markers, notices) to `apps/mobile/src/app/i18n/mobile-en.ts` and `apps/mobile/src/app/i18n/mobile-de.ts`; keep `apps/mobile/src/app/i18n/mobile-i18n.spec.ts` green (same keys in both languages); reuse shared keys from `libs/client-core/src/lib/i18n/` where they exist
 
 ---
 
@@ -47,7 +47,7 @@ description: 'Task list for M2 Mobile Game Table'
 - [x] T005 Extend `apps/mobile/src/app/core/mobile-socket.service.ts`: signals for `turnDeadline`, `preview`, `seats`, `log` as delivered by `game:snapshot` and `game:change` (via `applyChange` and `decodeView`); `pending` signal (set on send, cleared on ack or next view change); `action(action)` sending `turn:action` (refused with `reason: 'offline'` while offline, ignored while `pending`); `preview(dice)` sending `turn:preview` (not blocked by `pending`); `leave()` sending `game:leave`; handlers for `game:settingsChanged` and `game:closed`; ack `ok: false` maps to an error message and clears `pending`. Extend `apps/mobile/src/app/core/mobile-socket.service.spec.ts` for each addition, including duplicate-send protection
 - [x] T006 [P] Create `apps/mobile/src/app/core/dice-roll.ts`, a small port of the desktop `DiceRollService`/`rollDurations` (client-only reveal of the server dice, skipped under `prefers-reduced-motion`), with `apps/mobile/src/app/core/dice-roll.spec.ts` (reference: `apps/frontend/src/app/core/dice-roll.ts`)
 - [x] T007 [P] Create `apps/mobile/src/app/core/celebration.ts` with a lazy `import('party-js')` confetti, no-op under reduced motion, with `apps/mobile/src/app/core/celebration.spec.ts` (reference: `apps/frontend/src/app/core/celebration.ts`)
-- [ ] T008 Add the `table/:id` route to `apps/mobile/src/app/app.routes.ts` using the existing session guard plus a membership guard (not seated in a running game: redirect to `''`); create the minimal container `apps/mobile/src/app/table/table.ts` (loads or rejoins the game via `game:rejoin`, exposes `game`, `current`, `isMyTurn`, `chosen` and `pending`); add the membership guard spec next to `apps/mobile/src/app/core/session.guard.spec.ts` (depends on T005)
+- [x] T008 Add the `table/:id` route to `apps/mobile/src/app/app.routes.ts` using the existing session guard plus a membership guard (not seated in a running game: redirect to `''`); create the minimal container `apps/mobile/src/app/table/table.ts` (loads or rejoins the game via `game:rejoin`, exposes `game`, `current`, `isMyTurn`, `chosen` and `pending`); add the membership guard spec next to `apps/mobile/src/app/core/session.guard.spec.ts` (depends on T005)
 
 **Checkpoint**: Shared helpers available to both apps, socket service can send turn intents, route renders an empty table.
 
@@ -59,10 +59,10 @@ description: 'Task list for M2 Mobile Game Table'
 
 **Independent Test**: In a game with a computer, hold the phone in landscape, draw, throw, select and set aside dice, throw again or bank, and reach the end of the turn; on bust the outcome is shown.
 
-- [ ] T009 [P] [US1] Create `apps/mobile/src/app/table/table-board.ts` (+ `table-board.spec.ts`): card tile with deck prompt and current card, turn points and carried points, dice 46-56 px with 6-8 px gaps and touch targets that ignore accidental drags, dice selection (toggle into `chosen`, locked dice not selectable), status line with hint text and the bust, Volle Lotte, Street and card-effect notice held for `pacing(...).noticeMs`; plain CSS, `touch-action: manipulation`
-- [ ] T010 [P] [US1] Create `apps/mobile/src/app/table/table-actions.ts` (+ `table-actions.spec.ts`): buttons draw, throw, select (confirm), bank, plus continue after Volle Lotte, each ≥ 48 px high, text labels that wrap onto two lines; a disabled action shows its reason as text above the buttons; all disabled when it is not my turn or `pending`; explanation for an invalid selection as on desktop
-- [ ] T011 [US1] Compose board and actions in `apps/mobile/src/app/table/table.ts` (+ `table.spec.ts`): derive `actions` (`{ enabled, reason }`) from `game.turn` and own turn, call `socket.action(...)`, send `turn:preview` on every change of `chosen` while it is my turn, clear `chosen` on a new turn step or throw, run the dice-roll reveal from `dice-roll.ts`, show server error messages in the status line (depends on T009, T010)
-- [ ] T012 [US1] Table root styles in `apps/mobile/src/app/table/table.ts`: three regions (players, board, actions) per [contracts/routes-and-ui.md](contracts/routes-and-ui.md), `overflow: hidden`, `100dvh`, `touch-action: manipulation`, `env(safe-area-inset-*)` padding, reduced motion respected (depends on T011)
+- [x] T009 [P] [US1] Create `apps/mobile/src/app/table/table-board.ts` (+ `table-board.spec.ts`): card tile with deck prompt and current card, turn points and carried points, dice 46-56 px with 6-8 px gaps and touch targets that ignore accidental drags, dice selection (toggle into `chosen`, locked dice not selectable), status line with hint text and the bust, Volle Lotte, Street and card-effect notice held for `pacing(...).noticeMs`; plain CSS, `touch-action: manipulation`
+- [x] T010 [P] [US1] Create `apps/mobile/src/app/table/table-actions.ts` (+ `table-actions.spec.ts`): buttons draw, throw, select (confirm), bank, plus continue after Volle Lotte, each ≥ 48 px high, text labels that wrap onto two lines; a disabled action shows its reason as text above the buttons; all disabled when it is not my turn or `pending`; explanation for an invalid selection as on desktop
+- [x] T011 [US1] Compose board and actions in `apps/mobile/src/app/table/table.ts` (+ `table.spec.ts`): derive `actions` (`{ enabled, reason }`) from `game.turn` and own turn, call `socket.action(...)`, send `turn:preview` on every change of `chosen` while it is my turn, clear `chosen` on a new turn step or throw, run the dice-roll reveal from `dice-roll.ts`, show server error messages in the status line (depends on T009, T010)
+- [x] T012 [US1] Table root styles in `apps/mobile/src/app/table/table.ts`: three regions (players, board, actions) per [contracts/routes-and-ui.md](contracts/routes-and-ui.md), `overflow: hidden`, `100dvh`, `touch-action: manipulation`, `env(safe-area-inset-*)` padding, reduced motion respected (depends on T011)
 
 **Checkpoint**: A player can play a complete turn on the phone (players column and blocker not yet present).
 
@@ -74,9 +74,9 @@ description: 'Task list for M2 Mobile Game Table'
 
 **Independent Test**: Watch games with 2, 4 and 8 seats at 568×320; the active seat is identifiable at a glance and nothing is hidden.
 
-- [ ] T013 [P] [US2] Create `apps/mobile/src/app/table/table-players.ts` (+ `table-players.spec.ts`): one row per seat from `seatViews(...)` with name (ellipsis), score and markers; active seat has a thick border, ▶ marker and fill (not color only); computer marker, replaced marker with the former nickname in the title, "offline" marker and dimmed row when disconnected, struck through when gone; names capped at 20 characters, computers show the animal name only; spec covers 2 and 8 seats and each seat state
-- [ ] T014 [US2] Add the turn timer to the strip in `apps/mobile/src/app/table/table-board.ts` (+ extend `table-board.spec.ts`): bar from `turnDeadline.at` (server clock offset as on desktop) plus seconds as text in the last 10 s; one `interval(250)` signal that runs only while a deadline exists; rules summary in the strip following `game:settingsChanged` (depends on T009)
-- [ ] T015 [US2] Place `table-players` in the container in `apps/mobile/src/app/table/table.ts` (+ extend `table.spec.ts`): the players column width 10-13 rem, the active seat follows `game.current`, long German and English card names and rules do not push scores or controls off screen (depends on T011, T013)
+- [x] T013 [P] [US2] Create `apps/mobile/src/app/table/table-players.ts` (+ `table-players.spec.ts`): one row per seat from `seatViews(...)` with name (ellipsis), score and markers; active seat has a thick border, ▶ marker and fill (not color only); computer marker, replaced marker with the former nickname in the title, "offline" marker and dimmed row when disconnected, struck through when gone; names capped at 20 characters, computers show the animal name only; spec covers 2 and 8 seats and each seat state
+- [x] T014 [US2] Add the turn timer to the strip in `apps/mobile/src/app/table/table-board.ts` (+ extend `table-board.spec.ts`): bar from `turnDeadline.at` (server clock offset as on desktop) plus seconds as text in the last 10 s; one `interval(250)` signal that runs only while a deadline exists; rules summary in the strip following `game:settingsChanged` (depends on T009)
+- [x] T015 [US2] Place `table-players` in the container in `apps/mobile/src/app/table/table.ts` (+ extend `table.spec.ts`): the players column width 10-13 rem, the active seat follows `game.current`, long German and English card names and rules do not push scores or controls off screen (depends on T011, T013)
 
 **Checkpoint**: Players column, board and actions complete the three-column layout.
 
@@ -88,8 +88,8 @@ description: 'Task list for M2 Mobile Game Table'
 
 **Independent Test**: Rotate to portrait mid-turn with dice selected, then back: same selection and state, no turn lost.
 
-- [ ] T016 [US3] Add the rotate blocker to `apps/mobile/src/app/table/table.ts`: overlay shown by `@media (orientation: portrait)` only (no TypeScript orientation state), rotate message and a Leave button, table stays mounted behind it; lobby and other screens get no blocker (depends on T012)
-- [ ] T017 [US3] Extend `apps/mobile/src/app/table/table.spec.ts`: the blocker and the table are both in the DOM, `chosen` and `pending` are unchanged after the blocker is toggled, Leave in the blocker triggers the same leave flow (depends on T016, T019)
+- [x] T016 [US3] Add the rotate blocker to `apps/mobile/src/app/table/table.ts`: overlay shown by `@media (orientation: portrait)` only (no TypeScript orientation state), rotate message and a Leave button, table stays mounted behind it; lobby and other screens get no blocker (depends on T012)
+- [x] T017 [US3] Extend `apps/mobile/src/app/table/table.spec.ts`: the blocker and the table are both in the DOM, `chosen` and `pending` are unchanged after the blocker is toggled, Leave in the blocker triggers the same leave flow (depends on T016, T019)
 
 **Checkpoint**: Rotation never changes game or selection.
 
@@ -101,9 +101,9 @@ description: 'Task list for M2 Mobile Game Table'
 
 **Independent Test**: Host on desktop, join with a phone, play to the end; leave mid-game on a second run and verify the computer takes over.
 
-- [ ] T018 [P] [US4] Create `apps/mobile/src/app/table/game-over.ts` (+ `game-over.spec.ts`): dialog from `game.result` with all players (≤ 8), winner on top, final ranking, Leave without confirmation, focus trapped; confetti through `celebration.ts` when `youWon(...)`
-- [ ] T019 [P] [US4] Create `apps/mobile/src/app/table/leave-dialog.ts` (+ `leave-dialog.spec.ts`): confirm and back, text states that a computer takes the seat, focus trapped, real `<button>` elements with visible focus
-- [ ] T020 [US4] Wire both dialogs and the Leave button of the strip into `apps/mobile/src/app/table/table.ts` (+ extend `table.spec.ts`): `leaveOpen`, `socket.leave()` then navigate to `''`, `game:closed` navigates to `''`, game over replaces the leave confirmation (depends on T011, T018, T019)
+- [x] T018 [P] [US4] Create `apps/mobile/src/app/table/game-over.ts` (+ `game-over.spec.ts`): dialog from `game.result` with all players (≤ 8), winner on top, final ranking, Leave without confirmation, focus trapped; confetti through `celebration.ts` when `youWon(...)`
+- [x] T019 [P] [US4] Create `apps/mobile/src/app/table/leave-dialog.ts` (+ `leave-dialog.spec.ts`): confirm and back, text states that a computer takes the seat, focus trapped, real `<button>` elements with visible focus
+- [x] T020 [US4] Wire both dialogs and the Leave button of the strip into `apps/mobile/src/app/table/table.ts` (+ extend `table.spec.ts`): `leaveOpen`, `socket.leave()` then navigate to `''`, `game:closed` navigates to `''`, game over replaces the leave confirmation (depends on T011, T018, T019)
 
 **Checkpoint**: A full game can be played, left and finished on the phone.
 
@@ -115,9 +115,9 @@ description: 'Task list for M2 Mobile Game Table'
 
 **Independent Test**: Start in the phone lobby and see the table open; reload on `table/:id` and return to the same state; open a running own game from the list.
 
-- [ ] T021 [P] [US5] In `apps/mobile/src/app/game-lobby/game-lobby.ts` navigate to `table/:id` when the game starts (+ extend `game-lobby.spec.ts`); remove the "table not yet available" notice and its i18n keys
-- [ ] T022 [P] [US5] In `apps/mobile/src/app/list/list.ts` send a seated player of a running game to `table/:id`, keep the M1 actions for games the user is not part of (+ extend `list.spec.ts`)
-- [ ] T023 [US5] Delete `apps/mobile/src/app/started/started.ts`, remove the `started` route in `apps/mobile/src/app/app.routes.ts` and let `**` redirect to `''`; update `apps/mobile/src/app/app.spec.ts` if it references `started` (depends on T021, T022)
+- [x] T021 [P] [US5] In `apps/mobile/src/app/game-lobby/game-lobby.ts` navigate to `table/:id` when the game starts (+ extend `game-lobby.spec.ts`); remove the "table not yet available" notice and its i18n keys
+- [x] T022 [P] [US5] In `apps/mobile/src/app/list/list.ts` send a seated player of a running game to `table/:id`, keep the M1 actions for games the user is not part of (+ extend `list.spec.ts`)
+- [x] T023 [US5] Delete `apps/mobile/src/app/started/started.ts`, remove the `started` route in `apps/mobile/src/app/app.routes.ts` and let `**` redirect to `''`; update `apps/mobile/src/app/app.spec.ts` if it references `started` (depends on T021, T022)
 
 **Checkpoint**: The entry flow is end to end; M1 placeholder is gone.
 
@@ -125,7 +125,7 @@ description: 'Task list for M2 Mobile Game Table'
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
-- [ ] T024 [P] Update `docs/roadmap.md` (M2 done), `docs/mobile-roadmap.md` if present, and the German companion files (`*.de.md`) where they exist; English only in code comments
+- [x] T024 [P] Update `docs/roadmap.md` (M2 done), `docs/mobile-roadmap.md` if present, and the German companion files (`*.de.md`) where they exist; English only in code comments
 - [ ] T025 Run `npx nx run-many -t lint typecheck test -p mobile client-core frontend` and `npx nx build mobile --configuration=production`; fix component style budget warnings by splitting styles further
 - [ ] T026 Run the manual scenarios of [quickstart.md](quickstart.md) (2, 4 and 8 seats, 568×320 / 667×375 / 932×430, rotation, double tap, timer and seat states, languages, themes, reduced motion); fix findings
 - [ ] T027 Run `npm run test:e2e` via the `run-e2e` skill for a mixed desktop and phone game, and `npm run measure:socket -- --label m2` to confirm no change in socket traffic ([docs/socket-traffic.md](../../docs/socket-traffic.md))

@@ -155,4 +155,12 @@ describe('GameLobby', () => {
     });
     expect(nav).not.toHaveBeenCalled();
   });
+
+  it('moves to the table once the game starts', async () => {
+    const view = gameView({}, [human('p0', true)]);
+    const { show, nav, update } = setup(view);
+    show({ ...view, phase: 'running' });
+    await update();
+    expect(nav).toHaveBeenCalledWith('/table/g1');
+  });
 });

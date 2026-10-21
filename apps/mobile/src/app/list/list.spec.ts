@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import type { GameSummary } from 'game-rules';
 import { MobileSocketService } from '../core/mobile-socket.service';
 import { fakeSocket } from '../core/testing';
@@ -62,5 +62,18 @@ describe('List', () => {
     const fixture = TestBed.createComponent(List);
     fixture.detectChanges();
     expect(buttons(fixture.nativeElement)).toEqual(['Rejoin']);
+  });
+
+  it('opens the table of the running game the player is seated in', () => {
+    fakeSocket();
+    TestBed.configureTestingModule({ providers: [provideRouter([])] });
+    const nav = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+    const socket = TestBed.inject(MobileSocketService);
+    socket.games.set([game({ id: 'mine', phase: 'running' })]);
+    socket.game.set({ id: 'mine' } as never);
+    const fixture = TestBed.createComponent(List);
+    fixture.detectChanges();
+    fixture.nativeElement.querySelector('button').click();
+    expect(nav).toHaveBeenCalledWith('/table/mine');
   });
 });
