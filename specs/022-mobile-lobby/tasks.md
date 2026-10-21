@@ -27,11 +27,11 @@ description: 'Task list for Mobile lobby and game setup'
 
 **Purpose**: Move the pure setup model and translations into a `scope:shared` lib so mobile can use them (research R1).
 
-- [ ] T001 Scaffold `libs/client-core` by copying the layout of `libs/computer-names` (`package.json` with name `client-core` and `nx.tags ["scope:shared"]`, `eslint.config.mjs`, `tsconfig*.json`, `.spec.swcrc`, `jest.config.cts`, `src/index.ts`), and register it in the npm workspace (`npm install`)
-- [ ] T002 Move `apps/frontend/src/app/core/setup.ts` and `setup.spec.ts` to `libs/client-core/src/lib/` with `git mv`, export from `libs/client-core/src/index.ts`
-- [ ] T003 Move `apps/frontend/src/app/i18n/en.ts`, `de.ts`, `i18n.spec.ts` to `libs/client-core/src/lib/i18n/` with `git mv`, export from `libs/client-core/src/index.ts`
-- [ ] T004 Update desktop imports to `client-core` in `apps/frontend/src/app/core/i18n.service.ts`, `setup-store.ts`, `setup-apply.ts`, `create-game/create-game.ts`, `game-lobby/game-lobby.ts`, `game-lobby/start-question-dialog.ts`, `shared/preset-bar.ts`, `shared/preset-list-dialog.ts`, `shared/preset-save-dialog.ts` and their specs (`setup-store.spec.ts`, `create-game.spec.ts`, `game-lobby.spec.ts`, `start-question-dialog.spec.ts`, `preset-*.spec.ts`); add `client-core` as dependency in `apps/frontend/package.json` and `apps/mobile/package.json` if the other libs are listed there
-- [ ] T005 Run `npx nx run-many -t lint,typecheck,test -p client-core,frontend` and confirm desktop expectations are untouched (SC-005)
+- [x] T001 Scaffold `libs/client-core` by copying the layout of `libs/computer-names` (`package.json` with name `client-core` and `nx.tags ["scope:shared"]`, `eslint.config.mjs`, `tsconfig*.json`, `.spec.swcrc`, `jest.config.cts`, `src/index.ts`), and register it in the npm workspace (`npm install`)
+- [x] T002 Move `apps/frontend/src/app/core/setup.ts` and `setup.spec.ts` to `libs/client-core/src/lib/` with `git mv`, export from `libs/client-core/src/index.ts`
+- [x] T003 Move `apps/frontend/src/app/i18n/en.ts`, `de.ts`, `i18n.spec.ts` to `libs/client-core/src/lib/i18n/` with `git mv`, export from `libs/client-core/src/index.ts`
+- [x] T004 Update desktop imports to `client-core` in `apps/frontend/src/app/core/i18n.service.ts`, `setup-store.ts`, `setup-apply.ts`, `create-game/create-game.ts`, `game-lobby/game-lobby.ts`, `game-lobby/start-question-dialog.ts`, `shared/preset-bar.ts`, `shared/preset-list-dialog.ts`, `shared/preset-save-dialog.ts` and their specs (`setup-store.spec.ts`, `create-game.spec.ts`, `game-lobby.spec.ts`, `start-question-dialog.spec.ts`, `preset-*.spec.ts`); add `client-core` as dependency in `apps/frontend/package.json` and `apps/mobile/package.json` if the other libs are listed there
+- [x] T005 Run `npx nx run-many -t lint,typecheck,test -p client-core,frontend` and confirm desktop expectations are untouched (SC-005)
 
 ---
 

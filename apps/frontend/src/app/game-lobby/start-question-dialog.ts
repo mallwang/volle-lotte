@@ -2,7 +2,7 @@ import { Component, inject, input, model, output } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { I18nService } from '../core/i18n.service';
-import { describeSetup, type Setup } from '../core/setup';
+import { describeSetup, type Setup } from 'client-core';
 import { TranslatePipe } from '../core/translate.pipe';
 
 /** Asked on "Start game" when the setup is not known to be saved; closing it leaves the host in the lobby. */

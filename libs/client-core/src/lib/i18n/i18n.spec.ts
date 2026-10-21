@@ -1,6 +1,6 @@
-import { de } from './de';
+import { de } from './de.js';
 import type { RejectionReason, RulesErrorCode } from 'game-rules';
-import { en } from './en';
+import { en } from './en.js';
 
 const placeholders = (s: string) => [...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
 
@@ -11,7 +11,7 @@ describe('dictionaries', () => {
 
   it('have the same placeholders per key', () => {
     for (const [key, text] of Object.entries(en)) {
-      expect(placeholders(de[key as keyof typeof en]), key).toEqual(placeholders(text));
+      expect(placeholders(de[key as keyof typeof en])).toEqual(placeholders(text));
     }
   });
 
@@ -35,8 +35,8 @@ describe('dictionaries', () => {
       belowMinimum: true,
       nothingToBank: true,
     };
-    for (const k of Object.keys(rules)) expect(en, k).toHaveProperty(`rules.${k}`);
-    for (const k of Object.keys(engine)) expect(en, k).toHaveProperty(`engine.${k}`);
+    for (const k of Object.keys(rules)) expect(Object.hasOwn(en, `rules.${k}`)).toBe(true);
+    for (const k of Object.keys(engine)) expect(Object.hasOwn(en, `engine.${k}`)).toBe(true);
   });
 });
 
@@ -50,8 +50,8 @@ describe('computer name texts', () => {
   ];
 
   it.each(keys)('%s exists in both languages and differs between them', (key) => {
-    expect(en[key as keyof typeof en], key).toBeTruthy();
-    expect(de[key as keyof typeof de], key).toBeTruthy();
+    expect(en[key as keyof typeof en]).toBeTruthy();
+    expect(de[key as keyof typeof de]).toBeTruthy();
     expect(de[key as keyof typeof de]).not.toBe(en[key as keyof typeof en]);
   });
 });

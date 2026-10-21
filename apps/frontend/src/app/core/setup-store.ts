@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import { MAX_PRESETS, MAX_PRESET_NAME, sanitizeSetup, type Preset, type Setup } from './setup';
+import { MAX_PRESETS, MAX_PRESET_NAME, sanitizeSetup, type Preset, type Setup } from 'client-core';
 
 const LAST_KEY = 'vl-last-setup';
 const PRESETS_KEY = 'vl-presets';

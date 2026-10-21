@@ -16,7 +16,7 @@ import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
 import { SetupStore } from '../core/setup-store';
-import { MAX_PRESET_NAME, MAX_PRESETS, type Preset, type Setup } from '../core/setup';
+import { MAX_PRESET_NAME, MAX_PRESETS, type Preset, type Setup } from 'client-core';
 import { TranslatePipe } from '../core/translate.pipe';
 
 /** Saves a snapshot of `setup` under a name; asks before replacing and explains the limit. */

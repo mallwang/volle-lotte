@@ -1,5 +1,5 @@
 import type { Ack, ErrorAck, Intents } from 'game-rules';
-import { planComputers, type ComputerSeat, type Setup } from './setup';
+import { planComputers, type ComputerSeat, type Setup } from 'client-core';
 import type { SocketService } from './socket.service';
 import type { GameView } from 'game-rules';
 

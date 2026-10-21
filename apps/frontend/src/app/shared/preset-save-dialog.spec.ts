@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { providePrimeNG } from 'primeng/config';
-import { defaultSetup, MAX_PRESETS, type Preset } from '../core/setup';
+import { defaultSetup, MAX_PRESETS, type Preset } from 'client-core';
 import { SetupStore } from '../core/setup-store';
 import { PresetSaveDialog } from './preset-save-dialog';
 

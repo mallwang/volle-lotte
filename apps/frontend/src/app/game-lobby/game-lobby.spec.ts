@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import type { SeatView } from 'game-rules';
-import { defaultSetup, setupFromGame, type Setup } from '../core/setup';
+import { defaultSetup, setupFromGame, type Setup } from 'client-core';
 import { SetupStore } from '../core/setup-store';
 import { LeaveGame } from '../core/leave-game';
 import { SocketService } from '../core/socket.service';

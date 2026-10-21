@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 import { providePrimeNG } from 'primeng/config';
 import { defaultRules } from 'game-rules';
 import { SetupStore } from '../core/setup-store';
-import { defaultSetup } from '../core/setup';
+import { defaultSetup } from 'client-core';
 import { SocketService } from '../core/socket.service';
 import { expectNoA11yViolations, inBothModes, stubSocket } from '../core/testing';
 import { CreateGame } from './create-game';

@@ -1,7 +1,7 @@
 import { Component, inject, input, output, signal } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { SetupStore } from '../core/setup-store';
-import type { Preset, Setup } from '../core/setup';
+import type { Preset, Setup } from 'client-core';
 import { TranslatePipe } from '../core/translate.pipe';
 import { PresetListDialog } from './preset-list-dialog';
 import { PresetSaveDialog } from './preset-save-dialog';

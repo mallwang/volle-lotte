@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { defaultSetup, MAX_PRESETS, type Setup } from './setup';
+import { defaultSetup, MAX_PRESETS, type Setup } from 'client-core';
 import { SetupStore } from './setup-store';
 
 const make = () => {
