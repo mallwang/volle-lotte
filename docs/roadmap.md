@@ -248,6 +248,8 @@ Ordered by current priority and prerequisites; effort is a rough guess: S (a few
 
 **Dependencies:** Existing protocol-version reporting, desktop/tablet scope ([spec 008](../specs/008-desktop-min-size-table-polish/spec.md)) and sounds ([spec 019](../specs/019-sounds/spec.md)); no new roadmap prerequisite.
 
+**Delivery backlog:** [Mobile App Roadmap](./mobile-roadmap.md).
+
 **Open questions:** Mobile/desktop selection, user-agent routing or a linked `/m/` build; shared or separate deployment. User-agent routing must not break update caching. The feature specification is [020](../specs/020-mobile-pwa/spec.md).
 
 ### R22. User accounts and administration
