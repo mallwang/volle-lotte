@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, type OnInit } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import type { GameSummary } from 'game-rules';
 import { errorMessage } from '../core/error-message';
@@ -45,6 +45,8 @@ import { TranslatePipe } from '../core/translate.pipe';
           </p>
           @if (g.banned) {
             <p class="chip bad" role="alert">{{ 'error.banned' | t }}</p>
+          } @else if (socket.game()?.id === g.id) {
+            <button type="button" (click)="open(g)">{{ 'lobby.rejoin' | t }}</button>
           } @else if (g.phase === 'lobby') {
             @if (g.seatsUsed < g.seatsTotal) {
               <button type="button" (click)="selected.set(g)">{{ 'lobby.join' | t }}</button>
@@ -62,13 +64,22 @@ import { TranslatePipe } from '../core/translate.pipe';
     }
   `,
 })
-export class List {
+export class List implements OnInit {
   protected readonly socket = inject(MobileSocketService);
   private readonly router = inject(Router);
   private readonly i18n = inject(MobileI18nService);
   /** Game the join dialog is open for. */
   protected readonly selected = signal<GameSummary | null>(null);
   protected readonly error = signal('');
+
+  /** The push list is not received while seated, so refresh it when the screen opens. */
+  ngOnInit(): void {
+    void this.socket.refreshLobby();
+  }
+
+  protected open(g: GameSummary): Promise<boolean> {
+    return this.router.navigateByUrl(g.phase === 'lobby' ? `/game/${g.id}` : '/started');
+  }
 
   protected closed(message: string) {
     this.selected.set(null);

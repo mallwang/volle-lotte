@@ -52,4 +52,15 @@ describe('List', () => {
     expect(el.textContent).toContain('Running');
     expect(el.querySelectorAll('[role=alert]')).toHaveLength(1);
   });
+
+  it('offers the way back into the game the player is seated in', () => {
+    fakeSocket();
+    TestBed.configureTestingModule({ providers: [provideRouter([])] });
+    const socket = TestBed.inject(MobileSocketService);
+    socket.games.set([game({ id: 'mine', phase: 'running' })]);
+    socket.game.set({ id: 'mine' } as never);
+    const fixture = TestBed.createComponent(List);
+    fixture.detectChanges();
+    expect(buttons(fixture.nativeElement)).toEqual(['Rejoin']);
+  });
 });
