@@ -38,7 +38,7 @@ The goal is to put usable browser builds in front of real users early, then comp
 
 **Depends on:** None.
 
-### M1. Mobile lobby and game setup
+### M1. Mobile lobby and game setup ([spec 022](../specs/022-mobile-lobby/spec.md))
 
 **Outcome:** A phone user can enter a game from the mobile application.
 
@@ -59,7 +59,7 @@ The goal is to put usable browser builds in front of real users early, then comp
 
 **Depends on:** M0.
 
-### M2. Play a complete game on a phone
+### M2. Play a complete game on a phone ([spec 023](../specs/023-mobile-game-table/spec.md))
 
 **Outcome:** A mobile player can finish a full game with desktop players.
 
