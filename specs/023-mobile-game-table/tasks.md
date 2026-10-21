@@ -126,9 +126,9 @@ description: 'Task list for M2 Mobile Game Table'
 ## Phase 8: Polish & Cross-Cutting Concerns
 
 - [x] T024 [P] Update `docs/roadmap.md` (M2 done), `docs/mobile-roadmap.md` if present, and the German companion files (`*.de.md`) where they exist; English only in code comments
-- [ ] T025 Run `npx nx run-many -t lint typecheck test -p mobile client-core frontend` and `npx nx build mobile --configuration=production`; fix component style budget warnings by splitting styles further
-- [ ] T026 Run the manual scenarios of [quickstart.md](quickstart.md) (2, 4 and 8 seats, 568×320 / 667×375 / 932×430, rotation, double tap, timer and seat states, languages, themes, reduced motion); fix findings
-- [ ] T027 Run `npm run test:e2e` via the `run-e2e` skill for a mixed desktop and phone game, and `npm run measure:socket -- --label m2` to confirm no change in socket traffic ([docs/socket-traffic.md](../../docs/socket-traffic.md))
+- [x] T025 Run `npx nx run-many -t lint typecheck test -p mobile client-core frontend` and `npx nx build mobile --configuration=production`; fix component style budget warnings by splitting styles further
+- [x] T026 Run the manual scenarios of [quickstart.md](quickstart.md) (2, 4 and 8 seats, 568×320 / 667×375 / 932×430, rotation, double tap, timer and seat states, languages, themes, reduced motion); fix findings
+- [x] T027 Run `npm run test:e2e` via the `run-e2e` skill for a mixed desktop and phone game, and `npm run measure:socket -- --label m2` to confirm no change in socket traffic ([docs/socket-traffic.md](../../docs/socket-traffic.md))
 
 ---
 
