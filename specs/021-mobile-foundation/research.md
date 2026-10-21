@@ -68,3 +68,11 @@
 - **Shared frontend extraction**: No broad refactor. Existing `game-rules` already contains the protocol contract; extraction depends on evidence from the focused inventory.
 - **Native platform**: Capacitor config only in M0; emulator and native projects are deferred.
 - **Release tooling**: Keep the desktop/backend release group unchanged unless the mobile project generator produces a separately versioned distributable. The mobile browser build is bundled into backend image tags.
+
+## Final Reuse Audit (implemented)
+
+- `apps/mobile` imports `PROTOCOL_VERSION` from `game-rules` only; no protocol declaration is copied.
+- `MobileConnectionService` is a ~20-line connectivity signal over `socket.io-client`; the desktop `SocketService` stays in `apps/frontend`. No shared-code extraction was needed, so no `libs/` changes or tests were added.
+- `computer-names`, setup helpers and table sizing are not used by the M0 shell and stay where they are.
+- Capacitor: `@capacitor/core` and `@capacitor/cli` 8.x as root devDependencies; `apps/mobile/capacitor.config.ts` points `webDir` at `dist/apps/mobile-capacitor/browser`.
+- Backend routing moved from `main.ts` into `apps/backend/src/serve-frontend.ts` (so it is unit-testable without booting the app); `MOBILE_WEB_ROOT` is served at `/m/`.

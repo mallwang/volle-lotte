@@ -16,8 +16,8 @@ description: 'Implementation tasks for the mobile delivery foundation'
 
 **Purpose**: Establish the mobile Angular project using the workspace's existing Nx conventions.
 
-- [ ] T001 Create the Angular mobile application project and minimal app entry points under `apps/mobile/`, following `apps/frontend/project.json` and the existing Angular application conventions.
-- [ ] T002 Add the `scope:mobile` dependency constraint to `eslint.config.mjs` so the mobile project may depend on `scope:shared` projects only; tag the project in `apps/mobile/project.json`.
+- [x] T001 Create the Angular mobile application project and minimal app entry points under `apps/mobile/`, following `apps/frontend/project.json` and the existing Angular application conventions.
+- [x] T002 Add the `scope:mobile` dependency constraint to `eslint.config.mjs` so the mobile project may depend on `scope:shared` projects only; tag the project in `apps/mobile/project.json`.
 
 ---
 
@@ -25,7 +25,7 @@ description: 'Implementation tasks for the mobile delivery foundation'
 
 **Purpose**: Complete the required shared-code assessment before mobile integration work.
 
-- [ ] T003 Verify the reuse assessment against `libs/game-rules/src/lib/protocol.ts`, `libs/computer-names/`, `apps/frontend/src/app/core/socket.service.ts`, and the setup/table helpers; update `specs/021-mobile-foundation/research.md` with each candidate's reuse/extraction/leave-in-place decision and rationale before extracting any code.
+- [x] T003 Verify the reuse assessment against `libs/game-rules/src/lib/protocol.ts`, `libs/computer-names/`, `apps/frontend/src/app/core/socket.service.ts`, and the setup/table helpers; update `specs/021-mobile-foundation/research.md` with each candidate's reuse/extraction/leave-in-place decision and rationale before extracting any code.
 
 **Checkpoint**: The mobile project boundary and shared-code decisions are ready; user-story work can proceed.
 
@@ -39,18 +39,18 @@ description: 'Implementation tasks for the mobile delivery foundation'
 
 ### Tests for User Story 1
 
-- [ ] T004 [P] [US1] Add mobile shell rendering and route tests in `apps/mobile/src/app/app.spec.ts`, covering the initial shell and direct loading of the mobile entry route.
-- [ ] T005 [P] [US1] Add mobile backend-connection tests in `apps/mobile/src/app/core/mobile-connection.service.spec.ts`, covering same-origin runtime configuration and Socket.IO connection behavior.
-- [ ] T006 [P] [US1] Add backend static-routing tests in `apps/backend/src/main.spec.ts`, covering `/m/`, nested mobile routes, mobile assets, desktop routes, and API/Socket.IO fallback exclusions.
+- [x] T004 [P] [US1] Add mobile shell rendering and route tests in `apps/mobile/src/app/app.spec.ts`, covering the initial shell and direct loading of the mobile entry route.
+- [x] T005 [P] [US1] Add mobile backend-connection tests in `apps/mobile/src/app/core/mobile-connection.service.spec.ts`, covering same-origin runtime configuration and Socket.IO connection behavior.
+- [x] T006 [P] [US1] Add backend static-routing tests in `apps/backend/src/main.spec.ts`, covering `/m/`, nested mobile routes, mobile assets, desktop routes, and API/Socket.IO fallback exclusions.
 
 ### Implementation for User Story 1
 
-- [ ] T007 [US1] Implement the minimal mobile application shell and mobile route in `apps/mobile/src/app/`, with no lobby or gameplay UI.
-- [ ] T008 [US1] Implement the mobile connection integration in `apps/mobile/src/app/core/mobile-connection.service.ts`, using the existing same-origin backend and shared protocol types rather than copying protocol declarations or extracting the desktop `SocketService`.
-- [ ] T009 [US1] Configure the production browser build base path as `/m/` and its browser output in `apps/mobile/project.json` and `apps/mobile/src/index.html`.
-- [ ] T010 [US1] Serve mobile static assets and nested-route fallback from a separate `MOBILE_WEB_ROOT` asset root in `apps/backend/src/main.ts`, before desktop fallback, while preserving `/api` and `/socket.io` behavior.
-- [ ] T011 [US1] Update `Dockerfile` to build the mobile browser target, set `MOBILE_WEB_ROOT`, and copy its browser assets into the runtime image alongside the existing desktop assets and backend.
-- [ ] T012 [US1] Update `specs/021-mobile-foundation/quickstart.md` with the actual mobile Nx targets, one-container smoke checks, unique candidate image tag deployment, test-stack rollback, and desktop regression steps.
+- [x] T007 [US1] Implement the minimal mobile application shell and mobile route in `apps/mobile/src/app/`, with no lobby or gameplay UI.
+- [x] T008 [US1] Implement the mobile connection integration in `apps/mobile/src/app/core/mobile-connection.service.ts`, using the existing same-origin backend and shared protocol types rather than copying protocol declarations or extracting the desktop `SocketService`.
+- [x] T009 [US1] Configure the production browser build base path as `/m/` and its browser output in `apps/mobile/project.json` and `apps/mobile/src/index.html`.
+- [x] T010 [US1] Serve mobile static assets and nested-route fallback from a separate `MOBILE_WEB_ROOT` asset root in `apps/backend/src/main.ts`, before desktop fallback, while preserving `/api` and `/socket.io` behavior.
+- [x] T011 [US1] Update `Dockerfile` to build the mobile browser target, set `MOBILE_WEB_ROOT`, and copy its browser assets into the runtime image alongside the existing desktop assets and backend.
+- [x] T012 [US1] Update `specs/021-mobile-foundation/quickstart.md` with the actual mobile Nx targets, one-container smoke checks, unique candidate image tag deployment, test-stack rollback, and desktop regression steps.
 
 **Checkpoint**: The combined image serves the mobile browser app and existing desktop/API/Socket.IO routes independently.
 
@@ -64,7 +64,7 @@ description: 'Implementation tasks for the mobile delivery foundation'
 
 ### Implementation for User Story 2
 
-- [ ] T013 [US2] Compare the implemented mobile imports and any shared-code changes with the assessment in `specs/021-mobile-foundation/research.md`; record the final rationale there, keep UI/framework-coupled code in `apps/frontend/`, and add relevant tests in the affected `libs/` project if a concrete client-neutral extraction was required.
+- [x] T013 [US2] Compare the implemented mobile imports and any shared-code changes with the assessment in `specs/021-mobile-foundation/research.md`; record the final rationale there, keep UI/framework-coupled code in `apps/frontend/`, and add relevant tests in the affected `libs/` project if a concrete client-neutral extraction was required.
 
 **Checkpoint**: The mobile app reuses only justified shared behavior, and the code-sharing decision is traceable.
 
@@ -78,10 +78,10 @@ description: 'Implementation tasks for the mobile delivery foundation'
 
 ### Implementation for User Story 3
 
-- [ ] T014 [US3] Add matching `@capacitor/core` and `@capacitor/cli` dependencies on the same major version selected in `specs/021-mobile-foundation/research.md` to the root `package.json` and `package-lock.json`, without adding `@capacitor/android`, `@capacitor/ios`, Ionic UI, or the `@nxext/capacitor` plugin.
-- [ ] T015 [US3] Add `apps/mobile/capacitor.config.ts` with app ID `family.allwang.vollelotte.mobile`, app name `Volle Lotte`, and an explicit `webDir` for the relative-base Capacitor output.
-- [ ] T016 [US3] Add a separate relative-base Capacitor build configuration and output path in `apps/mobile/project.json`, keeping it distinct from the `/m/` browser build and outside the Docker runtime assets.
-- [ ] T017 [US3] Verify both mobile build outputs and the configured Capacitor `webDir`; update `specs/021-mobile-foundation/quickstart.md` with the exact commands and expected asset-base checks.
+- [x] T014 [US3] Add matching `@capacitor/core` and `@capacitor/cli` dependencies on the same major version selected in `specs/021-mobile-foundation/research.md` to the root `package.json` and `package-lock.json`, without adding `@capacitor/android`, `@capacitor/ios`, Ionic UI, or the `@nxext/capacitor` plugin.
+- [x] T015 [US3] Add `apps/mobile/capacitor.config.ts` with app ID `family.allwang.vollelotte.mobile`, app name `Volle Lotte`, and an explicit `webDir` for the relative-base Capacitor output.
+- [x] T016 [US3] Add a separate relative-base Capacitor build configuration and output path in `apps/mobile/project.json`, keeping it distinct from the `/m/` browser build and outside the Docker runtime assets.
+- [x] T017 [US3] Verify both mobile build outputs and the configured Capacitor `webDir`; update `specs/021-mobile-foundation/quickstart.md` with the exact commands and expected asset-base checks.
 
 **Checkpoint**: Capacitor can consume the mobile web assets without requiring native project generation or emulator tooling.
 
@@ -91,8 +91,8 @@ description: 'Implementation tasks for the mobile delivery foundation'
 
 **Purpose**: Validate M0 as a complete release increment and document the real test deployment procedure.
 
-- [ ] T018 Run the documented mobile, desktop, backend, lint, typecheck, and unit-test targets from `specs/021-mobile-foundation/quickstart.md`; resolve failures in the affected project files.
-- [ ] T019 Build and smoke-test the combined Docker image using the routes in `specs/021-mobile-foundation/contracts/mobile-entry.md`; confirm desktop, mobile, API, and Socket.IO behavior together.
+- [x] T018 Run the documented mobile, desktop, backend, lint, typecheck, and unit-test targets from `specs/021-mobile-foundation/quickstart.md`; resolve failures in the affected project files.
+- [x] T019 Build and smoke-test the combined Docker image using the routes in `specs/021-mobile-foundation/contracts/mobile-entry.md`; confirm desktop, mobile, API, and Socket.IO behavior together.
 - [ ] T020 Deploy a uniquely tagged candidate image to the isolated test stack by following `specs/021-mobile-foundation/quickstart.md`; verify the phone-browser mobile entry and desktop entry, and confirm production and its data volume remain unchanged.
 
 ---

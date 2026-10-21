@@ -22,6 +22,7 @@ npx nx run frontend:build:production
 npx nx run backend:build
 npx nx run mobile:lint
 npx nx run mobile:typecheck
+npx nx run backend:test
 npx nx run mobile:test
 ```
 
@@ -29,7 +30,7 @@ Expected results:
 
 - All Nx targets succeed from a clean checkout.
 - The browser build contains an `index.html` with URLs rooted at `/m/`.
-- The Capacitor build contains an `index.html` with relative asset URLs at the configured `webDir`.
+- The Capacitor build (`dist/apps/mobile-capacitor/browser`, the `webDir` in `apps/mobile/capacitor.config.ts`) contains an `index.html` with `<base href="./">`; check with `grep '<base' dist/apps/mobile*/browser/index.html` (`/m/` vs `./`).
 - The desktop build still emits its current browser output.
 - `mobile` can import shared libraries such as `game-rules`, and lint rejects a dependency on `scope:backend` or `scope:frontend`.
 
