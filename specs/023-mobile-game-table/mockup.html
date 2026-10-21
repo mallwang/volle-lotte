@@ -1,0 +1,1124 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Mobile game table (M2) – review mockup</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --review-bg: #f3f2ee;
+        --review-ink: #2c2a25;
+        --review-muted: #7a7669;
+        --review-line: #ddd9d0;
+        --review-accent: #b45f2c;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--review-bg);
+        color: var(--review-ink);
+        font-family:
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          sans-serif;
+      }
+      [hidden] {
+        display: none !important;
+      }
+
+      /* ============ review chrome ============ */
+      .review-header {
+        padding: 1.25rem 2rem 0.75rem;
+        border-bottom: 1px solid var(--review-line);
+      }
+      .review-eyebrow {
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--review-accent);
+        font-weight: 700;
+        margin: 0 0 0.25rem;
+      }
+      .review-header h1 {
+        margin: 0 0 0.35rem;
+        font-size: 1.35rem;
+      }
+      .review-header p {
+        margin: 0;
+        color: var(--review-muted);
+        font-size: 0.9rem;
+        max-width: 80ch;
+        line-height: 1.5;
+      }
+      .review-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem 1.5rem;
+        align-items: center;
+        padding: 0.75rem 2rem;
+        background: #fff;
+        border-bottom: 1px solid var(--review-line);
+        position: sticky;
+        top: 0;
+        z-index: 20;
+      }
+      .control-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .control-group .label {
+        font-size: 0.72rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--review-muted);
+        font-weight: 700;
+      }
+      .segmented {
+        display: inline-flex;
+        border: 1px solid var(--review-line);
+        border-radius: 8px;
+        overflow: hidden;
+        flex-wrap: wrap;
+      }
+      .segmented button {
+        appearance: none;
+        border: none;
+        background: #fff;
+        color: var(--review-ink);
+        font: inherit;
+        font-size: 0.83rem;
+        font-weight: 600;
+        padding: 0.4rem 0.7rem;
+        cursor: pointer;
+        border-right: 1px solid var(--review-line);
+      }
+      .segmented button:last-child {
+        border-right: none;
+      }
+      .segmented button:hover {
+        background: #f1efe9;
+      }
+      .segmented button[aria-pressed='true'] {
+        background: var(--review-accent);
+        color: #fff;
+      }
+      .review-stage {
+        padding: 1.5rem 1rem;
+        display: flex;
+        justify-content: center;
+        overflow-x: auto;
+      }
+      .device {
+        background: #1d1b18;
+        border-radius: 28px;
+        padding: 14px;
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
+        flex: none;
+      }
+      .device-label {
+        color: var(--review-muted);
+        font-size: 0.72rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        text-align: center;
+        margin: 0 0 0.5rem;
+      }
+      .review-footer {
+        padding: 0 2rem 2rem;
+        max-width: 1100px;
+        margin: 0 auto;
+        font-size: 0.85rem;
+        color: var(--review-muted);
+      }
+      .review-footer h3 {
+        margin: 0.75rem 0 0;
+        font-size: 0.8rem;
+        color: var(--review-ink);
+      }
+      .review-footer ul {
+        margin: 0.25rem 0;
+        padding-left: 1.1rem;
+        line-height: 1.5;
+      }
+
+      /* ============ phone (app tokens: terracotta theme) ============ */
+      .phone {
+        --bg: #fbf1ea;
+        --surface: #fffaf6;
+        --surface-2: #f3dccd;
+        --line: #e6c3ad;
+        --text: #3a241b;
+        --muted: #7b5a4c;
+        --primary: #a8431f;
+        --on-primary: #fff;
+        --mint: #d3e8d6;
+        --on-mint: #1f4a2c;
+        --lavender: #e6dcef;
+        --on-lavender: #44305f;
+        --butter: #f6e3a8;
+        --on-butter: #5a4300;
+        --rose: #f6d0cb;
+        --on-rose: #7a2118;
+        /* safe-area insets: notch on the left, rounded corners / home indicator elsewhere */
+        --sa-l: 0px;
+        --sa-r: 0px;
+        --sa-b: 0px;
+        background: var(--bg);
+        color: var(--text);
+        font-size: 13px;
+        border-radius: 16px;
+        overflow: hidden;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        user-select: none;
+      }
+      .phone.dark {
+        --bg: #1c1411;
+        --surface: #2a1d18;
+        --surface-2: #3b2a22;
+        --line: #52382c;
+        --text: #f5e6dc;
+        --muted: #cbaa98;
+        --primary: #f08a5d;
+        --on-primary: #2a1008;
+        --mint: #244a38;
+        --on-mint: #c9f1db;
+        --lavender: #3a3159;
+        --on-lavender: #e0d8fa;
+        --butter: #4d4018;
+        --on-butter: #ffefb0;
+        --rose: #5a2626;
+        --on-rose: #ffd9d9;
+      }
+      .phone[data-vp='small'] {
+        width: 568px;
+        height: 320px;
+      }
+      .phone[data-vp='mid'] {
+        width: 740px;
+        height: 360px;
+      }
+      .phone[data-vp='large'] {
+        width: 932px;
+        height: 430px;
+      }
+      .phone.portrait {
+        /* the same device turned upright: only the blocker is shown */
+        width: 320px !important;
+        height: 568px !important;
+      }
+      .phone.safe {
+        --sa-l: 44px;
+        --sa-r: 20px;
+        --sa-b: 14px;
+      }
+      .phone h2,
+      .phone h3,
+      .phone p {
+        margin: 0;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .phone button {
+        font: inherit;
+        color: inherit;
+      }
+
+      /* top strip: round, rules, timer, menu */
+      .strip {
+        flex: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        height: 34px;
+        padding: 0 calc(0.5rem + var(--sa-r)) 0 calc(0.5rem + var(--sa-l));
+        border-bottom: 1px solid var(--line);
+        font-size: 12px;
+      }
+      .strip .grow {
+        margin-right: auto;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .chip {
+        display: inline-block;
+        border-radius: 999px;
+        padding: 0.1rem 0.55rem;
+        font-size: 11.5px;
+        white-space: nowrap;
+      }
+      .mint {
+        background: var(--mint);
+        color: var(--on-mint);
+      }
+      .lav {
+        background: var(--lavender);
+        color: var(--on-lavender);
+      }
+      .butter {
+        background: var(--butter);
+        color: var(--on-butter);
+      }
+      .rose {
+        background: var(--rose);
+        color: var(--on-rose);
+      }
+      .timer {
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+      .timer.low {
+        background: var(--rose);
+        color: var(--on-rose);
+      }
+      .ibtn {
+        position: relative;
+        border: 0;
+        background: transparent;
+        height: 30px;
+        padding: 0 0.6rem;
+        font-size: 12px;
+        font-weight: 700;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        color: var(--primary);
+        white-space: nowrap;
+      }
+      /* the visible button is 34 px; the hit area is 44 x 44 */
+      .ibtn::after {
+        content: '';
+        position: absolute;
+        inset: -5px;
+      }
+
+      /* body: seats | centre | actions */
+      .board {
+        flex: 1;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: 10rem 1fr 6.5rem;
+        gap: 0;
+        padding: 0.4rem calc(0.5rem + var(--sa-r)) calc(0.4rem + var(--sa-b))
+          calc(0.5rem + var(--sa-l));
+      }
+      .phone[data-vp='large'] .board {
+        grid-template-columns: 13rem 1fr 8rem;
+      }
+      .seats {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-height: 0;
+        padding-right: 0.4rem;
+        border-right: 1px solid var(--line);
+      }
+      .seat {
+        flex: 1 1 0;
+        min-height: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0 0.45rem;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+        max-height: 54px;
+      }
+      .seat .nm {
+        flex: 1;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-weight: 600;
+      }
+      .seat .sc {
+        font-variant-numeric: tabular-nums;
+        font-weight: 800;
+      }
+      .seat .mk {
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .seat.you .nm::after {
+        content: ' (you)';
+        font-weight: 400;
+        color: var(--muted);
+      }
+      /* active: filled, thick border, arrow; readable without relying on colour alone */
+      .seat.cur {
+        border: 2px solid var(--primary);
+        background: var(--surface-2);
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 25%, transparent);
+      }
+      .seat.cur::before {
+        content: '▶';
+        color: var(--primary);
+        font-size: 11px;
+      }
+      .seat.gone {
+        opacity: 0.6;
+      }
+      .seat.gone .nm {
+        text-decoration: line-through;
+      }
+
+      .centre {
+        min-width: 0;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        position: relative;
+        padding: 0 0.4rem;
+      }
+      .turnrow {
+        display: flex;
+        gap: 0.5rem;
+        align-items: stretch;
+      }
+      .cardtile {
+        flex: none;
+        width: 74px;
+        min-height: 56px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 20px;
+        line-height: 1.1;
+      }
+      .cardtile small {
+        font-size: 10.5px;
+        font-weight: 600;
+        color: var(--muted);
+      }
+      .cardtile.empty {
+        border-style: dashed;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .pts {
+        flex: 1;
+        min-width: 0;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+        padding: 0.25rem 0.5rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 1px;
+        line-height: 1.25;
+      }
+      .pts b {
+        font-size: 15px;
+      }
+      .pts small {
+        color: var(--muted);
+        font-size: 11px;
+      }
+      .dicearea {
+        flex: 1;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: repeat(3, 50px);
+        grid-auto-rows: 50px;
+        gap: 8px;
+        justify-content: center;
+        align-content: center;
+      }
+      .phone[data-vp='large'] .dicearea {
+        grid-template-columns: repeat(6, 56px);
+        grid-auto-rows: 56px;
+      }
+      .phone[data-vp='mid'] .dicearea {
+        grid-template-columns: repeat(6, 46px);
+        grid-auto-rows: 46px;
+        gap: 6px;
+      }
+      /* dice are >= 44 px touch targets; gap keeps neighbours apart */
+      .die {
+        border: 2px solid var(--line);
+        border-radius: 10px;
+        background: var(--surface);
+        font-size: 24px;
+        font-weight: 800;
+        display: grid;
+        place-items: center;
+        padding: 0;
+        cursor: pointer;
+      }
+      .die.sel {
+        border-color: var(--primary);
+        background: var(--surface-2);
+        box-shadow: 0 0 0 2px var(--primary);
+      }
+      .die.aside {
+        opacity: 0.45;
+        border-style: dashed;
+        cursor: default;
+      }
+      .die.off {
+        opacity: 0.35;
+        cursor: default;
+      }
+      .die.blank {
+        border-style: dotted;
+        color: var(--muted);
+      }
+      .status {
+        flex: none;
+        min-height: 18px;
+        font-size: 11.5px;
+        color: var(--muted);
+        text-align: center;
+      }
+
+      .actions {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        gap: 0.4rem;
+        min-height: 0;
+        padding-left: 0.4rem;
+        border-left: 1px solid var(--line);
+      }
+      .btn {
+        min-height: 48px;
+        border: 0;
+        border-radius: 10px;
+        background: var(--primary);
+        color: var(--on-primary);
+        font-weight: 800;
+        font-size: 12.5px;
+        padding: 0.25rem 0.3rem;
+        line-height: 1.15;
+        white-space: normal;
+        text-wrap: balance;
+        overflow-wrap: anywhere;
+      }
+      .btn.sec {
+        background: transparent;
+        color: var(--primary);
+        border: 2px solid var(--primary);
+      }
+      .btn[disabled] {
+        opacity: 0.45;
+      }
+      .hint {
+        font-size: 11px;
+        color: var(--muted);
+        line-height: 1.25;
+        min-height: 2.5em;
+        text-align: center;
+      }
+      .waiting {
+        border: 1px dashed var(--line);
+        border-radius: 10px;
+        padding: 0.5rem;
+        text-align: center;
+        color: var(--muted);
+        line-height: 1.3;
+      }
+      .waiting b {
+        display: block;
+        color: var(--text);
+      }
+
+      /* overlays: result banner, dialog, game over, blocker */
+      .scrim {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 calc(1rem + var(--sa-r)) var(--sa-b) calc(1rem + var(--sa-l));
+        z-index: 5;
+      }
+      .dlg {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        width: 100%;
+        max-width: 26rem;
+      }
+      #over .dlg {
+        max-width: 36rem;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      .dlg h3 {
+        font-size: 16px;
+      }
+      .dlg .row {
+        display: flex;
+        gap: 0.5rem;
+      }
+      .dlg .row .btn {
+        flex: 1;
+      }
+      /* result / info text: the free space above the buttons, covers nothing */
+      .banner {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        display: grid;
+        place-items: center;
+        border-radius: 10px;
+        padding: 0.3rem 0.4rem;
+        font-size: 11.5px;
+        font-weight: 700;
+        line-height: 1.25;
+        text-align: center;
+      }
+      .rank {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2px 0.75rem;
+      }
+      .rank li {
+        display: flex;
+        gap: 0.4rem;
+        font-size: 12px;
+        padding: 0.15rem 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .rank li span:nth-child(2) {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .rank b {
+        font-variant-numeric: tabular-nums;
+      }
+      .blocker {
+        position: absolute;
+        inset: 0;
+        z-index: 9;
+        background: var(--bg);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        padding: 1.5rem;
+        text-align: center;
+      }
+      .blocker .ico {
+        font-size: 56px;
+        line-height: 1;
+        display: inline-block;
+        transform: rotate(-90deg);
+      }
+      .blocker .btn {
+        width: 100%;
+        max-width: 14rem;
+      }
+      .note {
+        position: absolute;
+        right: 6px;
+        bottom: 4px;
+        font-size: 10px;
+        color: var(--muted);
+        opacity: 0.8;
+        z-index: 10;
+        pointer-events: none;
+      }
+      .guide {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: var(--sa-l);
+        background: repeating-linear-gradient(
+          45deg,
+          rgba(180, 95, 44, 0.25) 0 6px,
+          transparent 6px 12px
+        );
+        left: 0;
+        z-index: 11;
+        pointer-events: none;
+        display: none;
+      }
+      .phone.safe .guide {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="review-header">
+      <p class="review-eyebrow">Non-functional review mockup</p>
+      <h1>Mobile game table (M2): landscape table and rotate blocker</h1>
+      <p>
+        Static HTML; nothing here plays a game. Switch scene, seats, viewport and theme to check the
+        states from spec 023. Dice faces, scores and names are placeholders. Tap the dice in "Select
+        dice" to see the selection look. The hatched stripe in safe-area mode is the notch inset.
+      </p>
+    </header>
+
+    <div class="review-controls">
+      <div class="control-group">
+        <span class="label">Scene</span>
+        <div class="segmented" id="scene-toggle">
+          <button type="button" data-scene="draw" aria-pressed="false">Draw</button>
+          <button type="button" data-scene="throw" aria-pressed="false">Throw</button>
+          <button type="button" data-scene="select" aria-pressed="true">Select dice</button>
+          <button type="button" data-scene="decide" aria-pressed="false">Throw or bank</button>
+          <button type="button" data-scene="other" aria-pressed="false">Other's turn</button>
+          <button type="button" data-scene="bust" aria-pressed="false">Bust</button>
+          <button type="button" data-scene="volle" aria-pressed="false">Volle Lotte</button>
+          <button type="button" data-scene="street" aria-pressed="false">Street card</button>
+          <button type="button" data-scene="leave" aria-pressed="false">Leave</button>
+          <button type="button" data-scene="over" aria-pressed="false">Game over</button>
+          <button type="button" data-scene="portrait" aria-pressed="false">Portrait blocker</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <span class="label">Seats</span>
+        <div class="segmented" id="seats-toggle">
+          <button type="button" data-seats="2" aria-pressed="false">2</button>
+          <button type="button" data-seats="4" aria-pressed="false">4</button>
+          <button type="button" data-seats="8" aria-pressed="true">8</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <span class="label">Viewport</span>
+        <div class="segmented" id="vp-toggle">
+          <button type="button" data-vp="small" aria-pressed="true">568 × 320</button>
+          <button type="button" data-vp="mid">740 × 360</button>
+          <button type="button" data-vp="large">932 × 430</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <span class="label">View</span>
+        <div class="segmented" id="opt-toggle">
+          <button type="button" data-opt="dark" aria-pressed="false">Dark</button>
+          <button type="button" data-opt="safe" aria-pressed="false">Safe areas</button>
+          <button type="button" data-opt="de" aria-pressed="false">German / long names</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="review-stage">
+      <div>
+        <p class="device-label" id="label">Phone, landscape 568 × 320</p>
+        <div class="device">
+          <div class="phone" id="phone" data-vp="small">
+            <div class="guide"></div>
+            <div class="strip" id="strip">
+              <span class="grow" id="rules"></span>
+              <span class="chip timer lav" id="timer">⏱ 0:24</span>
+              <button class="ibtn" id="leave-btn" type="button" data-open="leave">⎋ Leave</button>
+            </div>
+            <div class="board" id="board">
+              <ul class="seats" id="seats"></ul>
+              <div class="centre">
+                <div class="turnrow">
+                  <div class="cardtile" id="card"></div>
+                  <div class="pts" id="pts"></div>
+                </div>
+                <div class="dicearea" id="dice"></div>
+                <p class="status" id="status" role="status"></p>
+              </div>
+              <div class="actions" id="actions"></div>
+            </div>
+
+            <div class="scrim" id="leave" hidden>
+              <div class="dlg" role="dialog" aria-label="Leave game">
+                <h3 id="leave-h">Leave the game?</h3>
+                <p class="muted" id="leave-p">
+                  A computer takes over your seat. You can't come back.
+                </p>
+                <div class="row">
+                  <button class="btn sec" type="button" data-open="back">Stay</button>
+                  <button class="btn" type="button">Leave game</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="scrim" id="over" hidden>
+              <div class="dlg" role="dialog" aria-label="Game over">
+                <h3>Game over · Anna won.</h3>
+                <p class="muted">The target score was reached.</p>
+                <ol class="rank" id="rank"></ol>
+                <button class="btn" type="button">Back to the games</button>
+              </div>
+            </div>
+
+            <div class="blocker" id="blocker" hidden>
+              <span class="ico" aria-hidden="true">📱</span>
+              <h2>Please rotate your phone</h2>
+              <p class="muted" id="blocker-p">
+                The table needs landscape. The game keeps running and your turn is kept.
+              </p>
+              <p class="chip lav" id="blocker-turn">It's your turn · ⏱ 0:24</p>
+              <button class="btn sec" type="button">Leave game</button>
+            </div>
+            <span class="note" id="note"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="review-footer">
+      <h3>What to look at</h3>
+      <ul>
+        <li>
+          Three zones in landscape: all seats (left), card, turn points and dice (centre), actions
+          (right, thumb side). Nothing scrolls.
+        </li>
+        <li>
+          The active seat is filled with a thick border and an arrow, not colour alone. With 8 seats
+          each row is about 33 px; names are shortened with an ellipsis, scores never.
+        </li>
+        <li>
+          Dice are 46-56 px with 6-8 px gaps; the Leave button has a 44 px hit area. Buttons are
+          narrow, labels wrap onto two lines, 48 px high.
+        </li>
+        <li>
+          Disabled actions explain themselves in the hint line under the buttons (minimum points,
+          set aside first).
+        </li>
+        <li>
+          Results and info text (bust, Volle Lotte, Street) sit in the free space above the buttons,
+          so card, turn points and dice stay visible. Thin lines separate seats, centre and actions.
+        </li>
+        <li>
+          Portrait shows only the blocker with the state of the turn and Leave game; the table state
+          is kept in the background.
+        </li>
+        <li>
+          Out of this mockup: sounds, log, rematch, reconnect banner, spectators (M3); animation
+          details (shown as static faces).
+        </li>
+      </ul>
+    </footer>
+
+    <script>
+      const phone = document.getElementById('phone');
+      const $ = (id) => document.getElementById(id);
+      const T = {
+        en: {
+          leaveBtn: 'Leave',
+          rules: 'Round 4 · Target 5000 · Min. 350',
+          draw: 'Draw',
+          throw: 'Throw dice',
+          aside: 'Set aside selected',
+          bank: 'Bank points',
+          thrAgain: 'Throw 4 dice',
+          turn: 'Turn',
+          secured: 'Secured',
+          card: 'Card',
+          none: 'no card',
+          wait: 'is throwing…',
+          hDraw: 'Draw a card first',
+          hSel: 'Select at least one scoring die',
+          hMin: 'Minimum of 350 points not reached yet',
+          sDraw: 'Draw the next card or bank your points',
+          sSel: 'Select scoring dice',
+          sOther: 'Anna is throwing…',
+          leaveH: 'Leave the game?',
+          leaveP: "A computer takes over your seat. You can't come back.",
+          bust: 'You went bust. Next player (Ben) is up.',
+          volle: 'Volle Lotte! +1000, carried on · throw all 6 again',
+          street: 'Street: 1–6 in two throws, 4 of 6 dice secured',
+          over: 'You',
+          blocker: 'The table needs landscape. The game keeps running and your turn is kept.',
+          blockerH: 'Please rotate your phone',
+          youTurn: "It's your turn",
+          other: "Anna's turn",
+          you: 'Mia',
+        },
+        de: {
+          leaveBtn: 'Verlassen',
+          rules: 'Runde 4 · Ziel 5000 · Min. 350',
+          draw: 'Karte ziehen',
+          throw: 'Würfeln',
+          aside: 'Ausgewählte beiseitelegen',
+          bank: 'Punkte sichern',
+          thrAgain: '4 Würfel werfen',
+          turn: 'Zug',
+          secured: 'Gesichert',
+          card: 'Karte',
+          none: 'keine Karte',
+          wait: 'würfelt…',
+          hDraw: 'Zuerst eine Karte ziehen',
+          hSel: 'Mindestens einen Würfel auswählen',
+          hMin: 'Mindestens 350 Punkte noch nicht erreicht',
+          sDraw: 'Nächste Karte ziehen oder Punkte sichern',
+          sSel: 'Wertende Würfel auswählen',
+          sOther: 'Annabelle-Sophie Mue würfelt…',
+          leaveH: 'Spiel verlassen?',
+          leaveP: 'Ein Computer übernimmt deinen Platz. Du kannst nicht zurückkehren.',
+          bust: 'Du hast verloren gewürfelt. Als Nächster ist Ben dran.',
+          volle: 'Volle Lotte! +1000, übertragen · alle 6 Würfel neu werfen',
+          street: 'Straße: 1–6 in zwei Würfen, 4 von 6 Würfeln gesichert',
+          over: 'Du',
+          blocker:
+            'Der Tisch braucht das Querformat. Das Spiel läuft weiter, dein Zug bleibt erhalten.',
+          blockerH: 'Bitte dreh dein Handy',
+          youTurn: 'Du bist dran',
+          other: 'Annabelle-Sophie Mue ist dran',
+          you: 'Mia',
+        },
+      };
+      // nicknames are capped at 20 characters; computers ("Brave Badger") show the animal only
+      const NAMES_EN = ['Mia', 'Anna', 'Ben', 'Badger', 'Dora', 'Emil', 'Otter', 'Gus'];
+      const NAMES_LONG = [
+        'Mia',
+        'Annabelle-Sophie Mue',
+        'Benedikt-Alexander-X',
+        'Dachs',
+        'Dorothea Wilhelmine',
+        'Emil',
+        'Fischotter',
+        'Gustav',
+      ];
+      const SC = [3250, 4100, 1850, 2700, 500, 0, 3900, 1200];
+      const S = { scene: 'select', seats: 8, opts: new Set(), sel: new Set([0, 2]) };
+      const FACE = (v) => (v ? v : '');
+
+      function seatList(t) {
+        const names = S.opts.has('de') ? NAMES_LONG : NAMES_EN;
+        const curIdx =
+          ['other', 'portrait'].includes(S.scene) && S.scene === 'other'
+            ? 1
+            : S.scene === 'bust'
+              ? 0
+              : 0;
+        return Array.from({ length: S.seats }, (_, i) => {
+          const gone = S.seats === 8 && i === 5;
+          const mk = i === 3 || i === 6 ? '🤖' : gone ? '⚠' : '';
+          const you = i === 0 ? ' you' : '';
+          const cur = i === curIdx ? ' cur' : '';
+          const nm = gone ? 'Emil (disconnected)' : names[i];
+          return `<li class="seat${you}${cur}${gone ? ' gone' : ''}" ${i === curIdx ? 'aria-current="true"' : ''}>
+            <span class="nm" title="${nm}">${i === 0 ? t.you : nm}</span><span class="mk">${mk}</span><span class="sc">${SC[i]}</span></li>`;
+        }).join('');
+      }
+
+      function dice(vals, mode) {
+        return vals
+          .map((v, i) => {
+            if (v === null)
+              return `<button class="die blank" disabled aria-label="Die not thrown yet">–</button>`;
+            if (mode === 'aside' && i >= 4)
+              return `<button class="die aside" disabled aria-label="Die ${v}, set aside">${v}</button>`;
+            if (mode === 'locked')
+              return `<button class="die off" disabled aria-label="Die ${v}">${v}</button>`;
+            const sel = mode === 'select' && S.sel.has(i);
+            return `<button class="die${sel ? ' sel' : ''}" data-die="${i}" aria-pressed="${sel}" aria-label="Die ${v}, ${sel ? 'selected' : 'not selected'}">${v}</button>`;
+          })
+          .join('');
+      }
+
+      function render() {
+        const t = S.opts.has('de') ? T.de : T.en;
+        const sc = S.scene;
+        const mine = !['other', 'portrait'].includes(sc);
+        phone.classList.toggle('portrait', sc === 'portrait');
+        phone.classList.toggle('dark', S.opts.has('dark'));
+        phone.classList.toggle('safe', S.opts.has('safe'));
+        $('rules').textContent = t.rules;
+        $('leave-btn').textContent = '⎋ ' + t.leaveBtn;
+        $('seats').innerHTML = seatList(t);
+        $('timer').classList.toggle('low', sc === 'throw' && false);
+        $('timer').textContent = sc === 'other' ? '⏱ 0:41' : '⏱ 0:24';
+
+        // card tile + points
+        const cards = { draw: null, street: ['1-6', 'Street'], volle: ['+300', 'Bonus 300'] };
+        const c = cards[sc] === undefined ? ['×2', 'Double Lotte'] : cards[sc];
+        const dl = S.opts.has('de') && c;
+        $('card').className = 'cardtile' + (c ? '' : ' empty');
+        $('card').innerHTML = c
+          ? `${c[0]}<small>${S.opts.has('de') && c[1] === 'Double Lotte' ? 'Doppel-Lotte' : c[1]}</small>`
+          : t.none;
+        const pts = {
+          draw: ['0', '0'],
+          throw: ['0', '0'],
+          select: ['0', '0'],
+          decide: ['450', '450'],
+          other: ['250', '250'],
+          bust: ['0', '0'],
+          volle: ['1000', '1000'],
+          street: ['0', '0'],
+        }[sc] || ['0', '0'];
+        $('pts').innerHTML =
+          `<span><small>${t.turn}</small> <b>${pts[0]}</b></span><small>${t.secured}: ${pts[1]} · ${S.opts.has('de') ? 'übertragen' : 'carried'}: ${sc === 'volle' ? 1000 : 0}</small>`;
+
+        // dice + status + actions
+        let d = [null, null, null, null, null, null],
+          mode = 'locked',
+          status = '',
+          act = '',
+          banner = '';
+        const btn = (label, dis, cls = '') =>
+          `<button class="btn ${cls}" type="button" ${dis ? 'disabled' : ''}>${label}</button>`;
+        if (sc === 'draw') {
+          status = t.sDraw;
+          act = btn(t.draw, false) + btn(t.bank, true, 'sec') + `<p class="hint">${t.hMin}</p>`;
+        } else if (sc === 'throw') {
+          status = '';
+          act = btn(t.throw, false) + btn(t.bank, true, 'sec') + `<p class="hint">${t.hMin}</p>`;
+        } else if (sc === 'select') {
+          d = [5, 3, 1, 2, 6, 4];
+          mode = 'select';
+          status = t.sSel;
+          const none = S.sel.size === 0;
+          act =
+            btn(t.aside, none) +
+            btn(t.bank, true, 'sec') +
+            `<p class="hint">${none ? t.hSel : t.hMin}</p>`;
+        } else if (sc === 'decide') {
+          d = [1, 5, 2, 3, 6, 4].map((v, i) => v);
+          mode = 'aside';
+          status = `2 ${S.opts.has('de') ? 'Würfel beiseite' : 'dice set aside'}`;
+          act = btn(t.thrAgain, false) + btn(t.bank, false, 'sec') + `<p class="hint"></p>`;
+        } else if (sc === 'other') {
+          d = [4, 4, 1, 6, 2, 3];
+          mode = 'locked';
+          status = t.sOther;
+          act = `<div class="waiting"><b>${S.opts.has('de') ? 'Annabelle-Sophie Mue' : 'Anna'}</b>${S.opts.has('de') ? 'ist dran' : "'s turn"}<br />${S.opts.has('de') ? 'Du siehst alles live.' : 'You see it live.'}</div>`;
+        } else if (sc === 'bust') {
+          d = [2, 2, 3, 4, 4, 6];
+          mode = 'locked';
+          banner = 'rose|' + t.bust;
+          act = btn(t.draw, true) + btn(t.bank, true, 'sec') + `<p class="hint"></p>`;
+        } else if (sc === 'volle') {
+          d = [1, 1, 5, 5, 5, 1];
+          mode = 'locked';
+          banner = 'butter|' + t.volle;
+          act =
+            btn(t.throw.replace('dice', '6 dice'), false) +
+            btn(t.bank, false, 'sec') +
+            `<p class="hint"></p>`;
+        } else if (sc === 'street') {
+          d = [1, 2, 3, 4, 5, 6];
+          mode = 'locked';
+          banner = 'lav|' + t.street;
+          act =
+            btn(S.opts.has('de') ? '2 Würfel werfen' : 'Throw 2 dice', false) +
+            btn(t.bank, true, 'sec') +
+            `<p class="hint">${t.hMin}</p>`;
+        } else if (sc === 'leave' || sc === 'over' || sc === 'portrait') {
+          d = [5, 3, 1, 2, 6, 4];
+          mode = 'select';
+          status = t.sSel;
+          act = btn(t.aside, false) + btn(t.bank, true, 'sec') + `<p class="hint">${t.hMin}</p>`;
+        }
+        $('dice').innerHTML = dice(d, mode);
+        $('status').textContent = status;
+        if (banner) {
+          const [cls, txt] = banner.split('|');
+          act = `<div class="banner ${cls}" role="status">${txt}</div>` + act;
+        }
+        $('actions').innerHTML = act;
+
+        // overlays
+        $('leave').hidden = sc !== 'leave';
+        $('leave-h').textContent = t.leaveH;
+        $('leave-p').textContent = t.leaveP;
+        $('over').hidden = sc !== 'over';
+        const sorted = Array.from({ length: S.seats }, (_, i) => i).sort(
+          (a, b) => SC[b] - SC[a] || a - b,
+        );
+        $('rank').innerHTML = sorted
+          .map(
+            (i, r) =>
+              `<li><span>${r + 1}.</span><span>${i === 0 ? t.over : (S.opts.has('de') ? NAMES_LONG : NAMES_EN)[i]}</span><b>${Math.max(SC[i], r === 0 ? 5000 : SC[i])}</b></li>`,
+          )
+          .join('');
+        $('blocker').hidden = sc !== 'portrait';
+        $('blocker').querySelector('h2').textContent = t.blockerH;
+        $('blocker-p').textContent = t.blocker;
+        $('blocker-turn').textContent = `${t.youTurn} · ⏱ 0:24`;
+        $('label').textContent =
+          sc === 'portrait'
+            ? 'Phone, portrait 320 × 568: blocker instead of the table'
+            : `Phone, landscape ${{ small: '568 × 320', mid: '740 × 360', large: '932 × 430' }[phone.dataset.vp]}`;
+        $('note').textContent = mine ? '' : '';
+
+        document
+          .querySelectorAll('#scene-toggle button')
+          .forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.scene === sc)));
+        document
+          .querySelectorAll('#seats-toggle button')
+          .forEach((b) => b.setAttribute('aria-pressed', String(+b.dataset.seats === S.seats)));
+        document
+          .querySelectorAll('#vp-toggle button')
+          .forEach((b) =>
+            b.setAttribute('aria-pressed', String(b.dataset.vp === phone.dataset.vp)),
+          );
+        document
+          .querySelectorAll('#opt-toggle button')
+          .forEach((b) => b.setAttribute('aria-pressed', String(S.opts.has(b.dataset.opt))));
+      }
+
+      let before = 'select';
+      document.addEventListener('click', (e) => {
+        const sb = e.target.closest('#scene-toggle button');
+        if (sb) {
+          S.scene = sb.dataset.scene;
+          return render();
+        }
+        const seb = e.target.closest('#seats-toggle button');
+        if (seb) {
+          S.seats = +seb.dataset.seats;
+          return render();
+        }
+        const vb = e.target.closest('#vp-toggle button');
+        if (vb) {
+          phone.dataset.vp = vb.dataset.vp;
+          return render();
+        }
+        const ob = e.target.closest('#opt-toggle button');
+        if (ob) {
+          S.opts.has(ob.dataset.opt) ? S.opts.delete(ob.dataset.opt) : S.opts.add(ob.dataset.opt);
+          return render();
+        }
+        const op = e.target.closest('[data-open]');
+        if (op) {
+          if (op.dataset.open === 'back') {
+            S.scene = before;
+          } else {
+            before = S.scene;
+            S.scene = op.dataset.open;
+          }
+          return render();
+        }
+        const die = e.target.closest('[data-die]');
+        if (die && S.scene === 'select') {
+          const i = +die.dataset.die;
+          S.sel.has(i) ? S.sel.delete(i) : S.sel.add(i);
+          render();
+        }
+      });
+      render();
+    </script>
+  </body>
+</html>

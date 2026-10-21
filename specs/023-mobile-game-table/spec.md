@@ -8,6 +8,8 @@
 
 **Input**: User description: "M2. Play a complete game on a phone (docs/mobile-roadmap.md): a phone-oriented landscape-only game table with a rotate blocker in portrait, touch support for all game actions, clear active-player state with the maximum number of seats, no browser zoom or horizontal scrolling. Depends on M1 (spec 022)."
 
+**Design**: [design.md](design.md)
+
 ## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Play my turn with touch (Priority: P1)
