@@ -13,5 +13,5 @@ export const sessionGuard: CanActivateFn = async () => {
 /** `game/:id` needs a seat in that game; otherwise back to the list. */
 export const membershipGuard: CanActivateFn = (route) => {
   const game = inject(MobileSocketService).game();
-  return game && game.id === route.paramMap.get('id') ? true : inject(Router).createUrlTree(['/']);
+  return game?.id === route.paramMap.get('id') ? true : inject(Router).createUrlTree(['/']);
 };

@@ -13,8 +13,13 @@ export const MAX_PRESETS = 10;
 export const MAX_PRESET_NAME = 40;
 export const DEFAULT_SPEED = 3;
 
-const DIFFICULTIES: readonly Difficulty[] = ['easy', 'medium', 'hard', 'random'];
-const RISKS: readonly Risk[] = ['none', 'medium', 'high', 'random'];
+const DIFFICULTIES: ReadonlySet<unknown> = new Set<Difficulty>([
+  'easy',
+  'medium',
+  'hard',
+  'random',
+]);
+const RISKS: ReadonlySet<unknown> = new Set<Risk>(['none', 'medium', 'high', 'random']);
 
 export interface ComputerSeat {
   /** Index in the room; the host sits on 0. */
@@ -84,7 +89,7 @@ function sanitizeComputers(value: unknown, seats: number): ComputerSeat[] {
     const seat = int(c['seat'], 1, seats - 1);
     const { difficulty, risk } = c;
     if (seat === null || used.has(seat)) continue;
-    if (!DIFFICULTIES.includes(difficulty as Difficulty) || !RISKS.includes(risk as Risk)) continue;
+    if (!DIFFICULTIES.has(difficulty) || !RISKS.has(risk)) continue;
     used.add(seat);
     result.push({ seat, difficulty: difficulty as Difficulty, risk: risk as Risk });
   }
@@ -195,5 +200,6 @@ export function planComputers(
       place.push({ ...c, seat });
     }
   }
-  return { clear, place: place.sort((a, b) => a.seat - b.seat), skipped };
+  place.sort((a, b) => a.seat - b.seat);
+  return { clear, place, skipped };
 }

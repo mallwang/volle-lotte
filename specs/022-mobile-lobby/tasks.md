@@ -112,7 +112,7 @@ description: 'Task list for Mobile lobby and game setup'
 - [x] T025 [P] Run `/speckit-coverage` for `apps/mobile` and `libs/client-core`; add tests until ≥ 80 %
 - [x] T026 Run `npm run lint`, `typecheck`, `test`, `build` for all projects; confirm the initial mobile bundle stays under 500 kB and desktop suites pass unmodified (SC-005)
 - [x] T027 Run quickstart.md scenarios 1-7 (including cross-client join against a desktop host and the desktop regression) and fix findings
-- [ ] T028 Run `/speckit-sonar-validate` and resolve new issues
+- [x] T028 Run `/speckit-sonar-validate` and resolve new issues
 
 ---
 

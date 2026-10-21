@@ -35,6 +35,7 @@
 }
 
 :root[data-theme='dark'] {
+  color-scheme: dark;
   --vl-bg: #1c1411;
   --vl-surface: #2a201b;
   --vl-ink: #f3e8e1;
@@ -137,7 +138,7 @@ button:disabled {
 }
 
 .card {
-  padding: 12px;
+  padding: 10px 12px;
   border: 1px solid var(--vl-line);
   border-radius: 12px;
   background: var(--vl-surface);
@@ -198,6 +199,10 @@ header {
   align-items: center;
   padding: 10px 16px;
   border-bottom: 1px solid var(--vl-line);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--vl-bg);
 }
 
 header img {
@@ -205,6 +210,7 @@ header img {
 }
 
 header h1 {
+  flex: 1;
   font-size: 1.25rem;
 }
 
@@ -249,7 +255,10 @@ input[type='checkbox'] {
 summary {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   font-weight: 600;
+  list-style: none;
+  cursor: pointer;
 }
 
 /* short number fields sit side by side to keep long forms compact */
@@ -277,27 +286,8 @@ main .grid {
   gap: 8px;
 }
 
-.card {
-  padding: 10px 12px;
-}
-
 :root[data-theme='light'] {
   color-scheme: light;
-}
-
-:root[data-theme='dark'] {
-  color-scheme: dark;
-}
-
-header {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: var(--vl-bg);
-}
-
-header h1 {
-  flex: 1;
 }
 
 button.icon {
@@ -321,12 +311,6 @@ select {
 }
 
 /* expandable sections show a chevron */
-summary {
-  justify-content: space-between;
-  list-style: none;
-  cursor: pointer;
-}
-
 summary::-webkit-details-marker {
   display: none;
 }
