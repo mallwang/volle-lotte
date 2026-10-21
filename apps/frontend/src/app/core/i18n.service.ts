@@ -1,7 +1,6 @@
 import { DOCUMENT } from '@angular/common';
 import { Injectable, effect, inject, signal } from '@angular/core';
-import { de } from '../i18n/de';
-import { en } from '../i18n/en';
+import { de, en } from 'client-core';
 
 export type LanguageCode = 'en' | 'de';
 export interface Language {

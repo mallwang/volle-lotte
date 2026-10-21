@@ -21,7 +21,7 @@ import {
   type ComputerSeat,
   type Preset,
   type Setup,
-} from '../core/setup';
+} from 'client-core';
 import { SocketService } from '../core/socket.service';
 import { TranslatePipe } from '../core/translate.pipe';
 

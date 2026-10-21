@@ -1,7 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { providePrimeNG } from 'primeng/config';
-import { defaultSetup, type Preset, type Setup } from '../core/setup';
+import { defaultSetup, type Preset, type Setup } from 'client-core';
 import { SetupStore } from '../core/setup-store';
 import { PresetBar } from './preset-bar';
 

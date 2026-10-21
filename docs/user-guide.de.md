@@ -2,7 +2,7 @@
 
 > This guide is also available in English: [English user guide](user-guide.md)
 
-Volle Lotte ist ein Online-Würfelspiel für 2-8 Spieler. Computergegner können freie Plätze auffüllen. Wie das Spiel funktioniert, steht in der [Spielanleitung](how-to-play.de.md).
+Volle Lotte ist ein Online-Würfelspiel für 2-8 Spieler. Computergegner können freie Plätze auffüllen. Wie das Spiel funktioniert, steht in der [Spielanleitung](how-to-play.de.md). Die Handy-Version beschreibt die [mobile Benutzeranleitung](user-guide-mobile.de.md).
 
 ## Inhaltsverzeichnis
 

@@ -12,7 +12,7 @@ Hosting: https://volle-lotte.allwang.family. A single Docker container (NestJS s
 How to play: [docs/how-to-play.md](docs/how-to-play.md). Technical rule reference: [docs/rules.md](docs/rules.md) ([German](docs/rules.de.md)).
 Developed with [Spec-Kit](https://github.com/github/spec-kit) (`/speckit-*`); principles in `.specify/memory/constitution.md`.
 
-Features: English and German UI (follows the browser language, switchable in the menu bar). How to play: [English](docs/how-to-play.md) | [Deutsch](docs/how-to-play.de.md). User guide: [English](docs/user-guide.md) | [Deutsch](docs/user-guide.de.md).
+Features: English and German UI (follows the browser language, switchable in the menu bar). How to play: [English](docs/how-to-play.md) | [Deutsch](docs/how-to-play.de.md). User guide: [English](docs/user-guide.md) | [Deutsch](docs/user-guide.de.md). Phone version: [English](docs/user-guide-mobile.md) | [Deutsch](docs/user-guide-mobile.de.md).
 
 ## Status
 

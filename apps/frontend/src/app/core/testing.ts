@@ -1,7 +1,7 @@
 import type { ComponentFixture } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import type { GameView, SeatView } from 'game-rules';
-import { defaultRules } from 'game-rules';
+import type { GameView } from 'game-rules';
+export { gameView } from 'client-core';
 
 /** Test helpers (specs only). */
 export function stubSocket(game: GameView | null = null) {
@@ -23,30 +23,6 @@ export function stubSocket(game: GameView | null = null) {
     rematch: vi.fn().mockResolvedValue(true),
     rejoinRematch: vi.fn().mockResolvedValue(true),
     settings: vi.fn().mockResolvedValue({ ok: true }),
-  };
-}
-
-export function gameView(over: Partial<GameView> = {}, seats: SeatView[] = []): GameView {
-  const open: SeatView = { state: 'open' };
-  return {
-    id: 'g1',
-    name: 'Test',
-    phase: 'lobby',
-    rules: defaultRules(),
-    hostId: 'p0',
-    you: { playerId: 'p0', seat: 0, timeoutWarning: false },
-    round: 1,
-    seats: [...seats, ...Array.from({ length: 4 - seats.length }, () => open)],
-    fastComputerDice: false,
-    computerSpeed: 3,
-    showBustProbability: false,
-    spectating: true,
-    spectators: 0,
-    paused: false,
-    n: 0,
-    logBase: 0,
-    log: [],
-    ...over,
   };
 }
 

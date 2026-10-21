@@ -1,4 +1,4 @@
-import type { en } from './en';
+import type { en } from './en.js';
 
 export const de: Record<keyof typeof en, string> = {
   'language.label': 'Sprache',

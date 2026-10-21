@@ -3,7 +3,7 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { I18nService } from '../core/i18n.service';
 import { SetupStore } from '../core/setup-store';
-import { describeSetup, MAX_PRESETS, type Preset } from '../core/setup';
+import { describeSetup, MAX_PRESETS, type Preset } from 'client-core';
 import { TranslatePipe } from '../core/translate.pipe';
 
 /** Lists the presets of this device: load (create page) or apply (lobby), and delete with a confirmation. */

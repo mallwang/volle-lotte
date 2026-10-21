@@ -1,5 +1,5 @@
 import { defaultRules, type SeatView } from 'game-rules';
-import { gameView } from './testing';
+import { gameView } from './testing.js';
 import {
   defaultSetup,
   describeSetup,
@@ -8,7 +8,7 @@ import {
   setupFromGame,
   setupsEqual,
   type Setup,
-} from './setup';
+} from './setup.js';
 
 const computer = (
   difficulty: 'easy' | 'hard' = 'easy',

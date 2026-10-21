@@ -15,6 +15,9 @@
   "references": [
     {
       "path": "../../libs/game-rules/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/client-core/tsconfig.lib.json"
     }
   ]
 }

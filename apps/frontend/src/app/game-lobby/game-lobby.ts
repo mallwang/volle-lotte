@@ -19,7 +19,7 @@ import {
   setupsEqual,
   type Preset,
   type Setup,
-} from '../core/setup';
+} from 'client-core';
 import { SocketService } from '../core/socket.service';
 import { StartQuestionDialog } from './start-question-dialog';
 import { PresetSaveDialog } from '../shared/preset-save-dialog';

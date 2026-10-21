@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { providePrimeNG } from 'primeng/config';
-import { defaultSetup } from '../core/setup';
+import { defaultSetup } from 'client-core';
 import { StartQuestionDialog } from './start-question-dialog';
 
 async function open() {

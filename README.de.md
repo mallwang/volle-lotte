@@ -12,7 +12,7 @@ Hosting: https://volle-lotte.allwang.family. Ein einzelner Docker-Container (Nes
 Spielanleitung: [docs/how-to-play.de.md](docs/how-to-play.de.md). Technische Regelreferenz: [docs/rules.de.md](docs/rules.de.md) ([englisch](docs/rules.md)).
 Entwickelt mit [Spec-Kit](https://github.com/github/spec-kit) (`/speckit-*`); Prinzipien in `.specify/memory/constitution.md`.
 
-Funktionen: Oberfläche auf Deutsch und Englisch (folgt der Browsersprache, in der Kopfzeile umschaltbar). Spielanleitung: [Deutsch](docs/how-to-play.de.md) | [English](docs/how-to-play.md). Benutzeranleitung: [Deutsch](docs/user-guide.de.md) | [English](docs/user-guide.md).
+Funktionen: Oberfläche auf Deutsch und Englisch (folgt der Browsersprache, in der Kopfzeile umschaltbar). Spielanleitung: [Deutsch](docs/how-to-play.de.md) | [English](docs/how-to-play.md). Benutzeranleitung: [Deutsch](docs/user-guide.de.md) | [English](docs/user-guide.md). Handy-Version: [Deutsch](docs/user-guide-mobile.de.md) | [English](docs/user-guide-mobile.md).
 
 ## Status
 
