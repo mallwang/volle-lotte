@@ -4,11 +4,12 @@ import type { GameSummary } from 'game-rules';
 import { errorMessage } from '../core/error-message';
 import { MobileI18nService } from '../core/i18n.service';
 import { MobileSocketService } from '../core/mobile-socket.service';
+import { JoinDialog } from '../join-dialog/join-dialog';
 import { TranslatePipe } from '../core/translate.pipe';
 
 @Component({
   selector: 'app-list',
-  imports: [RouterLink, TranslatePipe],
+  imports: [RouterLink, TranslatePipe, JoinDialog],
   template: `
     <div class="bar">
       <h2>{{ 'lobby.title' | t }}</h2>
@@ -56,6 +57,9 @@ import { TranslatePipe } from '../core/translate.pipe';
         </li>
       }
     </ul>
+    @if (selected(); as g) {
+      <app-join-dialog [game]="g" (closed)="closed($event)" />
+    }
   `,
 })
 export class List {
@@ -65,6 +69,11 @@ export class List {
   /** Game the join dialog is open for. */
   protected readonly selected = signal<GameSummary | null>(null);
   protected readonly error = signal('');
+
+  protected closed(message: string) {
+    this.selected.set(null);
+    this.error.set(message);
+  }
 
   protected async rejoin(g: GameSummary): Promise<void> {
     const ack = await this.socket.rejoin(g.id);

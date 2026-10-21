@@ -86,9 +86,9 @@ description: 'Task list for Mobile lobby and game setup'
 
 **Independent Test**: Host on desktop, join from phone (password if protected), ready; desktop shows the phone seated and ready (quickstart scenarios 3 and 5).
 
-- [ ] T018 [P] [US3] Join dialog in `apps/mobile/src/app/join-dialog/join-dialog.ts` (+ spec): native `<dialog>`, bottom sheet portrait and centred landscape, password field, wrong password, lockout, full and closed errors with return to list
-- [ ] T019 [P] [US3] Started notice in `apps/mobile/src/app/started/started.ts` (+ spec): explains the phone table is not yet available (FR-013), back to list
-- [ ] T020 [US3] Integrate in `list.ts` (open dialog, `game:join`) and `game-lobby.ts` (guest view: read-only settings, ready/leave bar, live updates), navigate to `started` on game start
+- [x] T018 [P] [US3] Join dialog in `apps/mobile/src/app/join-dialog/join-dialog.ts` (+ spec): native `<dialog>`, bottom sheet portrait and centred landscape, password field, wrong password, lockout, full and closed errors with return to list
+- [x] T019 [P] [US3] Started notice in `apps/mobile/src/app/started/started.ts` (+ spec): explains the phone table is not yet available (FR-013), back to list
+- [x] T020 [US3] Integrate in `list.ts` (open dialog, `game:join`) and `game-lobby.ts` (guest view: read-only settings, ready/leave bar, live updates), navigate to `started` on game start
 
 **Checkpoint**: All lobby flows work end to end with desktop players.
 

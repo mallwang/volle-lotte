@@ -20,5 +20,10 @@ export const routes: Routes = [
     canActivate: [sessionGuard, membershipGuard],
     loadComponent: () => import('./game-lobby/game-lobby').then((m) => m.GameLobby),
   },
+  {
+    path: 'started',
+    canActivate: [sessionGuard],
+    loadComponent: () => import('./started/started').then((m) => m.Started),
+  },
   { path: '**', redirectTo: '' },
 ];
