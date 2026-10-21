@@ -1,201 +1,352 @@
 # Roadmap
 
-Living list of what is done, what is next and what is only an idea. New ideas go here first; a spec is created when an item is picked up. Every spec is compared against this file, and agents read it to know what is still open.
+Living list of completed features, upcoming work and ideas. Refine upcoming items here first; create a spec and its feature branch when an item is picked up, based on the current codebase. Every spec is compared against this file, and agents read it to know what is still open.
 
-Last updated: 2026-10-20. The Java -> web migration is finished (see [migration.md](migration.md)); everything below is extension work.
+Last updated: 2026-10-21. The Java -> web migration is finished (see [migration.md](migration.md)); everything below is extension work.
 
 ## How to use
 
-- Status: `idea` (noted, not discussed), `planned` (scope agreed, no spec yet), `in progress` (spec exists), `done`.
-- Pick an item, run `/speckit-specify`, put the spec number in the item, and set the status. When the feature ships, move it to [Done](#done) with a one-line result.
-- Keep items short: goal, why, constraints, open questions. Details belong in the spec.
+- Status: `idea` (scope still to refine), `planned` (scope agreed, no spec yet), `in progress` (spec exists), `done`.
+- Keep the stable roadmap IDs when refining or reordering items; they are not spec numbers.
+- Refine one item at a time: user story, scope, dependencies and open questions. The stories below are starting points, not finalized acceptance criteria.
+- When work starts, run `/speckit-specify`, link the spec from the item, and update its status in the overview. Create plans and tasks against the codebase at that time, not in advance for the whole backlog.
+- When the feature ships, move it to [Done](#done) with a short result, a spec link and the merge PR. Details belong in the spec.
 
 ## Done
 
-| Spec | Feature                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 001  | Rules engine (`libs/game-rules`), port of the Java game with all card types and 2-8 players                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| 002  | Lobby and multiplayer (NestJS gateway, Socket.IO, computer players with difficulties, reconnect)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| 003  | UI foundation (PrimeNG, Terracotta theme, light/dark)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| 004  | English and German UI and documentation                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| 005  | Pip dice faces, per-die rolling animation, computer pacing                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| 006  | Open lobbies, rejoin after replacement by a computer, per-phase turn timers, host removal and bans                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| 007  | Active game table UI (seat columns, piles, dice area, log); desktop layout is the target, see below                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| 008  | Desktop minimum size: header and table scale as one 992x900 stage (minimum 695x630, scale 0.7), scaling notice and "window too small" hint, global focus ring, tab order and contrast checked                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| 009  | App shell: PrimeNG menubar on every screen (active page, "Current game" status), one shared leave confirmation (navbar, browser back, table and lobby buttons), light/dark-only theme with a sun/moon button; create-game form restyle (P3) dropped, it stays as is until the form is reworked                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| 010  | Computer speed setting: host slider 1-5 (default 3, faster than before) in lobby and table settings, one shared pacing table, toast on setting changes, protocol v5                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| 011  | Computer AI rework: decisions by expected value from exact dice odds, skill (easy, medium, hard, random) and independent risk (none, medium, high, random) per computer seat, random resolved per decision, score situation shifts risk, protocol v6                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| 012  | Computer player names: random "adjective noun" names in English or German (own Nx library), host can rename inline or roll a new name, language follows the host                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| 013  | Game-over modal over the finished table (no result page), finished games are not restored on reload, winner confetti (`party-js`, shared `Celebration` service, reduced motion respected) and a victory sound played once (preloaded at the table, blocked autoplay tolerated)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| 014  | Rematch in the same room: the host reopens the finished room as a lobby (same settings, computers and seat order), other players rejoin their reserved seat from the game-over modal, a start drops missing players, rounds reject stale requests, protocol v10                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| 015  | Remembered settings and presets: the last started setup (seats, rules, computers, speed) prefills the next game, up to 10 named presets (save, load, apply in the lobby, delete) on the create-game and lobby pages, "Reset to defaults", a save question on Start for new setups; device-local, no protocol change                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| 016  | Spectators: anonymous read-only viewers of running games ("Watch" in the games list, same password rule), spectator counter, no log entry or toast on join and leave, host switch "Allow spectators", spectators never affect timers or game end, reload resumes watching, protocol v11                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| 017  | Leaner socket messages: one snapshot when a client enters (join, rejoin, watch, reload, rematch), then small `game:change` messages with a running number per recipient and only the changed parts; a client that misses a change asks for its own snapshot (`game:sync`); `game:state` and `game:log` are gone. 97% to 98% less data per player and spectator over a full game (3.0 MB to 0.10 MB with 2 players, 18.2 MB to 0.37 MB with 8), a turn message no longer grows with the log. Reusable measurement `npm run measure:socket` and the figures in [socket-traffic.md](socket-traffic.md); compression and MessagePack dropped or postponed, finer diffs postponed, protocol v12                                                                                                                                                                      |
-| 018  | Finer socket diffs and compact log: `game:change` carries only the changed game fields (`gameDiff`: changed scores by index, current player, changed turn fields, pile size, result) instead of the whole game, the log travels as groups with one time stamp per action and a flat kind (decoded in one place, the log text is unchanged), `you` carries only changed flags, and the client drops the turn limit itself when the turn moves, the game ends or it is paused. A card draw in a 4-player game: 747 to 237 bytes; 61% less data per player and 62% less per spectator over an 8-player game than protocol 12 (0.37 MB to 0.14 MB, 99.2% less than v11). Short keys not built: the estimate saves 23.1%, below the 25% gate (kept as idea R26); CSV strings rejected. Figures and decisions in [socket-traffic.md](socket-traffic.md), protocol v13 |
-| 019  | Sounds: seven cues (game start, your turn, countdown, own Volle Lotte, points credited, victory, defeat) with a menubar mute button remembered per device; one replaceable file per cue                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| N/A  | Connection state as toasts (lost, restored, failed with reload); the page is locked while offline                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| N/A  | Host handover: a player rejoining a game with only computers becomes host; the last host can end such a game from the games list (protocol v9)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| N/A  | Playtest fix: one-card discard piles have no background card                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| N/A  | Playtest fix: easy computers take all scoring dice                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| N/A  | Host option to share a next-throw bust probability preview (off by default, protocol v7)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| N/A  | Playtest fix: Star score updates wait for the final roll animation                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| N/A  | Playtest fix: Double Lotte always requires a Volle Lotte                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| N/A  | Docker image and Portainer stack, release workflow, app icon, page titles, version in the header                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| N/A  | Backend integration tests as manual e2e (`npm run test:e2e`, skill `run-e2e`), kept out of CI                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| Spec                                                        | Feature                                                                                                                                                            | Merge PR                                               |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------ |
+| [001](../specs/001-rules-engine/spec.md)                    | Rules engine ported from Java, covering all card types and games with 2-8 players.                                                                                 | [#7](https://github.com/mallwang/volle-lotte/pull/7)   |
+| [002](../specs/002-lobby-multiplayer/spec.md)               | Multiplayer lobbies and games with computer opponents and reconnect support.                                                                                       | [#8](https://github.com/mallwang/volle-lotte/pull/8)   |
+| [003](../specs/003-ui-foundation-primeng/spec.md)           | PrimeNG UI foundation with the Terracotta theme in light and dark mode.                                                                                            | [#9](https://github.com/mallwang/volle-lotte/pull/9)   |
+| [004](../specs/004-multi-language-i18n/spec.md)             | English and German UI and documentation.                                                                                                                           | [#12](https://github.com/mallwang/volle-lotte/pull/12) |
+| [005](../specs/005-dice-pips-rolling-animation/spec.md)     | Pip dice faces, per-die rolling animations and paced computer turns.                                                                                               | [#13](https://github.com/mallwang/volle-lotte/pull/13) |
+| [006](../specs/006-open-lobby-rejoin-timers/spec.md)        | Open lobbies, rejoining after computer replacement, per-phase turn timers, host removal and bans.                                                                  | [#14](https://github.com/mallwang/volle-lotte/pull/14) |
+| [007](../specs/007-active-game-table-ui/spec.md)            | Active game table with player columns, card piles, dice and a game log.                                                                                            | [#16](https://github.com/mallwang/volle-lotte/pull/16) |
+| [008](../specs/008-desktop-min-size-table-polish/spec.md)   | Desktop and tablet table scaling with small-window hints and accessibility polish.                                                                                 | [#23](https://github.com/mallwang/volle-lotte/pull/23) |
+| [009](../specs/009-app-shell-menubar-leave-confirm/spec.md) | Shared app menubar, leave confirmation and light/dark toggle.                                                                                                      | [#25](https://github.com/mallwang/volle-lotte/pull/25) |
+| [010](../specs/010-computer-speed-setting/spec.md)          | Host-controlled computer speed with five levels and a faster default.                                                                                              | [#27](https://github.com/mallwang/volle-lotte/pull/27) |
+| [011](../specs/011-computer-ai-rework/spec.md)              | Computer decisions based on exact dice odds, configurable skill and independent risk preferences.                                                                  | [#28](https://github.com/mallwang/volle-lotte/pull/28) |
+| [012](../specs/012-computer-player-names/spec.md)           | Generated English or German computer names that the host can rename or regenerate.                                                                                 | [#30](https://github.com/mallwang/volle-lotte/pull/30) |
+| [013](../specs/013-game-over-modal/spec.md)                 | Game-over modal on the finished table with winner confetti and a victory sound.                                                                                    | [#32](https://github.com/mallwang/volle-lotte/pull/32) |
+| [014](../specs/014-rematch-same-room/spec.md)               | Rematches in the same room, retaining settings, computers and reserved human seats.                                                                                | [#33](https://github.com/mallwang/volle-lotte/pull/33) |
+| [015](../specs/015-remembered-settings/spec.md)             | Device-local remembered setups and up to ten named presets for creating and configuring games.                                                                     | [#34](https://github.com/mallwang/volle-lotte/pull/34) |
+| [016](../specs/016-spectators/spec.md)                      | Read-only spectators for running games, controlled by the host and resumable after reload.                                                                         | [#35](https://github.com/mallwang/volle-lotte/pull/35) |
+| [017](../specs/017-leaner-socket-messages/spec.md)          | Initial snapshots followed by numbered changes, with automatic resynchronization. Full-game traffic fell by 97-98% per recipient.                                  | [#36](https://github.com/mallwang/volle-lotte/pull/36) |
+| [018](../specs/018-finer-socket-diffs/spec.md)              | Finer state diffs and a compact log reduced eight-player game traffic by another 61-62% per recipient. Measurements are in [socket-traffic.md](socket-traffic.md). | [#37](https://github.com/mallwang/volle-lotte/pull/37) |
+| [019](../specs/019-sounds/spec.md)                          | Seven replaceable game sound cues with a device-local menubar mute setting.                                                                                        | [#38](https://github.com/mallwang/volle-lotte/pull/38) |
+| N/A                                                         | Connection toasts and an offline page lock.                                                                                                                        | [#31](https://github.com/mallwang/volle-lotte/pull/31) |
+| N/A                                                         | Host takeover when rejoining a computer-only game, and ending abandoned games from the games list.                                                                 | [#31](https://github.com/mallwang/volle-lotte/pull/31) |
+| N/A                                                         | Correct single-card discard piles, easy-computer dice selection, Star score timing and Double Lotte completion.                                                    | [#29](https://github.com/mallwang/volle-lotte/pull/29) |
+| N/A                                                         | Optional host-shared preview of the next throw's bust probability.                                                                                                 | [#29](https://github.com/mallwang/volle-lotte/pull/29) |
+| N/A                                                         | Docker image, Portainer stack and release workflow.                                                                                                                | [#10](https://github.com/mallwang/volle-lotte/pull/10) |
+| N/A                                                         | App icon, page titles and version in the header.                                                                                                                   | [#18](https://github.com/mallwang/volle-lotte/pull/18) |
+| N/A                                                         | Manually run backend e2e flows, separate from unit tests and CI.                                                                                                   | [#20](https://github.com/mallwang/volle-lotte/pull/20) |
 
 ## Next
 
-Ordered by effort, smallest first, so small items ship before the big ones; an item never comes before what it needs. Effort is a rough guess: S (a few days, mostly one app), M (engine or protocol change plus UI), L (new subsystem or wide change), XL (new app or foundation for several items). R26 stays last on purpose: it is only built if its gate is met.
+Ordered by current priority and prerequisites; effort is a rough guess: S (a few days, mostly one app), M (engine or protocol change plus UI), L (new subsystem or wide change), XL (new app or foundation for several items). Mobile PWA work is the current top priority. R26 stays last because it is only built if its gate is met.
 
-### R19. Score change animations (`idea`, effort S)
+| #                                                 | Title                                                                       | Status      | Effort |
+| ------------------------------------------------- | --------------------------------------------------------------------------- | ----------- | ------ |
+| [R3](#r3-mobile-app-as-installable-pwa)           | Mobile app as installable PWA ([spec 020](../specs/020-mobile-pwa/spec.md)) | in progress | XL     |
+| [R19](#r19-score-change-animations)               | Score change animations                                                     | idea        | S      |
+| [R27](#r27-start-countdown-screen)                | Start countdown screen                                                      | idea        | M      |
+| [R17](#r17-starting-player-draw)                  | Starting player draw                                                        | idea        | M      |
+| [R14](#r14-in-game-reactions)                     | In-game reactions                                                           | idea        | M      |
+| [R18](#r18-reshuffle-step)                        | Reshuffle step                                                              | idea        | M      |
+| [R9](#r9-rule-options-per-game)                   | Rule options per game                                                       | idea        | M      |
+| [R20](#r20-new-cards)                             | New cards                                                                   | idea        | M      |
+| [R2](#r2-e2e-suite-with-bots)                     | E2E suite with bots                                                         | planned     | L      |
+| [R4](#r4-save-and-load-games)                     | Save and load games                                                         | planned     | L      |
+| [R6](#r6-game-log)                                | Game log                                                                    | planned     | L      |
+| [R13](#r13-replay)                                | Replay                                                                      | idea        | L      |
+| [R22](#r22-user-accounts-and-administration)      | User accounts and administration                                            | idea        | XL     |
+| [R12](#r12-statistics-history-and-highscore)      | Statistics, history and highscore                                           | idea        | L      |
+| [R15](#r15-lobby-search-finished-and-saved-games) | Lobby search, finished and saved games                                      | idea        | L      |
+| [R21](#r21-tournaments)                           | Tournaments                                                                 | idea        | L      |
+| [R23](#r23-credits-and-cosmetics)                 | Credits and cosmetics                                                       | idea        | XL     |
+| [R26](#r26-short-message-keys)                    | Short message keys                                                          | idea        | S      |
 
-- Gain: a green "+500" appears above the player's score and the score counts up like an odometer (rolling digits).
-- Loss: the same with a red "-1000" (Plus/Minus card).
-- Bust: when a player busts and loses the banked points of the turn, a red "-500" appears above the secured score and the points roll back to 0.
-- Securing: every time a player banks, a green "+500" appears above "Secured: x points" and the points count up.
-- Constraints: the Star score updates already wait for the final roll animation; the new animations follow the same rule and the "skip dice animation" setting; `prefers-reduced-motion`.
+### R19. Score change animations
 
-### R27. Start countdown screen (`idea`, effort M)
+**User story:** As a player, I want score gains and losses to animate next to the affected score, so that I can understand each turn's result at a glance.
 
-- Goal: after the host presses Play, a transition screen counts down from 10 to 0 before the table opens. The `game-start` sound plays there, so it no longer runs on top of the first turns of an already running game (the real file is about 9 s long).
-- Why: today the sound starts as soon as the game starts and overlaps with the first turn, its `your-turn` cue and the turn timer.
-- Constraints: all humans see the same countdown, so the start is decided on the server (phase or a start time in the game state, no client-side clock as the source); turn timers and computer moves start only after the countdown; the sound is triggered by the countdown screen instead of the `lobby` to `running` switch in `game/game.ts` (spec 019); a rematch uses the same screen; a reload during the countdown shows the remaining seconds; muted sounds still show the countdown; `prefers-reduced-motion` respected.
-- Open: protocol change (new state or start timestamp, so `PROTOCOL_VERSION` rises); can the host cancel the start; does it combine with the starting player draw (R17) into one start sequence; behaviour for players who join the table late or spectators.
+**Scope and constraints**
 
-### R17. Starting player draw (`idea`, effort M)
+- Show a green gain (for example "+500") above a player's total and count the score up with rolling digits; show losses such as the Plus/Minus card in red (for example "-1000").
+- When points are secured, show the green gain above "Secured: x points" and count up. On a bust, show the lost turn points in red and roll the secured score back to zero.
+- Wait for the final dice animation, including Star rolls. Follow the skip-dice-animation setting and respect `prefers-reduced-motion`.
 
-- Goal: the starting player is drawn in a start animation: a modal with a spin-the-wheel animation of all active player names, then fireworks with the message "Player X is the starting player".
-- Seat order: the player cards are numbered: the starting player gets 1, then humans in alphabetical order, then computers by their seat. Every player sees the same order; the current layout where your own card is always first no longer applies.
-- Constraints: the draw is made on the server (no client-side randomness), all clients show the same result; the animation does not hold the turn timers.
-- Open: touches the seat layout of spec 007 and 008; reuse the `Celebration` service (`apps/frontend/src/app/core/celebration.ts`, spec 013) for the fireworks.
+**Dependencies:** Existing score and dice-animation behavior; no new roadmap prerequisite.
 
-### R14. In-game reactions (`idea`, effort M)
+**Open questions:** Define the reduced-motion presentation and how consecutive score updates are presented without obscuring the result.
 
-- Goal: quick emotes or short chat messages between humans at the table.
-- Constraints: rate-limited, plain text only (no HTML), host can mute; translated preset reactions are the safe first step before free chat.
+### R27. Start countdown screen
 
-### R18. Reshuffle step (`idea`, effort M)
+**User story:** As a player, I want a shared countdown before the first turn, so that I have time to prepare and the game-start sound finishes before play begins.
 
-- When a draw pile is empty and the cards must be reshuffled, the current player has to press a "Reshuffle" button.
-- A new 30 second timeout runs below that button; when it expires, the cards are shuffled automatically and the player continues normally with "Draw" and the usual turn timer.
-- The shuffle animation takes 5 seconds: the discard pile is shuffled and moves to the draw pile.
-- Open: computers press the button after their normal pacing delay (spec 010); protocol change for the new phase.
+**Scope and constraints**
 
-### R9. Rule options per game (`idea`, effort M)
+- After the host presses Play, show a transition screen counting down from 10 to 0 before opening the table.
+- Play the `game-start` cue on this screen instead of the lobby-to-running transition. The current sound is about nine seconds long and otherwise overlaps the first turn, its cue and timer.
+- The server determines the start; turn timers and computer moves begin only after the countdown. All humans see the same countdown, including the remaining time after reload.
+- Use the same screen for rematches. Show the countdown when muted and respect `prefers-reduced-motion`.
 
-- Goal: the host adjusts rules in the lobby, for example target score, enabled card types, number of cards per type, house rules from playtests. The new cards (R20) are one such option.
-- Why: playtests already produced rule tweaks (Double Lotte, bonus Volle Lotte); options make variants testable without code changes.
-- Constraints: the engine in `libs/game-rules` stays the single source of truth and defaults stay unchanged; every option shows up in the lobby, the table settings and `docs/rules.md`.
+**Dependencies:** Sound cues ([spec 019](../specs/019-sounds/spec.md)) and rematch behavior. Coordinate with R17 if both become one start sequence.
 
-### R20. New cards (`idea`, effort M, option per game, needs R9)
+**Open questions:** New phase or start timestamp and the resulting protocol-version change; host cancellation; late arrivals and spectators; interaction with the starting-player draw.
 
-- Goal: an own game option in the settings that adds new card types to the deck. Card images are provided.
-- Bonus 800 (3 times) and Bonus 1000 (2 times).
-- Short Street (as often as the real Street): five in a row, so 1-5 or 2-6.
-- Three of a kind (3 times) and four of a kind (3 times), each with 3 attempts. Check first whether they are too easy; if so, adjust the target points (for example 300 for three, 600 for four of a kind).
-- Full House (3 times): a pair and three of a kind in one throw, 3 attempts. Check whether it is too easy; if so, adjust the points (for example 500).
-- Work: engine and `docs/rules.md` (both languages), tooltips, computer AI (spec 011: odds for the new goals), protocol version, deck size shown in the settings.
+### R17. Starting player draw
 
-### R2. E2E suite with bots (`planned`, effort L)
+**User story:** As a player, I want to see the starting player drawn and the resulting seat order, so that the opening of the game is clear to everyone.
 
-Goal: a thorough suite that plays real games with bots of different strength and checks the functionality and the UI. Run manually through its own skill, never in CI.
+**Scope and constraints**
 
-- Starting point: `apps/backend/src/app/lobby/*.e2e.spec.ts` (socket level, no browser) and the `run-e2e` skill.
-- Add Playwright for the UI (not installed in this repo yet; the `verify-ui` skill still says "throw-away scripts only", update it with this item). Stable selectors need `data-testid` attributes; there are none today.
-- Spike: try [Lightpanda](https://github.com/lightpanda-io/browser) as an optional second Playwright project (`connectOverCDP`) for the flow checks (socket and DOM state, two player contexts). It has no layout or rendering engine, so it cannot replace Chromium for layout and focus checks.
-- Ideas: bots of all difficulties against each other, many seeded games, UI checks per player count and language, reconnect and timeout flows in the browser, protocol version mismatch.
+- Show a modal with a spin-the-wheel animation of active player names, followed by fireworks and "Player X is the starting player".
+- Draw on the server; every client shows the same result and order.
+- Number the player cards: starting player first, then the remaining humans alphabetically, then the remaining computers by seat. Replace the current own-card-first layout.
+- The animation does not hold turn timers.
 
-### R4. Save and load games (`planned`, effort L)
+**Dependencies:** Table layout ([spec 007](../specs/007-active-game-table-ui/spec.md), [spec 008](../specs/008-desktop-min-size-table-polish/spec.md)) and the shared celebration service ([spec 013](../specs/013-game-over-modal/spec.md)).
 
-- Host saves a game server-side and loads it later; the game state is already immutable JSON (`toJSON`/`fromJSON`).
-- Persist after every turn in SQLite so restarts do not lose games. Loading leads to the game lobby, all humans must press "Ready" again.
-- Open: SQLite is not part of the backend yet; it is also the base for R6, R12, R15 and R22. Not to be confused with saving a finished game for later viewing (R15).
+**Open questions:** How to combine the draw with R27, whose countdown delays turn timers; reduced-motion presentation.
 
-### R6. Game log (`planned`, effort L, builds on R4)
+### R14. In-game reactions
 
-Goal: a persisted, structured game log. The in-game log is shown below the table, but it is technical, hard to read (every action is one row) and not persisted.
+**User story:** As a player, I want to send quick reactions to other humans at the table, so that we can interact without leaving the game.
 
-- Backend table: participants, date and time, duration, final result; plus an event log per game. Shares the SQLite work with R4.
-- Format: one compact, easy to parse text line per event (a code plus fields), so human-readable texts can be generated from it in any language later. The table log can group the lines per turn.
-- Game events: player leaves, rejoins, is disconnected, reconnects, is removed or banned, does not react (timer expired), host changes a setting, final result.
-- Throw events: round number, time since game start, player name, card name, dice result, chosen dice, final dice, turn result, dice points, total points.
-- First step: check which data is needed for a replay (R13): seating order, the global dice animation setting, card order if the engine is seeded.
-- Saved games keep their log assigned to the saving players (R15).
+**Scope and constraints**
 
-### R13. Replay (`idea`, effort L, builds on R6)
+- Start with translated preset reactions; consider short free-text messages later.
+- Rate-limit messages, allow plain text only and let the host mute reactions.
 
-- Goal: watch a finished game again ("re-live") from its persisted log, without a recording: the viewer is built purely by parsing the log (who sits where, rolling dice follow the viewer's global setting, and so on). Also useful to debug the computer AI (spec 011) and to reproduce bugs.
-- Saved games stay assigned to the players who saved them (R15).
-- Open: log granularity (needs dice and card order), a seeded engine makes replays small.
+**Dependencies:** No new roadmap prerequisite.
 
-### R3. Mobile app as installable PWA (`idea`, effort XL)
+**Open questions:** Initial reaction set, display location and duration, rate limits, mute scope and whether free chat belongs in a later feature.
 
-Goal: a separate mobile frontend with a UI optimized for phones, so the desktop and tablet frontend stays as it is. A new Nx application that only talks to the backend over WebSocket.
+### R18. Reshuffle step
 
-- Decision: no native store app for now (no Google Play or Apple publishing). Mobile users open the URL in their mobile browser and get the mobile UI; they can "install" it on the home screen. Capacitor is therefore not required for this step; it can be added later if a store presence is wanted (sideloaded APK is free, Google Play about 25 USD once, Apple Developer about 99 USD per year).
-- Routing on the one public URL (`https://volle-lotte.allwang.family`), the question is what a phone browser sees:
-  - A: client-side detection in the desktop app (`matchMedia('(pointer: coarse)')` and width) that shows "open the mobile version / continue anyway" (simple and robust);
-  - B: routing in the reverse proxy (nginx) or in NestJS based on the user agent, so phones are served the mobile build directly (brittle, must not interfere with the no-cache rule for `index.html`);
-  - C: serve the mobile build under `/m/` and link to it.
-- Installable PWA: web app manifest and icons; Angular service worker for updates. An update is only activated in the lobby or after the game, never mid-game. The backend reports a `protocolVersion` (exists, see `PROTOCOL_VERSION`); show "update required" when it does not match. Do not cache `index.html` and `ngsw.json`, cache hashed assets for long. A plain PWA for the desktop frontend is not needed (the desktop and tablet layout exists, spec 008); the former item "PWA and safe updates" is merged here.
-- Shared code: `libs/game-rules` (protocol types, rules); keep `scope:*` tags in mind for the new app.
-- Open: the same bundle behind nginx or a second deployment; sound is done (spec 019). The desktop scope is settled (spec 008), so this item can start any time.
+**User story:** As the current player, I want to trigger and see a reshuffle when the draw pile is empty, so that the transition to a fresh pile is understandable.
 
-### R22. User accounts and administration (`idea`, effort XL)
+**Scope and constraints**
 
-- Users: change name, change password, e-mail confirmation required; no admin needed who sends invitations or approves registrations. Also forgot password and profile picture (logic from Vaultfolio), SMTP.
-- An admin role (for example the operator of the application) with an admin section:
-  - a table of all registered players with statistics: games played, aborts (several aborts of the same game count as one), wins, Volle Lottes, timer overruns (every overrun counts);
-  - a quick statistics page: total games played, running games, connected players, active players in running games;
-  - a health page: current version, backend connection, database health.
-- Presets of R10 move to the account: they are stored on the server per user, so they load on every device and browser, not only in the local storage of one client. The "settings cannot be saved on this device" notice of R10 is removed then, and existing local presets are offered for import on the first sign-in.
-- Foundation for R12, R15, R21 and R23. Needs the persistence of R4 and R6.
+- Offer a "Reshuffle" button with a separate 30-second timeout below it; shuffle automatically when it expires.
+- Animate the discard pile being shuffled and moved to the draw pile for five seconds.
+- Afterwards, continue with "Draw" and the usual turn timer. Computers trigger reshuffling after their normal pacing delay.
 
-### R12. Statistics, history and highscore (`idea`, effort L, builds on R6 and R22)
+**Dependencies:** Computer pacing ([spec 010](../specs/010-computer-speed-setting/spec.md)); engine and protocol support for the new phase.
 
-- Highscore: a ranking of all players, either a paginated table or the top 20, with wins and total points; switchable category (wins or total points).
-- Game history: the logged-in player sees the past games they took part in and the result of each (list in the lobby, see R15). Won games can be filtered there.
-- Statistics per player: games played and won, average score, busts, Volle Lottes, favourite card. The admin table (R22) shows the operational variants (aborts, timer overruns).
-- Constraints: without accounts, identity is the nickname plus token (see [migration.md](migration.md)), so a ranking is only meaningful per account (R22). Needs the persistence of R4 and R6.
+**Open questions:** Exact timer transitions around the animation and behavior after disconnect or reload.
 
-### R15. Lobby rework: search, finished games, saved games (`idea`, effort L, needs R4, R6 and R22)
+### R9. Rule options per game
 
-- Search: search the games list by name and filter by criteria (status, player count, own games, won games).
-- "Finished" section: finished games stay listed until they are finally deleted and show the deletion time, so players know how long they remain. Today finished games are gone at once because nothing is persisted.
-- Saving: a player can save a finished game; it then stays in their "Finished" section together with its log, assigned to every player who saved it, and can be watched again in the re-live (R13). Re-live needs the log rework (R6), which is a separate feature.
-- History: a game history of the logged-in player (see R12).
-- Open: retention time of unsaved finished games.
+**User story:** As a host, I want to configure rule variants in the lobby, so that my group can try different decks and house rules without code changes.
 
-### R21. Tournaments (`idea`, effort L, needs R22)
+**Scope and constraints**
 
-- Several tournament types: easy (easy opponents), medium (easy and medium), hard (medium and hard).
-- A tournament section in the lobby with system-provided tournament settings: number of humans and computers, deck (standard or extended, see R20), computer speed, and so on.
-- The system is the host: players cannot change any setting that influences the game. Only the participating player can leave and rejoin. As today, a tournament that nobody takes part in is deleted after 24 hours.
-- Open: result and rewards (see R23); several rounds or a single game.
+- Consider target score, enabled card types, quantities per type and house rules informed by playtests, including Double Lotte and bonus Volle Lotte.
+- Provide the game option needed for the new cards in R20.
+- Keep the shared rules engine authoritative and existing defaults unchanged.
+- Reflect every option in the lobby, table settings and [rules.md](rules.md).
 
-### R23. Credits and cosmetics (`idea`, effort XL, needs R22; builds on R21)
+**Dependencies:** Existing game settings and rules engine; foundation for R20.
 
-- Players earn credits per game (depending on the difficulty and number of opponents) and per tournament (depending on its settings).
-- A small store redeems credits for cosmetics only: card patterns, modern versus hand-drawn cards, other dice, special player cards, other backgrounds (water, sky, lava, and so on).
-- Sounds: for every sound type the game has or will have (victory, game start, your turn, countdown, Volle Lotte, points, defeat), further sounds can be bought with credits in the store. Players pick them in their user settings, and the game plays the selected ones (spec 019 provides the sound types).
-- Constraint: gameplay is never affected (no pay to win, no credits to win).
-- Open: how cosmetics look to the other players at the table; assets must be provided.
+**Open questions:** Which options belong in the first release, allowed values and combinations, and compatibility with remembered setups and presets.
 
-### R26. Short message keys (`idea`, effort S, do last)
+### R20. New cards
 
-- Shorten the keys of the socket messages (`playerId` to `pid`, `seats` to `s`) from one table shared by frontend and backend (`wire-keys.ts` with `shortenKeys` / `expandKeys`, applied at the send boundary, and a test that fails for a key without an entry).
-- Why: spec 018 (Story 4) measured it and did not build it: the throw-away estimate (`keyTableEstimate` in `apps/backend/src/app/lobby/testing/traffic.ts`) saves 23.1% per player (109,262 instead of 142,121 bytes in an 8-player game), below the 25% gate. Details in [socket-traffic.md](socket-traffic.md#short-keys-not-built).
-- Constraint: lower readability of the traffic in the browser tools. Measure again first (`npm run measure:socket`); build it only if traffic matters by then or other changes push the saving over the gate.
+**User story:** As a host, I want to enable an extended deck, so that my group can play with additional dice challenges.
 
-### Later, not for the next releases
+**Scope and constraints**
 
-- Drag and drop for dice selection (tap is the current interaction).
+- Add Bonus 800 (three cards) and Bonus 1000 (two cards).
+- Add Short Street (1-5 or 2-6), with the same quantity as Street.
+- Add three cards each for three of a kind and four of a kind, each allowing three attempts. Check difficulty before fixing rewards; candidates are 300 and 600 points.
+- Add three Full House cards: a pair and three of a kind in one throw, with three attempts. Check difficulty before fixing the reward; a candidate is 500 points.
+- Card images are provided. Update the engine, English and German rules, tooltips, computer odds, protocol version and displayed deck size.
+
+**Dependencies:** R9; computer AI from [spec 011](../specs/011-computer-ai-rework/spec.md).
+
+**Open questions:** Difficulty and final rewards for the new challenges; precise selection rules across attempts.
+
+### R2. E2E suite with bots
+
+**User story:** As a maintainer, I want real games exercised by bots and browser clients, so that gameplay and UI regressions are caught before release.
+
+**Scope and constraints**
+
+- Build on the backend socket-level e2e tests and the `run-e2e` skill.
+- Run manually through a dedicated skill, never in CI.
+- Add browser flows with Playwright and stable `data-testid` selectors; update the `verify-ui` skill's throw-away-script guidance as part of this work.
+- Cover different bot strengths, many seeded games, player counts, languages, reconnects, timeouts and protocol-version mismatch.
+- Try [Lightpanda](https://github.com/lightpanda-io/browser) as an optional second Playwright project via `connectOverCDP`, including two player contexts. It can check socket and DOM state, but cannot replace Chromium for layout and focus checks.
+
+**Dependencies:** Existing backend e2e flows; check current browser tooling and selector coverage when specifying.
+
+**Open questions:** Initial flow matrix, deterministic seed support, acceptable runtime and whether Lightpanda adds enough value.
+
+### R4. Save and load games
+
+**User story:** As a host, I want to save and resume a game, so that a break, server restart or update does not lose our progress.
+
+**Scope and constraints**
+
+- Save server-side and allow the host to load later, using the existing immutable JSON state (`toJSON`/`fromJSON`).
+- Introduce SQLite persistence and persist after every turn.
+- Loading returns to the game lobby; every human must confirm "Ready" again.
+- This restores playable games, unlike R15's saved finished games for later viewing.
+
+**Dependencies:** Existing game-state serialization; persistence foundation for R6, R12, R15 and R22.
+
+**Open questions:** Save/load controls, ownership before accounts exist, retention and recovery of a partially completed turn.
+
+### R6. Game log
+
+**User story:** As a player, I want a readable, persisted record of a game, so that I can review what happened and later replay it.
+
+**Scope and constraints**
+
+- Store participants, timestamps, duration and final result, plus a structured event log per game.
+- Use one compact, parseable text line per event (code plus fields), from which localized text can be generated. Group entries by turn in the table log.
+- Record leaving, rejoining, disconnects, reconnects, removal, bans, timer expiry, host setting changes and the final result.
+- Record throw context: round, elapsed time, player, card, dice result, selected and final dice, turn result, dice points and total points.
+- Check replay requirements first: seating order, dice-animation preferences and card order if the engine is seeded.
+- Keep logs of saved games assigned to the saving players through R15.
+
+**Dependencies:** R4; foundation for R13 and the history features.
+
+**Open questions:** Replay-complete event schema, log grouping and presentation, retention, and which current technical entries can be reused.
+
+### R13. Replay
+
+**User story:** As a player, I want to relive a finished game from its saved log, so that I can review memorable turns or reproduce unexpected behavior.
+
+**Scope and constraints**
+
+- Build the viewer entirely from parsed log events, not a video recording.
+- Reconstruct seating and game actions; use the viewer's global dice-animation setting.
+- Support computer-AI debugging and bug reproduction.
+- Keep saved games assigned to the players who saved them through R15.
+
+**Dependencies:** R6. Coordinate saved-game access with R15; replay data requirements must be considered while designing the log.
+
+**Open questions:** Required dice and card-order detail, whether a seeded engine can reduce replay size, and playback controls.
+
+### R3. Mobile app as installable PWA
+
+**User story:** As a phone user, I want a dedicated, installable mobile interface, so that I can comfortably play without changing the desktop and tablet experience.
+
+**Scope and constraints**
+
+- Create a separate Nx frontend using Angular and Capacitor, communicating with the backend over WebSocket and sharing rules and protocol types within the `scope:*` boundaries. Capacitor is the agreed PWA foundation and keeps native app options open for a future feature.
+- Serve mobile users from the public URL, `https://volle-lotte.allwang.family`, with an option to install on the home screen.
+- Provide a manifest, icons and an Angular service worker. Activate updates only in the lobby or after a game, never mid-game; require an update on protocol-version mismatch.
+- Do not cache `index.html` or `ngsw.json`; cache hashed assets long-term.
+- No native store publishing for this step. No separate desktop PWA is needed; the desktop and tablet layout remains unchanged.
+- The mobile lobby and game table must be designed for phone-sized screens, including touch use; do not rely on scaling the desktop table to fit.
+
+**Dependencies:** Existing protocol-version reporting, desktop/tablet scope ([spec 008](../specs/008-desktop-min-size-table-polish/spec.md)) and sounds ([spec 019](../specs/019-sounds/spec.md)); no new roadmap prerequisite.
+
+**Delivery backlog:** [Mobile App Roadmap](./mobile-roadmap.md).
+
+**Open questions:** Mobile/desktop selection, user-agent routing or a linked `/m/` build; shared or separate deployment. User-agent routing must not break update caching. The feature specification is [020](../specs/020-mobile-pwa/spec.md).
+
+### R22. User accounts and administration
+
+**User story:** As a player, I want an optional account for my identity and settings across devices; as an operator, I want an administration area to monitor players and application health.
+
+**Scope and constraints**
+
+- Support self-registration with e-mail confirmation, name and password changes, password recovery and a profile picture. No invitation or admin approval is required; use SMTP and consider the existing Vaultfolio logic.
+- Add an admin role and a player table with games played, aborts, wins, Volle Lottes and timer overruns. Count repeated aborts of one game once, but every timer overrun.
+- Show total and running games, connected players and active players in running games; show version, backend connection and database health.
+- Move device-local presets from [spec 015](../specs/015-remembered-settings/spec.md) to per-user server storage. Offer local-preset import on first sign-in and remove the device-storage warning for account-backed presets.
+
+**Dependencies:** R4 and R6; foundation for R12, R15, R21 and R23.
+
+**Open questions:** Anonymous-to-account identity migration, profile-image storage, admin-role assignment and the account/anonymous settings experience.
+
+### R12. Statistics, history and highscore
+
+**User story:** As a signed-in player, I want to see my past results and compare statistics, so that I can follow my progress over time.
+
+**Scope and constraints**
+
+- Provide a ranking by wins or total points, as a paginated table or a top 20.
+- Show past games and results for the signed-in player, including a won-games filter in the lobby history (R15).
+- Show games played and won, average score, busts, Volle Lottes and favourite card.
+- Keep operational statistics such as aborts and timer overruns in R22's administration view.
+- Rank accounts, not anonymous nickname/token identities; see [migration.md](migration.md).
+
+**Dependencies:** R4, R6 and R22; coordinate the lobby history surface with R15.
+
+**Open questions:** Ranking presentation, statistical definitions, visibility and treatment of games played before account registration.
+
+### R15. Lobby search, finished and saved games
+
+**User story:** As a player, I want to find games and keep finished ones, so that I can revisit my results and replay games I saved.
+
+**Scope and constraints**
+
+- Search by game name and filter by status, player count, own games and won games.
+- Keep finished games listed until deletion and show their deletion time.
+- Let each player save a finished game and its log in their own "Finished" section; one game can be assigned to several saving players.
+- Provide the signed-in player's game history (R12) and access to replays (R13).
+
+**Dependencies:** R4, R6 and R22; R13 for replay viewing and coordination with R12 for history.
+
+**Open questions:** Retention for unsaved finished games, saved-game deletion and how history and saved games share the lobby.
+
+### R21. Tournaments
+
+**User story:** As a player, I want to enter system-hosted challenges with fixed settings, so that I can compete under consistent conditions.
+
+**Scope and constraints**
+
+- Offer easy (easy opponents), medium (easy and medium) and hard (medium and hard) tournament types.
+- Provide a tournament section with system-defined human/computer counts, deck, computer speed and other settings.
+- The system is host; players cannot alter settings that influence play. Only a participating player can leave and rejoin their place.
+- Delete a tournament after 24 hours without participants, matching current abandoned-game cleanup.
+
+**Dependencies:** R22; R20 if extended decks are offered. Coordinate rewards with R23.
+
+**Open questions:** Single game or multiple rounds, results, rewards and participation rules.
+
+### R23. Credits and cosmetics
+
+**User story:** As a player, I want to earn credits and unlock cosmetic choices, so that I can personalize the game without changing anyone's chance of winning.
+
+**Scope and constraints**
+
+- Award credits per game based on opponent difficulty and count, and per tournament based on its settings.
+- Offer cosmetics only: card patterns, modern or hand-drawn cards, dice, player cards and backgrounds such as water, sky or lava.
+- Offer additional sounds for every cue type, selected in user settings; [spec 019](../specs/019-sounds/spec.md) provides the current types.
+- Never affect gameplay: no pay to win and no credits to win. Assets must be provided.
+
+**Dependencies:** R22; builds on R21 for tournament rewards.
+
+**Open questions:** Earning and pricing rules, visibility of cosmetics to other players, asset availability and selected-sound delivery.
+
+### R26. Short message keys
+
+**User story:** As an operator, I want smaller socket messages only when the measured saving justifies the complexity, so that bandwidth improves without unnecessary protocol work.
+
+**Scope and constraints**
+
+- Consider shortening keys such as `playerId` to `pid` and `seats` to `s` from one frontend/backend table (`wire-keys.ts`), applied at the send boundary through `shortenKeys` / `expandKeys`.
+- If built, test that every wire key has an entry.
+- The estimate in [spec 018](../specs/018-finer-socket-diffs/spec.md), Story 4, saved 23.1% per player (109,262 instead of 142,121 bytes in an eight-player game), below the 25% gate. See [socket-traffic.md](socket-traffic.md#short-keys-not-built) and `keyTableEstimate` in the backend traffic measurement helper.
+- Measure again with `npm run measure:socket`. Build only if traffic matters at that time or other changes push savings over the gate; browser traffic becomes less readable.
+
+**Dependencies:** Do last, after other protocol changes, and only if its gate is met.
+
+**Open questions:** Updated measured savings and whether the operational benefit warrants reduced readability.
 
 ## Ideas
 
 - Accessibility: reduced-motion setting for the dice animation (respect `prefers-reduced-motion`), colour-blind safe card and score cues.
 - Optional turn-time presets for the host (relaxed, normal, blitz) instead of single timer values.
-
 - Screen-reader support for the timers on the table (live announcements of the turn timer and the game clock), found during spec 008.
 
-Decision (spec 008): no separate minimum width; the scale rule alone applies, so portrait tablets (768x1024, scale 0.77) still show the table.
+Decision ([spec 008](../specs/008-desktop-min-size-table-polish/spec.md)): no separate minimum width; the scale rule alone applies, so portrait tablets (768x1024, scale 0.77) still show the table.

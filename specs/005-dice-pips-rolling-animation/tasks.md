@@ -111,7 +111,7 @@ description: 'Task list for 005 dice pips and rolling animation'
 - [x] T030 [P] Update EN/DE documentation (paired files): `README` feature notes if dice are mentioned, `docs/user-guide*.md` (pips, rolling, skip setting, fast computer dice, reduced motion), `docs/how-to-play*.md` if it mentions dice display; update `docs/migration.md` status if the porting map lists dice UI. Use the repo's docs skill for the EN/DE pairing.
 - [x] T031 Check `sonar.coverage.exclusions` and the skip list in `.specify/memory/test-coverage-guide.md`: no new exclusions are needed unless `settings-dialog.ts` is template-only; keep both in sync if added. Run coverage and confirm ≥ 80 % for the touched projects.
 - [x] T032 Run `npm run typecheck && npm run test && npm run lint` and fix findings.
-- [ ] T033 Run the manual scenarios in `specs/005-dice-pips-rolling-animation/quickstart.md` (desktop and phone width, light and dark, reduced motion, skip setting, host and guest, reload mid-roll) and note any deviation.
+- [x] T033 Run the manual scenarios in `specs/005-dice-pips-rolling-animation/quickstart.md` (desktop and phone width, light and dark, reduced motion, skip setting, host and guest, reload mid-roll) and note any deviation.
 
 ---
 
