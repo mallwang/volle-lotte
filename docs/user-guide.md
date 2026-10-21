@@ -2,7 +2,7 @@
 
 > Diese Anleitung ist auch auf Deutsch verfügbar: [Deutsche Benutzeranleitung](user-guide.de.md)
 
-Volle Lotte is an online dice game for 2-8 players. Computer opponents can fill empty seats. How to play is explained in [how-to-play.md](how-to-play.md).
+Volle Lotte is an online dice game for 2-8 players. Computer opponents can fill empty seats. How to play is explained in [how-to-play.md](how-to-play.md). The phone version is described in the [mobile user guide](user-guide-mobile.md).
 
 ## Table of Contents
 

@@ -113,6 +113,10 @@ As a phone user, I want every lobby screen to fit my screen with labeled, touch-
 - **FR-013**: Starting a game MUST lead to a defined state on the phone (a clear notice that the phone game table is not yet available) until M2 delivers the table.
 - **FR-014**: The desktop and tablet application MUST remain unchanged in behavior and appearance.
 - **FR-015**: Mobile lobby behavior MUST follow the server's authority; the mobile application MUST NOT apply lobby changes locally before the server confirms them.
+- **FR-016**: The mobile application MUST offer a theme toggle (light/dark, initial value from the stored choice or the system preference, shared storage key with desktop) and a language toggle (German/English, shown as the flag of the current language), both as icon-only buttons in a sticky header.
+- **FR-017**: The host lobby MUST show a seat card for every unlocked seat; locked seats are hidden and a single "Add new player" card lets the host open the next locked seat for a player or fill it with a computer. Computer difficulty and risk selects MUST be labelled, and the computer speed scale MUST show slow/default/fast labels.
+- **FR-018**: Ready and Start MUST be one flow: guests and a not-ready host see Ready/Not ready; a ready host sees Not ready and Start game. The host's Ready MUST be disabled while a seat is open or another human is not ready.
+- **FR-019**: Leaving or withdrawing MUST use a visually distinct (red) button, and a started game MUST offer a "Back to the lobby" link besides leaving it.
 
 ### Key Entities
 

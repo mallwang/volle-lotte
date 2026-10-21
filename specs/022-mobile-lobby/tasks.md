@@ -102,7 +102,7 @@ description: 'Task list for Mobile lobby and game setup'
 
 - [ ] T021 [US4] Long-content pass: wrap or truncate names, nicknames and computer names with visible ellipsis in `apps/mobile/src/styles.css` and the component styles; confirm component styles stay within the 4/8 kB budgets
 - [ ] T022 [US4] Landscape and keyboard pass: fixed action bars stay reachable with the on-screen keyboard, reduced height scrolls vertically; fix in component styles
-- [ ] T023 [US4] Manual viewport walk-through of every screen in both languages per quickstart.md (320, 480 portrait; 568, 932 landscape); fix findings
+- [x] T023 [US4] Manual viewport walk-through of every screen in both languages per quickstart.md (320, 480 portrait; 568, 932 landscape); fix findings
 
 ---
 
