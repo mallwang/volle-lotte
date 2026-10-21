@@ -126,7 +126,7 @@ description: 'Task list for the rematch in the same room'
 
 - [x] T040 Run `npm run lint`, `npm run typecheck`, `npm run test` and `npm run build`; fix findings
 - [x] T041 Verify the manual scenarios of `quickstart.md` with the `verify-ui` skill (host-first rematch, rejoin, absent player, remove, leaver, two tabs, reload)
-- [ ] T042 (optional, not run) Check coverage of the changed files against `.specify/memory/test-coverage-guide.md` (`/speckit-coverage`, optional) and, before merging, the SonarQube quality gate (`/speckit-sonar-validate`, optional)
+- [x] T042 (optional, not run) Check coverage of the changed files against `.specify/memory/test-coverage-guide.md` (`/speckit-coverage`, optional) and, before merging, the SonarQube quality gate (`/speckit-sonar-validate`, optional)
 
 ---
 

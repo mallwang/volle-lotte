@@ -91,7 +91,7 @@
 ### Tests for User Story 3
 
 - [x] T026 [P] [US3] Computer strategy tests with seeded rng in `libs/game-rules/src/lib/computer.spec.ts`: always returns an action contained in `legalActions`, bank thresholds per difficulty (easy 300, medium 450 never with >= 5 free dice, hard 650 never with >= 4), hard takes a Volle Lotte when available
-- [ ] T027 [US3] Integration scenarios 3, 4 and 8 in `lobby/lobby.gateway.spec.ts`: full game with 2 and with 8 clients (computers included) to a ranking with identical state for all clients and delivery well under 1 s (SC-002, SC-005); `notYourTurn`, `rejected` with `engine` reason, duplicate action, no push and no state change on rejection (SC-003); two parallel games stay independent (SC-007)
+- [x] T027 [US3] Integration scenarios 3, 4 and 8 in `lobby/lobby.gateway.spec.ts`: full game with 2 and with 8 clients (computers included) to a ranking with identical state for all clients and delivery well under 1 s (SC-002, SC-005); `notYourTurn`, `rejected` with `engine` reason, duplicate action, no push and no state change on rejection (SC-003); two parallel games stay independent (SC-007)
 
 ### Implementation for User Story 3
 
@@ -114,7 +114,7 @@
 
 ### Tests for User Story 4
 
-- [ ] T034 [US4] Integration scenarios 5 and 7 in `lobby/lobby.gateway.spec.ts` (fake timers): disconnect warning and log entry, reconnect inside 60 s restores the exact state (SC-004), expiry leads to `pending` and pause, `host:decide` computer and free, `nothingPending`, deliberate `game:leave`, host handover, lobby cleanup after 15 min and running cleanup after 24 h with `game:closed`, reconnect cancels cleanup
+- [x] T034 [US4] Integration scenarios 5 and 7 in `lobby/lobby.gateway.spec.ts` (fake timers): disconnect warning and log entry, reconnect inside 60 s restores the exact state (SC-004), expiry leads to `pending` and pause, `host:decide` computer and free, `nothingPending`, deliberate `game:leave`, host handover, lobby cleanup after 15 min and running cleanup after 24 h with `game:closed`, reconnect cancels cleanup
 
 ### Implementation for User Story 4
 

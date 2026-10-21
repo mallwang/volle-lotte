@@ -163,7 +163,7 @@ description: 'Task list for UI Foundation (PrimeNG)'
 
 - [x] T043 Check the build against `apps/frontend/project.json` budgets (initial 500kb/1mb, anyComponentStyle 4kb/8kb); raise only if PrimeNG requires it and note the reason in the PR description
 - [x] T044 Run `npm run lint`, `npm run typecheck`, `npm run test`, `npm run build` and `npm run test:coverage`; frontend coverage must stay >= 80% with no new exclusions in `sonar-project.properties`
-- [ ] T045 Run the manual scenarios 1-7 in `specs/003-ui-foundation-primeng/quickstart.md` at 320, 360, 768 and 1280 px in light and dark; fix findings
+- [x] T045 Run the manual scenarios 1-7 in `specs/003-ui-foundation-primeng/quickstart.md` at 320, 360, 768 and 1280 px in light and dark; fix findings
 - [x] T046 [P] Update `docs/migration.md` with the UI toolkit decision (PrimeNG 22.1, Angular 22.1, Terracotta theme, replaceable tiles for the follow-up dice UI)
 
 ---
