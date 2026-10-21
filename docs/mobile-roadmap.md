@@ -55,6 +55,8 @@ The goal is to put usable browser builds in front of real users early, then comp
 - A tester can join a game hosted by a desktop user and become ready.
 - No primary lobby action requires browser zoom or horizontal page scrolling.
 
+**Deferred:** Presets (saved game setups) and the Start confirmation that offers to save one are not part of M1. The mobile lobby adds computers in the lobby instead. Add presets in a later milestone if phone users ask for them.
+
 **Depends on:** M0.
 
 ### M2. Play a complete game on a phone

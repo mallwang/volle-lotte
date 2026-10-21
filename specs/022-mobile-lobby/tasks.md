@@ -108,9 +108,9 @@ description: 'Task list for Mobile lobby and game setup'
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T024 [P] Record the presets deferral in `docs/mobile-roadmap.md` (M1 section) and mark M1 status in `docs/roadmap.md` if it tracks mobile status (research R6)
+- [x] T024 [P] Record the presets deferral in `docs/mobile-roadmap.md` (M1 section) and mark M1 status in `docs/roadmap.md` if it tracks mobile status (research R6)
 - [ ] T025 [P] Run `/speckit-coverage` for `apps/mobile` and `libs/client-core`; add tests until ≥ 80 %
-- [ ] T026 Run `npm run lint`, `typecheck`, `test`, `build` for all projects; confirm the initial mobile bundle stays under 500 kB and desktop suites pass unmodified (SC-005)
+- [x] T026 Run `npm run lint`, `typecheck`, `test`, `build` for all projects; confirm the initial mobile bundle stays under 500 kB and desktop suites pass unmodified (SC-005)
 - [ ] T027 Run quickstart.md scenarios 1-7 (including cross-client join against a desktop host and the desktop regression) and fix findings
 - [ ] T028 Run `/speckit-sonar-validate` and resolve new issues
 
