@@ -4,3 +4,5 @@ export * from './lib/i18n/de.js';
 export * from './lib/testing.js';
 export * from './lib/game-view.js';
 export * from './lib/table-view.js';
+export * from './lib/dice-roll.js';
+export * from './lib/pips.js';

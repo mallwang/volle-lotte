@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { DieFace, PIP_CELLS } from './die-face';
+import { PIP_CELLS } from 'client-core';
+import { DieFace } from './die-face';
 
 describe('DieFace', () => {
   it('maps each value to that many distinct cells', () => {

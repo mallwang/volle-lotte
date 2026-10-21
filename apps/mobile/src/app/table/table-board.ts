@@ -1,17 +1,9 @@
 import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
+import { PIP_CELLS } from 'client-core';
 import type { CardType } from 'game-rules';
 import { DiceRollService } from '../core/dice-roll';
 import { TranslatePipe } from '../core/translate.pipe';
 
-/** Grid cells (0-8, row-major 3x3) that carry a pip, per die value. */
-const PIPS: Record<number, readonly number[]> = {
-  1: [4],
-  2: [0, 8],
-  3: [0, 4, 8],
-  4: [0, 2, 6, 8],
-  5: [0, 2, 4, 6, 8],
-  6: [0, 2, 3, 5, 6, 8],
-};
 const CELLS = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 const WARN_SECONDS = 10;
 
@@ -229,6 +221,6 @@ export class TableBoard {
     });
   }
 
-  protected pips = (v: number | null): readonly number[] => PIPS[v ?? 0] ?? [];
+  protected pips = (v: number | null): readonly number[] => PIP_CELLS[v ?? 0] ?? [];
   protected left = (at: number): number => Math.max(0, at - Date.now());
 }
