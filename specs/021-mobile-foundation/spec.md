@@ -68,10 +68,10 @@ As a maintainer, I want the mobile frontend to build and ship with the existing 
 ### Functional Requirements
 
 - **FR-001**: The product MUST provide a separately buildable mobile frontend while preserving the existing desktop frontend.
-- **FR-002**: The mobile frontend MUST be reachable at a documented mobile entry point in a test deployment.
+- **FR-002**: The mobile frontend MUST be reachable at `https://test.volle-lotte.allwang.family/m/` in the existing test deployment.
 - **FR-003**: The mobile frontend MUST communicate with the existing game service, without introducing a separate game service.
 - **FR-004**: A single application release MUST make the mobile frontend, desktop frontend, and existing game service available together.
-- **FR-005**: A test release MUST be deployable and verifiable without replacing the production release.
+- **FR-005**: A test release MUST have an identifier distinct from production and MUST be deployable without replacing the production release.
 - **FR-006**: The M0 build MUST provide a runnable mobile application shell and establish its backend connection; mobile lobby and gameplay interactions are deferred to later increments.
 - **FR-007**: Before shared code is extracted, the M0 plan MUST document the existing game rules, protocol types, and frontend client logic relevant to the mobile app, and record whether each candidate is reused, extracted, or left in place with a rationale.
 - **FR-008**: New shared code MUST be limited to concrete client-neutral logic required by both frontends, and MUST follow the existing module-boundary rules.
@@ -100,7 +100,8 @@ As a maintainer, I want the mobile frontend to build and ship with the existing 
 ## Assumptions
 
 - M0 delivers a testable application shell and backend connectivity, not the mobile lobby or game table; those are M1 and M2.
-- The test deployment is externally reachable by selected testers and is operationally separate from production. Its exact host, access control, and deployment mechanism are decided during planning.
+- The test deployment is externally reachable by selected testers at `https://test.volle-lotte.allwang.family`, uses its own Docker instance and SQLite volume, and is updated manually by changing its Docker image tag. Production remains separate.
+- The mobile browser application is served from the same host under `/m/`; desktop remains at the root path.
 - The mobile build is a separate Nx frontend application and shares only client-neutral logic with the existing frontend.
 - Capacitor is the selected future native-wrapper path, but Android Studio, emulator support, native project generation, APK distribution, and app stores are outside M0.
 - Multiplayer play continues to require a connection to the existing backend.

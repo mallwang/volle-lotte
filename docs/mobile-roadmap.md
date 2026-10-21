@@ -8,7 +8,7 @@ The goal is to put usable browser builds in front of real users early, then comp
 
 - The mobile frontend is a separate Angular application in the Nx workspace, configured for Capacitor from the foundation increment. It shares game rules and protocol types with the existing frontend and communicates with the existing backend.
 - A single backend Docker image should serve the desktop frontend, mobile frontend, API and WebSocket. Mobile releases can therefore be deployed with the existing backend release process.
-- Keep a test deployment or URL separate from the production instance so selected users can try mobile builds before a production release.
+- Use the existing isolated test instance at `https://test.volle-lotte.allwang.family`, with its own Docker instance and SQLite volume, so selected users can try candidate mobile builds before a production release.
 - A browser-accessible test build does not need to be installable. Add manifest and service-worker behavior after the core mobile flows are usable.
 - Capacitor is the selected path for a future native wrapper. Android Studio and emulator validation are deferred until after the browser PWA is established. No APK distribution or app-store publishing is included in the initial mobile increments.
 - Keep the existing desktop and tablet experience unchanged.
@@ -22,18 +22,19 @@ The goal is to put usable browser builds in front of real users early, then comp
 **Requirements**
 
 - Create and build a dedicated Nx frontend application with the repository's existing Angular conventions.
-- Configure the mobile build output and app identity for Capacitor; defer adding native platform projects until the Android emulator increment.
+- Configure separate browser (`/m/`) and relative-base Capacitor build outputs, plus the app identity; defer adding native platform projects until the Android emulator increment.
 - Reuse shared game rules and protocol types without crossing Nx scope boundaries.
 - Include both frontend builds in the single backend Docker image and serve the mobile build at an explicit mobile entry point.
 - Preserve the existing desktop URL and behavior.
-- Make it possible to deploy a candidate mobile build to a test environment without changing the production release.
+- Publish a uniquely tagged candidate image and document manually changing the test stack's `TAG` and redeploying it, without changing production.
 
 **Acceptance**
 
-- CI builds the mobile frontend and the backend image.
-- A tester can open the mobile entry point on a phone over the test URL.
+- CI builds the mobile frontend; the combined Docker image can be built and published with a unique candidate tag.
+- The test Portainer stack can be manually switched to that tag and rolled back to its previous tag.
+- A tester can open `https://test.volle-lotte.allwang.family/m/` on a phone.
 - Desktop users continue to receive the current desktop application.
-- The mobile application can establish its backend and WebSocket connection from the test deployment.
+- The mobile application can establish its API and WebSocket connections to the test deployment.
 
 **Depends on:** None.
 
