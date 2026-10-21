@@ -93,7 +93,7 @@ description: 'Implementation tasks for the mobile delivery foundation'
 
 - [x] T018 Run the documented mobile, desktop, backend, lint, typecheck, and unit-test targets from `specs/021-mobile-foundation/quickstart.md`; resolve failures in the affected project files.
 - [x] T019 Build and smoke-test the combined Docker image using the routes in `specs/021-mobile-foundation/contracts/mobile-entry.md`; confirm desktop, mobile, API, and Socket.IO behavior together.
-- [ ] T020 Deploy a uniquely tagged candidate image to the isolated test stack by following `specs/021-mobile-foundation/quickstart.md`; verify the phone-browser mobile entry and desktop entry, and confirm production and its data volume remain unchanged.
+- [x] T020 Deploy a uniquely tagged candidate image to the isolated test stack by following `specs/021-mobile-foundation/quickstart.md`; verify the phone-browser mobile entry and desktop entry, and confirm production and its data volume remain unchanged.
 
 ---
 
