@@ -85,7 +85,26 @@ button {
   color: var(--vl-ink);
 }
 
-button.primary {
+a.button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--vl-line);
+  border-radius: 8px;
+  text-decoration: none;
+}
+
+.bar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+button.primary,
+a.button.primary {
   border-color: var(--vl-accent);
   background: var(--vl-accent);
   color: var(--vl-on-accent);

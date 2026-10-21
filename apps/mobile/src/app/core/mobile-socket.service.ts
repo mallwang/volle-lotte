@@ -134,6 +134,12 @@ export class MobileSocketService {
     return ack;
   }
 
+  async rejoin(gameId: string): Promise<Ack<Intents['game:rejoin'][1]>> {
+    const ack = await this.send('game:rejoin', { gameId });
+    if (ack.ok) this.adopt(ack.game);
+    return ack;
+  }
+
   /** Resolves true once the server accepted the leave. */
   async leave(): Promise<Ack> {
     const ack = await this.send('game:leave');

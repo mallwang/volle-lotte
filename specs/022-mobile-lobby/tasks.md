@@ -58,9 +58,9 @@ description: 'Task list for Mobile lobby and game setup'
 
 **Independent Test**: Open `/m/` on a phone-sized viewport, enter a nickname, see the list with name, host, target score, seats, protection and status; empty state and create action shown (quickstart scenario 1).
 
-- [ ] T012 [P] [US1] Nickname screen in `apps/mobile/src/app/nickname/nickname.ts` (+ `nickname.spec.ts`): native input, same validation and error messages as desktop, submit via `session:start`, navigate to list
-- [ ] T013 [P] [US1] Game list in `apps/mobile/src/app/list/list.ts` (+ `list.spec.ts`): cards, status chips, only applicable actions (no join on full game, banned notice, running games status only), empty state, create button
-- [ ] T014 [US1] Wire nickname redirect for stored sessions and the guard in `apps/mobile/src/app/app.routes.ts`; verify returning-user flow in the specs
+- [x] T012 [P] [US1] Nickname screen in `apps/mobile/src/app/nickname/nickname.ts` (+ `nickname.spec.ts`): native input, same validation and error messages as desktop, submit via `session:start`, navigate to list
+- [x] T013 [P] [US1] Game list in `apps/mobile/src/app/list/list.ts` (+ `list.spec.ts`): cards, status chips, only applicable actions (no join on full game, banned notice, running games status only), empty state, create button
+- [x] T014 [US1] Wire nickname redirect for stored sessions and the guard in `apps/mobile/src/app/app.routes.ts`; verify returning-user flow in the specs
 
 **Checkpoint**: US1 is demoable alone.
 
